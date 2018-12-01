@@ -1,0 +1,27 @@
+.react-resizable {
+    position: relative;
+}
+
+.react-resizable-handle {
+    position: absolute;
+    width: 10px;
+    height: 100%;
+    bottom: 0;
+    right: -5px;
+    cursor: col-resize;
+}
+
+.react-draggable-transparent-selection .ant-table{
+    -webkit-touch-callout: none!important; /* iOS Safari */
+    -webkit-user-select: none!important; /* Safari */
+    -khtml-user-select: none!important; /* Konqueror HTML */
+    -moz-user-select: none!important; /* Firefox */
+    -ms-user-select: none!important; /* Internet Explorer/Edge */
+    user-select: none!important; /* Non-prefixed version, currently
+                                  supported by Chrome and Opera */
+}
+
+thead.ant-table-thead .ant-row.ant-form-item{
+    margin-bottom: 0 !important;
+}
+

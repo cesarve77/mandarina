@@ -1,0 +1,8 @@
+# Type for Post
+type Post {
+	title: String
+	published: Boolean
+	tags: [String!]
+	user: User
+	id: ID! @unique
+}

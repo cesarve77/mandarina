@@ -1,0 +1,6 @@
+# Type for Category
+type Category {
+	category: String
+	users: [User!]!
+	id: ID! @unique
+}

@@ -1,0 +1,33 @@
+{
+  "dependencies": {
+    "docusaurus": "^1.5.1"
+  },
+  "scripts": {
+    "start": "cd website && yarn start"
+  },
+  "name": "mandarina",
+  "version": "0.0.1",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "devDependencies": {
+    "coffee-script": "^1.12.7"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cesarve77/mandarina.git"
+  },
+  "keywords": [
+    "React",
+    "Apollo",
+    "Prisma.io"
+  ],
+  "author": "César Ramos",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/cesarve77/mandarina/issues"
+  },
+  "homepage": "https://github.com/cesarve77/mandarina#readme",
+  "description": ""
+}

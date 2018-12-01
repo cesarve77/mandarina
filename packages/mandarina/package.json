@@ -1,0 +1,97 @@
+{
+  "name": "mandarina",
+  "version": "0.0.3",
+  "description": "",
+  "main": "build/index.js",
+  "types": "build/index.d.ts",
+  "author": "",
+  "license": "ISC",
+  "resolutions": {
+    "**/@types/react": "16.4.18",
+    "**/graphql": "14.0.2"
+  },
+  "dependencies": {
+    "browser-or-node": "^1.1.0",
+    "flat": "^4.1.0",
+    "inflection": "^1.12.0",
+    "lodash.get": "^4.4.2",
+    "lodash.isempty": "^4.4.0",
+    "lodash.mapvalues": "^4.6.0",
+    "lodash.pull": "^4.1.0",
+    "node-yaml": "^3.1.1"
+  },
+  "peerDependencies": {
+    "apollo-cache": "^1.1.20",
+    "apollo-cache-inmemory": "^1.3.9",
+    "apollo-client": "^2.4.5",
+    "apollo-link-http": "^1.5.5",
+    "graphql": "^14.0.2",
+    "graphql-tag": "^2.10.0",
+    "prisma-binding": "^2.1.6",
+    "react": "^16.6.1",
+    "react-apollo": "^2.2.4",
+    "react-dom": "^16.6.1"
+  },
+  "devDependencies": {
+    "@types/jest": "^23.3.9",
+    "@types/enzyme": "^3.1.15",
+    "@types/enzyme-adapter-react-16": "^1.0.3",
+    "@types/inflection": "^1.5.28",
+    "@types/lodash.isempty": "^4.4.4",
+    "@types/lodash.mapvalues": "^4.6.4",
+    "@types/lodash.pull": "^4.1.4",
+    "@types/node": "^10.12.3",
+    "@types/react": "^16.4.18",
+    "@types/react-dom": "^16.0.9",
+    "apollo-cache": "^1.1.20",
+    "apollo-cache-inmemory": "^1.3.9",
+    "apollo-client": "^2.4.5",
+    "apollo-link-http": "^1.5.5",
+    "babel-core": "^6.26.3",
+    "babel-jest": "^23.6.0",
+    "enzyme": "^3.7.0",
+    "enzyme-adapter-react-16": "^1.6.0",
+    "graphql-tag": "^2.10.0",
+    "graphql-yoga": "^1.16.7",
+    "jest": "^23.6.0",
+    "jsdom": "^13.0.0",
+    "jsdom-global": "^3.0.2",
+    "node-ts": "^2.1.2",
+    "prisma-binding": "^2.1.6",
+    "react": "^16.6.1",
+    "react-apollo": "^2.2.4",
+    "react-dom": "^16.6.1",
+    "react-test-renderer": "^16.6.1",
+    "ts-jest": "^23.10.4",
+    "typescript": "^3.1.6",
+    "unfetch": "^4.0.1",
+    "xmlhttprequest": "^1.8.0"
+  },
+  "scripts": {
+    "init-docker-test": "cd src/test/prisma && eval \"$(docker-machine env default)\" && docker-machine start default",
+    "stop-docker-test": "docker-machine stop default",
+    "deploy-prisma-test": "cd src/test/prisma && prisma deploy --force flag",
+    "playground-test": "prisma playground --port 7000",
+    "server-test": "ts-node -O '{\"module\": \"commonjs\"}' src/test/server/server.ts",
+    "docker-ip": "docker-machine ip default",
+    "docker-mysql-ip": "docker inspect myfw_mysql_1 | grep \"IPAddress\"",
+    "postinstall": "tsc"
+  },
+  "jest": {
+    "coverageDirectory": "coverage",
+    "testEnvironment": "node",
+    "clearMocks": true,
+    "transform": {
+      "^.+\\.(t|j)sx?$": "ts-jest"
+    },
+    "testRegex": "(/__tests__/.*|(\\.|/)(test|spec))\\.(jsx?|tsx?)$",
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "jsx",
+      "json",
+      "node"
+    ]
+  }
+}

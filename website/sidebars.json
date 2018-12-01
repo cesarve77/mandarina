@@ -1,0 +1,26 @@
+{
+  "docs": {
+    "Table": [
+      {
+        "type": "subcategory",
+        "label": "Table",
+        "ids": [
+          "table-constructor",
+          "table-static-methods"
+        ]
+      },
+      "schema",
+      "validator-creator",
+      "validators"
+    ],
+    "Operations": [
+      "find-one",
+      "find",
+      "create",
+      "update"
+    ],
+    "Auth": [
+      "auth"
+    ]
+  }
+}
