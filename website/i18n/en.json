@@ -15,7 +15,7 @@
         "title": "Auth"
       },
       "boilerplate": {
-        "title": "boilerplate"
+        "title": "Boilerplate"
       },
       "create-form": {
         "title": "create-form"
@@ -68,6 +68,7 @@
     },
     "categories": {
       "Table": "Table",
+      "Quick start": "Quick start",
       "Operations": "Operations",
       "Auth": "Auth"
     }

@@ -13,6 +13,9 @@
       "validator-creator",
       "validators"
     ],
+    "Quick start": [
+      "Boilerplate"
+    ],
     "Operations": [
       "find-one",
       "find",
