@@ -26,4 +26,5 @@
 <url> <loc>https://cesarve77.github.io/mandarina/docs/update</loc> <changefreq>hourly</changefreq> <priority>1.0</priority> <xhtml:link rel="alternate" hreflang="en" href="https://cesarve77.github.io/mandarina/docs/update" /> </url>
 <url> <loc>https://cesarve77.github.io/mandarina/docs/validator-creator</loc> <changefreq>hourly</changefreq> <priority>1.0</priority> <xhtml:link rel="alternate" hreflang="en" href="https://cesarve77.github.io/mandarina/docs/validator-creator" /> </url>
 <url> <loc>https://cesarve77.github.io/mandarina/docs/validators</loc> <changefreq>hourly</changefreq> <priority>1.0</priority> <xhtml:link rel="alternate" hreflang="en" href="https://cesarve77.github.io/mandarina/docs/validators" /> </url>
+<url> <loc>https://cesarve77.github.io/mandarina/docs/your-first-crud</loc> <changefreq>hourly</changefreq> <priority>1.0</priority> <xhtml:link rel="alternate" hreflang="en" href="https://cesarve77.github.io/mandarina/docs/your-first-crud" /> </url>
 </urlset>
