@@ -213,7 +213,9 @@ export class Table {
         if (this.options.virtual) return this
         const model = this.getGraphQLModel()
         if (model) {
-
+            if (!fs.existsSync(`${prismaDir}/datamodel`)){
+                fs.mkdirSync(`${prismaDir}/datamodel`);
+            }
             const fileAbsModel = `${prismaDir}/datamodel/${fileName}.model.graphql`
             const fileRelModel = `datamodel/${fileName}.model.graphql`
             fs.writeFileSync(fileAbsModel, model)
