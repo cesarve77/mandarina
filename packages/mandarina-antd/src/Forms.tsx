@@ -21,7 +21,7 @@ export interface FormProps<TData = any, TVariables = OperationVariables> {
     table: Table
     id: string
     fields?: string[]
-    children: (props: any) => React.ReactNode | React.ReactNode | React.ReactNode[]
+    children: (FormChildrenParams: any) => React.ReactNode | React.ReactNode | React.ReactNode[]
     showInlineError: boolean
     autosaveDelay: number
     autosave: boolean
@@ -80,7 +80,7 @@ const Form = ({Component, fields, table, id, onSubmit, children, showInlineError
                             }
                             return React.cloneElement(child)
                         })}
-                        {children && typeof  children === "function" && children({doc, loading, ...props})}
+                        {children && typeof  children === "function" && children({doc, loading,...rest, ...props})}
                         {children && typeof  children !== "function" && React.cloneElement(children)}
                         {!children && (
                             <div>
