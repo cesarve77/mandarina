@@ -14,6 +14,9 @@
       "auth": {
         "title": "Auth"
       },
+      "boilerplate": {
+        "title": "boilerplate"
+      },
       "create-form": {
         "title": "create-form"
       },
