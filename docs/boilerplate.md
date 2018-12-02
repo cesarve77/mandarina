@@ -1,5 +1,5 @@
 ---
-title: Boilerplate 
+title: Boilerplate
 ---
 
 The easiest way to start with mandarina
@@ -16,29 +16,42 @@ The easiest way to start with mandarina
 ### 1.1) Clone the boilerplate repository
 
 In the terminal 
-```
-git clone https://githib.com/cesarve77/mandarina-boilerplate  your-app-name
-
+```console
+git clone https://github.com/cesarve77/mandarina-boilerplate.git your-app-name
+cd  your-app-name
 ```
 Where your-app-name should be your app chosen name
 
-### 1.2) Init [docker machine](https://docs.docker.com/machine/reference/start/)
-
-In the terminal 
-```
-yarn run init-docker
-```
-
-### 1.2) Up [prisma](https://www.prisma.io/docs/run-prisma-server/) server
+### 1.2) Install dependencies
 
 In the same terminal 
+```console
+yarn install
 ```
-cd  your-app-name/prisma
-docker-compose up -d
-```
-Now prisma server should be running in http://localhost:5577 
 
-### 1.3) Set [secret keys](http://travistidwell.com/blog/2013/09/06/an-online-rsa-public-and-private-key-generator/)
+### 1.3) Init docker machine
+
+In the same terminal 
+```console
+yarn run init-docker
+```
+see: [docker machine](https://docs.docker.com/machine/reference/start/)
+
+### 1.4) Deploy prisma server
+
+In the same terminal 
+```console
+cd prisma
+docker-compose up -d
+yarn run deploy-prisma
+```
+Now prisma server should be running in http://localhost:5577
+
+see: [prisma](https://www.prisma.io/docs/run-prisma-server/) 
+
+### 1.5) Set secret keys
+
+It step is optional in dev 
 
 Go to this files and replace the content with your custom secret keys
 
@@ -47,17 +60,21 @@ Files:
 * /app/lib/security/private.key
 * /app/lib/security/public-key.js
 
-### 1.4) Run app server
+See: [secret keys](http://travistidwell.com/blog/2013/09/06/an-online-rsa-public-and-private-key-generator/)
+
+### 1.6) Run app server
 In a new terminal go to your app directory and run
-```
+```console
 yarn run server
 ```
 Now your app server should be running in http://localhost:8000 
 
 
-### 1.5) Run app [webpack](https://webpack.js.org/)
+### 1.7) Run app webpack
 In a new terminal go to your app directory and run
-```
+```console
 yarn run webpack
 ```
 Now your app  should be running in http://localhost:8080 
+
+See: [webpack](https://webpack.js.org/)
