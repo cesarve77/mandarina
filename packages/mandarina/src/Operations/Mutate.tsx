@@ -44,10 +44,8 @@ export interface UpdateProps extends MutateProps {
 export interface CreateProps extends MutateProps {
 }
 
-
-export interface MutateChildrenParams {
+export interface FormChildrenParams {
     table: Table,
-    mutate: (model: Model) => Promise<void | FetchResult<Model>>
     data: TData
     loading: boolean
     error?: ApolloError
@@ -55,6 +53,10 @@ export interface MutateChildrenParams {
     client?: ApolloClient<any>
 
     [rest: string]: any
+}
+
+export interface MutateChildrenParams extends FormChildrenParams{
+    mutate: (model: Model) => Promise<void | FetchResult<Model>>
 
 }
 
