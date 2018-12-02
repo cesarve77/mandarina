@@ -1,5 +1,9 @@
 {
   "docs": {
+    "Quick start": [
+      "boilerplate",
+      "your-first-crud"
+    ],
     "Table": [
       {
         "type": "subcategory",
@@ -13,14 +17,17 @@
       "validator-creator",
       "validators"
     ],
-    "Quick start": [
-      "Boilerplate"
-    ],
     "Operations": [
       "find-one",
       "find",
       "create",
       "update"
+    ],
+    "UI components": [
+      "list",
+      "create-form",
+      "update-form",
+      "delete-form"
     ],
     "Auth": [
       "auth"

@@ -18,10 +18,13 @@
         "title": "Boilerplate"
       },
       "create-form": {
-        "title": "create-form"
+        "title": "Create Form"
       },
       "create": {
         "title": "Create"
+      },
+      "delete-form": {
+        "title": "Delete Form"
       },
       "find-one": {
         "title": "Find One"
@@ -30,7 +33,7 @@
         "title": "Find"
       },
       "list": {
-        "title": "list"
+        "title": "List"
       },
       "mutate": {
         "title": "Mutate"
@@ -50,7 +53,7 @@
         "sidebar_label": "Static methods"
       },
       "update-form": {
-        "title": "update-form"
+        "title": "Update Form"
       },
       "update": {
         "title": "Update"
@@ -60,6 +63,9 @@
       },
       "validators": {
         "title": "Validators"
+      },
+      "your-first-crud": {
+        "title": "Your first CRUD"
       }
     },
     "links": {
@@ -67,9 +73,10 @@
       "Blog": "Blog"
     },
     "categories": {
-      "Table": "Table",
       "Quick start": "Quick start",
+      "Table": "Table",
       "Operations": "Operations",
+      "UI components": "UI components",
       "Auth": "Auth"
     }
   },

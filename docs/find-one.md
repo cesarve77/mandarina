@@ -2,7 +2,7 @@
 title: Find One
 ---
 
-Find one record by id )or a unique field)
+Find one record by id (or a unique field)
 
 *e.g*:
 
