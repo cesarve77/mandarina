@@ -73,7 +73,6 @@ exports.AuthTable = function (_a) {
             {function (_a) {
         var data = _a.data, loading = _a.loading, queryProps = __rest(_a, ["data", "loading"]);
         var fields = data && data.AuthFields;
-        console.log('AuthTable fields,', fields);
         if (typeof children === 'function')
             return children(__assign({ fields: fields, loading: loading }, props));
         return react_1.default.cloneElement(children, __assign({ fields: fields, loading: loading }, queryProps, props));
@@ -123,9 +122,6 @@ exports.AuthTable.getRoles = function (args) {
                 });
             });
         });
-        console.log('************************************');
-        console.dir(authFields['Family']['read'], { depth: 4 });
-        console.log('************************************');
     }
     if (!args)
         return roles;

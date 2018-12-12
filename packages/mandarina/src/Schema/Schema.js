@@ -22,6 +22,7 @@ var Schema = /** @class */ (function () {
         var name = _a.name, _b = _a.recursive, recursive = _b === void 0 ? [] : _b, _c = _a.forceType, forceType = _c === void 0 ? true : _c, _d = _a.virtual, virtual = _d === void 0 ? false : _d, errorFromServerMapper = _a.errorFromServerMapper, permissions = _a.permissions;
         var _this = this;
         this.pathDefinitions = {};
+        this.arraysFields = [];
         this.name = name;
         Schema.instances = Schema.instances || [];
         if (Schema.instances[this.name])
@@ -44,14 +45,6 @@ var Schema = /** @class */ (function () {
         if (!definition.validators)
             definition.validators = [];
         //insert  type Validator on top
-        if (definition.type === Number)
-            definition.validators.unshift(Validators_1.isNumber.getValidatorWithParam());
-        if (definition.type === Date)
-            definition.validators.unshift(Validators_1.isDate.getValidatorWithParam());
-        if (definition.type === Integer)
-            definition.validators.unshift(Validators_1.isInteger.getValidatorWithParam());
-        if (definition.type === String)
-            definition.validators.unshift(Validators_1.isString.getValidatorWithParam());
         fieldDefinition.validators = definition.validators.map(function (validator) {
             var constructor; // is a class constructor for Validator
             if (typeof validator === 'string') { //is is a string i found the Validator constructor in the instances
@@ -67,6 +60,18 @@ var Schema = /** @class */ (function () {
             }
             return constructor;
         });
+        var inNumberValidator = Validators_1.isNumber.getValidatorWithParam();
+        var isDateValidator = Validators_1.isDate.getValidatorWithParam();
+        var isIntegerValidator = Validators_1.isInteger.getValidatorWithParam();
+        var isStringValidator = Validators_1.isString.getValidatorWithParam();
+        if (definition.type === Number && (!utils_1.hasValidator(fieldDefinition.validators, inNumberValidator.validatorName)))
+            definition.validators.unshift(inNumberValidator);
+        if (definition.type === Date && (!utils_1.hasValidator(fieldDefinition.validators, isDateValidator.validatorName)))
+            definition.validators.unshift(isDateValidator);
+        if (definition.type === Integer && (!utils_1.hasValidator(fieldDefinition.validators, isIntegerValidator.validatorName)))
+            definition.validators.unshift(isIntegerValidator);
+        if (definition.type === String && (!utils_1.hasValidator(fieldDefinition.validators, isStringValidator.validatorName)))
+            definition.validators.unshift(isStringValidator);
         // set default -> default values
         if (Array.isArray(definition.type)) {
             fieldDefinition.defaultValue = definition.defaultValue || [];
@@ -105,14 +110,20 @@ var Schema = /** @class */ (function () {
     Schema.prototype.getFieldDefinition = function (key) {
         return __assign({}, this.shape[key]);
     };
+    /**
+     *
+     * @param permissions
+     */
     Schema.prototype.inheritPermission = function (permissions) {
-        if (!permissions)
-            return this;
-        var clone = Object.create(this);
-        clone.permissions = permissions;
-        clone.shape = lodash_mapvalues_1.default(clone.shape, function (def, key) { return clone.applyDefinitionsDefaults(def, key); });
-        clone.keys = Object.keys(clone.shape);
-        return clone;
+        return this;
+        //todo this is has very bad performance for deep nested tables
+        /*if (!permissions) return this
+        const clone: Schema = cloneDeep(this)
+        clone.permissions = permissions
+        clone.shape = mapValues(clone.shape, (def, key) => clone.applyDefinitionsDefaults(def, key))
+
+        clone.keys = Object.keys(clone.shape)
+        return clone*/
     };
     Schema.prototype.getPathDefinition = function (key) {
         if (!this.pathDefinitions[key])
@@ -304,18 +315,22 @@ var Schema = /** @class */ (function () {
             var table;
             if (typeof def.type === 'string')
                 table = Schema.getInstance(def.type);
-            if (Array.isArray(def.type) && typeof def.type[0] === 'string')
-                table = Schema.getInstance(def.type[0]);
+            if (Array.isArray(def.type)) {
+                _this.arraysFields.push(path);
+                if (typeof def.type[0] === 'string')
+                    table = Schema.getInstance(def.type[0]);
+            }
             if (table) {
                 pathHistory.push({ path: path, table: _this.name });
                 var fieldsInternal = [];
                 var tableName_1 = table.name;
                 //check if we are entering in a recursive table, if actual table has been used before, reviewing the history
                 if (!pathHistory.some(function (_a) {
-                    var table = _a.table, path = _a.path;
+                    var table = _a.table;
                     return tableName_1 === table;
-                }))
+                })) {
                     fieldsInternal = table._getFields(path, pathHistory);
+                }
                 //to intro a path in table options to continue deep in get fields
                 fields = fields.concat(fieldsInternal);
             }

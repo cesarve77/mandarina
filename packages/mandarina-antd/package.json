@@ -57,7 +57,7 @@
     "ts-jest": "^23.10.5",
     "typescript": "^3.2.1",
     "unfetch": "^4.0.1",
-    "uniforms": "^1.28.0",
+    "uniforms": "^1.28.1",
     "uniforms-antd": "^1.28.0",
     "xmlhttprequest": "^1.8.0"
   },

@@ -26,6 +26,7 @@ interface ListFilter {
 }
 
 const ListFilter = ({variables, onFilterChange, field, fieldDefinition}: ListFilter) => {
+    console.log('ListFilter',field,fieldDefinition)
     const name = uuid() //todo remove this dependeincy making schema get optional name
     fieldDefinition = {...fieldDefinition}
     fieldDefinition.form.col = false

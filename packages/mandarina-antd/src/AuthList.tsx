@@ -8,7 +8,6 @@ export const AuthList = ({table,denied, ...props}: { table: Table, denied?: JSX.
     return (
         <AuthTable table={table} action='read'>
             {({fields, loading}) => {
-                console.log('fields, loading',fields, loading)
                 return (
                     <Spin spinning={loading} style={{width:'100%'}}>
                         {!loading && fields && fields.length>0 && <List table={table} {...props} fields={fields}/>}

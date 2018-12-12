@@ -1,6 +1,6 @@
 import React, {createElement} from "react";
 import connectField from "uniforms/connectField";
-import filterDOMProps from "uniforms/filterDOMProps";
+
 import {Col} from "antd";
 import BaseField from 'uniforms/BaseField';
 import NumField from 'uniforms-antd/NumField';
@@ -15,6 +15,9 @@ import TableField from "./TableField";
 import invariant from 'invariant'
 import {Integer} from 'mandarina'
 import HiddenField from "uniforms-antd/HiddenField";
+import filterDOMProps from "uniforms/filterDOMProps";
+filterDOMProps.register('col', 'loading', 'omitFields','minCount','maxCount','submitting','validating')
+
 
 class CustomAuto extends BaseField {
     static displayName = 'AutoField';
@@ -89,4 +92,4 @@ export default connectField(CustomAuto, {
     initialValue: false
 })
 
-filterDOMProps.register('col', 'loading', 'omitFields','minCount','maxCount')
+

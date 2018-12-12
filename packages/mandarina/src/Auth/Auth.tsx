@@ -91,10 +91,6 @@ AuthTable.getRoles = (args) => {
                 })
             })
         })
-        console.log('************************************')
-        console.dir(authFields['Family']['read'], {depth: 4})
-        console.log('************************************')
-
     }
 
     if (!args)     return roles

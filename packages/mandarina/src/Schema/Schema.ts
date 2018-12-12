@@ -3,9 +3,8 @@ import {ErrorValidator, Validator, ValidatorCreator} from "./ValidatorCreator";
 import mapValues from 'lodash.mapvalues'
 import * as inflection from "inflection";
 import {extraKey, isDate, isInteger, isNumber, isString} from "./Validators";
-import {forceType} from "./utils";
+import {forceType, hasValidator} from "./utils";
 import {Permissions} from "../Table/Table";
-
 
 export class Schema {
 
@@ -16,6 +15,7 @@ export class Schema {
     public permissions: Permissions;
     public options: InstanceOptions
     public errorFromServerMapper: ErrorFromServerMapper | undefined
+    public arraysFields: string[] = []
     private pathDefinitions: { [key: string]: FieldDefinition } = {}
     private fields: string[]
     private original: Model;
@@ -28,7 +28,6 @@ export class Schema {
         Schema.instances = Schema.instances || []
         if (Schema.instances[this.name]) throw new Error(`Schema named ${this.name} already exists, names should be uniques`)
         Schema.instances[this.name] = this
-
         this.errorFromServerMapper = errorFromServerMapper
         this.options = {recursive, forceType, virtual}
         this.permissions = permissions || {}
@@ -47,10 +46,7 @@ export class Schema {
         const fieldDefinition = <FieldDefinition>{}
         if (!definition.validators) definition.validators = []
         //insert  type Validator on top
-        if (definition.type === Number) definition.validators.unshift(isNumber.getValidatorWithParam())
-        if (definition.type === Date) definition.validators.unshift(isDate.getValidatorWithParam())
-        if (definition.type === Integer) definition.validators.unshift(isInteger.getValidatorWithParam())
-        if (definition.type === String) definition.validators.unshift(isString.getValidatorWithParam())
+
         fieldDefinition.validators = definition.validators.map((validator: Validator | string | ValidatorFinder) => {
             let constructor: Validator // is a class constructor for Validator
             if (typeof validator === 'string') { //is is a string i found the Validator constructor in the instances
@@ -64,6 +60,14 @@ export class Schema {
             }
             return constructor
         })
+        const inNumberValidator = isNumber.getValidatorWithParam()
+        const isDateValidator = isDate.getValidatorWithParam()
+        const isIntegerValidator = isInteger.getValidatorWithParam()
+        const isStringValidator = isString.getValidatorWithParam()
+        if (definition.type === Number && (!hasValidator(fieldDefinition.validators, inNumberValidator.validatorName))) definition.validators.unshift(inNumberValidator)
+        if (definition.type === Date && (!hasValidator(fieldDefinition.validators, isDateValidator.validatorName))) definition.validators.unshift(isDateValidator)
+        if (definition.type === Integer && (!hasValidator(fieldDefinition.validators, isIntegerValidator.validatorName))) definition.validators.unshift(isIntegerValidator)
+        if (definition.type === String && (!hasValidator(fieldDefinition.validators, isStringValidator.validatorName))) definition.validators.unshift(isStringValidator)
         // set default -> default values
         if (Array.isArray(definition.type)) {
             fieldDefinition.defaultValue = definition.defaultValue || []
@@ -85,8 +89,8 @@ export class Schema {
         fieldDefinition.unique = !!definition.unique
         fieldDefinition.transformValue = definition.transformValue || ((value: any): any => value)
         if (typeof definition.label === 'string') fieldDefinition.label = definition.label
-        if (typeof definition.label === 'function') fieldDefinition.label =definition.label(definition)
-        if (typeof fieldDefinition.label !== 'string')  fieldDefinition.label = inflection.transform(key, ['underscore', 'humanize'])
+        if (typeof definition.label === 'function') fieldDefinition.label = definition.label(definition)
+        if (typeof fieldDefinition.label !== 'string') fieldDefinition.label = inflection.transform(key, ['underscore', 'humanize'])
         return fieldDefinition
     }
 
@@ -100,14 +104,20 @@ export class Schema {
         return {...this.shape[key]}
     }
 
+    /**
+     *
+     * @param permissions
+     */
     inheritPermission(permissions?: Permissions) {
-        if (!permissions) return this
-        const clone: Schema = Object.create(this)
+        return this
+        //todo this is has very bad performance for deep nested tables
+        /*if (!permissions) return this
+        const clone: Schema = cloneDeep(this)
         clone.permissions = permissions
         clone.shape = mapValues(clone.shape, (def, key) => clone.applyDefinitionsDefaults(def, key))
 
         clone.keys = Object.keys(clone.shape)
-        return clone
+        return clone*/
     }
 
     getPathDefinition(key: string): FieldDefinition {
@@ -145,7 +155,6 @@ export class Schema {
     }
 
 
-
     validate(model: Model): ErrorValidator[] {
         return this._validate(model, '', [{schema: this.name, path: ''}], model)
     }
@@ -157,9 +166,10 @@ export class Schema {
     }
 
     clean(model: Model, transform: boolean = false) {
-        this.original=model
+        this.original = model
         this._clean(model, transform)
     }
+
     /**
      * mutate the model,with all keys  proper types and null for undefined
      * @param model
@@ -167,7 +177,7 @@ export class Schema {
      * @param transform
      * @param removeExtraKeys
      */
-    protected _clean(model: Model | undefined | null, transform = false,  removeExtraKeys = true) {
+    protected _clean(model: Model | undefined | null, transform = false, removeExtraKeys = true) {
         removeExtraKeys && model && typeof model === 'object' && Object.keys(model).forEach((key) => !this.keys.includes(key) && delete model[key])
         this.keys.forEach((key): any => {
             const definition = this.getFieldDefinition(key)
@@ -175,19 +185,21 @@ export class Schema {
             if (typeof type === "function" && typeof model === 'object' && model !== undefined && model !== null) {
                 model[key] = forceType(model[key], <Native>definition.type)
                 model[key] = model[key] === 0 ? 0 : model[key] || definition.defaultValue
-            }
-            else if (typeof type === "string" && typeof model === 'object' && model !== undefined && model !== null) {
+            } else if (typeof type === "string" && typeof model === 'object' && model !== undefined && model !== null) {
                 if (model[key] !== 0 && !model[key]) return model[key] = definition.defaultValue
                 const schema = Schema.getInstance(type)
                 schema._clean(model[key], transform)
                 return
-            }
-            else if (Array.isArray(type) && typeof model === 'object' && model !== undefined && model !== null) {
+            } else if (Array.isArray(type) && typeof model === 'object' && model !== undefined && model !== null) {
                 model[key] = forceType(model[key], Array)
                 if (typeof type[0] === 'string') {
                     const schema = Schema.getInstance(<string>type[0])
                     model[key] = model[key].map((value: any) => {
+                        console.log('key', key)
+                        console.log('1 value', value)
                         schema._clean(value, transform)
+                        console.log('2 value', value)
+                        console.log('********************************')
                         return value
                     })
                 } else {
@@ -287,16 +299,20 @@ export class Schema {
             const def = schema.getFieldDefinition(key)
             let table: Schema | undefined
             if (typeof def.type === 'string') table = Schema.getInstance(def.type)
-            if (Array.isArray(def.type) && typeof def.type[0] === 'string') table = Schema.getInstance(<string>def.type[0])
+            if (Array.isArray(def.type)) {
+                this.arraysFields.push(path)
+                if (typeof def.type[0] === 'string') table = Schema.getInstance(<string>def.type[0])
+            }
             if (table) {
                 pathHistory.push({path: path, table: this.name})
                 let fieldsInternal: string[] = []
                 const tableName = table.name
                 //check if we are entering in a recursive table, if actual table has been used before, reviewing the history
-                if (!pathHistory.some(({table, path}) => tableName === table)) fieldsInternal = table._getFields(path, pathHistory)
+                if (!pathHistory.some(({table}) => tableName === table)) {
+                    fieldsInternal = table._getFields(path, pathHistory)
+                }
                 //to intro a path in table options to continue deep in get fields
                 fields = [...fields, ...fieldsInternal]
-
             } else {
                 fields.push(path)
             }

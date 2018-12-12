@@ -5,7 +5,7 @@ var __extends = (this && this.__extends) || (function () {
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
             function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
         return extendStatics(d, b);
-    }
+    };
     return function (d, b) {
         extendStatics(d, b);
         function __() { this.constructor = d; }
@@ -199,15 +199,20 @@ var Mutate = /** @class */ (function (_super) {
         if (type === 'update') {
             mutation.variables.where = where;
         }
-        if (optimisticResponse) {
-            var docWithTypes = this.getTypesDoc(cleaned, table);
-            mutation.optimisticResponse = (_a = {}, _a[names.mutation[type]] = docWithTypes, _a);
+        if (optimisticResponse !== false) {
+            if (!optimisticResponse) {
+                var docWithTypes = this.getTypesDoc(cleaned, table);
+                mutation.optimisticResponse = (_a = {}, _a[names.mutation[type]] = docWithTypes, _a);
+            }
+            else {
+                mutation.optimisticResponse = optimisticResponse;
+            }
         }
         return mutationFn(mutation);
     };
     Mutate.prototype.render = function () {
         var _this = this;
-        var _a = this.props, type = _a.type, children = _a.children, table = _a.table, fields = _a.fields, queryProps = _a.queryProps, findLoading = _a.loading, props = __rest(_a, ["type", "children", "table", "fields", "queryProps", "loading"]);
+        var _a = this.props, type = _a.type, children = _a.children, table = _a.table, fields = _a.fields, findLoading = _a.loading, variables = _a.variables, update = _a.update, ignoreResults = _a.ignoreResults, optimisticResponse = _a.optimisticResponse, _b = _a.refetchQueries, refetchQueries = _b === void 0 ? this.refetchQueries : _b, awaitRefetchQueries = _a.awaitRefetchQueries, onCompleted = _a.onCompleted, onError = _a.onError, context = _a.context, props = __rest(_a, ["type", "children", "table", "fields", "loading", "variables", "update", "ignoreResults", "optimisticResponse", "refetchQueries", "awaitRefetchQueries", "onCompleted", "onError", "context"]);
         var names = table.names;
         this.query = fields ? utils_1.buildQueryFromFields(fields) : this.buildQueryFromFields();
         var queryString;
@@ -218,15 +223,15 @@ var Mutate = /** @class */ (function (_super) {
             queryString = "mutation mutationFn($data: " + names.input[type] + " ) { " + names.mutation[type] + "(data: $data) " + this.query + " }";
         }
         var MUTATION = graphql_tag_1.default(queryString);
-        return (<react_apollo_1.Mutation mutation={MUTATION} refetchQueries={this.refetchQueries} {...queryProps}>
+        return (<react_apollo_1.Mutation mutation={MUTATION} refetchQueries={refetchQueries} variables={variables} update={update} ignoreResults={ignoreResults} optimisticResponse={optimisticResponse} awaitRefetchQueries={awaitRefetchQueries} onCompleted={onCompleted} onError={onError} context={context}>
                 {function (mutationFn, _a) {
-            var loading = _a.loading, data = _a.data;
-            return children(__assign({ table: table, mutate: function (model) { return _this.mutate(model, mutationFn); } }, props, data, { loading: findLoading || loading }));
+            var loading = _a.loading, data = _a.data, error = _a.error, called = _a.called, client = _a.client;
+            return children(__assign({ table: table, mutate: function (model) { return _this.mutate(model, mutationFn); }, loading: findLoading || loading, data: data,
+                error: error,
+                called: called,
+                client: client }, props));
         }}
             </react_apollo_1.Mutation>);
-    };
-    Mutate.defaultProps = {
-        optimisticResponse: true,
     };
     return Mutate;
 }(react_1.PureComponent));

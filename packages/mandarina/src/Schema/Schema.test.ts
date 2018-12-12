@@ -255,7 +255,7 @@ describe('Nested Array Schema', () => {
             validators: ['required']
         },
         description: {
-            type: String
+            type: String,
         }
     }, {name: 'UserArray',})
 
@@ -274,7 +274,9 @@ describe('Nested Array Schema', () => {
             validators: ['required']
         },
         description: {
-            type: String
+            type: String,
+
+            defaultValue: 'description'
         }
     }, {name: 'CardArray',})
 

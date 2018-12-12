@@ -5,7 +5,7 @@ var __extends = (this && this.__extends) || (function () {
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
             function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
         return extendStatics(d, b);
-    }
+    };
     return function (d, b) {
         extendStatics(d, b);
         function __() { this.constructor = d; }
@@ -54,7 +54,7 @@ var FindBase = /** @class */ (function (_super) {
     FindBase.prototype.render = function () {
         var _a;
         FindBase.queries = FindBase.queries || [];
-        var _b = this.props, children = _b.children, optionalFields = _b.fields, table = _b.table, after = _b.after, first = _b.first, type = _b.type, where = _b.where, props = __rest(_b, ["children", "fields", "table", "after", "first", "type", "where"]);
+        var _b = this.props, optionalFields = _b.fields, table = _b.table, after = _b.after, first = _b.first, type = _b.type, where = _b.where, children = _b.children, pollInterval = _b.pollInterval, notifyOnNetworkStatusChange = _b.notifyOnNetworkStatusChange, _c = _b.fetchPolicy, fetchPolicy = _c === void 0 ? 'cache-and-network' : _c, errorPolicy = _b.errorPolicy, ssr = _b.ssr, displayName = _b.displayName, skip = _b.skip, onCompleted = _b.onCompleted, onError = _b.onError, context = _b.context, partialRefetch = _b.partialRefetch, props = __rest(_b, ["fields", "table", "after", "first", "type", "where", "children", "pollInterval", "notifyOnNetworkStatusChange", "fetchPolicy", "errorPolicy", "ssr", "displayName", "skip", "onCompleted", "onError", "context", "partialRefetch"]);
         var fields = optionalFields || table.getFields();
         var names = table.names;
         var defaultQuery = this.buildQueryFromFields(fields);
@@ -72,9 +72,9 @@ var FindBase = /** @class */ (function (_super) {
         this.queryHistory.push(query);
         FindBase.queries.push(query); //save queries to update cache purposes
         var variables = { where: where, first: first, after: after };
-        return (<react_apollo_1.Query query={QUERY} variables={variables} notifyOnNetworkStatusChange fetchPolicy='cache-and-network' partialRefetch {...props}>
+        return (<react_apollo_1.Query query={QUERY} variables={variables} pollInterval={pollInterval} notifyOnNetworkStatusChange={notifyOnNetworkStatusChange} fetchPolicy={fetchPolicy} errorPolicy={errorPolicy} ssr={ssr} displayName={displayName} skip={skip} onCompleted={onCompleted} onError={onError} context={context} partialRefetch={partialRefetch}>
                 {function (_a) {
-            var error = _a.error, data = _a.data, loading = _a.loading, refetch = _a.refetch, fetchMore = _a.fetchMore, restData = __rest(_a, ["error", "data", "loading", "refetch", "fetchMore"]);
+            var error = _a.error, data = _a.data, loading = _a.loading, variables = _a.variables, networkStatus = _a.networkStatus, refetch = _a.refetch, fetchMore = _a.fetchMore, startPolling = _a.startPolling, stopPolling = _a.stopPolling, subscribeToMore = _a.subscribeToMore, updateQuery = _a.updateQuery, client = _a.client;
             var count, pageInfo;
             if (!error) {
                 if (type === 'connection' && data && data[names.query[type]]) {
@@ -86,14 +86,21 @@ var FindBase = /** @class */ (function (_super) {
                     data = data && data[names.query[type]];
                 }
             }
-            return children(__assign({ error: error,
-                table: table,
+            return children(__assign({ table: table, query: QUERY, data: data,
+                loading: loading,
+                error: error,
+                variables: variables,
+                networkStatus: networkStatus,
                 fields: fields,
-                data: data,
                 fetchMore: fetchMore,
                 count: count,
-                pageInfo: pageInfo, query: QUERY, loading: loading,
-                refetch: refetch }, restData));
+                pageInfo: pageInfo,
+                refetch: refetch,
+                startPolling: startPolling,
+                stopPolling: stopPolling,
+                subscribeToMore: subscribeToMore,
+                updateQuery: updateQuery,
+                client: client }, props));
         }}
             </react_apollo_1.Query>);
     };

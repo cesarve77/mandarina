@@ -1,4 +1,5 @@
 import {FieldDefinition, Integer, Native} from "./Schema";
+import {Validator} from "./ValidatorCreator";
 
 //code borrowed from https://github.com/aldeed/simple-schema-js/blob/master/package/lib/clean/convertToProperType.js
 export const forceType = (value: any, type: Native): any => {
@@ -59,8 +60,34 @@ export const forceType = (value: any, type: Native): any => {
 }
 
 
-export const isRequired = (field: FieldDefinition): boolean => {
-    const filtered = field.validators.filter(({validatorName}) => validatorName === 'required')
+export const isRequired = (field: FieldDefinition): boolean =>hasValidator(field.validators,'required')
+
+export const hasValidator = (validators: Validator[],name?: string): boolean => {
+    if (!name) return false
+    const filtered = validators.filter(({validatorName}) => validatorName === name)
     return !!filtered.length
+}
+
+
+export const get = (obj: any, paths: string[]): any[] => {
+
+    const result: any[] = []
+    paths.forEach((path, i) => {
+        const val = obj[path]
+        if (Array.isArray(val)) {
+            val.forEach((val) => {
+                result.push(...get(val, paths.slice(i + 1)))
+            })
+        } else if (val) {
+            if (paths.slice(i + 1).length === 0) {
+                result.push(val)
+            } else {
+                result.push(...get(val, paths.slice(i + 1)))
+            }
+
+        }
+    })
+
+    return result
 }
 

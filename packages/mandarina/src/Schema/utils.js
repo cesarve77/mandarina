@@ -59,10 +59,33 @@ exports.forceType = function (value, type) {
     // Could not convert
     return value;
 };
-exports.isRequired = function (field) {
-    var filtered = field.validators.filter(function (_a) {
+exports.isRequired = function (field) { return exports.hasValidator(field.validators, 'required'); };
+exports.hasValidator = function (validators, name) {
+    if (!name)
+        return false;
+    var filtered = validators.filter(function (_a) {
         var validatorName = _a.validatorName;
-        return validatorName === 'required';
+        return validatorName === name;
     });
     return !!filtered.length;
+};
+exports.get = function (obj, paths) {
+    var result = [];
+    paths.forEach(function (path, i) {
+        var val = obj[path];
+        if (Array.isArray(val)) {
+            val.forEach(function (val) {
+                result.push.apply(result, exports.get(val, paths.slice(i + 1)));
+            });
+        }
+        else if (val) {
+            if (paths.slice(i + 1).length === 0) {
+                result.push(val);
+            }
+            else {
+                result.push.apply(result, exports.get(val, paths.slice(i + 1)));
+            }
+        }
+    });
+    return result;
 };

@@ -35,9 +35,6 @@
       "list": {
         "title": "List"
       },
-      "mutate": {
-        "title": "Mutate"
-      },
       "schema": {
         "title": "Schema"
       },

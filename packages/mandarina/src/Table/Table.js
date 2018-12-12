@@ -258,6 +258,9 @@ var Table = /** @class */ (function () {
             return this;
         var model = this.getGraphQLModel();
         if (model) {
+            if (!fs.existsSync(prismaDir + "/datamodel")) {
+                fs.mkdirSync(prismaDir + "/datamodel");
+            }
             var fileAbsModel = prismaDir + "/datamodel/" + fileName + ".model.graphql";
             var fileRelModel = "datamodel/" + fileName + ".model.graphql";
             fs.writeFileSync(fileAbsModel, model);

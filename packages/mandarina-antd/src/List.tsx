@@ -7,6 +7,7 @@ import {onFilterChange} from "./ListFilter";
 import '../styles.css'
 import {getDecendents, getParents} from "./utils";
 import {ColumnProps} from 'antd/lib/table';
+import {get} from "mandarina/build/Schema/utils";
 
 export type onResize = (e: any, {size}: { size: { width: number } }) => void
 
@@ -48,13 +49,15 @@ export interface Edge {
     }
 }
 
+const     components = {
+    header: {
+        cell: ListHeader
+    }
+};
+
 export class List extends React.Component<ListProps, { columns: ColumnProps<any>[] }> {
 
-    components = {
-        header: {
-            cell: ListHeader
-        },
-    };
+
     fields: string[]
     me: React.RefObject<HTMLDivElement>
     fetchMore: () => void
@@ -69,7 +72,6 @@ export class List extends React.Component<ListProps, { columns: ColumnProps<any>
         const {table, fields} = this.props
         this.fields = fields || table.getFields()
         const columns = this.getColumns(this.fields)
-        console.log('columns',columns)
         this.state = {columns}
         this.me = React.createRef();
 
@@ -85,7 +87,6 @@ export class List extends React.Component<ListProps, { columns: ColumnProps<any>
         const columns: ColumnProps<any>[] = []
         const parents = getParents(fields)
         parents.forEach((parent, index) => {
-
             const decedents = getDecendents(fields, parent)
             const field = path ? `${path}.${parent}` : parent
             const column = this.getColumnDefinition(field, decedents, index)
@@ -115,12 +116,17 @@ export class List extends React.Component<ListProps, { columns: ColumnProps<any>
             width,
             children,
             title: fieldDefinition.label ? fieldDefinition.label : "",
+            render: (value: any, row: any, index: any) => {
+                if (!dataIndex) return null
+                return get(row, dataIndex.split('.'))
+            },
             onHeaderCell: (column: ColumnProps<any>) => ({
                 field: parent,
                 fieldDefinition,
                 onFilterChange,
                 width: column.width,
                 onResize: this.handleResize(index),
+
             })
         }
     }
@@ -195,22 +201,21 @@ export class List extends React.Component<ListProps, { columns: ColumnProps<any>
     firstLoad: boolean = true
 
     render() {
-
+        console.log('rendering list')
         const {table, first, where, ...props} = this.props
-        console.log('where', where)
         const {columns} = this.state
         return (
             <div id="list-wrapper" style={{width: 'max-content', height: '100%'}} ref={this.me}>
                 <Find table={table} where={where} first={first} fields={this.fields}
                       onCompleted={this.onScroll} {...props}>
                     {({data = [], variables, refetch, loading, count, pageInfo, fetchMore, error, onFiltersChange}) => {
+                        console.log('rendering table')
 
                         this.refetch = refetch
                         this.variables = variables
                         this.buildFetchMore(fetchMore, pageInfo && pageInfo.endCursor)
                         this.hasNextPage = pageInfo && pageInfo.hasNextPage
-                        const muck = new Array(first).fill({})
-                        const dataSource: any[] = loading && this.hasNextPage ? [...data as any[], ...muck] : data as any[]
+                        const dataSource: any[] = loading && this.hasNextPage ? [...data as any[], ...new Array(first).fill({})] : data as any[]
                         if (!loading) this.firstLoad = false
                         //this.lastHeight = this.me && this.me.current && this.me.current.offsetHeight || 0// && this.me.current && this.me.current.clientHeight || document.body.clientHeight + scrollTop + 200
                         return (
@@ -228,7 +233,7 @@ export class List extends React.Component<ListProps, { columns: ColumnProps<any>
                                     rowKey={(record: any) => record.id}
 
                                     bordered
-                                    components={this.components}
+                                    components={components}
                                     columns={columns}
                                     loading={this.firstLoad}
                                     dataSource={dataSource}
@@ -242,3 +247,5 @@ export class List extends React.Component<ListProps, { columns: ColumnProps<any>
         );
     }
 }
+
+

@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "@types/lodash.get": "^4.4.4",
     "docusaurus": "^1.5.1"
   },
   "scripts": {

@@ -129,7 +129,8 @@ class Mutate extends PureComponent<WithApolloClient<MutateProps & { type: 'creat
     }
 
     getSubTableMutations(model: Model, table: Table) {
-        const clone = {...model}
+        const clone = deepClone(model)
+
         delete clone.id
         const wrapper: Wrapper = (result, type): object => {
             if (type instanceof Table) {
@@ -182,8 +183,9 @@ class Mutate extends PureComponent<WithApolloClient<MutateProps & { type: 'creat
         const {table, where, type, optimisticResponse} = this.props
         const cleaned = deepClone(model)
         table.schema.clean(cleaned)// fill null all missing keys
+
         const {names} = table
-        const data = this.getSubTableMutations(model, table)
+        const data = this.getSubTableMutations(cleaned, table)
         const mutation: MutationBaseOptions = {variables: {data}}
         if (type === 'update') {
             mutation.variables!.where = where
@@ -191,6 +193,8 @@ class Mutate extends PureComponent<WithApolloClient<MutateProps & { type: 'creat
         if (optimisticResponse !== false) {
             if (!optimisticResponse) {
                 const docWithTypes = this.getTypesDoc(cleaned, table)
+                console.log('docWithTypes 2',docWithTypes)
+
                 mutation.optimisticResponse = {[names.mutation[type]]: docWithTypes}
             } else {
                 mutation.optimisticResponse = optimisticResponse

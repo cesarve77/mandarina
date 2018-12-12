@@ -220,7 +220,7 @@ describe('Nested Array Schema', function () {
             validators: ['required']
         },
         description: {
-            type: String
+            type: String,
         }
     }, { name: 'UserArray', });
     // @ts-ignore
@@ -238,7 +238,8 @@ describe('Nested Array Schema', function () {
             validators: ['required']
         },
         description: {
-            type: String
+            type: String,
+            defaultValue: 'description'
         }
     }, { name: 'CardArray', });
     test('getPathDefinition', function () {
