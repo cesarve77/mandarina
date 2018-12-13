@@ -126,7 +126,6 @@ export class List extends React.Component<ListProps, { columns: ColumnProps<any>
                 onFilterChange,
                 width: column.width,
                 onResize: this.handleResize(index),
-
             })
         }
     }
@@ -136,7 +135,6 @@ export class List extends React.Component<ListProps, { columns: ColumnProps<any>
     }
 
     componentDidMount() {
-        console.log('list componentDidMount')
         window.addEventListener("scroll", this.onScroll);
     }
 
@@ -201,13 +199,12 @@ export class List extends React.Component<ListProps, { columns: ColumnProps<any>
     firstLoad: boolean = true
 
     render() {
-        console.log('rendering list')
         const {table, first, where, ...props} = this.props
         const {columns} = this.state
         return (
             <div id="list-wrapper" style={{width: 'max-content', height: '100%'}} ref={this.me}>
                 <Find table={table} where={where} first={first} fields={this.fields}
-                      onCompleted={this.onScroll} {...props}>
+                      onCompleted={this.onScroll}>
                     {({data = [], variables, refetch, loading, count, pageInfo, fetchMore, error, onFiltersChange}) => {
                         console.log('rendering table')
 
@@ -233,10 +230,12 @@ export class List extends React.Component<ListProps, { columns: ColumnProps<any>
                                     rowKey={(record: any) => record.id}
 
                                     bordered
-                                    components={components}
+                                    //components={components}
                                     columns={columns}
                                     loading={this.firstLoad}
                                     dataSource={dataSource}
+                                    {...props}
+                                    scroll={{ x: 300, y: 1000 }}
                                 />
                             </div>
                         )

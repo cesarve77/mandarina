@@ -21,8 +21,8 @@ var Schema = /** @class */ (function () {
     function Schema(shape, _a) {
         var name = _a.name, _b = _a.recursive, recursive = _b === void 0 ? [] : _b, _c = _a.forceType, forceType = _c === void 0 ? true : _c, _d = _a.virtual, virtual = _d === void 0 ? false : _d, errorFromServerMapper = _a.errorFromServerMapper, permissions = _a.permissions;
         var _this = this;
-        this.pathDefinitions = {};
         this.arraysFields = [];
+        this.pathDefinitions = {};
         this.name = name;
         Schema.instances = Schema.instances || [];
         if (Schema.instances[this.name])
@@ -202,7 +202,11 @@ var Schema = /** @class */ (function () {
                 if (typeof type[0] === 'string') {
                     var schema_1 = Schema.getInstance(type[0]);
                     model[key] = model[key].map(function (value) {
+                        console.log('key', key);
+                        console.log('1 value', value);
                         schema_1._clean(value, transform);
+                        console.log('2 value', value);
+                        console.log('********************************');
                         return value;
                     });
                 }
