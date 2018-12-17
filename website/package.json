@@ -3,7 +3,7 @@
     "examples": "docusaurus-examples",
     "start": "docusaurus-start",
     "build": "docusaurus-build",
-    "publish-gh-pages": "GIT_USER=cesarve77 docusaurus-publish",
+    "publish-gh-pages": "echo \"What's your Github user?\" && read user1 && GIT_USER=$user1 docusaurus-publish",
     "write-translations": "docusaurus-write-translations",
     "version": "docusaurus-version",
     "rename-version": "docusaurus-rename-version"
