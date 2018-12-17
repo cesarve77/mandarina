@@ -18,11 +18,12 @@ interface AuthTableProps {
 
 interface AuthTable {
     (authTableProps: AuthTableProps): JSX.Element
-    getRoles: (args?:{table:string,action:string,role?:string}) => string[]
+
+    getRoles: (args?: { table: string, action: string, role?: string }) => string[]
     resolvers: {
         AuthFields: (_: any, args: any, context: any, info: any) => Promise<string[] | null>
     }
-    reset:()=>void
+    reset: () => void
     saveFiles: () => void
 }
 
@@ -32,7 +33,7 @@ export const AuthTable: AuthTable = ({action, table, children, ...props}) => {
     return (
         <Query query={QUERY} variables={{action, table}}>
             {({data, loading, ...queryProps}) => {
-                const fields= data && data.AuthFields
+                const fields = data && data.AuthFields
                 if (typeof children === 'function') return children({fields, loading, ...props})
                 return React.cloneElement(children, {fields, loading, ...queryProps, ...props})
             }}
@@ -40,7 +41,7 @@ export const AuthTable: AuthTable = ({action, table, children, ...props}) => {
     )
 }
 
-let roles: string[] =[]
+let roles: string[] = []
 let authFields: {
     [tableName: string]: {
         [action in Action]: {
@@ -50,11 +51,13 @@ let authFields: {
 } = {}
 export const actions = ['read', 'create', 'update', 'delete']
 export const staticPermissions = ['everyone', 'nobody', 'logged']
-AuthTable.reset=()=>{
-    roles=[]
+AuthTable.reset = () => {
+    roles = []
+    authFields={}
 }
 AuthTable.getRoles = (args) => {
     if (!roles.length) {
+        console.log(Object.keys(Table.instances))
         const tables = Object.values(Table.instances)
         tables.forEach((table: Table) => {
             authFields[table.name] = authFields[table.name] || {read: {}, create: {}, update: {}, delete: {},}
@@ -71,29 +74,39 @@ AuthTable.getRoles = (args) => {
                 })
             }
             const fields = table.getFields()
+            console.log(table.name, fields.length)
             fields.forEach((field) => {
                 const def = table.schema.getPathDefinition(field)
 
                 actions.forEach((action) => {
                     def.permissions = def.permissions || {}
+
                     if (!def.permissions[action]) {
                         authFields[table.name][action].everyone = authFields[table.name][action].everyone || []
                         authFields[table.name][action].everyone.push(field)
+
+                        if (table.name === 'Family' && action === 'read') {
+                            console.log('*******authFields[\'Family\'][\'read\'].everyone.length', authFields['Family']['read'].everyone.length)
+
+                        }
                         return
                     }
                     if (def.permissions[action] === 'nobody') return
                     const roles: string[] = def.permissions[action].split('|')
                     roles.forEach((role) => {
+
                         authFields[table.name][action][role] = authFields[table.name][action][role] || []
                         authFields[table.name][action][role].push(field)
+
                     })
 
                 })
             })
+            console.log('tabletabletabletabletabletabletabletabletabletabletabletabletabletabletabletabletabletable', table.name)
         })
     }
 
-    if (!args)     return roles
+    if (!args) return roles
     if (!args.role) return authFields[args.table][args.action]
     return authFields[args.table][args.action][args.role]
 }
@@ -107,20 +120,25 @@ export interface AuthArgs {
 AuthTable.resolvers = {
     AuthFields: async (_: any, args: AuthArgs, context: any, info: any) => {
         const allRoles = AuthTable.getRoles()
-        const user=await Table.config.getUser(context)
-        const userRoles =(user && user.roles) || []
+        const user = await Table.config.getUser(context)
+        const userRoles = (user && user.roles) || []
         if (!actions.includes(args.action)) throw new Error(`Action only can be one of ['read', 'create', 'update', 'delete'] now is: ${args.action} `)
         if (!authFields[args.table]) throw new Error(`Table ${args.table} not found getting AuthFields `)
         const everyone = authFields[args.table][args.action].everyone
         let fields: string[] = everyone ? everyone : []
+        console.log('everyone', everyone.length)
         let extraRoles: string[] = []
+        console.log('userRoles', userRoles)
+
         userRoles.forEach((role) => {
             if (allRoles.includes(role)) {
+                console.log('role', role)
                 addToSet(fields, authFields[args.table][args.action][role] || [])
             } else {
                 extraRoles.push(role)
             }
         })
+        console.log(userRoles, fields.length)
         if (!extraRoles.length) return fields
         const alcFields = await context.prisma.query.authTables({
             where: {
@@ -129,6 +147,7 @@ AuthTable.resolvers = {
                 action: args.action,
             }
         })
+        console.log('alcFields', alcFields)
         addToSet(fields, alcFields)
         return fields
         /*const staticRoles = roles.filter(permissionRoles.includes)

@@ -11,14 +11,14 @@ import {AuthUpdateForm} from './AuthUpdateForm'
 import {AuthList} from './AuthList'
 import {CreateForm} from './Forms'
 import {UpdateForm} from './Forms'
-import {List} from './List'
+import {ListVirtualized} from './List'
 
 
 export {
     AuthCreateForm,
     AuthUpdateForm,
     AuthList,
-    List,
+    ListVirtualized,
     AutoFields,
     AutoField,
     ErrorsField,

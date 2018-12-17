@@ -69,7 +69,7 @@ export const hasValidator = (validators: Validator[],name?: string): boolean => 
 }
 
 
-export const get = (obj: any, paths: string[]): any[] => {
+export const get = (obj: any={}, paths: string[]): any[] => {
 
     const result: any[] = []
     paths.forEach((path, i) => {

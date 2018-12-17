@@ -47,7 +47,7 @@ export interface FindProps {
     errorPolicy?: ErrorPolicy
     ssr?: boolean
     displayName?: string
-    skip?: boolean
+    skip?: number
     onCompleted?: (data: any | {}) => void
     onError?: (error: ApolloError) => void
     context?: Record<string, any>
@@ -63,7 +63,7 @@ export interface FindBaseState {
 }
 
 export class FindBase extends PureComponent<FindProps & FindBaseProps, FindBaseState> {
-    static defaultProps = {where: {}, first: 10}
+    static defaultProps = {where: {}, first: 50}
     static queries: object[]
     queryHistory: object[] = []
 
@@ -78,7 +78,7 @@ export class FindBase extends PureComponent<FindProps & FindBaseProps, FindBaseS
     render() {
         FindBase.queries = FindBase.queries || []
         const {
-            fields: optionalFields, table, after, first, type, where,
+            fields: optionalFields, table, after, first, type, where, skip,
             children,
             pollInterval,
             notifyOnNetworkStatusChange,
@@ -86,7 +86,6 @@ export class FindBase extends PureComponent<FindProps & FindBaseProps, FindBaseS
             errorPolicy,
             ssr,
             displayName,
-            skip,
             onCompleted,
             onError,
             context,
@@ -98,15 +97,19 @@ export class FindBase extends PureComponent<FindProps & FindBaseProps, FindBaseS
         const defaultQuery = this.buildQueryFromFields(fields)
         let queryString: string
         if (type === 'connection') {
-            queryString = `query ($where: ${names.input.where[type]}, $after: String, $first: Int) 
-            { ${names.query[type]}  (where: $where, after: $after, first: $first) {
+            queryString = `query ($where: ${names.input.where[type]}, $after: String, $first: Int, $skip: Int) 
+            { ${names.query[type]} (where: $where, after: $after, first: $first, skip: $skip) {
                 pageInfo {
                   hasNextPage
+                  hasPreviousPage
+                  startCursor
                   endCursor
                 }
                 edges {
                   node  ${defaultQuery}
                 }
+              }
+              totalCount: ${names.query[type]} (where: $where) {
                 aggregate {
                   count
                 }
@@ -123,7 +126,7 @@ export class FindBase extends PureComponent<FindProps & FindBaseProps, FindBaseS
         const query = {[names.input[type]]: where}
         this.queryHistory.push(query)
         FindBase.queries.push(query) //save queries to update cache purposes
-        const variables = {where, first, after}
+        const variables = {where, first, after, skip}
         return (
             <Query
                 query={QUERY}
@@ -134,7 +137,6 @@ export class FindBase extends PureComponent<FindProps & FindBaseProps, FindBaseS
                 errorPolicy={errorPolicy}
                 ssr={ssr}
                 displayName={displayName}
-                skip={skip}
                 onCompleted={onCompleted}
                 onError={onError}
                 context={context}
@@ -157,7 +159,7 @@ export class FindBase extends PureComponent<FindProps & FindBaseProps, FindBaseS
                     let count, pageInfo
                     if (!error) {
                         if (type === 'connection' && data && data[names.query[type]]) {
-                            count = data[names.query[type]].aggregate.count
+                            count = data[`totalCount`].aggregate.count
                             pageInfo = data[names.query[type]].pageInfo
                             data = data[names.query[type]].edges.map((data: any) => data.node)
                         } else {

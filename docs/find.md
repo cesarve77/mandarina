@@ -213,48 +213,48 @@ interface FindChildrenParams {
 
 *description*: 
 
+### 1.7) skip
+ 
+*type*:  number
 
-### 1.7) pollInterval
+*description*: skip n number of record
+
+### 1.8) pollInterval
  
 *type*:  number
 
 *description*: Specifies the interval in ms at which you want your component to poll for data. Defaults to 0 (no polling).
 
-### 1.8) notifyOnNetworkStatusChange
+### 1.9) notifyOnNetworkStatusChange
  
 *type*:  boolean
 
 *description*: Whether updates to the network status or network error should re-render your component. Defaults to false.
 
-### 1.9) fetchPolicy
+### 1.10) fetchPolicy
  
 *type*:  FetchPolicy
 
 *description*: How you want your component to interact with the Apollo cache. Defaults to “cache-first”.
 
-### 1.10) errorPolicy
+### 1.11) errorPolicy
  
 *type*:  ErrorPolicy
 
 *description*: How you want your component to handle network and GraphQL errors. Defaults to “none”, which means we treat GraphQL errors as runtime errors.
 
-### 1.11) ssr
+### 1.12) ssr
  
 *type*:  boolean
 
 *description*: Pass in false to skip your query during server-side rendering.
 
-### 1.12) displayName
+### 1.13) displayName
  
 *type*:  string
 
 *description*: The name of your component to be displayed in React DevTools. Defaults to ‘Query’.
 
-### 1.13) skip
- 
-*type*:  boolean
-
-*description*: If skip is true, the query will be skipped entirely.
 
 ### 1.14) onCompleted
  
