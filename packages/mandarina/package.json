@@ -19,7 +19,7 @@
     "lodash.mapvalues": "^4.6.0",
     "lodash.pull": "^4.1.0",
     "node-yaml": "^3.1.1",
-    "lodash.deepclone": "latest"
+    "lodash.clonedeep": "^4.5.0"
   },
   "peerDependencies": {
     "apollo-cache": "^1.1.21",

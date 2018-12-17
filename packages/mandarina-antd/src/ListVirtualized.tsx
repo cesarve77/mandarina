@@ -65,10 +65,9 @@ export class ListVirtualized extends React.Component<ListProps, { columns: Colum
     data: any[] = []
     fields: string[]
     tHead: React.RefObject<HTMLDivElement>
-    refetch: any //todo
     hasNextPage: boolean = false
-    refetching: boolean = false
     variables: { where?: any, first?: number, after?: string }
+    fetchMore: (fetchMoreOptions: any) => Promise<any>
 
     constructor(props: ListProps) {
         super(props);
@@ -96,17 +95,6 @@ export class ListVirtualized extends React.Component<ListProps, { columns: Colum
     }
 
 
-    onScroll2 = () => {
-        return
-        if (this.refetching || !this.hasNextPage) return this.fetchMore()
-
-
-    }
-    fetchMore: (fetchMoreOptions: any) => Promise<any>
-
-    buildFetchMore = (fetchMore: (fetchMoreOptions: any) => Promise<any>, skip: number) => {//FetchMoreQueryOptions<{ variables: { offset: any } }, any>) => void, data: any[]) => {
-
-    }
 
 
     getColumnWidth = (index: number) => {
@@ -117,7 +105,6 @@ export class ListVirtualized extends React.Component<ListProps, { columns: Colum
         this.timeoutId && clearTimeout(this.timeoutId)
         this.timeoutId = setTimeout(() => {
 
-            this.refetching = true
             this.fetchMore(
                 {
                     variables: {
@@ -125,7 +112,6 @@ export class ListVirtualized extends React.Component<ListProps, { columns: Colum
                         first: 50,
                     },
                     updateQuery: (previousResult: ConnectionResult, {fetchMoreResult}: { fetchMoreResult: ConnectionResult }) => {
-                        this.refetching = false
                         return fetchMoreResult
                     }
                 }
