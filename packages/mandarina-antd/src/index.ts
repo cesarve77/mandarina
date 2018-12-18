@@ -9,15 +9,19 @@ import {TableForm} from './TableForm'
 import {AuthCreateForm} from './AuthCreateForm'
 import {AuthUpdateForm} from './AuthUpdateForm'
 import {AuthList} from './AuthList'
+import {AuthListVirtualized} from './AuthList'
 import {CreateForm} from './Forms'
 import {UpdateForm} from './Forms'
-import {ListVirtualized} from './List'
+import {List} from './List'
+import {ListVirtualized} from './ListVirtualized'
 
 
 export {
     AuthCreateForm,
     AuthUpdateForm,
+    AuthListVirtualized,
     AuthList,
+    List,
     ListVirtualized,
     AutoFields,
     AutoField,

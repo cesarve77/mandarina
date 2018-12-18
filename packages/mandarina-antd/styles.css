@@ -1,15 +1,28 @@
 .mandarina-list-thead {
     overflow: hidden;
     position: relative;
+    border-bottom: 1px solid rgb(232, 232, 232);
+    border-collapse: collapse;
+    color: rgba(0, 0, 0, 0.65);
+    background-color: #fafafa;
 }
 
 .mandarina-list-thead-row {
     position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.mandarina-list-cell {
+    padding: 5px 15px;
+    border-bottom: 1px solid rgb(232, 232, 232);
+
 }
 .mandarina-list-thead-row .mandarina-list-thead-col {
     float: left;
     overflow: hidden;
     text-overflow: ellipsis;
+    padding: 0px 15px;
 }
 
 .mandarina-list-thead-row::after {
