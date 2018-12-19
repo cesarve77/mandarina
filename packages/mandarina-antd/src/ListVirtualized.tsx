@@ -14,7 +14,9 @@ export interface ListProps {
     height?: number
     width?: number
     estimatedRowHeight?: number
-
+    paginatorFactor?: number
+    overscanCount?: number
+    overLoad?: number
 }
 
 
@@ -59,9 +61,12 @@ interface ColumnProps {
     title: string
     width: number
 }
-const estimatedColumnWidthDefault=120
+
+const estimatedColumnWidthDefault = 200
+const estimatedRowHeightDefault = 60
+
 export class ListVirtualized extends React.Component<ListProps, { columns: ColumnProps[], height: number, width: number }> {
-    skip: number = 0
+
     data: any[] = []
     fields: string[]
     tHead: React.RefObject<HTMLDivElement>
@@ -70,15 +75,17 @@ export class ListVirtualized extends React.Component<ListProps, { columns: Colum
     variables: { where?: any, first?: number, after?: string }
     fetchMore: (fetchMoreOptions: any) => Promise<any>
     estimatedColumnWidth: number
+    firstLoad: number
+    start: number = 0
+    end: number = 0
 
-
-    constructor({
-                    estimatedRowHeight = estimatedColumnWidthDefault,
-                    table,
-                    fields,
-                    ...rest
-                }: ListProps) {
-        super({estimatedRowHeight, table, fields, ...rest});
+    constructor(props: ListProps) {
+        super(props);
+        const {
+            estimatedRowHeight = estimatedRowHeightDefault,
+            table,
+            fields,
+        } = props
         //const definitions: Partial<FieldDefinitions> = {}
         this.fields = fields || table.getFields()
         const columns = this.fields.map(this.getColumnDefinition)
@@ -87,12 +94,14 @@ export class ListVirtualized extends React.Component<ListProps, { columns: Colum
         this.state = {columns, height: 0, width: 0}
         this.tHead = React.createRef()
         this.container = React.createRef()
+        this.firstLoad = Math.ceil((this.props.height || window.innerHeight) / estimatedRowHeight)
+        this.end=this.firstLoad
         //this.definitions=definitions
     }
 
-    static defaultProps = {
-        first: 50,
-        pageSize: 10000,
+    defaultProps = {
+        estimatedRowHeight: estimatedRowHeightDefault
+
     }
 
     componentDidMount(): void {
@@ -115,7 +124,6 @@ export class ListVirtualized extends React.Component<ListProps, { columns: Colum
         if (container) {
             if (!this.props.height && this.state.height !== container.clientHeight) {
                 this.setState({height: container.clientHeight})
-
             }
             if (!this.props.width && this.state.width !== container.clientWidth) {
                 this.setState({width: container.clientWidth})
@@ -139,18 +147,20 @@ export class ListVirtualized extends React.Component<ListProps, { columns: Colum
 
 
     getColumnWidth = (index: number) => {
-        return 120
+        return this.state.columns[index].width
     }
     onScrollTimeoutId: number
     onScroll = ({scrollLeft}: GridOnScrollProps) => {
         this.onScrollTimeoutId && window.clearTimeout(this.onScrollTimeoutId)
         this.onScrollTimeoutId = window.setTimeout(() => {
-
+            //if (this.data.every((val) => val !== undefined)) return
+            console.log({  start: this.start,
+                end : this.end })
             this.fetchMore(
                 {
                     variables: {
-                        skip: this.skip,
-                        first: 50,
+                        skip: this.start,
+                        first: this.end - this.start,
                     },
                     updateQuery: (previousResult: ConnectionResult, {fetchMoreResult}: { fetchMoreResult: ConnectionResult }) => {
                         return fetchMoreResult
@@ -164,23 +174,26 @@ export class ListVirtualized extends React.Component<ListProps, { columns: Colum
         }
     }
 
-    data0: any[] = []
+
+    shouldComponentUpdate(nextProps: Readonly<ListProps>, nextState: Readonly<{ columns: ColumnProps[]; height: number; width: number }>, nextContext: any): boolean {
+        console.log('shouldComponentUpdate', nextProps, nextState)
+        return true
+    }
 
     render() {
-        const {table, first, where, estimatedRowHeight} = this.props //todo rest props
+        const {table, where, estimatedRowHeight,overscanCount=2,overLoad=this.firstLoad} = this.props //todo rest props
         const {columns, width, height} = this.state
-        const rowHeight = 35
+        console.log('renderrenderrenderrenderrenderrenderrender')
         return (
-            <Find table={table} where={where} first={first} fields={this.fields}>
+            <Find table={table} where={where} skip={0} first={this.firstLoad} fields={this.fields}>
                 {({data = [], variables, refetch, loading, count, pageInfo, fetchMore, error, onFiltersChange}) => {
+                    console.log('fetching11', loading)
                     const dataCollection = data as any[]
                     if (this.data.length === 0 && data && !loading) {
-                        this.data = Array(count).fill({})
-                        this.data0 = columns.map(({field}) => get(this.data[0], field.split('.')))
+                        this.data = Array(count).fill(undefined)
                     }
                     if (dataCollection.length && !loading) {
-                        console.log('splice.splice', this.state)
-                        this.data.splice(this.skip, dataCollection.length, ...dataCollection);
+                        this.data.splice(this.start, dataCollection.length, ...dataCollection);
                     }
 
                     this.fetchMore = fetchMore
@@ -196,7 +209,8 @@ export class ListVirtualized extends React.Component<ListProps, { columns: Colum
                              }}>
                             Total:{count}
                             <div ref={this.tHead} className='mandarina-list-thead' style={{width}}>
-                                <div className={'mandarina-list-thead-row'} style={{width: this.estimatedColumnWidth * columns.length}}>
+                                <div className={'mandarina-list-thead-row'}
+                                     style={{width: this.estimatedColumnWidth * columns.length}}>
                                     {columns.map(({title, field}, columnIndex) => <div key={field}
                                                                                        className={'mandarina-list-thead-col'}
                                                                                        style={{width: this.getColumnWidth(columnIndex)}}>{title}</div>)}
@@ -210,28 +224,47 @@ export class ListVirtualized extends React.Component<ListProps, { columns: Colum
                                 estimatedRowHeight={estimatedRowHeight}
                                 columnCount={columns.length}
                                 columnWidth={this.getColumnWidth}
-                                rowHeight={index => rowHeight}
+                                rowHeight={index => estimatedRowHeight || estimatedRowHeightDefault}
                                 width={width}
-                                overscanCount={10}
-                                useIsScrolling
+                                overscanCount={overscanCount}
                                 onItemsRendered={({
                                                       overscanRowStartIndex,
+                                                      overscanRowStopIndex,
+                                    visibleColumnStopIndex,
+                                    visibleColumnStartIndex,
+                                    overscanColumnStartIndex,
+                                    overscanColumnStopIndex,
+                                    visibleRowStartIndex,
+                                    visibleRowStopIndex,
+
                                                   }) => {
-                                    this.skip = overscanRowStartIndex
+                                    console.log('overscanRowStartIndex',overscanRowStartIndex)
+                                    console.log('overscanRowStopIndex',overscanRowStopIndex)
+                                    console.log('visibleRowStartIndex',visibleRowStartIndex)
+                                    console.log('visibleRowStopIndex',visibleRowStopIndex)
+                                    console.log('******************************************')
+                                    console.log('overscanColumnStartIndex',overscanColumnStartIndex)
+                                    console.log('overscanColumnStopIndex',overscanColumnStopIndex)
+
+                                    console.log('visibleColumnStartIndex',visibleColumnStartIndex)
+                                    console.log('visibleColumnStopIndex',visibleColumnStopIndex)
+
+
+
+                                    this.start = overscanRowStartIndex
+                                    this.end = overscanRowStopIndex
+
                                 }}
                             >
                                 {
                                     ({columnIndex, rowIndex, style, ...props}) => {
-                                        // @ts-ignore
-                                        const isScrolling = props.isScrolling
                                         return (
                                             <div className={'mandarina-list-cell'}
                                                  style={{...style, ...blur, overflow: 'hidden'}}>
-                                                {(isScrolling || loading) && '...'}
-                                                {(!isScrolling && !loading) && get(this.data[rowIndex], columns[columnIndex].field.split('.'))}
+                                                {!this.data[rowIndex] && '...'}
+                                                {this.data[rowIndex] && get(this.data[rowIndex], columns[columnIndex].field.split('.'))}
                                             </div>
                                         )
-
                                     }}
 
                             </Grid>

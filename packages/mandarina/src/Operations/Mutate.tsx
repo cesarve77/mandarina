@@ -193,7 +193,6 @@ class Mutate extends PureComponent<WithApolloClient<MutateProps & { type: 'creat
         if (optimisticResponse !== false) {
             if (!optimisticResponse) {
                 const docWithTypes = this.getTypesDoc(cleaned, table)
-                console.log('docWithTypes 2',docWithTypes)
 
                 mutation.optimisticResponse = {[names.mutation[type]]: docWithTypes}
             } else {

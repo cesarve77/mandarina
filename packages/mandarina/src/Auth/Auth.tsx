@@ -57,7 +57,6 @@ AuthTable.reset = () => {
 }
 AuthTable.getRoles = (args) => {
     if (!roles.length) {
-        console.log(Object.keys(Table.instances))
         const tables = Object.values(Table.instances)
         tables.forEach((table: Table) => {
             authFields[table.name] = authFields[table.name] || {read: {}, create: {}, update: {}, delete: {},}
@@ -74,7 +73,6 @@ AuthTable.getRoles = (args) => {
                 })
             }
             const fields = table.getFields()
-            console.log(table.name, fields.length)
             fields.forEach((field) => {
                 const def = table.schema.getPathDefinition(field)
 
@@ -85,10 +83,6 @@ AuthTable.getRoles = (args) => {
                         authFields[table.name][action].everyone = authFields[table.name][action].everyone || []
                         authFields[table.name][action].everyone.push(field)
 
-                        if (table.name === 'Family' && action === 'read') {
-                            console.log('*******authFields[\'Family\'][\'read\'].everyone.length', authFields['Family']['read'].everyone.length)
-
-                        }
                         return
                     }
                     if (def.permissions[action] === 'nobody') return
@@ -102,7 +96,6 @@ AuthTable.getRoles = (args) => {
 
                 })
             })
-            console.log('tabletabletabletabletabletabletabletabletabletabletabletabletabletabletabletabletabletable', table.name)
         })
     }
 
@@ -126,19 +119,15 @@ AuthTable.resolvers = {
         if (!authFields[args.table]) throw new Error(`Table ${args.table} not found getting AuthFields `)
         const everyone = authFields[args.table][args.action].everyone
         let fields: string[] = everyone ? everyone : []
-        console.log('everyone', everyone.length)
         let extraRoles: string[] = []
-        console.log('userRoles', userRoles)
 
         userRoles.forEach((role) => {
             if (allRoles.includes(role)) {
-                console.log('role', role)
                 addToSet(fields, authFields[args.table][args.action][role] || [])
             } else {
                 extraRoles.push(role)
             }
         })
-        console.log(userRoles, fields.length)
         if (!extraRoles.length) return fields
         const alcFields = await context.prisma.query.authTables({
             where: {

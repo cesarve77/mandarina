@@ -195,11 +195,7 @@ export class Schema {
                 if (typeof type[0] === 'string') {
                     const schema = Schema.getInstance(<string>type[0])
                     model[key] = model[key].map((value: any) => {
-                        console.log('key', key)
-                        console.log('1 value', value)
                         schema._clean(value, transform)
-                        console.log('2 value', value)
-                        console.log('********************************')
                         return value
                     })
                 } else {

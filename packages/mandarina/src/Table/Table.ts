@@ -41,10 +41,6 @@ export class Table {
         getUser: ({user}) => user,
 
     }
-    static configure = (options: TableConfig): void => {
-        if (options.prismaDir) Table.config.prismaDir = options.prismaDir
-        if (options.getUser) Table.config.getUser = options.getUser
-    }
     public schema: Schema
     public names: Names
     public name: string
@@ -100,6 +96,11 @@ export class Table {
         Table.instances[this.name] = this
     }
 
+    static configure = (options: TableConfig): void => {
+        if (options.prismaDir) Table.config.prismaDir = options.prismaDir
+        if (options.getUser) Table.config.getUser = options.getUser
+    }
+
     static getInstance(name: string): Table {
         const instance = Table.instances[name]
         if (!instance) throw new Error(`No table named ${name}`)
@@ -130,11 +131,11 @@ export class Table {
         const {onBefore, onAfter} = this.options
         operationNames.forEach((operationName: string) => {
             result[operationName] = async (_: any, args: any = {}, context: Context, info: any) => {
-                const subOperationName: Action | string=operationName.substr(0,6)
-                const action: Action=<Action>(['create','update','delete'].includes(subOperationName) ? subOperationName : 'read')
+                const subOperationName: Action | string = operationName.substr(0, 6)
+                const action: Action = <Action>(['create', 'update', 'delete'].includes(subOperationName) ? subOperationName : 'read')
                 const user = await Promise.resolve(Table.config.getUser(context))
                 //todo deletion
-                console.log(user)
+                console.log('user->', operationName,args, user)
                 //const fields = Object.keys(flatten({[this.name]: graphqlFields(info)}))
                 //if (type === 'mutation') this.validate(args.data,fields)
                 //const userId = Table.config.getUserId(context)
@@ -213,7 +214,7 @@ export class Table {
         if (this.options.virtual) return this
         const model = this.getGraphQLModel()
         if (model) {
-            if (!fs.existsSync(`${prismaDir}/datamodel`)){
+            if (!fs.existsSync(`${prismaDir}/datamodel`)) {
                 fs.mkdirSync(`${prismaDir}/datamodel`);
             }
             const fileAbsModel = `${prismaDir}/datamodel/${fileName}.model.graphql`
@@ -260,6 +261,7 @@ export class Table {
 
 export interface Context extends ContextParameters {
     prisma: Prisma
+
     [others: string]: any
 }
 

@@ -13,16 +13,22 @@
     align-items: center;
 }
 
+
 .mandarina-list-cell {
     padding: 5px 15px;
     border-bottom: 1px solid rgb(232, 232, 232);
 
 }
+
+.blur {
+    filter: blur(4px);
+}
 .mandarina-list-thead-row .mandarina-list-thead-col {
     float: left;
     overflow: hidden;
     text-overflow: ellipsis;
-    padding: 0px 15px;
+    padding: 0px 20px;
+    font-weight: bold;
 }
 
 .mandarina-list-thead-row::after {
