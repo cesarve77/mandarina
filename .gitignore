@@ -8,3 +8,4 @@ packages/mandarina-antd/build/
 packages/mandarina-antd/node_modules/
 packages/mandarina-antd/.idea/
 website/node_modules
+node_modules
