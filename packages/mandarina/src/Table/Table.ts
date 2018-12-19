@@ -14,6 +14,10 @@ import {Action, AuthArgs} from "../Auth/Auth";
 import {Prisma} from "prisma-binding";
 
 import {ContextParameters} from "graphql-yoga/dist/types";
+import { InvalidActionError } from '../Errors/InvalidActionError';
+
+const defaultPermissions = { read: {}, create: {}, update: {}, delete: {} };
+const defaultActions = Object.keys(defaultPermissions);
 
 /**
  *
@@ -50,6 +54,7 @@ export class Table {
     public name: string
     public path: string
     public options: TableSchemaOptions & TableShapeOptions
+    private permissions: any;
 
     /**
      *
@@ -60,16 +65,18 @@ export class Table {
         this.path = this._getFilePath()
         this.schema = schema instanceof Schema ? schema : new Schema(schema, <TableShapeOptions>tableOptions)
         this.options = {resolvers: {}, ...schema.options, ...tableOptions}
-        if (!this.options.virtual) this.schema.extend({
-            id: {
-                type: String,
-                permissions: {
-                    read: this.schema.permissions.read,
-                    create: 'nobody',
-                    update: 'nobody',
+        if (!this.options.virtual) {
+            this.schema.extend({
+                id: {
+                    type: String,
+                    permissions: {
+                        read: this.schema.permissions.read,
+                        create: 'nobody',
+                        update: 'nobody',
+                    }
                 }
-            }
-        })
+            })
+        }
         this.name = tableOptions.name || this.schema.name
         let single = singularize(this.name)
         const singleUpper = capitalize(single)
@@ -110,6 +117,71 @@ export class Table {
         return this.schema.getFields()
     }
 
+    /**
+     * Returns the resource schema appliying the authorization and data exposition policy
+     *
+     * @param action
+     * @param role
+     *
+     * @return Schema
+     */
+    getSchema(action: string, role?: string | string[]) {
+
+        const roles = Array.isArray(role) ? role : [role];
+
+        if(!defaultActions.includes(action)){
+            throw new InvalidActionError(action);
+        }
+
+        const fields = this.getFields();
+        const permissionsByRole = this.getPermissions()[action];
+        const allowedFieldsNames = Object.keys(permissionsByRole)
+                                            .filter(k => roles.includes(k))
+                                            .map(k => permissionsByRole[k])
+                                            .reduce((p, c) => p.concat(c), permissionsByRole.everyone);
+
+        return fields
+                .filter((fieldName) => allowedFieldsNames.includes(fieldName))
+                .reduce((res, fieldName) => ({...res, [fieldName]: this.schema.shape[fieldName] }), {});
+    }
+
+    /**
+     * Returns the the authorization schema definition for the instance
+     *
+     * @return Permissions
+     */
+    getPermissions() {
+        const fields = this.getFields();
+
+        if(!this.permissions) {
+            this.permissions = defaultPermissions;
+
+            fields.forEach((field) => {
+                const def = this.schema.getPathDefinition(field)
+
+                defaultActions.forEach((action) => {
+                    def.permissions = def.permissions || {}
+
+                    if (!def.permissions[action]) {
+                        this.permissions[action].everyone = this.permissions[action].everyone || []
+                        this.permissions[action].everyone.push(field)
+                        return
+                    }
+
+                    if (def.permissions[action] === 'nobody') return
+                    const roles: string[] = def.permissions[action].split('|')
+                    roles.forEach((role) => {
+                        this.permissions[action][role] = this.permissions[action][role] || []
+                        this.permissions[action][role].push(field)
+                    })
+
+                })
+            });
+        }
+
+        return this.permissions;
+    }
+
     getResolvers(type: operationType) {
         const resolvers = this.options.resolvers || {}
         let result = {}
@@ -132,9 +204,11 @@ export class Table {
             result[operationName] = async (_: any, args: any = {}, context: Context, info: any) => {
                 const subOperationName: Action | string=operationName.substr(0,6)
                 const action: Action=<Action>(['create','update','delete'].includes(subOperationName) ? subOperationName : 'read')
-                const user = await Promise.resolve(Table.config.getUser(context))
-                //todo deletion
-                console.log(user)
+                const user = await Promise.resolve(Table.config.getUser(context));
+
+                // TODO: deletion
+                console.log(user);
+
                 //const fields = Object.keys(flatten({[this.name]: graphqlFields(info)}))
                 //if (type === 'mutation') this.validate(args.data,fields)
                 //const userId = Table.config.getUserId(context)
@@ -144,11 +218,14 @@ export class Table {
                 //    let query = args.where || {}
                 //    args.where = {AND: [query, restrictionQuery]}
                 //}
+
                 onBefore && await onBefore(action, _, args, context, info)
                 const result = await context.prisma[type][operationName](args, info)
                 context.result = result
                 onAfter && onAfter(action, _, args, context, info)
-                await sleep(400) //todo remove in production
+
+                // TODO: remove in production
+                await sleep(400)
                 return result
             }
         })
