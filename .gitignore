@@ -1,0 +1,10 @@
+.idea/
+.DS_Store
+node_modules/
+packages/mandarina/build/
+packages/mandarina/node_modules/
+packages/mandarina/.idea/
+packages/mandarina-antd/build/
+packages/mandarina-antd/node_modules/
+packages/mandarina-antd/.idea/
+website/node_modules
