@@ -1710,7 +1710,7 @@ Lockfile:
     version "3.6.1"
     resolved "https://registry.yarnpkg.com/duplexify/-/duplexify-3.6.1.tgz#b1a7a29c4abfd639585efaecce80d666b1e34125"
     dependencies:
-      end-of-stream "^1.0.0"
+      overscanRowStopIndex-of-stream "^1.0.0"
       inherits "^2.0.1"
       readable-stream "^2.0.0"
       stream-shift "^1.0.0"
@@ -1741,9 +1741,9 @@ Lockfile:
     version "1.0.2"
     resolved "https://registry.yarnpkg.com/encodeurl/-/encodeurl-1.0.2.tgz#ad3ff4c86ec2d029322f5a02c3a9a606c95b3f59"
   
-  end-of-stream@^1.0.0:
+  overscanRowStopIndex-of-stream@^1.0.0:
     version "1.4.1"
-    resolved "https://registry.yarnpkg.com/end-of-stream/-/end-of-stream-1.4.1.tgz#ed29634d19baba463b6ce6b80a37213eab71ec43"
+    resolved "https://registry.yarnpkg.com/overscanRowStopIndex-of-stream/-/overscanRowStopIndex-of-stream-1.4.1.tgz#ed29634d19baba463b6ce6b80a37213eab71ec43"
     dependencies:
       once "^1.4.0"
   
@@ -4643,7 +4643,7 @@ Lockfile:
     dependencies:
       bl "^1.0.0"
       buffer-alloc "^1.2.0"
-      end-of-stream "^1.0.0"
+      overscanRowStopIndex-of-stream "^1.0.0"
       fs-constants "^1.0.0"
       readable-stream "^2.3.0"
       to-buffer "^1.1.1"
