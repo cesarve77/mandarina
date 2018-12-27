@@ -1,5 +1,5 @@
 import React, {ReactChild, ReactElement} from 'react'
-import {Create, Table, Update} from "mandarina";
+import {Create, Schema, Update} from "mandarina";
 import AutoForm from "uniforms-antd/AutoForm"
 import SubmitField from "uniforms-antd/SubmitField";
 import {CreateProps, UpdateProps} from "mandarina/build/Operations/Mutate";
@@ -18,7 +18,7 @@ export const UpdateForm = (props: any) => <Form Component={Update} {...props}/>
 
 export interface FormProps<TData = any, TVariables = OperationVariables> {
     Component: (props: CreateProps | UpdateProps) => JSX.Element
-    table: Table
+    schema: Schema
     id: string
     fields?: string[]
     children: (FormChildrenParams: any) => React.ReactNode | React.ReactNode | React.ReactNode[]
@@ -56,14 +56,14 @@ export interface ChildFunc {
     (props: any): JSX.Element
 }
 
-const Form = ({Component, fields, table, id, onSubmit, children, showInlineError, omitFields, ...props}: FormProps) => {
-    const schema = new Bridge(table)
+const Form = ({Component, fields, schema, id, onSubmit, children, showInlineError, omitFields, ...props}: FormProps) => {
+    const bridge = new Bridge(schema)
     return (
-        <Component id={id} table={table}>
+        <Component id={id} schema={schema}>
             {({mutate, doc, loading, ...rest}) => {
                 return (
                     <AutoForm
-                        schema={schema}
+                        schema={bridge}
                         model={doc}
                         onSubmit={(model: object) => {
                             onSubmit && onSubmit(model)

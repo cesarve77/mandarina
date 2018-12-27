@@ -53,8 +53,8 @@ exports.getDeclarationType = function (type, key) {
             return "number";
         case 'Array':
             if (typeof type[0] === 'string') {
-                var table = Table_1.Table.getInstance(type[0]);
-                var interfaceName = exports.buildInterfaceName(table);
+                var schema = Schema_1.Schema.getInstance(type[0]);
+                var interfaceName = exports.buildInterfaceName(schema);
                 return interfaceName + "[]";
             }
             var scalarName = exports.getDeclarationType(type[0], key);
@@ -65,8 +65,8 @@ exports.getDeclarationType = function (type, key) {
             return "Date";
         default:
             if (typeof type === 'string') {
-                var table = Table_1.Table.getInstance(type);
-                var interfaceName = exports.buildInterfaceName(table);
+                var schema = Schema_1.Schema.getInstance(type);
+                var interfaceName = exports.buildInterfaceName(schema);
                 return "" + interfaceName;
             }
             throw new Error("Error in field definition " + key + ". Fields Table definitions do not accept objects, please use composite tables");
@@ -104,25 +104,25 @@ exports.getGraphQLType = function (type, key, required) {
             return typeName;
     }
 };
-exports.buildInterfaceName = function (table) { return table instanceof Table_1.Table ? table.name + "TableInterface" : table + "TableInterface"; };
-exports.getDeclarations = function (table) {
+exports.buildInterfaceName = function (schema) { return schema instanceof Table_1.Table ? schema.name + "TableInterface" : schema + "TableInterface"; };
+exports.getDeclarations = function (schema) {
     var headers = [];
     var path = require('path');
-    var declarations = ["export interface " + exports.buildInterfaceName(table) + " {"];
-    for (var _i = 0, _a = table.schema.keys; _i < _a.length; _i++) {
+    var declarations = ["export interface " + exports.buildInterfaceName(schema) + " {"];
+    for (var _i = 0, _a = schema.keys; _i < _a.length; _i++) {
         var key = _a[_i];
-        var field = table.schema.getFieldDefinition(key);
+        var field = schema.getFieldDefinition(key);
         var optional = utils_1.isRequired(field) ? '' : '?';
         var fieldType = exports.getDeclarationType(field.type, key);
-        var tableName = "";
+        var schemaName = "";
         if (Array.isArray(field.type) && typeof field.type[0] === 'string')
-            tableName = field.type[0];
+            schemaName = field.type[0];
         if (typeof field.type === 'string')
-            tableName = field.type;
-        if (tableName) {
-            var childTable = Table_1.Table.getInstance(tableName);
-            var interfaceName = exports.buildInterfaceName(tableName);
-            var dir = path.relative(table.path, childTable.path);
+            schemaName = field.type;
+        if (schemaName) {
+            var childSchema = Schema_1.Schema.getInstance(schemaName);
+            var interfaceName = exports.buildInterfaceName(schemaName);
+            var dir = path.relative(schema.getFilePath(), childSchema.getFilePath());
             headers.push("import {" + interfaceName + "} from \"" + (dir ? dir : '.') + "/" + interfaceName + "\"");
         }
         field.description && declarations.push("// " + field.description);
@@ -148,7 +148,8 @@ var getMainSchema = function (schema, type) {
     }
     return mainSchema;
 };
-var getGraphQL = function (type, schema, name) {
+var getGraphQL = function (type, schema) {
+    var name = schema.name;
     //if (isBrowser) throw new Error('getGraphQLSchema is not available on browser')
     var mainSchema = getMainSchema(schema, type), graphQLSchema = '';
     var description = exports.capitalize(type) + " for " + name;
@@ -160,8 +161,8 @@ var getGraphQL = function (type, schema, name) {
     }
     return graphQLSchema;
 };
-exports.getGraphQLModel = function (schema, name) { return getGraphQL('type', schema, name); };
-exports.getGraphQLInput = function (schema, name) { return getGraphQL('input', schema, name); };
+exports.getGraphQLModel = function (schema) { return getGraphQL('type', schema); };
+exports.getGraphQLInput = function (schema) { return getGraphQL('input', schema); };
 exports.sleep = function (ms) {
     return new Promise(function (resolve) { return setTimeout(resolve, ms); });
 };

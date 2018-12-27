@@ -1,8 +1,8 @@
 import {Table as TableAntD} from 'antd';
-import {Find, Table} from 'mandarina';
+import {Find, Schema} from 'mandarina';
 import * as React from "react";
 import {FieldDefinition} from 'mandarina/build/Schema/Schema'
-import ListHeader from "./ListHeader";
+//import ListHeader from "./ListHeader";
 import {onFilterChange} from "./ListFilter";
 import '../styles.css'
 import {getDecendents, getParents} from "./utils";
@@ -13,7 +13,7 @@ export type onResize = (e: any, {size}: { size: { width: number } }) => void
 
 
 export interface ListProps {
-    table: Table
+    schema: Schema
     fields?: string[]
     pageSize?: number
     first?: number
@@ -48,12 +48,12 @@ export interface Edge {
 
     }
 }
-
-const components = {
-    header: {
-        cell: ListHeader
-    }
-};
+//
+// const components = {
+//     header: {
+//         cell: ListHeader
+//     }
+// };
 
 export class List extends React.Component<ListProps, { columns: ColumnProps<any>[] }> {
 
@@ -69,8 +69,8 @@ export class List extends React.Component<ListProps, { columns: ColumnProps<any>
     constructor(props: ListProps) {
         super(props);
         //const definitions: Partial<FieldDefinitions> = {}
-        const {table, fields} = this.props
-        this.fields = fields || table.getFields()
+        const {schema, fields} = this.props
+        this.fields = fields || schema.getFields()
         const columns = this.getColumns(this.fields)
         this.state = {columns}
         this.me = React.createRef();
@@ -100,7 +100,7 @@ export class List extends React.Component<ListProps, { columns: ColumnProps<any>
     }
 
     getColumnDefinition = (parent: string, decedents: string[], index: number): ColumnProps<any> | undefined => {
-        const fieldDefinition = this.props.table.schema.getPathDefinition(parent)
+        const fieldDefinition = this.props.schema.getPathDefinition(parent)
         const defaultWidth = window.innerWidth / this.fields.length
         let width: number | undefined
         if (index !== this.fields.length - 1) {
@@ -149,7 +149,7 @@ export class List extends React.Component<ListProps, { columns: ColumnProps<any>
         }
     }
     buildFetchMore = (fetchMore: (fetchMoreOptions: any) => Promise<any>, endCursor: string) => {//FetchMoreQueryOptions<{ variables: { offset: any } }, any>) => void, data: any[]) => {
-        const name = this.props.table.names.query.connection
+        const name = this.props.schema.names.query.connection
         this.fetchMore = () => {
             this.refetching = true
             fetchMore(
@@ -199,11 +199,11 @@ export class List extends React.Component<ListProps, { columns: ColumnProps<any>
     firstLoad: boolean = true
 
     render() {
-        const {table, first, where, ...props} = this.props
+        const {schema, first, where, ...props} = this.props
         const {columns} = this.state
         return (
             <div id="list-wrapper" style={{width: 'max-content', height: '100%'}} ref={this.me}>
-                <Find table={table} where={where} first={first} fields={this.fields}
+                <Find schema={schema} where={where} first={first} fields={this.fields}
                       onCompleted={this.onScroll}>
                     {({data = [], variables, refetch, loading, count, pageInfo, fetchMore, error, onFiltersChange}) => {
                         console.log('rendering table')

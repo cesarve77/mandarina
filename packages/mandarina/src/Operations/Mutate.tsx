@@ -1,5 +1,5 @@
 import React, {PureComponent} from "react"
-import {Table} from '../Table/Table'
+import {Schema} from '../Schema/Schema'
 import gql from "graphql-tag";
 import {Mutation, MutationFn, withApollo, WithApolloClient} from "react-apollo";
 import {buildQueryFromFields} from "./utils";
@@ -20,7 +20,7 @@ const deepClone = (obj: any): any => JSON.parse(JSON.stringify(obj))
 
 export interface MutateProps {
     children: MutateChildren
-    table: Table
+    schema: Schema
     fields?: string[]
     where?: object
     variables?: { [key: string]: any }
@@ -45,7 +45,7 @@ export interface CreateProps extends MutateProps {
 }
 
 export interface FormChildrenParams {
-    table: Table,
+    schema: Schema,
     data: TData
     loading: boolean
     error?: ApolloError
@@ -72,11 +72,11 @@ export interface Model {
 }
 
 export interface Wrapper {
-    (result: any, type?: Table | Native): object
+    (result: any, type?: Schema | Native): object
 }
 
 export interface Initiator {
-    (obj: any, table: Table): void
+    (obj: any, schema: Schema): void
 }
 
 
@@ -84,40 +84,40 @@ class Mutate extends PureComponent<WithApolloClient<MutateProps & { type: 'creat
 
     query: string
 
-    buildQueryFromFields = () => buildQueryFromFields(this.props.table.getFields())
+    buildQueryFromFields = () => buildQueryFromFields(this.props.schema.getFields())
 
     /**
      * walk al properties of the model add new properties with initiator, and wrap values with wrapper
      * @param {object} obj
-     * @param {Table} table
-     * @param {function} wrapper - wrap the value for eg. from {table: []} return {table: {create: []}}
+     * @param {Schema} schema
+     * @param {function} wrapper - wrap the value for eg. from {schema: []} return {schema: {create: []}}
      * @param {function} initiator - function with return the object with  initial value of the model (for each level)
      * @return {object} - transformed model
      */
-    spider(obj: any, table: Table, wrapper: Wrapper, initiator: Initiator): any {
+    spider(obj: any, schema: Schema, wrapper: Wrapper, initiator: Initiator): any {
         if (typeof obj !== "object" || obj === undefined || obj === null) return obj
         if (Array.isArray(obj)) {
-            return obj.map((obj) => (this.spider(obj, table, wrapper, initiator)))
+            return obj.map((obj) => (this.spider(obj, schema, wrapper, initiator)))
         } else {
-            const data = initiator(obj, table)
+            const data = initiator(obj, schema)
             Object.keys(obj).forEach((key) => {
                 const value = obj[key]
-                let definition = table.schema.getFieldDefinition(key)
+                let definition = schema.getFieldDefinition(key)
                 if (typeof value === "object" && value !== null && value !== undefined && !(value instanceof Date)) {
                     if (Array.isArray(definition.type)) {
                         if (typeof definition.type[0] === 'string') {
-                            const table = Table.getInstance(definition.type[0] as string)
-                            data[key] = wrapper(this.spider(value, table, wrapper, initiator), table)
+                            const schema = Schema.getInstance(definition.type[0] as string)
+                            data[key] = wrapper(this.spider(value, schema, wrapper, initiator), schema)
                         } else {
                             const native = definition.type[0] as Native
-                            data[key] = wrapper(this.spider(value, table, wrapper, initiator), native)
+                            data[key] = wrapper(this.spider(value, schema, wrapper, initiator), native)
                         }
                     } else {
                         if (typeof definition.type === 'string') {
-                            const table = Table.getInstance(definition.type as string)
-                            data[key] = wrapper(this.spider(value, table, wrapper, initiator), table)
+                            const schema = Schema.getInstance(definition.type as string)
+                            data[key] = wrapper(this.spider(value, schema, wrapper, initiator), schema)
                         } else {
-                            data[key] = wrapper(this.spider(value, table, wrapper, initiator), definition.type)
+                            data[key] = wrapper(this.spider(value, schema, wrapper, initiator), definition.type)
                         }
                     }
                 } else {
@@ -128,12 +128,12 @@ class Mutate extends PureComponent<WithApolloClient<MutateProps & { type: 'creat
         }
     }
 
-    getSubTableMutations(model: Model, table: Table) {
+    getSubSchemaMutations(model: Model, schema: Schema) {
         const clone = deepClone(model)
 
         delete clone.id
         const wrapper: Wrapper = (result, type): object => {
-            if (type instanceof Table) {
+            if (type instanceof Schema) {
                 //todo check next statement id is always there?
                 if (Array.isArray(result) && result[0] && result[0].id !== undefined) {
                     const clone = [...result]
@@ -160,17 +160,17 @@ class Mutate extends PureComponent<WithApolloClient<MutateProps & { type: 'creat
             return result
         }
         const initiator = () => ({})
-        return this.spider(clone, table, wrapper, initiator)
+        return this.spider(clone, schema, wrapper, initiator)
     }
 
 
-    getTypesDoc(obj: Model, table: Table) {
+    getTypesDoc(obj: Model, schema: Schema) {
         const wrapper: Wrapper = (result) => result
-        const initiator: Initiator = (obj, table) => ({
+        const initiator: Initiator = (obj, schema) => ({
             id: this.props.type === 'update' ? obj.id : '',
-            __typename: table.name
+            __typename: schema.name
         })
-        return this.spider(obj, table, wrapper, initiator)
+        return this.spider(obj, schema, wrapper, initiator)
     }
 
     /**
@@ -180,19 +180,19 @@ class Mutate extends PureComponent<WithApolloClient<MutateProps & { type: 'creat
      * @return {Promise<{object}>} result of the mutation
      */
     mutate(model: Model, mutationFn: MutationFn): Promise<void | FetchResult<Model>> {
-        const {table, where, type, optimisticResponse} = this.props
+        const {schema, where, type, optimisticResponse} = this.props
         const cleaned = deepClone(model)
-        table.schema.clean(cleaned)// fill null all missing keys
+        schema.clean(cleaned)// fill null all missing keys
 
-        const {names} = table
-        const data = this.getSubTableMutations(cleaned, table)
+        const {names} = schema
+        const data = this.getSubSchemaMutations(cleaned, schema)
         const mutation: MutationBaseOptions = {variables: {data}}
         if (type === 'update') {
             mutation.variables!.where = where
         }
         if (optimisticResponse !== false) {
             if (!optimisticResponse) {
-                const docWithTypes = this.getTypesDoc(cleaned, table)
+                const docWithTypes = this.getTypesDoc(cleaned, schema)
 
                 mutation.optimisticResponse = {[names.mutation[type]]: docWithTypes}
             } else {
@@ -204,7 +204,7 @@ class Mutate extends PureComponent<WithApolloClient<MutateProps & { type: 'creat
 
     refetchQueries = (mutationResult: FetchResult) => {
         const refetchQueries: { query: DocumentNode, variables?: OperationVariables }[] = []
-        const {single, plural, connection} = this.props.table.names.query
+        const {single, plural, connection} = this.props.schema.names.query
         // @ts-ignore
         this.props.client.cache.watches.forEach(({query, variables}) => {
             const queryName = query.definitions[0].selectionSet.selections[0].name.value
@@ -216,7 +216,7 @@ class Mutate extends PureComponent<WithApolloClient<MutateProps & { type: 'creat
 
         /*if (this.props.type === 'update') return //for updates the cache is automatic updated by apollo
 
-        const {table: {names}} = this.props;
+        const {schema: {names}} = this.props;
         const doc = data && data[names.mutation.create]
         if (!Array.isArray(FindBase.queries)) return //no quiries to update
         FindBase.queries.forEach((cachedQuery) => {
@@ -247,7 +247,7 @@ class Mutate extends PureComponent<WithApolloClient<MutateProps & { type: 'creat
 
     render() {
         const {
-            type, children, table, fields, loading: findLoading,
+            type, children, schema, fields, loading: findLoading,
             variables,
             update,
             ignoreResults,
@@ -259,7 +259,7 @@ class Mutate extends PureComponent<WithApolloClient<MutateProps & { type: 'creat
             context,
             ...props
         } = this.props;
-        const {names} = table
+        const {names} = schema
         this.query = fields ? buildQueryFromFields(fields) : this.buildQueryFromFields()
         let queryString
         if (type === 'update') {
@@ -290,7 +290,7 @@ class Mutate extends PureComponent<WithApolloClient<MutateProps & { type: 'creat
                     client,
 
                 }) => children({
-                    table,
+                    schema,
                     mutate: (model: Model) => this.mutate(model, mutationFn),
                     loading: findLoading || loading,
                     data,
@@ -306,15 +306,15 @@ class Mutate extends PureComponent<WithApolloClient<MutateProps & { type: 'creat
 
 const MutateWithApollo = withApollo(Mutate);
 
-export const Create = ({table, optimisticResponse, ...props}: CreateProps): JSX.Element => (
-    <MutateWithApollo type='create' table={table} optimisticResponse={optimisticResponse} {...props}/>
+export const Create = ({schema, optimisticResponse, ...props}: CreateProps): JSX.Element => (
+    <MutateWithApollo type='create' schema={schema} optimisticResponse={optimisticResponse} {...props}/>
 )
 
 
-export const Update = ({id, table, children, fields, optimisticResponse, ...props}: UpdateProps): JSX.Element => (
-    <FindOne table={table} where={{id}} fields={fields} {...props}>
+export const Update = ({id, schema, children, fields, optimisticResponse, ...props}: UpdateProps): JSX.Element => (
+    <FindOne schema={schema} where={{id}} fields={fields} {...props}>
         {({data, ...findOneProps}) => (
-            <MutateWithApollo where={{id}} type='update' table={table} doc={data}
+            <MutateWithApollo where={{id}} type='update' schema={schema} doc={data}
                               optimisticResponse={optimisticResponse} {...findOneProps} >
                 {children}
             </MutateWithApollo>

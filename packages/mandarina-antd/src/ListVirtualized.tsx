@@ -1,4 +1,4 @@
-import {Find, Table} from 'mandarina';
+import {Find, Schema} from 'mandarina';
 import * as React from "react";
 import '../styles.css'
 import {get} from "mandarina/build/Schema/utils";
@@ -6,7 +6,7 @@ import {GridOnScrollProps, VariableSizeGrid as Grid} from 'react-window';
 
 
 export interface ListProps {
-    table: Table
+    schema: Schema
     fields?: string[]
     pageSize?: number
     first?: number
@@ -65,7 +65,7 @@ interface ColumnProps {
 const estimatedColumnWidthDefault = 200
 const estimatedRowHeightDefault = 60
 
-export class ListVirtualized extends React.Component<ListProps, { columns: ColumnProps[], height: number, width: number }> {
+export class ListVirtualized extends React.Component<ListProps, { row:number, columns: ColumnProps[], height: number, width: number }> {
 
     data: any[] = []
     fields: string[]
@@ -73,29 +73,31 @@ export class ListVirtualized extends React.Component<ListProps, { columns: Colum
     container: React.RefObject<HTMLDivElement>
     hasNextPage: boolean = false
     variables: { where?: any, first?: number, after?: string }
-    fetchMore: (fetchMoreOptions: any) => Promise<any>
+    refetch: (refetchOptions: any) => Promise<any>
     estimatedColumnWidth: number
     firstLoad: number
-    start: number = 0
-    end: number = 0
+    overscanRowStartIndex: number = 0
+    overscanRowStopIndex: number = 0
+    visibleRowStartIndex: number = 0
+    visibleRowStopIndex: number = 0
 
     constructor(props: ListProps) {
         super(props);
         const {
             estimatedRowHeight = estimatedRowHeightDefault,
-            table,
+            schema,
             fields,
         } = props
         //const definitions: Partial<FieldDefinitions> = {}
-        this.fields = fields || table.getFields()
+        this.fields = fields || schema.getFields()
         const columns = this.fields.map(this.getColumnDefinition)
         this.estimatedColumnWidth = columns.reduce((mem, {width}) => width + mem, 0) / columns.length
 
-        this.state = {columns, height: 0, width: 0}
+        this.state = {row: 0,columns, height: 0, width: 0}
         this.tHead = React.createRef()
         this.container = React.createRef()
         this.firstLoad = Math.ceil((this.props.height || window.innerHeight) / estimatedRowHeight)
-        this.end=this.firstLoad
+        this.overscanRowStopIndex = this.firstLoad
         //this.definitions=definitions
     }
 
@@ -137,7 +139,7 @@ export class ListVirtualized extends React.Component<ListProps, { columns: Colum
         this.onResizeTimeoutId = window.setTimeout(this.resize, 200)
     }
     getColumnDefinition = (field: string): ColumnProps => {
-        const fieldDefinition = this.props.table.schema.getPathDefinition(field)
+        const fieldDefinition = this.props.schema.getPathDefinition(field)
         return {
             field,
             title: fieldDefinition.label ? fieldDefinition.label : "",
@@ -151,20 +153,20 @@ export class ListVirtualized extends React.Component<ListProps, { columns: Colum
     }
     onScrollTimeoutId: number
     onScroll = ({scrollLeft}: GridOnScrollProps) => {
+        this.setState({row: this.visibleRowStartIndex})
         this.onScrollTimeoutId && window.clearTimeout(this.onScrollTimeoutId)
         this.onScrollTimeoutId = window.setTimeout(() => {
-            //if (this.data.every((val) => val !== undefined)) return
-            console.log({  start: this.start,
-                end : this.end })
-            this.fetchMore(
+            //If all visible are loaded, then not refetch
+            if (this.data.slice(this.visibleRowStartIndex, this.visibleRowStopIndex).every((val) => val !== undefined)) return
+
+            //TODO: maybe normalized the edgeds for try to do the sames queries, and get the data from the cache
+            //TODO: maybe if we are in gap, then just query for that data
+
+            const {overLoad = 0} = this.props
+            this.refetch(
                 {
-                    variables: {
-                        skip: this.start,
-                        first: this.end - this.start,
-                    },
-                    updateQuery: (previousResult: ConnectionResult, {fetchMoreResult}: { fetchMoreResult: ConnectionResult }) => {
-                        return fetchMoreResult
-                    }
+                    skip: this.overscanRowStartIndex,
+                    first: this.overscanRowStopIndex - this.overscanRowStartIndex + 1 + overLoad,
                 }
             ).catch((console.error)) //todo
 
@@ -176,27 +178,29 @@ export class ListVirtualized extends React.Component<ListProps, { columns: Colum
 
 
     shouldComponentUpdate(nextProps: Readonly<ListProps>, nextState: Readonly<{ columns: ColumnProps[]; height: number; width: number }>, nextContext: any): boolean {
-        console.log('shouldComponentUpdate', nextProps, nextState)
         return true
     }
 
     render() {
-        const {table, where, estimatedRowHeight,overscanCount=2,overLoad=this.firstLoad} = this.props //todo rest props
-        const {columns, width, height} = this.state
-        console.log('renderrenderrenderrenderrenderrenderrender')
+        const {schema, where, estimatedRowHeight, overscanCount = 2, overLoad = 0} = this.props //todo rest props
+        const {columns, row,width, height} = this.state
+
+
         return (
-            <Find table={table} where={where} skip={0} first={this.firstLoad} fields={this.fields}>
-                {({data = [], variables, refetch, loading, count, pageInfo, fetchMore, error, onFiltersChange}) => {
-                    console.log('fetching11', loading)
+            <Find schema={schema} where={where} skip={0} first={this.firstLoad + overLoad} fields={this.fields}
+                  notifyOnNetworkStatusChange>
+                {({data = [], variables, refetch, loading, count, onFiltersChange}) => {
+                    console.log('fetching')
                     const dataCollection = data as any[]
                     if (this.data.length === 0 && data && !loading) {
                         this.data = Array(count).fill(undefined)
                     }
                     if (dataCollection.length && !loading) {
-                        this.data.splice(this.start, dataCollection.length, ...dataCollection);
+                        console.log('first', variables.skip, dataCollection[0].profileComplete)
+                        this.data.splice(variables.skip, dataCollection.length, ...dataCollection);
                     }
 
-                    this.fetchMore = fetchMore
+                    this.refetch = refetch
                     this.variables = variables
 
 
@@ -207,7 +211,7 @@ export class ListVirtualized extends React.Component<ListProps, { columns: Colum
                                  width,
                                  height: height + tHeadHeight
                              }}>
-                            Total:{count}
+                            Row: {row+1} Total:{count}
                             <div ref={this.tHead} className='mandarina-list-thead' style={{width}}>
                                 <div className={'mandarina-list-thead-row'}
                                      style={{width: this.estimatedColumnWidth * columns.length}}>
@@ -230,29 +234,15 @@ export class ListVirtualized extends React.Component<ListProps, { columns: Colum
                                 onItemsRendered={({
                                                       overscanRowStartIndex,
                                                       overscanRowStopIndex,
-                                    visibleColumnStopIndex,
-                                    visibleColumnStartIndex,
-                                    overscanColumnStartIndex,
-                                    overscanColumnStopIndex,
-                                    visibleRowStartIndex,
-                                    visibleRowStopIndex,
+                                                      visibleRowStartIndex,
+                                                      visibleRowStopIndex,
 
                                                   }) => {
-                                    console.log('overscanRowStartIndex',overscanRowStartIndex)
-                                    console.log('overscanRowStopIndex',overscanRowStopIndex)
-                                    console.log('visibleRowStartIndex',visibleRowStartIndex)
-                                    console.log('visibleRowStopIndex',visibleRowStopIndex)
-                                    console.log('******************************************')
-                                    console.log('overscanColumnStartIndex',overscanColumnStartIndex)
-                                    console.log('overscanColumnStopIndex',overscanColumnStopIndex)
 
-                                    console.log('visibleColumnStartIndex',visibleColumnStartIndex)
-                                    console.log('visibleColumnStopIndex',visibleColumnStopIndex)
-
-
-
-                                    this.start = overscanRowStartIndex
-                                    this.end = overscanRowStopIndex
+                                    this.overscanRowStartIndex = overscanRowStartIndex
+                                    this.overscanRowStopIndex = overscanRowStopIndex
+                                    this.visibleRowStartIndex = visibleRowStartIndex
+                                    this.visibleRowStopIndex = visibleRowStopIndex
 
                                 }}
                             >

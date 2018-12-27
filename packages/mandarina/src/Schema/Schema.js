@@ -11,67 +11,71 @@ var __assign = (this && this.__assign) || function () {
     return __assign.apply(this, arguments);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-var ValidatorCreator_1 = require("./ValidatorCreator");
 // @ts-ignore
-var lodash_mapvalues_1 = require("lodash.mapvalues");
+var lodash_1 = require("lodash");
 var inflection = require("inflection");
+var ValidatorCreator_1 = require("./ValidatorCreator");
 var Validators_1 = require("./Validators");
 var utils_1 = require("./utils");
+var UniqueSchemaError_1 = require("../Errors/UniqueSchemaError");
+var SchemaInstanceNotFound_1 = require("../Errors/SchemaInstanceNotFound");
 var Schema = /** @class */ (function () {
-    function Schema(shape, _a) {
-        var name = _a.name, _b = _a.recursive, recursive = _b === void 0 ? [] : _b, _c = _a.forceType, forceType = _c === void 0 ? true : _c, _d = _a.virtual, virtual = _d === void 0 ? false : _d, errorFromServerMapper = _a.errorFromServerMapper, permissions = _a.permissions;
+    function Schema(shape, options) {
         var _this = this;
         this.arraysFields = [];
         this.pathDefinitions = {};
+        var name = options.name, _a = options.recursive, recursive = _a === void 0 ? [] : _a, _b = options.forceType, forceType = _b === void 0 ? true : _b, _c = options.virtual, virtual = _c === void 0 ? false : _c, errorFromServerMapper = options.errorFromServerMapper, permissions = options.permissions;
         this.name = name;
         Schema.instances = Schema.instances || [];
-        if (Schema.instances[this.name])
-            throw new Error("Schema named " + this.name + " already exists, names should be uniques");
+        if (Schema.instances[this.name]) {
+            throw new UniqueSchemaError_1.UniqueSchemaError(this.name);
+        }
         Schema.instances[this.name] = this;
         this.errorFromServerMapper = errorFromServerMapper;
         this.options = { recursive: recursive, forceType: forceType, virtual: virtual };
         this.permissions = permissions || {};
-        this.shape = lodash_mapvalues_1.default(shape, function (field, key) { return _this.applyDefinitionsDefaults(field, key); });
+        this.shape = lodash_1.mapValues(shape, function (field, key) { return _this.applyDefinitionsDefaults(field, key); });
         this.keys = Object.keys(this.shape);
     }
     Schema.getInstance = function (name) {
-        var instance = Schema.instances[name];
-        if (!instance)
-            throw new Error("No Schema named " + name);
-        return instance;
+        if (!Schema.instances[name]) {
+            throw new SchemaInstanceNotFound_1.SchemaInstanceNotFound(name);
+        }
+        return Schema.instances[name];
     };
     Schema.prototype.applyDefinitionsDefaults = function (definition, key) {
         var fieldDefinition = {};
-        if (!definition.validators)
+        if (!definition.validators) {
             definition.validators = [];
+        }
         //insert  type Validator on top
         fieldDefinition.validators = definition.validators.map(function (validator) {
-            var constructor; // is a class constructor for Validator
             if (typeof validator === 'string') { //is is a string i found the Validator constructor in the instances
-                constructor = ValidatorCreator_1.ValidatorCreator.getInstance(validator).getValidatorWithParam(true);
+                return ValidatorCreator_1.ValidatorCreator.getInstance(validator).getValidatorWithParam(true);
             }
             else if (typeof validator === 'object') { //if is a object is because the only property is the instance validatorName and the value is the param to pass to getValidatorWithParam
                 var name_1 = Object.keys(validator)[0];
                 var param = validator[name_1];
-                constructor = ValidatorCreator_1.ValidatorCreator.getInstance(name_1).getValidatorWithParam(param);
+                return ValidatorCreator_1.ValidatorCreator.getInstance(name_1).getValidatorWithParam(param);
             }
-            else { // else is the constructor
-                return validator;
-            }
-            return constructor;
+            return validator;
         });
-        var inNumberValidator = Validators_1.isNumber.getValidatorWithParam();
+        var isNumberValidator = Validators_1.isNumber.getValidatorWithParam();
         var isDateValidator = Validators_1.isDate.getValidatorWithParam();
         var isIntegerValidator = Validators_1.isInteger.getValidatorWithParam();
         var isStringValidator = Validators_1.isString.getValidatorWithParam();
-        if (definition.type === Number && (!utils_1.hasValidator(fieldDefinition.validators, inNumberValidator.validatorName)))
-            definition.validators.unshift(inNumberValidator);
-        if (definition.type === Date && (!utils_1.hasValidator(fieldDefinition.validators, isDateValidator.validatorName)))
+        if (definition.type === Number && (!utils_1.hasValidator(fieldDefinition.validators, isNumberValidator.validatorName))) {
+            definition.validators.unshift(isNumberValidator);
+        }
+        if (definition.type === Date && (!utils_1.hasValidator(fieldDefinition.validators, isDateValidator.validatorName))) {
             definition.validators.unshift(isDateValidator);
-        if (definition.type === Integer && (!utils_1.hasValidator(fieldDefinition.validators, isIntegerValidator.validatorName)))
+        }
+        if (definition.type === Integer && (!utils_1.hasValidator(fieldDefinition.validators, isIntegerValidator.validatorName))) {
             definition.validators.unshift(isIntegerValidator);
-        if (definition.type === String && (!utils_1.hasValidator(fieldDefinition.validators, isStringValidator.validatorName)))
+        }
+        if (definition.type === String && (!utils_1.hasValidator(fieldDefinition.validators, isStringValidator.validatorName))) {
             definition.validators.unshift(isStringValidator);
+        }
         // set default -> default values
         if (Array.isArray(definition.type)) {
             fieldDefinition.defaultValue = definition.defaultValue || [];
@@ -94,17 +98,20 @@ var Schema = /** @class */ (function () {
         fieldDefinition.list = definition.list || {};
         fieldDefinition.unique = !!definition.unique;
         fieldDefinition.transformValue = definition.transformValue || (function (value) { return value; });
-        if (typeof definition.label === 'string')
+        if (typeof definition.label === 'string') {
             fieldDefinition.label = definition.label;
-        if (typeof definition.label === 'function')
+        }
+        if (typeof definition.label === 'function') {
             fieldDefinition.label = definition.label(definition);
-        if (typeof fieldDefinition.label !== 'string')
+        }
+        if (typeof fieldDefinition.label !== 'string') {
             fieldDefinition.label = inflection.transform(key, ['underscore', 'humanize']);
+        }
         return fieldDefinition;
     };
     Schema.prototype.extend = function (shape) {
         var _this = this;
-        this.shape = __assign({}, this.shape, lodash_mapvalues_1.default(shape, function (def, key) { return _this.applyDefinitionsDefaults(def, key); }));
+        this.shape = __assign({}, this.shape, lodash_1.mapValues(shape, function (def, key) { return _this.applyDefinitionsDefaults(def, key); }));
         this.keys = Object.keys(this.shape);
     };
     Schema.prototype.getFieldDefinition = function (key) {
@@ -116,29 +123,32 @@ var Schema = /** @class */ (function () {
      */
     Schema.prototype.inheritPermission = function (permissions) {
         return this;
-        //todo this is has very bad performance for deep nested tables
-        /*if (!permissions) return this
-        const clone: Schema = cloneDeep(this)
-        clone.permissions = permissions
-        clone.shape = mapValues(clone.shape, (def, key) => clone.applyDefinitionsDefaults(def, key))
-
-        clone.keys = Object.keys(clone.shape)
-        return clone*/
+        // TODO: this is has very bad performance for deep nested tables
+        // if (!permissions) {
+        //     return this
+        // }
+        // const clone: Schema = cloneDeep(this);
+        // clone.permissions = permissions;
+        // clone.shape = mapValues(clone.shape, (def, key) => clone.applyDefinitionsDefaults(def, key));
+        // clone.keys = Object.keys(clone.shape);
+        // return clone;
     };
     Schema.prototype.getPathDefinition = function (key) {
-        if (!this.pathDefinitions[key])
-            this.pathDefinitions[key] = this._getPathDefinition(key);
+        if (!this.pathDefinitions[key]) {
+            this.pathDefinitions[key] = this.generatePathDefinition(key);
+        }
         return this.pathDefinitions[key];
     };
-    Schema.prototype._getPathDefinition = function (key) {
+    Schema.prototype.generatePathDefinition = function (key) {
         var paths = key.split('.');
-        var last = paths.length - 1;
-        var schema = this, def = schema.getFieldDefinition(paths[0]);
-        for (var i = 0; i <= last; i++) {
-            if (!paths[i].match(/\$|^\d+$/)) { //example user.0
-                def = schema.getFieldDefinition(paths[i]);
-                if (typeof def.type === 'string')
+        var schema = this;
+        var def = schema.getFieldDefinition(paths[0]);
+        paths.forEach(function (path) {
+            if (!path.match(/\$|^\d+$/)) { //example user.0
+                def = schema.getFieldDefinition(path);
+                if (typeof def.type === 'string') {
                     schema = Schema.getInstance(def.type).inheritPermission(def.permissions);
+                }
                 if (Array.isArray(def.type)) {
                     var tableName = def.type[0];
                     if (typeof tableName === 'string') {
@@ -146,24 +156,22 @@ var Schema = /** @class */ (function () {
                     }
                 }
             }
-            else {
-                if (Array.isArray(def.type)) { //should be
-                    def.type = def.type[0];
-                    if (typeof def.type === 'string') {
-                        schema = Schema.getInstance(def.type).inheritPermission(def.permissions);
-                    }
+            else if (Array.isArray(def.type)) { //should be
+                def.type = def.type[0];
+                if (typeof def.type === 'string') {
+                    schema = Schema.getInstance(def.type).inheritPermission(def.permissions);
                 }
             }
-        }
+        });
         return def;
     };
     Schema.prototype.validate = function (model) {
         return this._validate(model, '', [{ schema: this.name, path: '' }], model);
     };
     Schema.prototype.getFields = function () {
-        if (this.fields)
-            return this.fields;
-        this.fields = this._getFields();
+        if (!this.fields) {
+            this.fields = this._getFields();
+        }
         return this.fields;
     };
     Schema.prototype.clean = function (model, transform) {
@@ -172,9 +180,9 @@ var Schema = /** @class */ (function () {
         this._clean(model, transform);
     };
     /**
-     * mutate the model,with all keys  proper types and null for undefined
+     * Mutate the model,with all keys  proper types and null for undefined
+     * TODO: Refactor to prevent mutation, fix it creating a new cloned model and returning it
      * @param model
-     * @param original
      * @param transform
      * @param removeExtraKeys
      */
@@ -182,7 +190,13 @@ var Schema = /** @class */ (function () {
         var _this = this;
         if (transform === void 0) { transform = false; }
         if (removeExtraKeys === void 0) { removeExtraKeys = true; }
-        removeExtraKeys && model && typeof model === 'object' && Object.keys(model).forEach(function (key) { return !_this.keys.includes(key) && delete model[key]; });
+        if (removeExtraKeys && model && typeof model === 'object') {
+            Object.keys(model).forEach(function (key) {
+                if (!_this.keys.includes(key)) {
+                    delete model[key];
+                }
+            });
+        }
         this.keys.forEach(function (key) {
             var definition = _this.getFieldDefinition(key);
             var type = definition.type;
@@ -191,8 +205,9 @@ var Schema = /** @class */ (function () {
                 model[key] = model[key] === 0 ? 0 : model[key] || definition.defaultValue;
             }
             else if (typeof type === "string" && typeof model === 'object' && model !== undefined && model !== null) {
-                if (model[key] !== 0 && !model[key])
+                if (model[key] !== 0 && !model[key]) {
                     return model[key] = definition.defaultValue;
+                }
                 var schema = Schema.getInstance(type);
                 schema._clean(model[key], transform);
                 return;
@@ -202,11 +217,7 @@ var Schema = /** @class */ (function () {
                 if (typeof type[0] === 'string') {
                     var schema_1 = Schema.getInstance(type[0]);
                     model[key] = model[key].map(function (value) {
-                        console.log('key', key);
-                        console.log('1 value', value);
                         schema_1._clean(value, transform);
-                        console.log('2 value', value);
-                        console.log('********************************');
                         return value;
                     });
                 }
@@ -218,11 +229,12 @@ var Schema = /** @class */ (function () {
                 }
                 return;
             }
-            if (transform && model)
+            if (transform && model) {
                 model[key] = definition.transformValue.call({
                     model: _this.original,
                     siblings: model
                 }, model[key]);
+            }
         });
     };
     Schema.prototype._validate = function (model, parent, pathHistory, originalModel) {
@@ -233,9 +245,8 @@ var Schema = /** @class */ (function () {
         var shape = __assign({}, model);
         this.keys.forEach(function (key) {
             delete shape[key];
-            var path;
             var dot = parent ? '.' : '';
-            path = "" + parent + dot + key;
+            var path = "" + parent + dot + key;
             var definition = _this.getFieldDefinition(key);
             var value = model && model[key];
             var type = definition.type;
@@ -243,20 +254,19 @@ var Schema = /** @class */ (function () {
                 var schema = Schema.getInstance(type);
                 var schemaName_1 = schema.name;
                 var internalErrors = [];
-                //check if we are entering in a recursive table, if actual table has been used before, reviewing the history
+                // Check if we are entering in a recursive table, if actual table has been used before, reviewing the history
                 if (!pathHistory.some(function (_a) {
                     var schema = _a.schema, path = _a.path;
                     return schemaName_1 === schema;
-                }))
+                })) {
                     internalErrors = schema._validate(value, path, pathHistory, originalModel);
+                }
                 pathHistory.push({ path: path, schema: schemaName_1 });
                 return errors = errors.concat(internalErrors);
             }
             if (Array.isArray(type)) {
-                // const Validator = isArray.getValidatorWithParam()
-                // const error = new Validator({key, path, definition, value}).validate(originalModel)
-                //if (error) return errors = errors.concat(error)
-                if (typeof type[0] === 'string' && value) { //todo tal vez es mejor chquear en default value que siempre tenga un valor
+                // TODO: Tal vez es mejor chequear en default value que siempre tenga un valor
+                if (typeof type[0] === 'string' && value) {
                     var schema_2 = Schema.getInstance(type[0]);
                     var schemaName_2 = schema_2.name;
                     var internalErrors_1 = [];
@@ -264,20 +274,24 @@ var Schema = /** @class */ (function () {
                         if (!pathHistory.some(function (_a) {
                             var schema = _a.schema, path = _a.path;
                             return schemaName_2 === schema;
-                        }))
+                        })) {
                             internalErrors_1 = internalErrors_1.concat(schema_2._validate(value, path + "." + i, pathHistory, originalModel));
+                        }
                         pathHistory.push({ path: path, schema: schemaName_2 });
                     });
                     errors = errors.concat(internalErrors_1);
                 }
-                else if (value) { //todo es mejor chquear en default value que siempre tenga un valor
+                else if (value) {
+                    // TODO: Es mejor chquear en default value que siempre tenga un valor
                     value.forEach(function (value, i) {
                         for (var _i = 0, _a = definition.validators; _i < _a.length; _i++) {
                             var validator = _a[_i];
                             var instance = new validator({ key: key, path: path, definition: definition, value: value });
                             var error = instance.validate(originalModel);
-                            if (error)
+                            if (error) {
+                                ;
                                 return errors.push(error);
+                            }
                         }
                     });
                 }
@@ -287,22 +301,26 @@ var Schema = /** @class */ (function () {
                 var validator = _a[_i];
                 var instance = new validator({ key: key, path: path, definition: definition, value: value });
                 var error = instance.validate(originalModel);
-                if (error)
+                if (error) {
                     return errors.push(error);
+                }
             }
         });
         var extraKeys = Object.keys(shape);
-        if (extraKeys.length)
-            errors = errors.concat(extraKeys.map(function (key) {
+        if (extraKeys.length) {
+            var extraKeysErrors = extraKeys.map(function (key) {
                 var Validator = Validators_1.extraKey.getValidatorWithParam();
-                var definition = _this.applyDefinitionsDefaults({ label: key, type: String }, key); //mock definition for a not existent key
+                // Mock definition for a not existent key
+                var definition = _this.applyDefinitionsDefaults({ label: key, type: String }, key);
                 return new Validator({
                     key: key,
                     definition: definition,
                     path: parent,
                     value: key
                 }).validate(originalModel);
-            }));
+            });
+            errors = errors.concat(extraKeysErrors);
+        }
         return errors;
     };
     Schema.prototype._getFields = function (parent, pathHistory) {
@@ -312,30 +330,31 @@ var Schema = /** @class */ (function () {
         var fields = [];
         var schema = this;
         schema.keys.forEach(function (key) {
-            var path;
             var dot = parent ? '.' : '';
-            path = "" + parent + dot + key;
+            var path = "" + parent + dot + key;
             var def = schema.getFieldDefinition(key);
             var table;
-            if (typeof def.type === 'string')
+            if (typeof def.type === 'string') {
                 table = Schema.getInstance(def.type);
+            }
             if (Array.isArray(def.type)) {
                 _this.arraysFields.push(path);
-                if (typeof def.type[0] === 'string')
+                if (typeof def.type[0] === 'string') {
                     table = Schema.getInstance(def.type[0]);
+                }
             }
             if (table) {
                 pathHistory.push({ path: path, table: _this.name });
                 var fieldsInternal = [];
                 var tableName_1 = table.name;
-                //check if we are entering in a recursive table, if actual table has been used before, reviewing the history
+                // Check if we are entering in a recursive table, if actual table has been used before, reviewing the history
                 if (!pathHistory.some(function (_a) {
                     var table = _a.table;
                     return tableName_1 === table;
                 })) {
                     fieldsInternal = table._getFields(path, pathHistory);
                 }
-                //to intro a path in table options to continue deep in get fields
+                // To intro a path in table options to continue deep in get fields
                 fields = fields.concat(fieldsInternal);
             }
             else {
@@ -343,6 +362,18 @@ var Schema = /** @class */ (function () {
             }
         });
         return fields;
+    };
+    Schema.prototype.getFilePath = function () {
+        var origPrepareStackTrace = Error.prepareStackTrace;
+        Error.prepareStackTrace = function (_, stack) {
+            return stack;
+        };
+        var err = new Error();
+        var stack = err.stack;
+        Error.prepareStackTrace = origPrepareStackTrace;
+        var path = require('path');
+        // @ts-ignore
+        return path.dirname(stack[2].getFileName());
     };
     return Schema;
 }());

@@ -70,6 +70,7 @@ exports.hasValidator = function (validators, name) {
     return !!filtered.length;
 };
 exports.get = function (obj, paths) {
+    if (obj === void 0) { obj = {}; }
     var result = [];
     paths.forEach(function (path, i) {
         var val = obj[path];

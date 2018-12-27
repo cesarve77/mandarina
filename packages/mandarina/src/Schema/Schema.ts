@@ -1,13 +1,14 @@
 // @ts-ignore
-import { mapValues } from 'lodash';
+import {mapValues} from 'lodash';
 import * as inflection from "inflection";
 
-import { ErrorValidator, Validator, ValidatorCreator } from "./ValidatorCreator";
+import {ErrorValidator, Validator, ValidatorCreator} from "./ValidatorCreator";
 import {extraKey, isDate, isInteger, isNumber, isString} from "./Validators";
 import {forceType, hasValidator} from "./utils";
-import {Permissions} from "../Table/Table";
-import { UniqueSchemaError } from '../Errors/UniqueSchemaError';
-import { SchemaInstanceNotFound } from '../Errors/SchemaInstanceNotFound';
+import {Names, Permissions} from "../Table/Table";
+import {UniqueSchemaError} from '../Errors/UniqueSchemaError';
+import {SchemaInstanceNotFound} from '../Errors/SchemaInstanceNotFound';
+import {capitalize, pluralize, singularize} from "../Table/utils";
 
 export class Schema {
 
@@ -22,9 +23,11 @@ export class Schema {
     private pathDefinitions: { [key: string]: FieldDefinition } = {}
     private fields: string[]
     private original: Model;
+    private filePath: string;
+    public names: Names;
 
     constructor(shape: UserSchemaShape, options: SchemaOptions) {
-        const { name, recursive = [], forceType = true, virtual = false, errorFromServerMapper, permissions } = options;
+        const {name, recursive = [], forceType = true, virtual = false, errorFromServerMapper, permissions} = options;
         this.name = name;
 
         Schema.instances = Schema.instances || [];
@@ -35,10 +38,40 @@ export class Schema {
 
         Schema.instances[this.name] = this;
         this.errorFromServerMapper = errorFromServerMapper;
-        this.options = { recursive, forceType, virtual };
+        this.options = {recursive, forceType, virtual};
         this.permissions = permissions || {};
         this.shape = mapValues(shape, (field, key) => this.applyDefinitionsDefaults(field, key));
         this.keys = Object.keys(this.shape);
+        this.filePath=this.getFilePath()
+
+
+        const single = singularize(this.name);
+        const singleUpper = capitalize(single);
+        const plural = pluralize(this.name);
+        const pluralUpper = capitalize(plural);
+        const connection = `${plural}Connection`;
+
+        this.names = {
+            // Example user, users, usersConnection
+            query: {single, plural, connection},
+            mutation: {
+                create: `create${singleUpper}`,
+                update: `update${singleUpper}`,
+                delete: `delete${singleUpper}`,
+                updateMany: `updateMany${pluralUpper}`,
+                deleteMany: `deleteMany${pluralUpper}`
+            },
+            input: {
+                where: {
+                    single: `${singleUpper}WhereUniqueInput!`,
+                    plural: `${singleUpper}WhereInput`,
+                    connection: `${singleUpper}WhereInput`,
+                },
+                create: `${singleUpper}CreateInput!`,
+                update: `${singleUpper}UpdateInput!`,
+            }
+        };
+
     }
 
     static getInstance(name: string): Schema {
@@ -61,11 +94,11 @@ export class Schema {
         fieldDefinition.validators = definition.validators.map((validator: Validator | string | ValidatorFinder) => {
 
             if (typeof validator === 'string') { //is is a string i found the Validator constructor in the instances
-                return  ValidatorCreator.getInstance(validator).getValidatorWithParam(true);
+                return ValidatorCreator.getInstance(validator).getValidatorWithParam(true);
             } else if (typeof validator === 'object') {//if is a object is because the only property is the instance validatorName and the value is the param to pass to getValidatorWithParam
                 const name = Object.keys(validator)[0];
                 const param = validator[name];
-                return  ValidatorCreator.getInstance(name).getValidatorWithParam(param);
+                return ValidatorCreator.getInstance(name).getValidatorWithParam(param);
             }
 
             return <Validator>validator;
@@ -139,7 +172,7 @@ export class Schema {
     }
 
     getFieldDefinition(key: string): FieldDefinition {
-        return { ...this.shape[key] };
+        return {...this.shape[key]};
     }
 
     /**
@@ -169,38 +202,6 @@ export class Schema {
         return this.pathDefinitions[key];
     }
 
-    private generatePathDefinition(key: string): FieldDefinition {
-        const paths = key.split('.')
-        let schema: Schema = this;
-        let def = schema.getFieldDefinition(paths[0]);
-
-        paths.forEach((path) => {
-            if (!path.match(/\$|^\d+$/)) { //example user.0
-                def = schema.getFieldDefinition(path)
-
-                if (typeof def.type === 'string') {
-                    schema = Schema.getInstance(def.type).inheritPermission(def.permissions);
-                }
-
-                if (Array.isArray(def.type)) {
-                    const tableName = def.type[0];
-
-                    if (typeof tableName === 'string') {
-                        schema = Schema.getInstance(tableName).inheritPermission(def.permissions);
-                    }
-
-                }
-            } else if (Array.isArray(def.type)) { //should be
-                def.type = def.type[0];
-                if (typeof def.type === 'string') {
-                    schema = Schema.getInstance(def.type).inheritPermission(def.permissions);
-                }
-            }
-        });
-
-        return def
-    }
-
     validate(model: Model): ErrorValidator[] {
         return this._validate(model, '', [{schema: this.name, path: ''}], model);
     }
@@ -218,6 +219,22 @@ export class Schema {
         this._clean(model, transform);
     }
 
+    getFilePath() {
+        if (!this.filePath) {
+            const origPrepareStackTrace = Error.prepareStackTrace
+            Error.prepareStackTrace = function (_, stack) {
+                return stack
+            }
+            const err = new Error()
+            const stack = err.stack
+            Error.prepareStackTrace = origPrepareStackTrace
+            const path = require('path')
+            // @ts-ignore
+            this.filePath = path.dirname(stack[2].getFileName())
+        }
+        return this.filePath
+    }
+
     /**
      * Mutate the model,with all keys  proper types and null for undefined
      * TODO: Refactor to prevent mutation, fix it creating a new cloned model and returning it
@@ -227,9 +244,9 @@ export class Schema {
      */
     protected _clean(model: Model | undefined | null, transform = false, removeExtraKeys = true) {
 
-        if(removeExtraKeys && model && typeof model === 'object') {
+        if (removeExtraKeys && model && typeof model === 'object') {
             Object.keys(model).forEach((key) => {
-                if(!this.keys.includes(key)) {
+                if (!this.keys.includes(key)) {
                     delete model[key]
                 }
             });
@@ -280,6 +297,38 @@ export class Schema {
                 }, model[key]);
             }
         })
+    }
+
+    private generatePathDefinition(key: string): FieldDefinition {
+        const paths = key.split('.')
+        let schema: Schema = this;
+        let def = schema.getFieldDefinition(paths[0]);
+
+        paths.forEach((path) => {
+            if (!path.match(/\$|^\d+$/)) { //example user.0
+                def = schema.getFieldDefinition(path)
+
+                if (typeof def.type === 'string') {
+                    schema = Schema.getInstance(def.type).inheritPermission(def.permissions);
+                }
+
+                if (Array.isArray(def.type)) {
+                    const tableName = def.type[0];
+
+                    if (typeof tableName === 'string') {
+                        schema = Schema.getInstance(tableName).inheritPermission(def.permissions);
+                    }
+
+                }
+            } else if (Array.isArray(def.type)) { //should be
+                def.type = def.type[0];
+                if (typeof def.type === 'string') {
+                    schema = Schema.getInstance(def.type).inheritPermission(def.permissions);
+                }
+            }
+        });
+
+        return def
     }
 
     private _validate(model: Model, parent: string = '', pathHistory: { schema: string, path: string }[] = [], originalModel: Model): ErrorValidator[] {
@@ -336,7 +385,8 @@ export class Schema {
                             const instance = new validator({key, path, definition, value});
                             const error = instance.validate(originalModel);
 
-                            if (error) {;
+                            if (error) {
+                                ;
                                 return errors.push(error);
                             }
                         }
@@ -365,7 +415,7 @@ export class Schema {
             const extraKeysErrors = extraKeys.map(key => {
                 const Validator = extraKey.getValidatorWithParam()
                 // Mock definition for a not existent key
-                const definition = this.applyDefinitionsDefaults({ label: key, type: String }, key)
+                const definition = this.applyDefinitionsDefaults({label: key, type: String}, key)
 
                 return <ErrorValidator>new Validator({
                     key,
@@ -426,6 +476,7 @@ export class Schema {
 
 export interface Model {
     id?: string
+
     [key: string]: any
 }
 
@@ -499,3 +550,23 @@ export type Label = string | false;
 export type LabelResolver = (definition: UserFieldDefinition) => string;
 export type LabelOrResolver = Label | LabelResolver | undefined;
 
+
+export interface Names {
+    query: { single: string, plural: string, connection: string },//user, users, usersConnection
+    mutation: {
+        create: string,
+        update: string,
+        delete: string,
+        updateMany: string,
+        deleteMany: string
+    },
+    input: {
+        where: {
+            single: string,
+            plural: string,
+            connection: string,
+        },
+        create: string,
+        update: string,
+    }
+}

@@ -22,10 +22,10 @@ let resolvers = {
         ...Post.saveFiles().getDefaultResolvers('query'),
     },
     Mutation: {
-        ...User.getDefaultResolvers('mutation'),
-        ...Address.getDefaultResolvers('mutation'),
-        ...Category.getDefaultResolvers('mutation'),
-        ...Post.getDefaultResolvers('mutation'),
+        ...User.getDefaultActions('mutation'),
+        ...Address.getDefaultActions('mutation'),
+        ...Category.getDefaultActions('mutation'),
+        ...Post.getDefaultActions('mutation'),
     }
 
 

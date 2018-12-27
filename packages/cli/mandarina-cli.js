@@ -11,8 +11,9 @@ const exec =require('child_process').execSync
 
 
 switch (cmd) {
+
     case "create":
-        const project=args && args[0] || 'madnarina'
+        const project=args && args[0] || 'mandarina'
         const projectDir = path.join(process.cwd(), project);
         const npmDir = path.resolve(nodeDir,'../npm')
         console.log('creating project')

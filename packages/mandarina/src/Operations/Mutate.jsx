@@ -138,7 +138,7 @@ var Mutate = /** @class */ (function (_super) {
     };
     Mutate.prototype.getSubTableMutations = function (model, table) {
         var _this = this;
-        var clone = __assign({}, model);
+        var clone = deepClone(model);
         delete clone.id;
         var wrapper = function (result, type) {
             if (type instanceof Table_1.Table) {
@@ -194,7 +194,7 @@ var Mutate = /** @class */ (function (_super) {
         var cleaned = deepClone(model);
         table.schema.clean(cleaned); // fill null all missing keys
         var names = table.names;
-        var data = this.getSubTableMutations(model, table);
+        var data = this.getSubTableMutations(cleaned, table);
         var mutation = { variables: { data: data } };
         if (type === 'update') {
             mutation.variables.where = where;

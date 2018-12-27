@@ -1,7 +1,6 @@
 import * as inflection from "inflection";
 import {Schema} from "../Schema/Schema";
 import {isRequired} from "../Schema/utils";
-import {Table} from "./Table";
 
 /**
  * Upper case the first latter
@@ -58,9 +57,9 @@ export const getDeclarationType = (type: any, key: string): string => {
             return `number`;
 
         case 'Array':
-            if (typeof  type[0] === 'string') {
-                const table = Table.getInstance(type[0])
-                const interfaceName = buildInterfaceName(table)
+            if (typeof type[0] === 'string') {
+                const schema = Schema.getInstance(type[0])
+                const interfaceName = buildInterfaceName(schema)
 
                 return `${interfaceName}[]`
             }
@@ -72,9 +71,9 @@ export const getDeclarationType = (type: any, key: string): string => {
         case 'Date':
             return `Date`;
         default:
-            if (typeof  type === 'string') {
-                const table = Table.getInstance(type)
-                const interfaceName = buildInterfaceName(table)
+            if (typeof type === 'string') {
+                const schema = Schema.getInstance(type)
+                const interfaceName = buildInterfaceName(schema)
                 return `${interfaceName}`
             }
             throw new Error(`Error in field definition ${key}. Fields Table definitions do not accept objects, please use composite tables`)
@@ -102,7 +101,7 @@ export const getGraphQLType = (type: any, key: string, required: '' | '!' = ''):
 
         case 'Array':
 
-            if (typeof  type[0] === 'string') {
+            if (typeof type[0] === 'string') {
                 const schemaName = Schema.getInstance(type[0]).name
                 return `[${schemaName}!]!`
             }
@@ -118,24 +117,34 @@ export const getGraphQLType = (type: any, key: string, required: '' | '!' = ''):
     }
 }
 
-export const buildInterfaceName = (table: Table | string): string => table instanceof Table ? `${table.name}TableInterface` : `${table}TableInterface`
+export const buildInterfaceName = (schema: Schema | string): string => schema instanceof Schema ? `${schema.name}Interface` : `${schema}Interface`
 
-export const getDeclarations = (table: Table): string => {
+export const getDeclarations = (schema: Schema): string => {
     const headers: string[] = []
     const path = require('path')
-    let declarations = [`export interface ${buildInterfaceName(table)} {`]
-    for (const key of table.schema.keys) {
-        const field = table.schema.getFieldDefinition(key)
-        const optional = isRequired(field) ? '' : '?'
+    const schemaDeclarationName = buildInterfaceName(schema)
+    let declarations = [`export interface ${schemaDeclarationName} {`]
+    for (const key of schema.keys) {
+        const field = schema.getFieldDefinition(key)
+        const optional = isRequired(field) || key === 'id' ? '' : '?'
         const fieldType = getDeclarationType(field.type, key);
-        let tableName: string = ""
-        if (Array.isArray(field.type) && typeof field.type[0] === 'string') tableName = <string>field.type[0]
-        if (typeof field.type === 'string') tableName = field.type
-        if (tableName) {
-            const childTable = Table.getInstance(tableName)
-            const interfaceName = buildInterfaceName(tableName)
-            const dir = path.relative(table.path, childTable.path)
-            headers.push(`import {${interfaceName}} from "${dir ? dir : '.'}/${interfaceName}"`)
+        let schemaName: string = ""
+        if (Array.isArray(field.type) && typeof field.type[0] === 'string') {
+            schemaName = <string>field.type[0]
+        }
+        if (typeof field.type === 'string') schemaName = field.type
+        if (schemaName) {
+            const childSchema = Schema.getInstance(schemaName)
+            const interfaceName = buildInterfaceName(schemaName)
+            let dir = path.relative(schema.getFilePath(), childSchema.getFilePath())
+            if (!dir){
+                dir='.'
+            }else if (dir.indexOf('.') !== 0) {
+                dir = './' + dir
+            }
+            console.log(dir)
+            console.log('**********************')
+            headers.push(`import { ${interfaceName} } from "${dir}/${interfaceName}"`);
         }
         field.description && declarations.push(`// ${field.description}`);
         declarations.push(`    ${key}${optional}: ${fieldType}`);
@@ -159,7 +168,8 @@ const getMainSchema = (schema: Schema, type: 'input' | 'type') => {
     }
     return mainSchema
 }
-const getGraphQL = (type: 'input' | 'type', schema: Schema, name: string) => {
+const getGraphQL = (type: 'input' | 'type', schema: Schema) => {
+    const name = schema.name
     //if (isBrowser) throw new Error('getGraphQLSchema is not available on browser')
     let mainSchema = getMainSchema(schema, type), graphQLSchema = '';
     const description = `${capitalize(type)} for ${name}`
@@ -172,8 +182,8 @@ const getGraphQL = (type: 'input' | 'type', schema: Schema, name: string) => {
     return graphQLSchema;
 }
 
-export const getGraphQLModel = (schema: Schema, name: string) => getGraphQL('type', schema, name)
-export const getGraphQLInput = (schema: Schema, name: string) => getGraphQL('input', schema, name)
+export const getGraphQLModel = (schema: Schema) => getGraphQL('type', schema)
+export const getGraphQLInput = (schema: Schema) => getGraphQL('input', schema)
 
 export const sleep = (ms: number) => {
     return new Promise(resolve => setTimeout(resolve, ms));

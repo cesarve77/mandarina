@@ -1,9 +1,10 @@
 import React from "react"
 import gql from "graphql-tag";
 import {Query, QueryResult} from "react-apollo";
-import {Table} from "..";
+import {Schema, Table} from "..";
+import {Mandarina} from "../Mandarina";
 
-export type Action = 'create' | 'read' | 'update' | 'delete'
+export type ActionType = 'create' | 'read' | 'update' | 'delete'
 
 type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>
 
@@ -11,8 +12,8 @@ export type AuthQueryResult = Omit<QueryResult, 'data'> & { fields: string[] };
 
 
 interface AuthTableProps {
-    action: Action,
-    table: Table | string
+    action: ActionType,
+    schema: Schema | string
     children: (props: any) => JSX.Element | JSX.Element
 }
 
@@ -27,8 +28,8 @@ interface AuthTable {
     saveFiles: () => void
 }
 
-export const AuthTable: AuthTable = ({action, table, children, ...props}) => {
-    if (table instanceof Table) table = table.name
+export const AuthTable: AuthTable = ({action, schema, children, ...props}) => {
+    const table=(schema instanceof Schema) ? schema.name : schema
     const QUERY = gql`query AuthFields($action: String!, $table:String!) {AuthFields(action: $action, table: $table) }`
     return (
         <Query query={QUERY} variables={{action, table}}>
@@ -44,7 +45,7 @@ export const AuthTable: AuthTable = ({action, table, children, ...props}) => {
 let roles: string[] = []
 let authFields: {
     [tableName: string]: {
-        [action in Action]: {
+        [action in ActionType]: {
             [role: string]: string[]
         }
     }
@@ -106,14 +107,15 @@ AuthTable.getRoles = (args) => {
 
 export interface AuthArgs {
     table: string,
-    action: Action,
+    action: ActionType,
     id?: string
 }
+
 
 AuthTable.resolvers = {
     AuthFields: async (_: any, args: AuthArgs, context: any, info: any) => {
         const allRoles = AuthTable.getRoles()
-        const user = await Table.config.getUser(context)
+        const user = await Mandarina.config.getUser(context)
         const userRoles = (user && user.roles) || []
         if (!actions.includes(args.action)) throw new Error(`Action only can be one of ['read', 'create', 'update', 'delete'] now is: ${args.action} `)
         if (!authFields[args.table]) throw new Error(`Table ${args.table} not found getting AuthFields `)
@@ -189,7 +191,7 @@ AuthTable.saveFiles = () => { //todo unify with Table save files
                        }`
     const fs = require('fs')
     const yaml = require('node-yaml')
-    const prismaDir = Table.config.prismaDir
+    const prismaDir = Mandarina.config.prismaDir
     const fileName = 'mandarina.auth'
     const fileAbsOperation = `${prismaDir}/datamodel/${fileName}.operations.graphql`
     const fileAbsModel = `${prismaDir}/datamodel/${fileName}.model.graphql`

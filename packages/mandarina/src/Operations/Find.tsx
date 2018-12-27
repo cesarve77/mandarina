@@ -1,5 +1,5 @@
 import React, {PureComponent} from 'react'
-import {Table} from '../Table/Table'
+import {Schema} from '../Schema/Schema'
 import gql from "graphql-tag";
 import {Query} from "react-apollo";
 import {buildQueryFromFields} from "./utils";
@@ -12,7 +12,7 @@ type TVariables = { [key: string]: any }
 type TData = any
 
 export interface FindChildrenParams {
-    table: Table
+    schema: Schema
     data: object | object[]
     fields?: string[]
     loading: boolean
@@ -36,7 +36,7 @@ export interface FindChildren {
 
 export interface FindProps {
     children: FindChildren
-    table: Table
+    schema: Schema
     fields?: string[]
     where?: object
     after?: string
@@ -78,7 +78,7 @@ export class FindBase extends PureComponent<FindProps & FindBaseProps, FindBaseS
     render() {
         FindBase.queries = FindBase.queries || []
         const {
-            fields: optionalFields, table, after, first, type, where, skip,
+            fields: optionalFields, schema, after, first, type, where, skip,
             children,
             pollInterval,
             notifyOnNetworkStatusChange,
@@ -92,8 +92,8 @@ export class FindBase extends PureComponent<FindProps & FindBaseProps, FindBaseS
             partialRefetch,
             ...props
         } = this.props;
-        const fields = optionalFields || table.getFields()
-        const {names} = table
+        const fields = optionalFields || schema.getFields()
+        const {names} = schema
         const defaultQuery = this.buildQueryFromFields(fields)
         let queryString: string
         if (type === 'connection') {
@@ -167,7 +167,7 @@ export class FindBase extends PureComponent<FindProps & FindBaseProps, FindBaseS
                         }
                     }
                     return children({
-                        table,
+                        schema,
                         query: QUERY,
                         data,
                         loading,

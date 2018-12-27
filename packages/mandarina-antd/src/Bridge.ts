@@ -1,27 +1,29 @@
-import {Table} from "mandarina";
-import {FieldDefinition, Native, Schema} from "mandarina/build/Schema/Schema";
+import {Schema} from "mandarina";
+import {FieldDefinition, Native} from "mandarina/build/Schema/Schema";
 import {Validator} from "mandarina/build/Schema/ValidatorCreator";
 
 export interface ErrorInterface {
     [field: string]: string
 }
-export interface FieldProps{
+
+export interface FieldProps {
     label: string
     allowedValues?: any[] | undefined
-    transform:(value: any) => any
+    transform: (value: any) => any
     component: JSX.ElementClass
     required: boolean
     placeholder?: string
     minCount?: number
     maxCount?: number
 }
+
 export class Bridge {
     protected schema: Schema
-    protected fields: { [field: string]: FieldDefinition }={}
-    protected fieldProps: { [field: string]: FieldProps }={}
+    protected fields: { [field: string]: FieldDefinition } = {}
+    protected fieldProps: { [field: string]: FieldProps } = {}
 
-    constructor(schemaOrTable: Schema | Table) {
-        this.schema = schemaOrTable instanceof Schema ? schemaOrTable : schemaOrTable.schema
+    constructor(schema: Schema) {
+        this.schema = schema
     }
 
     static check(schema: any) {
@@ -153,10 +155,10 @@ export class Bridge {
             if (validatorIsAllowed) allowedValues = validatorIsAllowed.param
             const required = !!this.findValidator('required', field)
 
-            let uniforms = field.form, component=field.form.component
+            let uniforms = field.form, component = field.form.component
             if (typeof uniforms === 'string' || typeof uniforms === 'function') {
                 component = uniforms
-                uniforms={}
+                uniforms = {}
 
             }
 

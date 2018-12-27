@@ -64,6 +64,7 @@ var react_1 = require("react");
 var graphql_tag_1 = require("graphql-tag");
 var react_apollo_1 = require("react-apollo");
 var __1 = require("..");
+var Mandarina_1 = require("../Mandarina");
 exports.AuthTable = function (_a) {
     var action = _a.action, table = _a.table, children = _a.children, props = __rest(_a, ["action", "table", "children"]);
     if (table instanceof __1.Table)
@@ -85,6 +86,7 @@ exports.actions = ['read', 'create', 'update', 'delete'];
 exports.staticPermissions = ['everyone', 'nobody', 'logged'];
 exports.AuthTable.reset = function () {
     roles = [];
+    authFields = {};
 };
 exports.AuthTable.getRoles = function (args) {
     if (!roles.length) {
@@ -166,6 +168,7 @@ exports.AuthTable.resolvers = {
                         })];
                 case 2:
                     alcFields = _a.sent();
+                    console.log('alcFields', alcFields);
                     exports.addToSet(fields, alcFields);
                     return [2 /*return*/, fields
                         /*const staticRoles = roles.filter(permissionRoles.includes)
@@ -211,7 +214,7 @@ exports.AuthTable.saveFiles = function () {
     var operation = "extend type Query {\n                            AuthFields(action: String!, table: String!) :  [String!]\n                       }";
     var fs = require('fs');
     var yaml = require('node-yaml');
-    var prismaDir = __1.Table.config.prismaDir;
+    var prismaDir = Mandarina_1.Mandarina.config.prismaDir;
     var fileName = 'mandarina.auth';
     var fileAbsOperation = prismaDir + "/datamodel/" + fileName + ".operations.graphql";
     var fileAbsModel = prismaDir + "/datamodel/" + fileName + ".model.graphql";

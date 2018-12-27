@@ -46,9 +46,12 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-var Schema_1 = require("../Schema/Schema");
 var utils_1 = require("./utils");
-var browser_or_node_1 = require("browser-or-node");
+var InvalidActionError_1 = require("../Errors/InvalidActionError");
+var UniqueTableError_1 = require("../Errors/UniqueTableError");
+var TableInstanceNotFound_1 = require("../Errors/TableInstanceNotFound");
+var defaultPermissions = { read: {}, create: {}, update: {}, delete: {} };
+var defaultActions = Object.keys(defaultPermissions);
 /**
  *
  * A Table instance is the representation of the one of several of the followings:
@@ -63,27 +66,20 @@ var Table = /** @class */ (function () {
      * @param tableOptions
      */
     function Table(schema, tableOptions) {
-        this.path = this._getFilePath();
-        this.schema = schema instanceof Schema_1.Schema ? schema : new Schema_1.Schema(schema, tableOptions);
-        this.options = __assign({ resolvers: {} }, schema.options, tableOptions);
-        if (!this.options.virtual)
-            this.schema.extend({
-                id: {
-                    type: String,
-                    permissions: {
-                        read: this.schema.permissions.read,
-                        create: 'nobody',
-                        update: 'nobody',
-                    }
-                }
-            });
-        this.name = tableOptions.name || this.schema.name;
+        Table.instances = Table.instances || {};
+        this.name = this.schema.name;
+        if (Table.instances[this.name]) {
+            throw new UniqueTableError_1.UniqueTableError(this.name);
+        }
+        this.schema = schema;
+        this.options = __assign({}, schema.options, tableOptions);
         var single = utils_1.singularize(this.name);
         var singleUpper = utils_1.capitalize(single);
         var plural = utils_1.pluralize(this.name);
         var pluralUpper = utils_1.capitalize(plural);
         var connection = plural + "Connection";
         this.names = {
+            // Example user, users, usersConnection
             query: { single: single, plural: plural, connection: connection },
             mutation: {
                 create: "create" + singleUpper,
@@ -102,101 +98,111 @@ var Table = /** @class */ (function () {
                 update: singleUpper + "UpdateInput!",
             }
         };
-        Table.instances = Table.instances || {};
-        if (Table.instances[this.name])
-            throw new Error("Table named " + this.name + " already exists, names should be uniques");
         Table.instances[this.name] = this;
     }
     Table.getInstance = function (name) {
-        var instance = Table.instances[name];
-        if (!instance)
-            throw new Error("No table named " + name);
-        return instance;
+        if (!Table.instances[name]) {
+            throw new TableInstanceNotFound_1.TableInstanceNotFound(name);
+        }
+        return Table.instances[name];
     };
     Table.prototype.getFields = function () {
         return this.schema.getFields();
     };
-    Table.prototype.getResolvers = function (type) {
-        var resolvers = this.options.resolvers || {};
-        var result = {};
-        Object.keys(resolvers).forEach(function (key) {
-            if (resolvers[key].type === type)
-                result[key] = resolvers[key].resolver;
-        });
-        return result;
-    };
-    Table.prototype.getDefaultResolvers = function (type) {
+    /**
+     * Returns the resource schema appliying the authorization and data exposition policy
+     *
+     * @param action
+     * @param role
+     *
+     * @return Schema
+     */
+    Table.prototype.getSchema = function (action, role) {
         var _this = this;
-        if (browser_or_node_1.isBrowser)
-            throw new Error('getDefaultResolvers is not available on browser');
-        /* SEVER-START */
-        if (this.schema.options.virtual) {
-            return this.getResolvers(type);
+        var roles = Array.isArray(role) ? role : [role];
+        if (!defaultActions.includes(action)) {
+            throw new InvalidActionError_1.InvalidActionError(action);
         }
+        var fields = this.getFields();
+        var permissionsByRole = this.getPermissions()[action];
+        var allowedFieldsNames = Object.keys(permissionsByRole)
+            .filter(function (k) { return roles.includes(k); })
+            .map(function (k) { return permissionsByRole[k]; })
+            .reduce(function (p, c) { return p.concat(c); }, permissionsByRole.everyone);
+        return fields
+            .filter(function (fieldName) { return allowedFieldsNames.includes(fieldName); })
+            .reduce(function (res, fieldName) {
+            var _a;
+            return (__assign({}, res, (_a = {}, _a[fieldName] = _this.schema.shape[fieldName], _a)));
+        }, {});
+    };
+    /**
+     * Returns the the authorization schema definition for the instance
+     *
+     * @return Permissions
+     */
+    Table.prototype.getPermissions = function () {
+        var _this = this;
+        var fields = this.getFields();
+        if (!this.permissions) {
+            this.permissions = defaultPermissions;
+            fields.forEach(function (field) {
+                var def = _this.schema.getPathDefinition(field);
+                defaultActions.forEach(function (action) {
+                    def.permissions = def.permissions || {};
+                    if (!def.permissions[action]) {
+                        _this.permissions[action].everyone = _this.permissions[action].everyone || [];
+                        _this.permissions[action].everyone.push(field);
+                        return;
+                    }
+                    if (def.permissions[action] === 'nobody')
+                        return;
+                    var roles = def.permissions[action].split('|');
+                    roles.forEach(function (role) {
+                        _this.permissions[action][role] = _this.permissions[action][role] || [];
+                        _this.permissions[action][role].push(field);
+                    });
+                });
+            });
+        }
+        return this.permissions;
+    };
+    Table.prototype.getDefaultActions = function (type) {
+        var _this = this;
         var result = {};
-        var operationNames = Object.values(this.names[type]); //operationName for query is user or users, for mutation are createUser, updateUser ....
+        // OperationName for query is user or users, for mutation are createUser, updateUser ....
+        var operationNames = Object.values(this.names[type]);
         var _a = this.options, onBefore = _a.onBefore, onAfter = _a.onAfter;
         operationNames.forEach(function (operationName) {
             result[operationName] = function (_, args, context, info) {
                 if (args === void 0) { args = {}; }
                 return __awaiter(_this, void 0, void 0, function () {
-                    var subOperationName, action, user, _a, result;
-                    return __generator(this, function (_b) {
-                        switch (_b.label) {
+                    var subOperationName, action, result;
+                    return __generator(this, function (_a) {
+                        switch (_a.label) {
                             case 0:
                                 subOperationName = operationName.substr(0, 6);
                                 action = (['create', 'update', 'delete'].includes(subOperationName) ? subOperationName : 'read');
-                                return [4 /*yield*/, Promise.resolve(Table.config.getUser(context))
-                                    //todo deletion
-                                ];
-                            case 1:
-                                user = _b.sent();
-                                //todo deletion
-                                console.log(user);
-                                //const fields = Object.keys(flatten({[this.name]: graphqlFields(info)}))
-                                //if (type === 'mutation') this.validate(args.data,fields)
-                                //const userId = Table.config.getUserId(context)
-                                //const restrictionQuery = await this.checkPermissionsTable({type, operationName, userId})
-                                //await this.checkPermissionsFields({type, operationName, info, userId})
-                                //if (restrictionQuery) {
-                                //    let query = args.where || {}
-                                //    args.where = {AND: [query, restrictionQuery]}
-                                //}
-                                _a = onBefore;
-                                if (!_a) 
-                                //const fields = Object.keys(flatten({[this.name]: graphqlFields(info)}))
-                                //if (type === 'mutation') this.validate(args.data,fields)
-                                //const userId = Table.config.getUserId(context)
-                                //const restrictionQuery = await this.checkPermissionsTable({type, operationName, userId})
-                                //await this.checkPermissionsFields({type, operationName, info, userId})
-                                //if (restrictionQuery) {
-                                //    let query = args.where || {}
-                                //    args.where = {AND: [query, restrictionQuery]}
-                                //}
-                                return [3 /*break*/, 3];
+                                if (!onBefore) return [3 /*break*/, 2];
                                 return [4 /*yield*/, onBefore(action, _, args, context, info)];
-                            case 2:
-                                _a = (_b.sent());
-                                _b.label = 3;
+                            case 1:
+                                _a.sent();
+                                _a.label = 2;
+                            case 2: return [4 /*yield*/, context.prisma[type][operationName](args, info)];
                             case 3:
-                                //const fields = Object.keys(flatten({[this.name]: graphqlFields(info)}))
-                                //if (type === 'mutation') this.validate(args.data,fields)
-                                //const userId = Table.config.getUserId(context)
-                                //const restrictionQuery = await this.checkPermissionsTable({type, operationName, userId})
-                                //await this.checkPermissionsFields({type, operationName, info, userId})
-                                //if (restrictionQuery) {
-                                //    let query = args.where || {}
-                                //    args.where = {AND: [query, restrictionQuery]}
-                                //}
-                                _a;
-                                return [4 /*yield*/, context.prisma[type][operationName](args, info)];
-                            case 4:
-                                result = _b.sent();
+                                result = _a.sent();
                                 context.result = result;
-                                onAfter && onAfter(action, _, args, context, info);
-                                return [4 /*yield*/, utils_1.sleep(400)]; //todo remove in production
-                            case 5:
-                                _b.sent(); //todo remove in production
+                                if (!onAfter) return [3 /*break*/, 5];
+                                return [4 /*yield*/, onAfter(action, _, args, context, info)];
+                            case 4:
+                                _a.sent();
+                                _a.label = 5;
+                            case 5: 
+                            // TODO: remove in production
+                            return [4 /*yield*/, utils_1.sleep(400)];
+                            case 6:
+                                // TODO: remove in production
+                                _a.sent();
                                 return [2 /*return*/, result];
                         }
                     });
@@ -204,113 +210,9 @@ var Table = /** @class */ (function () {
             };
         });
         return result;
-        /* SEVER-END */
     };
-    Table.prototype.getGraphQLModel = function () {
-        return utils_1.getGraphQLModel(this.schema, this.schema.name);
-    };
-    Table.prototype.getGraphQLInput = function () {
-        return utils_1.getGraphQLInput(this.schema, this.schema.name);
-    };
-    // string with virtual schemas
-    Table.prototype.getGraphQLOperations = function () {
-        var response = '';
-        var resolvers = this.options.resolvers;
-        if (resolvers) {
-            Object.keys(resolvers).forEach(function (resolverName) {
-                var resolver = resolvers[resolverName];
-                response += "extend type " + utils_1.capitalize(resolver.type) + " {\n\t" + resolverName + "(data: " + utils_1.capitalize(resolverName) + "Input!): " + resolver.result + "\n}";
-            });
-        }
-        return response;
-    };
-    Table.prototype.saveDeclarationFiles = function () {
-        var fs = require('fs');
-        var path = require('path');
-        fs.writeFileSync(path.join(this.path, utils_1.buildInterfaceName(this.name)) + '.ts', utils_1.getDeclarations(this));
-        return this;
-    };
-    Table.prototype.saveFiles = function () {
-        //if (isBrowser) throw new Error('getGraphQLSchema is not available on browser')
-        var fs = require('fs');
-        var path = require('path');
-        var yaml = require('node-yaml');
-        var prismaDir = Table.config.prismaDir;
-        var prismaYaml = prismaDir + "/prisma.yml";
-        if (Object.keys(Table.instances).length === 0) {
-            var prisma = yaml.readSync(prismaYaml) || {};
-            prisma.datamodel = [];
-            yaml.writeSync(prismaYaml, prisma);
-            var datamodelDir_1 = path.join(prismaDir, 'datamodel');
-            fs.readdirSync(datamodelDir_1).forEach(function (file) {
-                fs.unlinkSync(path.join(datamodelDir_1, file));
-            });
-        }
-        var fileName = this.name.toLowerCase();
-        var operations = this.getGraphQLOperations();
-        if (operations) {
-            var fileAbsInput = prismaDir + "/datamodel/" + fileName + ".input.graphql";
-            var fileAbsOperations = prismaDir + "/datamodel/" + fileName + ".operations.graphql";
-            fs.writeFileSync(fileAbsOperations, operations);
-            fs.writeFileSync(fileAbsInput, this.getGraphQLInput());
-        }
-        if (this.options.virtual)
-            return this;
-        var model = this.getGraphQLModel();
-        if (model) {
-            if (!fs.existsSync(prismaDir + "/datamodel")) {
-                fs.mkdirSync(prismaDir + "/datamodel");
-            }
-            var fileAbsModel = prismaDir + "/datamodel/" + fileName + ".model.graphql";
-            var fileRelModel = "datamodel/" + fileName + ".model.graphql";
-            fs.writeFileSync(fileAbsModel, model);
-            var prisma = yaml.readSync(prismaYaml) || {};
-            prisma.datamodel = prisma.datamodel || [];
-            if (!Array.isArray(prisma.datamodel))
-                prisma.datamodel = [prisma.datamodel];
-            if (!prisma.datamodel.includes(fileRelModel))
-                prisma.datamodel.push(fileRelModel);
-            yaml.writeSync(prismaYaml, prisma);
-        }
-        return this;
-    };
-    //}
     Table.prototype.register = function () {
-    };
-    Table.prototype._getFilePath = function () {
-        /* SEVER-START */
-        var origPrepareStackTrace = Error.prepareStackTrace;
-        Error.prepareStackTrace = function (_, stack) {
-            return stack;
-        };
-        var err = new Error();
-        var stack = err.stack;
-        Error.prepareStackTrace = origPrepareStackTrace;
-        var path = require('path');
-        // @ts-ignore
-        return path.dirname(stack[2].getFileName());
-        /* SERVER-END */
-    };
-    /**
-     * Configure is a function which takes 1 params as a Object
-     * @param get
-     */
-    Table.config = {
-        prismaDir: '/prisma',
-        /**
-         *
-         * @param user
-         */
-        getUser: function (_a) {
-            var user = _a.user;
-            return user;
-        },
-    };
-    Table.configure = function (options) {
-        if (options.prismaDir)
-            Table.config.prismaDir = options.prismaDir;
-        if (options.getUser)
-            Table.config.getUser = options.getUser;
+        // TODO: Do we need to implement this method?
     };
     return Table;
 }());

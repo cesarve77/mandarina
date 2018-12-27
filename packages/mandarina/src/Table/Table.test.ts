@@ -77,10 +77,10 @@ describe('Table', () => {
         expect(userTable.getFields()).toMatchObject(["name", "card.number", "card.id", "id"])
     });
 
-    test("getDefaultResolvers ", () => {
+    test("getDefaultActions ", () => {
         const resolvers = {
-            Query: userTable.getDefaultResolvers('query'),
-            Mutation: userTable.getDefaultResolvers('mutation')
+            Query: userTable.getDefaultActions('query'),
+            Mutation: userTable.getDefaultActions('mutation')
         }
         expect(resolvers).toEqual(expect.objectContaining({
             Query: expect.objectContaining({

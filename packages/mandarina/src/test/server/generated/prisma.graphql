@@ -36,7 +36,7 @@ input AddressCreateWithoutUserInput {
 
 """An edge in a connection."""
 type AddressEdge {
-  """The item at the end of the edge."""
+  """The item at the overscanRowStopIndex of the edge."""
   node: Address!
 
   """A cursor for use in pagination."""
@@ -319,7 +319,7 @@ input CategoryCreateWithoutUsersInput {
 
 """An edge in a connection."""
 type CategoryEdge {
-  """The item at the end of the edge."""
+  """The item at the overscanRowStopIndex of the edge."""
   node: Category!
 
   """A cursor for use in pagination."""
@@ -616,7 +616,7 @@ input PostCreateWithoutUserInput {
 
 """An edge in a connection."""
 type PostEdge {
-  """The item at the end of the edge."""
+  """The item at the overscanRowStopIndex of the edge."""
   node: Post!
 
   """A cursor for use in pagination."""
@@ -872,7 +872,7 @@ input Table2CreateInput {
 
 """An edge in a connection."""
 type Table2Edge {
-  """The item at the end of the edge."""
+  """The item at the overscanRowStopIndex of the edge."""
   node: Table2!
 
   """A cursor for use in pagination."""
@@ -1103,7 +1103,7 @@ input UserCreateWithoutPostsInput {
 
 """An edge in a connection."""
 type UserEdge {
-  """The item at the end of the edge."""
+  """The item at the overscanRowStopIndex of the edge."""
   node: User!
 
   """A cursor for use in pagination."""
