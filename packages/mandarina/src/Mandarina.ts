@@ -1,11 +1,11 @@
-import {buildInterfaceName, capitalize, getDeclarations, getGraphQLInput, getGraphQLModel} from "./Table/utils";
 import fs from "fs";
 import path from "path";
-import {Context, Table} from "./Table/Table";
-import {Schema} from "./Schema/Schema";
-import {CustomAction} from "./Operations/CustomAction";
-
 import yaml from "node-yaml";
+
+import { buildInterfaceName, capitalize, getDeclarations, getGraphQLInput, getGraphQLModel } from "./Table/utils";
+import { Context, Table } from "./Table/Table";
+import { Schema } from "./Schema/Schema";
+import { CustomAction } from "./Operations/CustomAction";
 
 export class Mandarina {
     static config: MandarinaConfigDefault = {
@@ -164,7 +164,7 @@ export class Mandarina {
     }
 }
 
-type   getUser = (context: Context) => Promise<UserType | null | undefined> | UserType | null | undefined
+type getUser = (context: Context) => Promise<UserType | null | undefined> | UserType | null | undefined
 
 export interface MandarinaConfigOptions {
     getUser?: getUser
