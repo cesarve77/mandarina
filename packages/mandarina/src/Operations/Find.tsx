@@ -35,7 +35,7 @@ export interface FindChildren {
 }
 
 export interface FindProps {
-    children: FindChildren
+    children?: FindChildren
     schema: Schema
     fields?: string[]
     where?: object
@@ -166,7 +166,8 @@ export class FindBase extends PureComponent<FindProps & FindBaseProps, FindBaseS
                             data = data && data[names.query[type]]
                         }
                     }
-                    return children({
+                    if (!children) return null
+                    return  children({
                         schema,
                         query: QUERY,
                         data,

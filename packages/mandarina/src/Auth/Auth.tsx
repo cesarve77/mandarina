@@ -138,7 +138,6 @@ AuthTable.resolvers = {
                 action: args.action,
             }
         })
-        console.log('alcFields', alcFields)
         addToSet(fields, alcFields)
         return fields
         /*const staticRoles = roles.filter(permissionRoles.includes)

@@ -140,6 +140,7 @@ export class ListVirtualized extends React.Component<ListProps, { row:number, co
     }
     getColumnDefinition = (field: string): ColumnProps => {
         const fieldDefinition = this.props.schema.getPathDefinition(field)
+        console.log('getColumnDefinition',field,fieldDefinition)
         return {
             field,
             title: fieldDefinition.label ? fieldDefinition.label : "",
@@ -190,13 +191,11 @@ export class ListVirtualized extends React.Component<ListProps, { row:number, co
             <Find schema={schema} where={where} skip={0} first={this.firstLoad + overLoad} fields={this.fields}
                   notifyOnNetworkStatusChange>
                 {({data = [], variables, refetch, loading, count, onFiltersChange}) => {
-                    console.log('fetching')
                     const dataCollection = data as any[]
                     if (this.data.length === 0 && data && !loading) {
                         this.data = Array(count).fill(undefined)
                     }
                     if (dataCollection.length && !loading) {
-                        console.log('first', variables.skip, dataCollection[0].profileComplete)
                         this.data.splice(variables.skip, dataCollection.length, ...dataCollection);
                     }
 

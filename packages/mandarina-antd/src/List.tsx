@@ -206,7 +206,6 @@ export class List extends React.Component<ListProps, { columns: ColumnProps<any>
                 <Find schema={schema} where={where} first={first} fields={this.fields}
                       onCompleted={this.onScroll}>
                     {({data = [], variables, refetch, loading, count, pageInfo, fetchMore, error, onFiltersChange}) => {
-                        console.log('rendering table')
 
                         this.refetch = refetch
                         this.variables = variables

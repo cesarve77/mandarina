@@ -26,7 +26,6 @@ interface ListFilter {
 }
 
 const ListFilter = ({variables, onFilterChange, field, fieldDefinition}: ListFilter) => {
-    console.log('ListFilter',field,fieldDefinition)
     const name = uuid() //todo remove this dependeincy making schema get optional name
     fieldDefinition = {...fieldDefinition}
     fieldDefinition.form.col = false
@@ -55,7 +54,6 @@ const getDefaultFilterMethod = function (this: { field: string, type: Native | N
 
     switch (this.type) {
         case String:
-            console.log(path,this.type)
             return (variables: variables) => {
                 path[path.length - 1] += '_contains'
                 path.unshift("where");

@@ -1,7 +1,7 @@
 import React, {PureComponent, ReactChild, ReactElement} from 'react'
 import {Mutation} from 'react-apollo'
 import gql from "graphql-tag";
-import {CustomAction, Schema} from 'mandarina'
+import {Schema} from 'mandarina'
 import {AutoField, AutoFields, ErrorsField} from './index'
 
 import AutoForm from 'uniforms-antd/AutoForm'
@@ -25,8 +25,6 @@ export interface ActionFormProps {
 export class ActionForm extends PureComponent<ActionFormProps> {
     state: { changed: boolean } = {changed: false}
     render() {
-        console.log('ActionForm')
-
         const {result,actionName, schema, omitFields, children, fields: fieldsProp, onSubmit, ...rest} = this.props
         const {changed} = this.state
         const resultSchema = Schema.instances[result]
@@ -43,7 +41,6 @@ export class ActionForm extends PureComponent<ActionFormProps> {
                     ${queryFromFields}
             }
         `;
-        console.log(gqlString)
         const bridge = new Bridge(schema)
         const MUTATION = gql(gqlString)
 

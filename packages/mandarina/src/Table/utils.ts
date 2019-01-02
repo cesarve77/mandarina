@@ -142,8 +142,6 @@ export const getDeclarations = (schema: Schema): string => {
             }else if (dir.indexOf('.') !== 0) {
                 dir = './' + dir
             }
-            console.log(dir)
-            console.log('**********************')
             headers.push(`import { ${interfaceName} } from "${dir}/${interfaceName}"`);
         }
         field.description && declarations.push(`// ${field.description}`);

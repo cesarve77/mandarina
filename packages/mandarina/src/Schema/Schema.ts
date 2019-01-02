@@ -5,7 +5,7 @@ import * as inflection from "inflection";
 import {ErrorValidator, Validator, ValidatorCreator} from "./ValidatorCreator";
 import {extraKey, isDate, isInteger, isNumber, isString} from "./Validators";
 import {forceType, hasValidator} from "./utils";
-import {Names, Permissions} from "../Table/Table";
+import {Permissions} from "../Table/Table";
 import {UniqueSchemaError} from '../Errors/UniqueSchemaError';
 import {SchemaInstanceNotFound} from '../Errors/SchemaInstanceNotFound';
 import {capitalize, pluralize, singularize} from "../Table/utils";
@@ -167,7 +167,6 @@ export class Schema {
             ...this.shape,
             ...mapValues(shape, (def, key) => this.applyDefinitionsDefaults(def, key))
         };
-
         this.keys = Object.keys(this.shape);
     }
 

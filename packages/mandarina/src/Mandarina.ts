@@ -4,10 +4,11 @@ import path from "path";
 import {Context, Table} from "./Table/Table";
 import {Schema} from "./Schema/Schema";
 import {CustomAction} from "./Operations/CustomAction";
-
 import yaml from "node-yaml";
+import {getParents} from "./utils";
 
 export class Mandarina {
+    private static  processed:{[tableName: string] : true} ={}
     static config: MandarinaConfigDefault = {
         prismaDir: '/prisma',
         getUser: ({user}) => user,
@@ -54,14 +55,34 @@ export class Mandarina {
         fs.readdirSync(datamodelDir).forEach((file: string) => fs.unlinkSync(path.join(datamodelDir, file)));
 
     }
+    static saveSubSchemas(schema: Schema){
+        const parents=getParents(schema.getFields())
+        parents.forEach((field)=>{
+            const fieldDefinition=schema.getPathDefinition(field)
 
+            let subSchema=''
+            if (typeof fieldDefinition.type==='string'){
+                subSchema=fieldDefinition.type
+            }
+            if (Array.isArray(fieldDefinition.type) && typeof fieldDefinition.type[0]==='string'){
+                subSchema=<string>fieldDefinition.type[0]
+            }
+            if (subSchema && !Mandarina.processed[subSchema]){
+                const schema=Schema.getInstance(subSchema)
+                Mandarina.saveFile(schema)
+                Mandarina.saveDeclarationFile(schema)
+                Mandarina.saveSubSchemas(schema)
+            }
+        })
+    }
     static saveFiles() {
+        Mandarina.processed={}
         Mandarina.reset()
         for (const tableName in Table.instances) {
-            console.log(tableName)
             const table = Table.getInstance(tableName)
             Mandarina.saveFile(table.schema)
             Mandarina.saveDeclarationFile(table.schema)
+            Mandarina.saveSubSchemas(table.schema)
         }
         for (const actionName in CustomAction.instances) {
             const action = CustomAction.getInstance(actionName)
@@ -94,6 +115,8 @@ export class Mandarina {
     }
 
     static saveFile(schema: Schema) {
+        if (Mandarina.processed[schema.name]) return
+        Mandarina.processed[schema.name]= true
         const prismaDir = Mandarina.config.prismaDir;
         const prismaYaml = `${prismaDir}/prisma.yml`;
 
@@ -107,9 +130,7 @@ export class Mandarina {
             fs.writeFileSync(fileAbsInput, getGraphQLInput(schema));
         }
 
-        if (!Table.instances[schema.name]) {
-            return this;
-        }
+
 
         const model = getGraphQLModel(schema)
         if (model) {
