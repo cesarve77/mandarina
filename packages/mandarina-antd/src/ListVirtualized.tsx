@@ -1,8 +1,15 @@
 import {Find, Schema} from 'mandarina';
-import * as React from "react";
+import React, {memo} from "react";
 import '../styles.css'
 import {get} from "mandarina/build/Schema/utils";
-import {GridOnScrollProps, VariableSizeGrid as Grid} from 'react-window';
+import {
+    areEqual,
+    GridChildComponentProps,
+    GridOnScrollProps,
+    ListChildComponentProps,
+    VariableSizeGrid as Grid
+} from 'react-window';
+
 import ListFilter from "./ListFilter";
 
 
@@ -67,7 +74,7 @@ interface ColumnProps {
 const estimatedColumnWidthDefault = 200
 const estimatedRowHeightDefault = 60
 
-export class ListVirtualized extends React.Component<ListProps, {  columns: ColumnProps[], height: number, width: number }> {
+export class ListVirtualized extends React.Component<ListProps, { columns: ColumnProps[], height: number, width: number }> {
 
     data: any[] = []
     fields: string[]
@@ -95,7 +102,7 @@ export class ListVirtualized extends React.Component<ListProps, {  columns: Colu
         const columns = this.fields.map(this.getColumnDefinition)
         this.estimatedColumnWidth = columns.reduce((mem, {width}) => width + mem, 0) / columns.length
 
-        this.state = { columns, height: 0, width: 0}
+        this.state = {columns, height: 0, width: 0}
         this.tHead = React.createRef()
         this.container = React.createRef()
         this.firstLoad = Math.ceil((this.props.height || window.innerHeight) / estimatedRowHeight)
@@ -156,7 +163,7 @@ export class ListVirtualized extends React.Component<ListProps, {  columns: Colu
         return this.state.columns[index].width
     }
     onScrollTimeoutId: number
-    onScroll = ({scrollLeft}: GridOnScrollProps) => {
+    onScroll = ({scrollLeft, ...rest}: GridOnScrollProps) => {
         if (this.tHead.current) {
             this.tHead.current.scrollLeft = scrollLeft
         }
@@ -164,7 +171,6 @@ export class ListVirtualized extends React.Component<ListProps, {  columns: Colu
         this.onScrollTimeoutId && window.clearTimeout(this.onScrollTimeoutId)
         this.onScrollTimeoutId = window.setTimeout(() => {
             //If all visible are loaded, then not refetch
-            console.log('scroll stop')
             if (this.data.slice(this.visibleRowStartIndex, this.visibleRowStopIndex).every((val) => val !== undefined)) return
 
             //TODO: maybe normalized the edgeds for try to do the sames queries, and get the data from the cache
@@ -177,7 +183,6 @@ export class ListVirtualized extends React.Component<ListProps, {  columns: Colu
                     first: this.overscanRowStopIndex - this.overscanRowStartIndex + 1 + overLoad,
                 }
             ).catch(console.error) //todo
-            console.log('scroll refetch')
         }, 100)
 
     }
@@ -188,7 +193,7 @@ export class ListVirtualized extends React.Component<ListProps, {  columns: Colu
     }
 
     render() {
-        const {schema, where, estimatedRowHeight, overscanRowsCount = 2,overscanColumnsCount=2, overLoad = 0} = this.props //todo rest props
+        const {schema, where, estimatedRowHeight, overscanRowsCount = 2, overscanColumnsCount = 2, overLoad = 0} = this.props //todo rest props
         const {columns, width, height} = this.state
 
 
@@ -209,13 +214,14 @@ export class ListVirtualized extends React.Component<ListProps, {  columns: Colu
 
 
                     const tHeadHeight = this.tHead.current && this.tHead.current.offsetHeight || 0
+                    const itemData = {data: this.data, columns}
                     return (
                         <div className={'mandarina-list'} ref={this.container}
                              style={{
                                  width,
                                  height: height + tHeadHeight
                              }}>
-                             Total:{count}
+                            Total:{count}
                             <div ref={this.tHead} className='mandarina-list-thead' style={{width}}>
                                 <div className={'mandarina-list-thead-row'}
                                      style={{width: this.estimatedColumnWidth * columns.length}}>
@@ -223,7 +229,8 @@ export class ListVirtualized extends React.Component<ListProps, {  columns: Colu
                                                                                        className={'mandarina-list-thead-col'}
                                                                                        style={{width: this.getColumnWidth(columnIndex)}}>
                                         {title}
-                                        <ListFilter variables={variables} onFilterChange={onFiltersChange} field={field} fieldDefinition={schema.getPathDefinition(field)}/>
+                                        <ListFilter variables={variables} onFilterChange={onFiltersChange} field={field}
+                                                    fieldDefinition={schema.getPathDefinition(field)}/>
                                     </div>)}
                                 </div>
                             </div>
@@ -237,6 +244,7 @@ export class ListVirtualized extends React.Component<ListProps, {  columns: Colu
                                 columnWidth={this.getColumnWidth}
                                 rowHeight={index => estimatedRowHeight || estimatedRowHeightDefault}
                                 width={width}
+                                itemData={itemData}
                                 overscanColumnsCount={overscanColumnsCount}
                                 overscanRowsCount={overscanRowsCount}
                                 onItemsRendered={({
@@ -248,7 +256,6 @@ export class ListVirtualized extends React.Component<ListProps, {  columns: Colu
                                                   }) => {
 
 
-
                                     this.overscanRowStartIndex = overscanRowStartIndex
                                     this.overscanRowStopIndex = overscanRowStopIndex
                                     this.visibleRowStartIndex = visibleRowStartIndex
@@ -257,15 +264,8 @@ export class ListVirtualized extends React.Component<ListProps, {  columns: Colu
                                 }}
                             >
                                 {
-                                    ({columnIndex, rowIndex, style, ...props}) => {
-                                        return (
-                                            <div className={'mandarina-list-cell'}
-                                                 style={{...style, ...blur, overflow: 'hidden'}}>
-                                                {!this.data[rowIndex] && '...'}
-                                                {this.data[rowIndex] && get(this.data[rowIndex], columns[columnIndex].field.split('.'))}
-                                            </div>
-                                        )
-                                    }}
+                                    Row
+                                }
 
                             </Grid>
                         </div>
@@ -278,4 +278,15 @@ export class ListVirtualized extends React.Component<ListProps, {  columns: Colu
 }
 
 
-
+const Row = memo(
+    ({columnIndex, rowIndex, data: {data, columns}, style}: ListChildComponentProps & GridChildComponentProps & { data: { data: any, columns: ColumnProps[] } }) => {
+        return (
+            <div className={'mandarina-list-cell'}
+                 style={{...style, ...blur, overflow: 'hidden'}}>
+                {!data[rowIndex] && '...'}
+                {data[rowIndex] && get(data[rowIndex], columns[columnIndex].field.split('.'))}
+            </div>
+        )
+    },
+    areEqual
+);
