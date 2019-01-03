@@ -7,11 +7,13 @@ import {ListVirtualized} from "./ListVirtualized";
 import {FindProps} from "mandarina/build/Operations/Find";
 
 
-
 const AuthListComponent = ({schema, denied, Component, ...props}: ColumnProps<any> & FindProps & { Component: React.ComponentClass<ListProps, { columns: ColumnProps<any>[] }>, schema: Schema, denied?: JSX.Element }) => {
     return (
         <AuthTable schema={schema} action='read'>
             {({fields, loading}) => {
+                if (!loading && Array.isArray(fields)) {
+                    fields = fields.filter((field) => !field.match(/\.id$|^id$/))
+                }
                 return (
                     <Spin spinning={loading} style={{width: '100%'}}>
                         {!loading && fields && fields.length > 0 &&

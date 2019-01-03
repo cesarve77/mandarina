@@ -3,6 +3,7 @@ import * as React from "react";
 import '../styles.css'
 import {get} from "mandarina/build/Schema/utils";
 import {GridOnScrollProps, VariableSizeGrid as Grid} from 'react-window';
+import ListFilter from "./ListFilter";
 
 
 export interface ListProps {
@@ -15,7 +16,8 @@ export interface ListProps {
     width?: number
     estimatedRowHeight?: number
     paginatorFactor?: number
-    overscanCount?: number
+    overscanRowsCount?: number
+    overscanColumnsCount?: number
     overLoad?: number
 }
 
@@ -65,7 +67,7 @@ interface ColumnProps {
 const estimatedColumnWidthDefault = 200
 const estimatedRowHeightDefault = 60
 
-export class ListVirtualized extends React.Component<ListProps, { row:number, columns: ColumnProps[], height: number, width: number }> {
+export class ListVirtualized extends React.Component<ListProps, {  columns: ColumnProps[], height: number, width: number }> {
 
     data: any[] = []
     fields: string[]
@@ -93,7 +95,7 @@ export class ListVirtualized extends React.Component<ListProps, { row:number, co
         const columns = this.fields.map(this.getColumnDefinition)
         this.estimatedColumnWidth = columns.reduce((mem, {width}) => width + mem, 0) / columns.length
 
-        this.state = {row: 0,columns, height: 0, width: 0}
+        this.state = { columns, height: 0, width: 0}
         this.tHead = React.createRef()
         this.container = React.createRef()
         this.firstLoad = Math.ceil((this.props.height || window.innerHeight) / estimatedRowHeight)
@@ -111,6 +113,8 @@ export class ListVirtualized extends React.Component<ListProps, { row:number, co
         if (height && width) return
         this.resize()
         window.addEventListener('resize', this.onResize);
+
+
     }
 
     componentWillUnmount(): void {
@@ -140,7 +144,6 @@ export class ListVirtualized extends React.Component<ListProps, { row:number, co
     }
     getColumnDefinition = (field: string): ColumnProps => {
         const fieldDefinition = this.props.schema.getPathDefinition(field)
-        console.log('getColumnDefinition',field,fieldDefinition)
         return {
             field,
             title: fieldDefinition.label ? fieldDefinition.label : "",
@@ -154,10 +157,14 @@ export class ListVirtualized extends React.Component<ListProps, { row:number, co
     }
     onScrollTimeoutId: number
     onScroll = ({scrollLeft}: GridOnScrollProps) => {
-        this.setState({row: this.visibleRowStartIndex})
+        if (this.tHead.current) {
+            this.tHead.current.scrollLeft = scrollLeft
+        }
+        //this.setState({row: this.visibleRowStartIndex})
         this.onScrollTimeoutId && window.clearTimeout(this.onScrollTimeoutId)
         this.onScrollTimeoutId = window.setTimeout(() => {
             //If all visible are loaded, then not refetch
+            console.log('scroll stop')
             if (this.data.slice(this.visibleRowStartIndex, this.visibleRowStopIndex).every((val) => val !== undefined)) return
 
             //TODO: maybe normalized the edgeds for try to do the sames queries, and get the data from the cache
@@ -169,12 +176,10 @@ export class ListVirtualized extends React.Component<ListProps, { row:number, co
                     skip: this.overscanRowStartIndex,
                     first: this.overscanRowStopIndex - this.overscanRowStartIndex + 1 + overLoad,
                 }
-            ).catch((console.error)) //todo
+            ).catch(console.error) //todo
+            console.log('scroll refetch')
+        }, 100)
 
-        }, 75)
-        if (this.tHead.current) {
-            this.tHead.current.scrollLeft = scrollLeft
-        }
     }
 
 
@@ -183,8 +188,8 @@ export class ListVirtualized extends React.Component<ListProps, { row:number, co
     }
 
     render() {
-        const {schema, where, estimatedRowHeight, overscanCount = 2, overLoad = 0} = this.props //todo rest props
-        const {columns, row,width, height} = this.state
+        const {schema, where, estimatedRowHeight, overscanRowsCount = 2,overscanColumnsCount=2, overLoad = 0} = this.props //todo rest props
+        const {columns, width, height} = this.state
 
 
         return (
@@ -210,13 +215,16 @@ export class ListVirtualized extends React.Component<ListProps, { row:number, co
                                  width,
                                  height: height + tHeadHeight
                              }}>
-                            Row: {row+1} Total:{count}
+                             Total:{count}
                             <div ref={this.tHead} className='mandarina-list-thead' style={{width}}>
                                 <div className={'mandarina-list-thead-row'}
                                      style={{width: this.estimatedColumnWidth * columns.length}}>
                                     {columns.map(({title, field}, columnIndex) => <div key={field}
                                                                                        className={'mandarina-list-thead-col'}
-                                                                                       style={{width: this.getColumnWidth(columnIndex)}}>{title}</div>)}
+                                                                                       style={{width: this.getColumnWidth(columnIndex)}}>
+                                        {title}
+                                        <ListFilter variables={variables} onFilterChange={onFiltersChange} field={field} fieldDefinition={schema.getPathDefinition(field)}/>
+                                    </div>)}
                                 </div>
                             </div>
                             <Grid
@@ -229,7 +237,8 @@ export class ListVirtualized extends React.Component<ListProps, { row:number, co
                                 columnWidth={this.getColumnWidth}
                                 rowHeight={index => estimatedRowHeight || estimatedRowHeightDefault}
                                 width={width}
-                                overscanCount={overscanCount}
+                                overscanColumnsCount={overscanColumnsCount}
+                                overscanRowsCount={overscanRowsCount}
                                 onItemsRendered={({
                                                       overscanRowStartIndex,
                                                       overscanRowStopIndex,
@@ -237,6 +246,8 @@ export class ListVirtualized extends React.Component<ListProps, { row:number, co
                                                       visibleRowStopIndex,
 
                                                   }) => {
+
+
 
                                     this.overscanRowStartIndex = overscanRowStartIndex
                                     this.overscanRowStopIndex = overscanRowStopIndex
@@ -265,5 +276,6 @@ export class ListVirtualized extends React.Component<ListProps, { row:number, co
         );
     }
 }
+
 
 

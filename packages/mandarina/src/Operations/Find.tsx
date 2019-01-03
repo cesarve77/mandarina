@@ -52,6 +52,7 @@ export interface FindProps {
     onError?: (error: ApolloError) => void
     context?: Record<string, any>
     partialRefetch?: boolean
+    //todo: crear un parametro para hacer el refrescamiento de los quieres **1
 }
 
 export interface FindBaseProps {
@@ -68,6 +69,10 @@ export class FindBase extends PureComponent<FindProps & FindBaseProps, FindBaseS
     queryHistory: object[] = []
 
     buildQueryFromFields = (fields: string[]) => buildQueryFromFields(fields)
+    componentWillMount(): void {
+        FindBase.queries = FindBase.queries || []
+        //todo: **1
+    }
 
     componentWillUnmount() {
         if (!Array.isArray(FindBase.queries)) return
@@ -76,7 +81,7 @@ export class FindBase extends PureComponent<FindProps & FindBaseProps, FindBaseS
 
 
     render() {
-        FindBase.queries = FindBase.queries || []
+
         const {
             fields: optionalFields, schema, after, first, type, where, skip,
             children,

@@ -84,7 +84,7 @@ class Mutate extends PureComponent<WithApolloClient<MutateProps & { type: 'creat
 
     query: string
 
-    buildQueryFromFields = () => buildQueryFromFields(this.props.schema.getFields())
+    buildQueryFromFields = () => buildQueryFromFields(this.props.fields  || this.props.schema.getFields())
 
     /**
      * walk al properties of the model add new properties with initiator, and wrap values with wrapper

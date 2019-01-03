@@ -1,14 +1,14 @@
 // @ts-ignore
-import {mapValues} from 'lodash';
+import { mapValues } from 'lodash';
 import * as inflection from "inflection";
 
-import {ErrorValidator, Validator, ValidatorCreator} from "./ValidatorCreator";
-import {extraKey, isDate, isInteger, isNumber, isString} from "./Validators";
-import {forceType, hasValidator} from "./utils";
-import {Permissions} from "../Table/Table";
-import {UniqueSchemaError} from '../Errors/UniqueSchemaError';
-import {SchemaInstanceNotFound} from '../Errors/SchemaInstanceNotFound';
-import {capitalize, pluralize, singularize} from "../Table/utils";
+import { ErrorValidator, Validator, ValidatorCreator } from "./ValidatorCreator";
+import { extraKey, isDate, isInteger, isNumber, isString } from "./Validators";
+import { forceType, hasValidator } from "./utils";
+import { Permissions } from "../Table/Table";
+import { UniqueSchemaError } from '../Errors/UniqueSchemaError';
+import { SchemaInstanceNotFound } from '../Errors/SchemaInstanceNotFound';
+import { capitalize, pluralize, singularize } from "../Table/utils";
 
 export class Schema {
 

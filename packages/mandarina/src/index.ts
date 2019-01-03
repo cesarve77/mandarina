@@ -1,6 +1,7 @@
 import {Table} from './Table/Table'
 import {Schema} from './Schema/Schema'
 import {AuthTable} from './Auth/Auth'
+import {AuthServer} from './Auth/AuthServer'
 import {CustomAction} from './Operations/CustomAction'
 import {Create} from './Operations/Mutate'
 import {Update} from './Operations/Mutate'
@@ -19,5 +20,6 @@ export {
     Create,
     Update,
     FindOne,
-    Find
+    Find,
+    AuthServer,
 }

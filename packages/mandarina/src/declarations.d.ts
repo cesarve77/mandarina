@@ -1,3 +1,5 @@
+declare module 'node-yaml'
+
 declare module 'browser-or-node' {
     export function isBrowser(): boolean
 }

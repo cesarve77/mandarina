@@ -1,21 +1,21 @@
-import {buildInterfaceName, capitalize, getDeclarations, getGraphQLInput, getGraphQLModel} from "./Table/utils";
 import fs from "fs";
 import path from "path";
+import yaml from "node-yaml";
+import {getParents} from "./utils";
+import {buildInterfaceName, capitalize, getDeclarations, getGraphQLInput, getGraphQLModel} from "./Table/utils";
 import {Context, Table} from "./Table/Table";
 import {Schema} from "./Schema/Schema";
 import {CustomAction} from "./Operations/CustomAction";
-import yaml from "node-yaml";
-import {getParents} from "./utils";
 
 export class Mandarina {
-    private static  processed:{[tableName: string] : true} ={}
     static config: MandarinaConfigDefault = {
         prismaDir: '/prisma',
         getUser: ({user}) => user,
 
     }
+    private static processed: { [tableName: string]: true } = {}
 
-    static configure(options: MandarinaConfigOptions) {
+    static configure = (options: MandarinaConfigOptions) => {
         if (options.prismaDir) {
             Mandarina.config.prismaDir = options.prismaDir;
         }
@@ -55,28 +55,30 @@ export class Mandarina {
         fs.readdirSync(datamodelDir).forEach((file: string) => fs.unlinkSync(path.join(datamodelDir, file)));
 
     }
-    static saveSubSchemas(schema: Schema){
-        const parents=getParents(schema.getFields())
-        parents.forEach((field)=>{
-            const fieldDefinition=schema.getPathDefinition(field)
 
-            let subSchema=''
-            if (typeof fieldDefinition.type==='string'){
-                subSchema=fieldDefinition.type
+    static saveSubSchemas(schema: Schema) {
+        const parents = getParents(schema.getFields())
+        parents.forEach((field) => {
+            const fieldDefinition = schema.getPathDefinition(field)
+
+            let subSchema = ''
+            if (typeof fieldDefinition.type === 'string') {
+                subSchema = fieldDefinition.type
             }
-            if (Array.isArray(fieldDefinition.type) && typeof fieldDefinition.type[0]==='string'){
-                subSchema=<string>fieldDefinition.type[0]
+            if (Array.isArray(fieldDefinition.type) && typeof fieldDefinition.type[0] === 'string') {
+                subSchema = <string>fieldDefinition.type[0]
             }
-            if (subSchema && !Mandarina.processed[subSchema]){
-                const schema=Schema.getInstance(subSchema)
+            if (subSchema && !Mandarina.processed[subSchema]) {
+                const schema = Schema.getInstance(subSchema)
                 Mandarina.saveFile(schema)
                 Mandarina.saveDeclarationFile(schema)
                 Mandarina.saveSubSchemas(schema)
             }
         })
     }
+
     static saveFiles() {
-        Mandarina.processed={}
+        Mandarina.processed = {}
         Mandarina.reset()
         for (const tableName in Table.instances) {
             const table = Table.getInstance(tableName)
@@ -91,7 +93,6 @@ export class Mandarina {
                 Mandarina.saveFile(action.schema)
                 Mandarina.saveDeclarationFile(action.schema)
             } else {
-                console.log(actionName,action)
                 Mandarina.saveActionSchema(action.name)
 
             }
@@ -116,7 +117,7 @@ export class Mandarina {
 
     static saveFile(schema: Schema) {
         if (Mandarina.processed[schema.name]) return
-        Mandarina.processed[schema.name]= true
+        Mandarina.processed[schema.name] = true
         const prismaDir = Mandarina.config.prismaDir;
         const prismaYaml = `${prismaDir}/prisma.yml`;
 
@@ -129,7 +130,6 @@ export class Mandarina {
             fs.writeFileSync(fileAbsOperations, operations);
             fs.writeFileSync(fileAbsInput, getGraphQLInput(schema));
         }
-
 
 
         const model = getGraphQLModel(schema)
@@ -185,7 +185,7 @@ export class Mandarina {
     }
 }
 
-type   getUser = (context: Context) => Promise<UserType | null | undefined> | UserType | null | undefined
+type getUser = (context: Context) => Promise<UserType | null | undefined> | UserType | null | undefined
 
 export interface MandarinaConfigOptions {
     getUser?: getUser

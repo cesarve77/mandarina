@@ -1,16 +1,20 @@
 import {Prisma} from "prisma-binding";
 import {ContextParameters} from "graphql-yoga/dist/types";
+import {fieldsList} from 'graphql-fields-list';
 
-import {ActionType, AuthArgs} from "../Auth/Auth";
+import {ActionType} from "../Auth/Auth";
+import {AuthArgs} from "../Auth/AuthServer";
 import {Schema, SchemaOptions} from "../Schema/Schema";
-import {sleep} from "./utils";
 import {InvalidActionError} from '../Errors/InvalidActionError';
 import {UniqueTableError} from '../Errors/UniqueTableError';
 import {TableInstanceNotFound} from "../Errors/TableInstanceNotFound";
+import {Mandarina} from "../Mandarina";
+import {capitalize} from './utils';
+import {FieldsPermissionsError} from '../Errors/FieldsPermissionsError';
 
 
-const defaultPermissions = {read: {}, create: {}, update: {}, delete: {}};
-const defaultActions = Object.keys(defaultPermissions);
+const getDefaultPermissions = () => ({read: {}, create: {}, update: {}, delete: {}});
+const defaultActions = Object.keys(getDefaultPermissions());
 
 /**
  *
@@ -27,7 +31,11 @@ export class Table {
     public schema: Schema;
     public name: string;
     public options: TableSchemaOptions & TableShapeOptions;
-    private permissions: any;
+    private permissions: {
+        read: { [role: string]: string[] }
+        create: { [role: string]: string[] }
+        update: { [role: string]: string[] }
+    };
 
     /**
      *
@@ -51,10 +59,8 @@ export class Table {
 
         this.options = {...schema.options, ...tableOptions};
 
-
         Table.instances[this.name] = this;
     }
-
 
     static getInstance(name: string): Table {
         if (!Table.instances[name]) {
@@ -69,43 +75,14 @@ export class Table {
     }
 
     /**
-     * Returns the resource schema appliying the authorization and data exposition policy
-     *
-     * @param action
-     * @param role
-     *
-     * @return Schema
-     */
-    getSchema(action: string, role?: string | string[]) {
-
-        const roles = Array.isArray(role) ? role : [role];
-
-        if (!defaultActions.includes(action)) {
-            throw new InvalidActionError(action);
-        }
-
-        const fields = this.getFields();
-        const permissionsByRole = this.getPermissions()[action];
-        const allowedFieldsNames = Object.keys(permissionsByRole)
-            .filter(k => roles.includes(k))
-            .map(k => permissionsByRole[k])
-            .reduce((p, c) => p.concat(c), permissionsByRole.everyone);
-
-        return fields
-            .filter((fieldName) => allowedFieldsNames.includes(fieldName))
-            .reduce((res, fieldName) => ({...res, [fieldName]: this.schema.shape[fieldName]}), {});
-    }
-
-    /**
      * Returns the the authorization schema definition for the instance
      *
      * @return Permissions
      */
     getPermissions() {
         const fields = this.getFields();
-
         if (!this.permissions) {
-            this.permissions = defaultPermissions;
+            this.permissions = getDefaultPermissions();
 
             fields.forEach((field) => {
                 const def = this.schema.getPathDefinition(field)
@@ -129,8 +106,26 @@ export class Table {
                 })
             });
         }
-
         return this.permissions;
+    }
+
+    /**
+     * It apply the fields permissions policy by action and roles, throw an exception if is not a valid request
+     *
+     * @param action
+     * @param role
+     * @param model
+     */
+    validatePermissions(action: string, role: string | string[] | null | undefined, model: string[] | any): void {
+        const fields = this.getFields();
+        const allowedFields = Object.keys(this.getSchema(action, role));
+        const modelFields = (Array.isArray(model) ? model : Object.keys(model)).filter(f => fields.includes(f));
+        const intersection = allowedFields.filter(af => modelFields.includes(af));
+
+        if (modelFields.length > intersection.length) {
+            const invalidFields = modelFields.filter(mf => !intersection.includes(mf));
+            throw new FieldsPermissionsError(action, invalidFields);
+        }
     }
 
     getDefaultActions(type: operationType) {
@@ -138,39 +133,68 @@ export class Table {
         const result = {};
         // OperationName for query is user or users, for mutation are createUser, updateUser ....
         const operationNames: string[] = Object.values(this.schema.names[type]);
-        const {onBefore, onAfter} = this.options;
-
         operationNames.forEach((operationName: string) => {
             result[operationName] = async (_: any, args: any = {}, context: Context, info: any) => {
+                let time = new Date().getTime()
+                const bm = (description?: string) => {
+                    if (description) {
+                        console.log(description, new Date().getTime() - time)
+                    }
+                    time = new Date().getTime()
+                }
+                bm()
+                const middlewares = this.options.middlewares || [];
+                const user = await Mandarina.config.getUser(context);
                 const subOperationName: ActionType | string = operationName.substr(0, 6)
                 const action: ActionType = <ActionType>(['create', 'update', 'delete'].includes(subOperationName) ? subOperationName : 'read')
+                const prismaMethod = context.prisma[type][operationName];
+                const roles = user && user.roles
+                bm('init')
+                if (middlewares.length > 0) {
+                    await Promise.all(middlewares.map((m: any) => m(user, context, info)));
+                }
+                bm('middlewares')
+                let result: any
+                // TODO: Review the hooks architecture for adding a way to execute hooks of nested operations
+                if (type === 'mutation') {
+                    this.callHook('beforeValidate', action, _, args, context, info);
 
-                // TODO: deletion
-                // const user = await Promise.resolve(Table.config.getUser(context));
-                // console.log('user->', operationName,args, user)
-                // const fields = Object.keys(flatten({[this.name]: graphqlFields(info)}))
-                // if (type === 'mutation') this.validate(args.data,fields)
-                // const userId = Table.config.getUserId(context)
-                // const restrictionQuery = await this.checkPermissionsTable({type, operationName, userId})
-                // await this.checkPermissionsFields({type, operationName, info, userId})
-                // if (restrictionQuery) {
-                //    let query = args.where || {}
-                //    args.where = {AND: [query, restrictionQuery]}
-                // }
+                    // TODO: Flatting nested fields operation (context, update, create)
+                    const errors = this.schema.validate(this.flatFields(args.data));
 
-                if (onBefore) {
-                    await onBefore(action, _, args, context, info);
+                    if (errors.length > 0) {
+                        await this.callHook('validationFailed', action, _, args, context, info);
+                    } else {
+                        await this.callHook('afterValidate', action, _, args, context, info);
+                    }
+
+                    await this.callHook(<HookName>`before${capitalize(action)}`, action, _, args, context, info);
+
+                    this.validatePermissions(action, roles, args.data);
+
+                    result = await prismaMethod(args, info);
+                    context.result = result
+
+                    await this.callHook(<HookName>`after${capitalize(action)}`, action, _, args, context, info);
+
+                    this.validatePermissions('read', roles, fieldsList(info));
+                    bm('mutation')
                 }
 
-                const result = await context.prisma[type][operationName](args, info);
-                context.result = result;
+                if (type === 'query') {
+                    bm()
+                    await this.callHook('beforeQuery', action, _, args, context, info);
+                    bm('beforeQuery')
+                    this.validatePermissions('read', roles, fieldsList(info));
+                    bm('validatePermissions')
+                    result = await prismaMethod(args, info);
+                    context.result = result
+                    bm('prismaMethod')
+                    await this.callHook('afterQuery', action, _, args, context, info);
+                    bm('afterQuery')
+                    bm('query')
 
-                if (onAfter) {
-                    await onAfter(action, _, args, context, info);
                 }
-
-                // TODO: remove in production
-                await sleep(400);
                 return result;
             }
         });
@@ -178,9 +202,80 @@ export class Table {
         return result;
     }
 
-
     register() {
         // TODO: Do we need to implement this method?
+    }
+
+    /**
+     * Simple wrapper to execute the table hook if exists
+     *
+     * @param name
+     * @param actionType
+     * @param _
+     * @param args
+     * @param context
+     * @param info
+     */
+    private async callHook(name: HookName, actionType: ActionType, _: any, args: any, context: any, info: any) {
+        const hookHandler = this.options.hooks && this.options.hooks[name];
+
+        if (hookHandler) {
+            await hookHandler(actionType, _, args, context, info);
+        }
+    }
+
+    /**
+     * Returns the resource schema appliying the authorization and data exposition policy
+     *
+     * @param action
+     * @param role
+     *
+     * @return Schema
+     */
+    private getSchema(action: string, role?: string | string[] | null | undefined) {
+
+        const roles = Array.isArray(role) ? role : [role];
+
+        if (!defaultActions.includes(action)) {
+            throw new InvalidActionError(action);
+        }
+
+        const fields = this.getFields();
+        const permissionsByRole = this.getPermissions()[action];
+        const allowedFieldsNames = Object.keys(permissionsByRole)
+            .filter(k => roles.includes(k))
+            .map(k => permissionsByRole[k])
+            .reduce((p, c) => p.concat(c), permissionsByRole.everyone);
+
+        return fields
+            .filter((fieldName) => allowedFieldsNames.includes(fieldName))
+            .reduce((res, fieldName) => ({...res, [fieldName]: this.schema.shape[fieldName]}), {});
+    }
+
+    private flatFields(model: any) {
+        const fieldWrappers = ['connect', 'create', 'udpate', 'delete'];
+        const composedFields = Object.keys(model).filter(key => {
+            const wrapperKey = Object.keys(model[key]).pop() || '';
+            return fieldWrappers.includes(wrapperKey);
+        });
+
+        if (composedFields.length > 0) {
+            const mappedFields = composedFields.reduce((p, key) => {
+                const wrapperKey = Object.keys(model[key]).pop() || '';
+
+                return {
+                    ...p,
+                    [key]: model[key][wrapperKey]
+                };
+            }, {});
+
+            return {
+                ...model,
+                ...mappedFields
+            };
+        }
+
+        return model;
     }
 
 
@@ -216,9 +311,41 @@ export type operationType = "mutation" | "query"
 
 export interface TableSchemaOptions {
     virtual?: boolean
-    onBefore?: Hook
-    onAfter?: Hook
+    hooks?: {
+        // Mutation opearion hooks
+        beforeValidate?: Hook
+        afterValidate?: Hook
+        validationFailed?: Hook
+        beforeCreate?: Hook
+        beforeDelete?: Hook
+        beforeUpdate?: Hook
+        beforeSave?: Hook
+        afterCreate?: Hook
+        afterDelete?: Hook
+        afterUpdate?: Hook
+
+        // Query operation hooks
+        beforeQuery?: Hook
+        afterQuery?: Hook
+    }
+    middlewares?: Array<(user: any, context: any, info: any) => Promise<void>>
 }
 
 export interface TableShapeOptions extends SchemaOptions, TableSchemaOptions {
 }
+
+
+type HookName =
+    'beforeValidate'
+    | 'afterValidate'
+    | 'validationFailed'
+    | 'beforeCreate'
+    | 'beforeDelete'
+    | 'beforeUpdate'
+    | 'beforeSave'
+    | 'afterCreate'
+    | 'afterDelete'
+    | 'afterUpdate'
+    | 'beforeQuery'
+    | 'afterQuery'
+

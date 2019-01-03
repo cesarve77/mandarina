@@ -5,7 +5,7 @@ import {FieldDefinition} from 'mandarina/build/Schema/Schema'
 //import ListHeader from "./ListHeader";
 import {onFilterChange} from "./ListFilter";
 import '../styles.css'
-import {getDecendents, getParents} from "./utils";
+import {getDecendents, getParents} from 'mandarina/build/utils'
 import {ColumnProps} from 'antd/lib/table';
 import {get} from "mandarina/build/Schema/utils";
 
