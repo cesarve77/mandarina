@@ -2,6 +2,8 @@ import {Find, Schema} from 'mandarina';
 import React, {memo} from "react";
 import '../styles.css'
 import {get} from "mandarina/build/Schema/utils";
+import isEmpty from 'lodash.isempty'
+//@ts-ignore
 import {
     areEqual,
     GridChildComponentProps,
@@ -9,8 +11,16 @@ import {
     ListChildComponentProps,
     VariableSizeGrid as Grid
 } from 'react-window';
+import ListFilter, {onFilterChange, Where} from "./ListFilter";
 
-import ListFilter from "./ListFilter";
+declare module "react-window" {
+    const areEqual: any
+
+    interface CommonProps {
+        overscanColumnsCount: number
+        overscanRowsCount: number
+    }
+}
 
 
 export interface ListProps {
@@ -184,13 +194,27 @@ export class ListVirtualized extends React.Component<ListProps, { columns: Colum
                 }
             ).catch(console.error) //todo
         }, 100)
+    }
+    filters: { [field: string]: Where } = {}
 
+    onFilterChange: onFilterChange = (field, where) => {
+        console.log('this. onFilterChange')
+        if (where && !isEmpty(where)) {
+            this.filters[field] = where
+        } else {
+            delete this.filters[field]
+        }
+        const allFilters = Object.values(this.filters)
+        this.variables.where = this.variables.where || {}
+        if (this.props.where) {
+            this.variables.where = {AND: [this.props.where, ...allFilters]}
+        } else {
+            this.variables.where = {AND: allFilters}
+        }
+
+        this.refetch(this.variables)
     }
 
-
-    shouldComponentUpdate(nextProps: Readonly<ListProps>, nextState: Readonly<{ columns: ColumnProps[]; height: number; width: number }>, nextContext: any): boolean {
-        return true
-    }
 
     render() {
         const {schema, where, estimatedRowHeight, overscanRowsCount = 2, overscanColumnsCount = 2, overLoad = 0} = this.props //todo rest props
@@ -200,7 +224,7 @@ export class ListVirtualized extends React.Component<ListProps, { columns: Colum
         return (
             <Find schema={schema} where={where} skip={0} first={this.firstLoad + overLoad} fields={this.fields}
                   notifyOnNetworkStatusChange>
-                {({data = [], variables, refetch, loading, count, onFiltersChange}) => {
+                {({data = [], variables, refetch, loading, count}) => {
                     const dataCollection = data as any[]
                     if (this.data.length === 0 && data && !loading) {
                         this.data = Array(count).fill(undefined)
@@ -215,6 +239,7 @@ export class ListVirtualized extends React.Component<ListProps, { columns: Colum
 
                     const tHeadHeight = this.tHead.current && this.tHead.current.offsetHeight || 0
                     const itemData = {data: this.data, columns}
+
                     return (
                         <div className={'mandarina-list'} ref={this.container}
                              style={{
@@ -229,8 +254,9 @@ export class ListVirtualized extends React.Component<ListProps, { columns: Colum
                                                                                        className={'mandarina-list-thead-col'}
                                                                                        style={{width: this.getColumnWidth(columnIndex)}}>
                                         {title}
-                                        <ListFilter variables={variables} onFilterChange={onFiltersChange} field={field}
-                                                    fieldDefinition={schema.getPathDefinition(field)}/>
+                                        <ListFilter onFilterChange={this.onFilterChange}
+                                                    field={field}
+                                                    schema={schema}/>
                                     </div>)}
                                 </div>
                             </div>

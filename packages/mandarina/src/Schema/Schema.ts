@@ -1,14 +1,14 @@
 // @ts-ignore
-import { mapValues } from 'lodash';
+import {mapValues} from 'lodash';
 import * as inflection from "inflection";
 
-import { ErrorValidator, Validator, ValidatorCreator } from "./ValidatorCreator";
-import { extraKey, isDate, isInteger, isNumber, isString } from "./Validators";
-import { forceType, hasValidator } from "./utils";
-import { Permissions } from "../Table/Table";
-import { UniqueSchemaError } from '../Errors/UniqueSchemaError';
-import { SchemaInstanceNotFound } from '../Errors/SchemaInstanceNotFound';
-import { capitalize, pluralize, singularize } from "../Table/utils";
+import {ErrorValidator, Validator, ValidatorCreator} from "./ValidatorCreator";
+import {extraKey, isDate, isInteger, isNumber, isString} from "./Validators";
+import {forceType, hasValidator} from "./utils";
+import {Permissions} from "../Table/Table";
+import {UniqueSchemaError} from '../Errors/UniqueSchemaError';
+import {SchemaInstanceNotFound} from '../Errors/SchemaInstanceNotFound';
+import {capitalize, pluralize, singularize} from "../Table/utils";
 
 export class Schema {
 
@@ -20,11 +20,11 @@ export class Schema {
     public options: InstanceOptions
     public errorFromServerMapper: ErrorFromServerMapper | undefined
     public arraysFields: string[] = []
+    public names: Names;
     private pathDefinitions: { [key: string]: FieldDefinition } = {}
     private fields: string[]
     private original: Model;
     private filePath: string;
-    public names: Names;
 
     constructor(shape: UserSchemaShape, options: SchemaOptions) {
         const {name, recursive = [], forceType = true, virtual = false, errorFromServerMapper, permissions} = options;
@@ -42,7 +42,7 @@ export class Schema {
         this.permissions = permissions || {};
         this.shape = mapValues(shape, (field, key) => this.applyDefinitionsDefaults(field, key));
         this.keys = Object.keys(this.shape);
-        this.filePath=this.getFilePath()
+        this.filePath = this.getFilePath()
 
 
         const single = singularize(this.name);
@@ -515,8 +515,10 @@ export interface UserSchemaShape {
 
 export type Native = (props: any) => any
 
+export type Types = Native | string | Array<string> | Array<Native>
+
 export interface UserFieldDefinition {
-    type: Native | string | Array<string> | Array<Native>,
+    type: Types
     label?: LabelOrResolver
     description?: string
     validators?: Array<Validator | string | ValidatorFinder>

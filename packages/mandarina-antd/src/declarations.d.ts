@@ -54,6 +54,10 @@ declare module "uniforms-antd/SubmitField" {
     const SubmitField: any
     export default SubmitField
 }
+declare module "uniforms/connectField" {
+    const connectField: any
+    export default connectField
+}
 
 declare module 'simpl-schema' {
     const SimpleSchema: any

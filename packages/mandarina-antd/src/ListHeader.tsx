@@ -1,8 +1,9 @@
 import {Resizable} from "react-resizable";
 import * as React from "react";
-import ListFilter, {onFilterChange, variables} from "./ListFilter";
+import ListFilter, {onFilterChange} from "./ListFilter";
 import {onResize} from "./List";
 import {FieldDefinition} from "mandarina/build/Schema/Schema";
+import {Schema} from "mandarina";
 
 
 interface ListHeaderProps {
@@ -12,16 +13,15 @@ interface ListHeaderProps {
     fieldDefinition: FieldDefinition
     onFilterChange: onFilterChange
     field: string,
-    variables: variables
+    schema: Schema,
 }
 
-const ListHeader = ({field, onResize, onFilterChange, width, children, fieldDefinition, variables, ...rest}: ListHeaderProps) => {
+const ListHeader = ({field, onResize, onFilterChange, width, schema, children, fieldDefinition,  ...rest}: ListHeaderProps) => {
     if (!width) return (
         <th {...rest}>
             {children}
             {onFilterChange &&
-            <ListFilter field={field} fieldDefinition={fieldDefinition} onFilterChange={onFilterChange}
-                        variables={variables}/>}
+            <ListFilter field={field} schema={schema} onFilterChange={onFilterChange} />}
         </th>
     )
     return (
@@ -29,8 +29,8 @@ const ListHeader = ({field, onResize, onFilterChange, width, children, fieldDefi
             <th {...rest} >
                 {children}
                 {onFilterChange &&
-                <ListFilter field={field} fieldDefinition={fieldDefinition} onFilterChange={onFilterChange}
-                            variables={variables}/>}
+                <ListFilter field={field} schema={schema} onFilterChange={onFilterChange} />}
+
             </th>
         </Resizable>
     );

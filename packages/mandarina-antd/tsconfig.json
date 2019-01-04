@@ -3,10 +3,11 @@
     "**/*.test.ts*",
     "build",
     "src/test/**",
+    "src/uniforms/**",
     "node_modules"
   ],
   "compilerOptions": {
-    "allowJs": false,
+    "allowJs": true,
     "types": [
       "jest",
       "react",
@@ -35,20 +36,10 @@
     "noUnusedLocals": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
-    "declaration": true,
     "maxNodeModuleJsDepth": 1
   },
   "include": [
     "src"
-  ],
-  "files": [
-    "src/uniforms/AutoField.js",
-    "src/uniforms/AutoFields.js",
-    "src/uniforms/ErrorsField.js",
-    "src/uniforms/ListField.js",
-    "src/uniforms/TableField.js",
-    "src/uniforms/ListItemField.js",
-    "src/uniforms/NestField.js"
   ]
 }
 

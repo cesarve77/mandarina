@@ -3,11 +3,12 @@ import {Find, Schema} from 'mandarina';
 import * as React from "react";
 import {FieldDefinition} from 'mandarina/build/Schema/Schema'
 //import ListHeader from "./ListHeader";
-import {onFilterChange} from "./ListFilter";
+import {onFilterChange, Where} from "./ListFilter";
 import '../styles.css'
 import {getDecendents, getParents} from 'mandarina/build/utils'
 import {ColumnProps} from 'antd/lib/table';
 import {get} from "mandarina/build/Schema/utils";
+import isEmpty from "lodash.isempty";
 
 export type onResize = (e: any, {size}: { size: { width: number } }) => void
 
@@ -179,9 +180,25 @@ export class List extends React.Component<ListProps, { columns: ColumnProps<any>
             ).catch((console.error)) //todo
         }
     }
-    onFilterChange: onFilterChange = (variablesMutator) => {
-        this.firstLoad = true
-        variablesMutator(this.variables)
+
+    filters: { [field: string]: Where }={}
+
+
+    onFilterChange: onFilterChange = (field, where) => {
+        console.log('this. onFilterChange')
+        if (where && !isEmpty(where)) {
+            this.filters[field] = where
+        } else {
+            delete this.filters[field]
+        }
+        const allFilters = Object.values(this.filters)
+        this.variables.where = this.variables.where || {}
+        if (this.props.where) {
+            this.variables.where = {AND: [this.props.where, ...allFilters]}
+        } else {
+            this.variables.where = {AND: allFilters}
+        }
+
         this.refetch(this.variables)
     }
 
@@ -205,7 +222,7 @@ export class List extends React.Component<ListProps, { columns: ColumnProps<any>
             <div id="list-wrapper" style={{width: 'max-content', height: '100%'}} ref={this.me}>
                 <Find schema={schema} where={where} first={first} fields={this.fields}
                       onCompleted={this.onScroll}>
-                    {({data = [], variables, refetch, loading, count, pageInfo, fetchMore, error, onFiltersChange}) => {
+                    {({data = [], variables, refetch, loading, count, pageInfo, fetchMore, error}) => {
 
                         this.refetch = refetch
                         this.variables = variables
