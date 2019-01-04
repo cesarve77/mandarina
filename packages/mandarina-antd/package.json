@@ -70,9 +70,9 @@
     "apollo-client": "^2.4.7",
     "graphql": "^14.0.2",
     "graphql-tag": "^2.10.0",
-    "react": "^16.6.3",
+    "react": "^16.7.0-alpha.2",
     "react-apollo": "^2.3.2",
-    "react-dom": "^16.6.3"
+    "react-dom": "^16.7.0-alpha.2"
   },
   "scripts": {
     "postinstall": "tsc && tsc -d --emitDeclarationOnly --allowJs false"
