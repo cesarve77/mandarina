@@ -1,6 +1,6 @@
 {
   "name": "mandarina-antd",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "Antd styling for mandarina",
   "main": "build/index.js",
   "types": "build/index.d.ts",
@@ -55,8 +55,8 @@
     "prisma-binding": "^2.2.8",
     "prop-types": "^15.6.2",
     "react": "^16.7.0-alpha.2",
-    "react-apollo": "^2.3.2",
     "react-dom": "^16.7.0-alpha.2",
+    "react-apollo": "^2.3.2",
     "react-test-renderer": "^16.6.3",
     "ts-jest": "^23.10.5",
     "typescript": "^3.2.1",
@@ -71,8 +71,8 @@
     "graphql": "^14.0.2",
     "graphql-tag": "^2.10.0",
     "react": "^16.7.0-alpha.2",
-    "react-apollo": "^2.3.2",
-    "react-dom": "^16.7.0-alpha.2"
+    "react-dom": "^16.7.0-alpha.2",
+    "react-apollo": "^2.3.2"
   },
   "scripts": {
     "postinstall": "tsc && tsc -d --emitDeclarationOnly --allowJs false"
