@@ -43,11 +43,10 @@ export class ActionForm extends PureComponent<ActionFormProps> {
         `;
         const bridge = new Bridge(schema)
         const MUTATION = gql(gqlString)
-
         return (
             // @ts-ignore
-            <Mutation mutation={MUTATION} fetchPolicy='network-only'
-                      onCompleted={(data) => console.log('onCompleted', data)}>
+            <Mutation mutation={MUTATION}
+                      onCompleted={(data) => console.log('ActionForm onCompleted', data)}>
                 {(mutation, {loading, error, ...restMutation}) => {
                     return (
                         <AutoForm disabled={loading}
