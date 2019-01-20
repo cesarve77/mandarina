@@ -17,6 +17,7 @@ export const forceType = (value: any, type: Native): any => {
 
     // Convert to Number type
     if (type === Number || type === Integer) {
+        console.log(value,type,Number(value))
         if (typeof value === 'string' && value.length > 0) {
             // Try to convert numeric strings to numbers
             const numberVal = Number(value);
@@ -72,21 +73,26 @@ export const hasValidator = (validators: Validator[],name?: string): boolean => 
 export const get = (obj: any={}, paths: string[]): any[] => {
 
     const result: any[] = []
-    paths.forEach((path, i) => {
+    const len=paths.length
+    for (let i=0;i<len;i++){
+        const path=paths[i]
         const val = obj[path]
         if (Array.isArray(val)) {
             val.forEach((val) => {
                 result.push(...get(val, paths.slice(i + 1)))
             })
         } else if (val) {
-            if (paths.slice(i + 1).length === 0) {
+            const slice=paths.slice(i + 1)
+            if (slice.length === 0) {
                 result.push(val)
+                return result
             } else {
-                result.push(...get(val, paths.slice(i + 1)))
+                result.push(...get(val, slice))
+                return result
             }
 
         }
-    })
+    }
 
     return result
 }

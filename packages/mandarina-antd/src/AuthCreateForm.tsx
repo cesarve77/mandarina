@@ -9,6 +9,7 @@ interface AuthUpdateFormStateProps {
 
 }
 
+
 export const AuthCreateForm = ({schema, denied, ...props}: AuthUpdateFormStateProps) => {
     return (
         <AuthTable schema={schema} action='create'>

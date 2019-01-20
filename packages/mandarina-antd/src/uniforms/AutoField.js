@@ -16,7 +16,8 @@ import invariant from 'invariant'
 import {Integer} from 'mandarina'
 import HiddenField from "uniforms-antd/HiddenField";
 import filterDOMProps from "uniforms/filterDOMProps";
-filterDOMProps.register('col', 'loading', 'omitFields','minCount','maxCount','submitting','validating')
+
+filterDOMProps.register('col', 'loading', 'omitFields', 'minCount', 'maxCount', 'submitting', 'validating')
 
 
 class CustomAuto extends BaseField {
@@ -42,13 +43,15 @@ class CustomAuto extends BaseField {
                     case  /(^id$|\.id$)/.test(this.props.name):
                         props.component = HiddenField;
                         break;
+
+                    case !!props.query:
+                        console.log(props.name)
+                        props.component = TableField;
+                        break;
                     case (Array.isArray(props.fieldType) || props.fieldType === Array):
                         props.component = ListField;
                         break;
-                    case !!props.query:
-                        props.component = TableField;
-                        break;
-                    case (typeof  props.fieldType === 'string' || props.fieldType === Object):
+                    case (typeof props.fieldType === 'string' || props.fieldType === Object):
 
                         props.component = NestField;
                         break;
@@ -73,13 +76,13 @@ class CustomAuto extends BaseField {
 
             }
         }
-        let label=this.props.label
+        let label = this.props.label
         if (label === "") label = this.props.field.label
-        if (col === false) return createElement(props.component, {...this.props,label})
+        if (col === false) return createElement(props.component, {...this.props, label})
         if (typeof col !== 'object') col = {span: col}
         return (
             <Col {...col}>
-                {createElement(props.component,  {...this.props,label})}
+                {createElement(props.component, {...this.props, label})}
             </Col>
         )
     }

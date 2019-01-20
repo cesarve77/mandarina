@@ -1,47 +1,73 @@
 import {Query} from "react-apollo";
 import React from "react";
 import gql from "graphql-tag";
-import isEmpty from 'lodash.isempty'
 import SelectField from "uniforms-antd/SelectField";
+import {Spin} from "antd";
+import {Schema} from 'mandarina'
 
-const defaultExtractor = (data) => {
-    if (isEmpty(data)) return []
-    const queryName = Object.keys(data)[0]
-    const docs = data[queryName]
-    return docs.map((doc) => {
-        const keys = Object.keys(doc)
-        const value = doc[keys[0]]
-        const label = getFirstProperty(doc[keys[1]])
-        return {value, label}
+const defaultLabeler = (doc) => {
+    const clone = {...doc}
+    const id = clone.id
+    delete clone.id
+    delete clone.__typename
+    return joinValues(clone, id)
+
+}
+const getTransform = (docs, labeler) => {
+    if (!Array.isArray(docs) || docs.length === 0) return (id) => id
+    const mapper = {}
+    docs.forEach((doc) => {
+        mapper[doc.id] = labeler(doc)
     })
+    return (id) => mapper[id] && mapper[id].toString()
 }
 
-const getFirstProperty = (obj) => {
-    if (!obj) return ''
+
+export const joinValues = (obj, defaultValue, divider = ' ') => {
+    if (!obj) return defaultValue
     if (typeof obj === 'string') return obj
     const keys = Object.keys(obj)
-    if (!keys[0]) return ''
-    if (obj[keys[0]] === 'object') {
-        return getFirstProperty(obj[keys[0]])
-    } else {
-        return obj[keys[0]]
-    }
+    if (!keys[0]) return defaultValue
+    const result = []
+    keys.forEach((key) => {
+        if (obj[key] === 'object') {
+            return result.push(joinValues(obj[key]))
+        } else {
+            return result.push(obj[key])
+        }
+    })
+    return result.join(divider)
 }
 
-export default ({query, extractor = defaultExtractor, ...props}) => {
+
+export default React.memo(({query, mode, labeler = defaultLabeler, ...props}) => {
     if (typeof query === 'string') {
-        const QUERY = gql(`query docs{ ${query} }`)
+        const schema = Schema.getInstance(props.field.type)
+        const queryName = schema.names.query.plural
+        const QUERY = gql(`query {${queryName} { id ${query} }}`)
         return (
             <Query query={QUERY}>
                 {({loading, error, data, variables, refetch}) => {
                     if (error) return <Error variables={variables} error={error} refetch={refetch}/> //todo create ERROR component
-                    const options = extractor(data)
+                    const docs = loading ? [] : data[queryName]
+                    const allowedValues = docs.map(({id}) => id)
+                    const transform = getTransform(docs, labeler)
+                    let mode = props.mode, value = props.value && props.value.id || ''
+                    let onChange = value => props.onChange({id: value})
+                    if (props.fieldType === Array) {
+                        mode = mode || "multiple"
+                        value = props.value || []
+                        onChange = values => props.onChange(values.map(id => ({id})))
+                    }
                     return <SelectField {...props}
-                                        options={options}
+                                        transform={transform}
                                         placeholder={props.loading ? '.... ... .. .' : props.placeholder}
                                         disabled={loading || props.disabled}
-                                        onChange={value => props.onChange({id: value})}
-                                        value={props.fieldType === Array ? props.value || [] : '' + (props.value && props.value.id || '')}
+                                        onChange={onChange}
+                                        value={value}
+                                        notFoundContent={loading ? <Spin size="small"/> : null}
+                                        mode={mode}
+                                        allowedValues={allowedValues}
                     />
                 }}
             </Query>
@@ -49,4 +75,4 @@ export default ({query, extractor = defaultExtractor, ...props}) => {
     } else {
 
     }
-}
+})

@@ -1,5 +1,5 @@
 import React, {PureComponent} from 'react'
-import {Schema} from '../Schema/Schema'
+import {Schema} from '..'
 import gql from "graphql-tag";
 import {Query} from "react-apollo";
 import {buildQueryFromFields} from "./utils";
@@ -38,6 +38,8 @@ export interface FindProps {
     children?: FindChildren
     schema: Schema
     fields?: string[]
+    omitFields?: string[]
+    omitFieldsRegEx?: RegExp
     where?: object
     after?: string
     first?: number
@@ -69,6 +71,7 @@ export class FindBase extends PureComponent<FindProps & FindBaseProps, FindBaseS
     queryHistory: object[] = []
 
     buildQueryFromFields = (fields: string[]) => buildQueryFromFields(fields)
+
     componentWillMount(): void {
         FindBase.queries = FindBase.queries || []
         //todo: **1
@@ -83,7 +86,9 @@ export class FindBase extends PureComponent<FindProps & FindBaseProps, FindBaseS
     render() {
 
         const {
-            fields: optionalFields, schema, after, first, type, where, skip,
+            fields: optionalFields = [], schema, after, first, type, where, skip,
+            omitFields: optionalOmitFields = [],
+            omitFieldsRegEx,
             children,
             pollInterval,
             notifyOnNetworkStatusChange,
@@ -97,7 +102,12 @@ export class FindBase extends PureComponent<FindProps & FindBaseProps, FindBaseS
             partialRefetch,
             ...props
         } = this.props;
-        const fields = optionalFields || schema.getFields()
+        let fields = optionalFields || schema.getFields()
+        const omitFields = optionalOmitFields.map(omit => omit.replace('.', '\\.'))
+        fields = fields.filter(field => !omitFields.some(omit => !!field.match(new RegExp(`^${omit}$|^${omit}\\.`))))
+        if (omitFieldsRegEx) {
+            fields = fields.filter(field => !field.match(omitFieldsRegEx))
+        }
         const {names} = schema
         const defaultQuery = this.buildQueryFromFields(fields)
         let queryString: string
@@ -172,7 +182,7 @@ export class FindBase extends PureComponent<FindProps & FindBaseProps, FindBaseS
                         }
                     }
                     if (!children) return null
-                    return  children({
+                    return children({
                         schema,
                         query: QUERY,
                         data,

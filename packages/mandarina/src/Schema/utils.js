@@ -15,6 +15,7 @@ exports.forceType = function (value, type) {
     }
     // Convert to Number type
     if (type === Number || type === Schema_1.Integer) {
+        console.log(value, type, Number(value));
         if (typeof value === 'string' && value.length > 0) {
             // Try to convert numeric strings to numbers
             var numberVal = Number(value);
@@ -72,7 +73,9 @@ exports.hasValidator = function (validators, name) {
 exports.get = function (obj, paths) {
     if (obj === void 0) { obj = {}; }
     var result = [];
-    paths.forEach(function (path, i) {
+    var len = paths.length;
+    var _loop_1 = function (i) {
+        var path = paths[i];
         var val = obj[path];
         if (Array.isArray(val)) {
             val.forEach(function (val) {
@@ -80,13 +83,21 @@ exports.get = function (obj, paths) {
             });
         }
         else if (val) {
-            if (paths.slice(i + 1).length === 0) {
+            var slice = paths.slice(i + 1);
+            if (slice.length === 0) {
                 result.push(val);
+                return { value: result };
             }
             else {
-                result.push.apply(result, exports.get(val, paths.slice(i + 1)));
+                result.push.apply(result, exports.get(val, slice));
+                return { value: result };
             }
         }
-    });
+    };
+    for (var i = 0; i < len; i++) {
+        var state_1 = _loop_1(i);
+        if (typeof state_1 === "object")
+            return state_1.value;
+    }
     return result;
 };

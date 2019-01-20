@@ -3,10 +3,10 @@ import connectField from 'uniforms/connectField';
 import filterDOMProps from 'uniforms/filterDOMProps';
 import injectName from 'uniforms/injectName';
 import joinName from 'uniforms/joinName';
-
 import AutoField from './AutoField';
-import {getDecendents, getParents} from "../utils";
+import {getDecendents, getParents} from "mandarina/build/utils";
 import * as PropTypes from "prop-types";
+
 
 class Nest extends Component {
     decendents = {}

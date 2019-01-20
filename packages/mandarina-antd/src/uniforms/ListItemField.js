@@ -1,7 +1,6 @@
 import React, {Children} from 'react';
 import connectField from 'uniforms/connectField';
 import joinName from 'uniforms/joinName';
-
 import AutoField from './AutoField';
 import ListDelField from 'uniforms-antd/ListDelField';
 

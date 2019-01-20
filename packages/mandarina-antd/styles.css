@@ -23,6 +23,7 @@
 .blur {
     filter: blur(4px);
 }
+
 .mandarina-list-thead-row .mandarina-list-thead-col {
     float: left;
     overflow: hidden;
@@ -39,3 +40,14 @@
     clear: both;
 }
 
+.ant-input-wrapper.ant-input-group .ant-input-number {
+    border-bottom-left-radius: 0;
+    border-top-left-radius: 0;
+}
+
+/* avoid operator list filter grow for DatePickers*/
+.ant-input-wrapper.ant-input-group.date-picker input{
+    float: none !important;
+    border-bottom-left-radius: 0;
+    border-top-left-radius: 0;
+}

@@ -3,7 +3,7 @@ import {mapValues} from 'lodash';
 import * as inflection from "inflection";
 
 import {ErrorValidator, Validator, ValidatorCreator} from "./ValidatorCreator";
-import {extraKey, isDate, isInteger, isNumber, isString} from "./Validators";
+import {extraKey, isDate, isInteger, isNumber, isString, required} from "./Validators";
 import {forceType, hasValidator} from "./utils";
 import {Permissions} from "../Table/Table";
 import {UniqueSchemaError} from '../Errors/UniqueSchemaError';
@@ -71,7 +71,6 @@ export class Schema {
                 update: `${singleUpper}UpdateInput!`,
             }
         };
-
     }
 
     static getInstance(name: string): Schema {
@@ -108,6 +107,7 @@ export class Schema {
         const isDateValidator = isDate.getValidatorWithParam();
         const isIntegerValidator = isInteger.getValidatorWithParam();
         const isStringValidator = isString.getValidatorWithParam();
+        const isRequired = required.getValidatorWithParam();
 
         if (definition.type === Number && (!hasValidator(fieldDefinition.validators, isNumberValidator.validatorName))) {
             definition.validators.unshift(isNumberValidator);
@@ -125,9 +125,18 @@ export class Schema {
             definition.validators.unshift(isStringValidator);
         }
 
+        if (Array.isArray(definition.type) && typeof definition.type[0] !== 'string' && (!hasValidator(fieldDefinition.validators, isRequired.validatorName))) {
+            definition.validators.unshift(isRequired);
+        }
+
         // set default -> default values
         if (Array.isArray(definition.type)) {
-            fieldDefinition.defaultValue = definition.defaultValue || [];
+            if (typeof definition.type[0] === 'string') {
+                fieldDefinition.defaultValue = definition.defaultValue || {};
+            } else {
+                fieldDefinition.defaultValue = definition.defaultValue || null;
+            }
+
         } else if (typeof definition.type === 'string') {
             fieldDefinition.defaultValue = definition.defaultValue || {};
         } else {
@@ -214,6 +223,7 @@ export class Schema {
     }
 
     clean(model: Model, transform: boolean = false) {
+        console.log(this.name, this.keys)
         this.original = model;
         this._clean(model, transform);
     }
@@ -229,6 +239,8 @@ export class Schema {
             Error.prepareStackTrace = origPrepareStackTrace
             const path = require('path')
             // @ts-ignore
+            if (!stack || !stack[2] || !stack[2].getFileName) return ''
+            // @ts-ignore
             this.filePath = path.dirname(stack[2].getFileName())
         }
         return this.filePath
@@ -242,7 +254,6 @@ export class Schema {
      * @param removeExtraKeys
      */
     protected _clean(model: Model | undefined | null, transform = false, removeExtraKeys = true) {
-
         if (removeExtraKeys && model && typeof model === 'object') {
             Object.keys(model).forEach((key) => {
                 if (!this.keys.includes(key)) {
@@ -252,16 +263,15 @@ export class Schema {
         }
 
         this.keys.forEach((key): any => {
+            console.log(key)
             const definition = this.getFieldDefinition(key);
             const type = definition.type;
 
             if (typeof type === "function" && typeof model === 'object' && model !== undefined && model !== null) {
-
                 model[key] = forceType(model[key], <Native>definition.type);
                 model[key] = model[key] === 0 ? 0 : model[key] || definition.defaultValue;
 
             } else if (typeof type === "string" && typeof model === 'object' && model !== undefined && model !== null) {
-
                 if (model[key] !== 0 && !model[key]) {
                     return model[key] = definition.defaultValue;
                 }
@@ -271,7 +281,6 @@ export class Schema {
                 return;
 
             } else if (Array.isArray(type) && typeof model === 'object' && model !== undefined && model !== null) {
-
                 model[key] = forceType(model[key], Array)
 
                 if (typeof type[0] === 'string') {
@@ -281,13 +290,14 @@ export class Schema {
                         return value
                     });
                 } else {
-                    model[key] = model[key].map((value: any) => {
-                        this._clean(value, transform)
-                        return value
-                    });
+                    model[key] = model[key].map((value: any) => forceType(value, <Native>type[0]));
                 }
                 return;
+            } else if (Array.isArray(type) && typeof model !== 'object' && model !== undefined && model !== null) {
+                console.log('NOOOOO DETERMINADO', key, model)
+
             }
+
 
             if (transform && model) {
                 model[key] = definition.transformValue.call({
@@ -358,29 +368,35 @@ export class Schema {
                 return errors = [...errors, ...internalErrors];
             }
 
-            if (Array.isArray(type)) {
 
+            if (Array.isArray(type)) {
+                for (const validator of definition.validators) {
+                    console.log('validator.arrayValidator', validator.arrayValidator, validator.validatorName)
+                    if (!validator.arrayValidator) continue
+                    console.log('**************************', key, path, definition, value)
+                    const instance = new validator({key, path, definition, value});
+                    const error = instance.validate(originalModel);
+                    if (error) {
+                        return errors.push(error);
+                    }
+                }
                 // TODO: Tal vez es mejor chequear en default value que siempre tenga un valor
                 if (typeof type[0] === 'string' && value) {
                     const schema = Schema.getInstance(<string>type[0]);
                     const schemaName = schema.name;
                     let internalErrors: ErrorValidator[] = [];
-
                     value.forEach((value: any, i: number) => {
                         if (!pathHistory.some(({schema, path}) => schemaName === schema)) {
                             internalErrors = [...internalErrors, ...schema._validate(value, `${path}.${i}`, pathHistory, originalModel)];
                         }
                         pathHistory.push({path, schema: schemaName});
                     });
-
                     errors = [...errors, ...internalErrors];
-
                 } else if (value) {
-
                     // TODO: Es mejor chquear en default value que siempre tenga un valor
                     value.forEach((value: any, i: number): any => {
                         for (const validator of definition.validators) {
-
+                            if (validator.arrayValidator) continue
                             const instance = new validator({key, path, definition, value});
                             const error = instance.validate(originalModel);
 
@@ -396,7 +412,7 @@ export class Schema {
             }
 
             for (const validator of definition.validators) {
-
+                if (validator.arrayValidator) continue
                 const instance = new validator({key, path, definition, value});
                 const error = instance.validate(originalModel);
 
@@ -411,20 +427,21 @@ export class Schema {
         const extraKeys = Object.keys(shape);
 
         if (extraKeys.length) {
-            const extraKeysErrors = extraKeys.map(key => {
+            extraKeys.forEach(key => {
+                if (key === 'id') return
                 const Validator = extraKey.getValidatorWithParam()
                 // Mock definition for a not existent key
                 const definition = this.applyDefinitionsDefaults({label: key, type: String}, key)
 
-                return <ErrorValidator>new Validator({
+                errors.push(<ErrorValidator>new Validator({
                     key,
                     definition,
                     path: parent,
                     value: key
-                }).validate(originalModel);
-            });
+                }).validate(originalModel))
+            })
 
-            errors = errors.concat(extraKeysErrors);
+
         }
 
         return errors;
@@ -517,6 +534,15 @@ export type Native = (props: any) => any
 
 export type Types = Native | string | Array<string> | Array<Native>
 
+type Where = any
+
+export type FilterMethod = (filter: any) => Where
+
+export type FilterComponent = ((props: any) => JSX.Element) | null
+
+export type CellComponent = (props: { columnIndex: number, rowIndex: number, data: any[], field: string }) => JSX.Element
+
+
 export interface UserFieldDefinition {
     type: Types
     label?: LabelOrResolver
@@ -525,7 +551,16 @@ export interface UserFieldDefinition {
     defaultValue?: any
     transformValue?: (value: any) => any
     form?: any;
-    list?: any;
+    list?: {
+        hidden?: true
+        filterMethod?: FilterMethod
+        filterComponent?: FilterComponent
+        CellComponent?: CellComponent
+        LoadingElement?: JSX.Element
+        filter?: boolean
+        width?: number
+
+    }
     unique?: boolean
     permissions?: Permissions
 }
@@ -534,7 +569,7 @@ export interface ValidatorFinder {
     [validator: string]: any
 }
 
-export interface FieldDefinition {
+export interface FieldDefinition extends UserFieldDefinition{
     type: Native | string | Array<string> | Array<Native>,
     label: Label
     description?: string
@@ -542,7 +577,15 @@ export interface FieldDefinition {
     defaultValue: any
     transformValue: (value: any) => any
     form: any;
-    list: any;
+    list: {
+        hidden?: true
+        filterMethod?: FilterMethod
+        filterComponent?: FilterComponent
+        CellComponent?: CellComponent
+        LoadingElement?: JSX.Element
+        filter?: boolean
+        width?: number
+    }
     unique: boolean
     permissions?: Permissions
 }

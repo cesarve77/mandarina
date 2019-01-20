@@ -12,6 +12,7 @@ import {
     VariableSizeGrid as Grid
 } from 'react-window';
 import ListFilter, {onFilterChange, Where} from "./ListFilter";
+import {CellComponent} from "mandarina/build/Schema/Schema";
 
 declare module "react-window" {
     const areEqual: any
@@ -75,10 +76,13 @@ export interface Edge {
     }
 }
 
+
 interface ColumnProps {
     field: string
     title: string
     width: number
+    CellComponent?: CellComponent
+    LoadingElement?: JSX.Element
 }
 
 const estimatedColumnWidthDefault = 200
@@ -109,9 +113,14 @@ export class ListVirtualized extends React.Component<ListProps, { columns: Colum
         } = props
         //const definitions: Partial<FieldDefinitions> = {}
         this.fields = fields || schema.getFields()
-        const columns = this.fields.map(this.getColumnDefinition)
-        this.estimatedColumnWidth = columns.reduce((mem, {width}) => width + mem, 0) / columns.length
+        const columns = this.fields.reduce((result, field) => {
+            const column = this.getColumnDefinition(field)
+            if (column) result.push(column)
+            return result
+        }, [] as ColumnProps[]);
 
+        this.fields.map(this.getColumnDefinition)
+        this.estimatedColumnWidth = columns.reduce((mem, {width}) => width + mem, 0) / columns.length
         this.state = {columns, height: 0, width: 0}
         this.tHead = React.createRef()
         this.container = React.createRef()
@@ -159,10 +168,13 @@ export class ListVirtualized extends React.Component<ListProps, { columns: Colum
         this.onResizeTimeoutId && window.clearTimeout(this.onResizeTimeoutId)
         this.onResizeTimeoutId = window.setTimeout(this.resize, 200)
     }
-    getColumnDefinition = (field: string): ColumnProps => {
+    getColumnDefinition = (field: string): ColumnProps | undefined => {
         const fieldDefinition = this.props.schema.getPathDefinition(field)
+        if (fieldDefinition.list.hidden) return
         return {
             field,
+            LoadingElement: fieldDefinition.list.LoadingElement,
+            CellComponent: fieldDefinition.list.CellComponent,
             title: fieldDefinition.label ? fieldDefinition.label : "",
             width: fieldDefinition.list.width || estimatedColumnWidthDefault
         }
@@ -180,6 +192,7 @@ export class ListVirtualized extends React.Component<ListProps, { columns: Colum
         //this.setState({row: this.visibleRowStartIndex})
         this.onScrollTimeoutId && window.clearTimeout(this.onScrollTimeoutId)
         this.onScrollTimeoutId = window.setTimeout(() => {
+            console.log('scroll stop')
             //If all visible are loaded, then not refetch
             if (this.data.slice(this.visibleRowStartIndex, this.visibleRowStopIndex).every((val) => val !== undefined)) return
 
@@ -187,6 +200,7 @@ export class ListVirtualized extends React.Component<ListProps, { columns: Colum
             //TODO: maybe if we are in gap, then just query for that data
 
             const {overLoad = 0} = this.props
+            console.log('refetch')
             this.refetch(
                 {
                     skip: this.overscanRowStartIndex,
@@ -198,7 +212,7 @@ export class ListVirtualized extends React.Component<ListProps, { columns: Colum
     filters: { [field: string]: Where } = {}
 
     onFilterChange: onFilterChange = (field, where) => {
-        console.log('this. onFilterChange')
+        console.log('this. onFilterChange', field, where)
         if (where && !isEmpty(where)) {
             this.filters[field] = where
         } else {
@@ -211,7 +225,7 @@ export class ListVirtualized extends React.Component<ListProps, { columns: Colum
         } else {
             this.variables.where = {AND: allFilters}
         }
-
+        this.data = []
         this.refetch(this.variables)
     }
 
@@ -290,7 +304,7 @@ export class ListVirtualized extends React.Component<ListProps, { columns: Colum
                                 }}
                             >
                                 {
-                                    Row
+                                    Cell
                                 }
 
                             </Grid>
@@ -304,15 +318,26 @@ export class ListVirtualized extends React.Component<ListProps, { columns: Colum
 }
 
 
-const Row = memo(
+
+const DefaultCellComponent: CellComponent = ({columnIndex, rowIndex, data, field}) => {
+    const children = (data[rowIndex] && get(data[rowIndex], field.split('.'))) || []
+    return <>{children.map(child => <>{child}<br/></>)}</>
+}
+const DefaultLoadingElement='...'
+
+const Cell = memo(
     ({columnIndex, rowIndex, data: {data, columns}, style}: ListChildComponentProps & GridChildComponentProps & { data: { data: any, columns: ColumnProps[] } }) => {
+        const field = columns[columnIndex].field
+        const CellComponent=columns[columnIndex].CellComponent || DefaultCellComponent
+        const LoadingElement=columns[columnIndex].LoadingElement || DefaultLoadingElement
         return (
             <div className={'mandarina-list-cell'}
-                 style={{...style, ...blur, overflow: 'hidden'}}>
-                {!data[rowIndex] && '...'}
-                {data[rowIndex] && get(data[rowIndex], columns[columnIndex].field.split('.'))}
+                 style={style}>
+                {!data[rowIndex] && LoadingElement}
+                <CellComponent columnIndex={columnIndex} rowIndex={rowIndex} data={data} field={field}/>
             </div>
         )
     },
     areEqual
 );
+

@@ -3,7 +3,8 @@ import PropTypes from 'prop-types';
 import filterDOMProps from "uniforms/filterDOMProps";
 import AutoField from "./AutoField";
 import {Row} from "antd";
-import {getDecendents, getParents} from "../utils";
+import {getDecendents, getParents} from "mandarina/build/utils";
+
 
 class AutoFields extends Component {
 

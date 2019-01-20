@@ -11,9 +11,6 @@ const AuthListComponent = ({schema, denied, Component, ...props}: ColumnProps<an
     return (
         <AuthTable schema={schema} action='read'>
             {({fields, loading}) => {
-                if (!loading && Array.isArray(fields)) {
-                    fields = fields.filter((field) => !field.match(/\.id$|^id$/))
-                }
                 return (
                     <Spin spinning={loading} style={{width: '100%'}}>
                         {!loading && fields && fields.length > 0 &&

@@ -32,20 +32,21 @@ export const AuthServer: AuthInterface = {
     },
     getRoles: () => {
         if (roles.length === 0) {
-            console.log('AuthTable.getRoles ************************************', roles)
+
             const tables = Object.values(Table.instances)
             tables.forEach((table: Table) => {
-                authFields[table.name] = authFields[table.name] || {read: {}, create: {}, update: {}, delete: {},}
+                authFields[table.name] = authFields[table.name] || {read: {}, create: {}, update: {}, delete: {}}
                 const permissions = table.getPermissions()
-                    actions.forEach((action) => {
-                        const tableRoles=Object.keys(permissions[action])
-                        tableRoles.forEach(role=>{
-                            if (role && !roles.includes(role)) {
-                                roles.push(role)
-                            }
-                        })
-
+                actions.forEach((action) => {
+                    const tableRoles = Object.keys(permissions[action])
+                    tableRoles.forEach(role => {
+                        authFields[table.name][action][role] = permissions[action][role]
+                        if (role && !roles.includes(role)) {
+                            roles.push(role)
+                        }
                     })
+
+                })
             })
         }
         return roles
@@ -54,10 +55,12 @@ export const AuthServer: AuthInterface = {
         AuthFields: async (_: any, args: AuthArgs, context: any, info: any) => {
             const allRoles = AuthServer.getRoles()
             const user = await Mandarina.config.getUser(context)
+
             const userRoles = (user && user.roles) || []
             if (!actions.includes(args.action)) throw new Error(`Action only can be one of ['read', 'create', 'update', 'delete'] now is: ${args.action} `)
             if (!authFields[args.table]) throw new Error(`Table ${args.table} not found getting AuthFields `)
             const table = Table.getInstance(args.table)
+            const allTableFields=table.getFields()
             const tablePermissions = table.getPermissions()
             const everyone = tablePermissions[args.action].everyone
             let fields: string[] = everyone ? everyone : []
@@ -65,12 +68,14 @@ export const AuthServer: AuthInterface = {
 
             userRoles.forEach((role) => {
                 if (allRoles.includes(role)) {
+                    console.log('authFields[args.table][args.action][role]', authFields[args.table][args.action][role])
+                    console.log(args.table, args.action, role, authFields[args.table][args.action][role])
                     addToSet(fields, authFields[args.table][args.action][role] || [])
                 } else {
                     extraRoles.push(role)
                 }
             })
-            if (!extraRoles.length) return fields
+            if (!extraRoles.length) return allTableFields.filter(field=>fields.includes(field)) // for keep the order
             const alcFields = await context.prisma.query.authTables({
                 where: {
                     role_in: userRoles,
@@ -79,7 +84,8 @@ export const AuthServer: AuthInterface = {
                 }
             })
             addToSet(fields, alcFields)
-            return fields
+
+            return allTableFields.filter(field=>fields.includes(field)) // for keep the order
             /*const staticRoles = roles.filter(permissionRoles.includes)
             const dynamicRoles = roles.filter((field: string) => !permissionRoles.includes(field))
 

@@ -5,7 +5,6 @@ import connectField   from 'uniforms/connectField';
 import filterDOMProps from 'uniforms/filterDOMProps';
 import joinName       from 'uniforms/joinName';
 import {Children}     from 'react';
-
 import ListAddField  from 'uniforms-antd/ListAddField';
 import ListItemField from './ListItemField';
 

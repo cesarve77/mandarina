@@ -1,6 +1,7 @@
 import * as inflection from "inflection";
-import {Schema} from "../Schema/Schema";
+import {Schema} from "..";
 import {isRequired} from "../Schema/utils";
+import {Table} from "./Table";
 
 /**
  * Upper case the first latter
@@ -153,11 +154,15 @@ export const getDeclarations = (schema: Schema): string => {
 const getMainSchema = (schema: Schema, type: 'input' | 'type') => {
     let mainSchema = []
     for (const key of schema.keys) {
-        if (key === 'id' && !schema.options.virtual) {
-            mainSchema.push(`id: ID! @unique`);
+        if (key === 'id' && type==='type' ) {
+            console.log(schema.name,!!Table.instances[schema.name])
+            if (!!Table.instances[schema.name]){
+                mainSchema.push(`id: ID! @unique`);
+            }
             continue
         }
         const field = schema.getFieldDefinition(key)
+
         const required = isRequired(field) ? '!' : ''
         const unique = type === 'type' && field.unique ? '@unique' : ''
         const fieldType = getGraphQLType(field.type, key, required);

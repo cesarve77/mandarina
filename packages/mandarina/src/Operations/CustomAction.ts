@@ -20,7 +20,7 @@ export class CustomAction {
     public name: string;
     public options: ActionOptions
     public actions: ActionInterface
-    public permissions: string[];
+    public permission: string[];
 
 
     /**
@@ -41,7 +41,7 @@ export class CustomAction {
         if (CustomAction.instances[this.name]) {
             throw new UniqueActionError(this.name);
         }
-        this.permissions = actionOptions.permissions || ['everyone']
+        this.permission = actionOptions.permission || ['everyone']
         this.actions = actionOptions.actions
         CustomAction.instances[this.name] = this;
     }
@@ -90,7 +90,7 @@ export class CustomAction {
 
 export interface ActionOptions {
     actions: ActionInterface
-    permissions?: Permission[]
+    permission?: Permission
     onBefore?: Hook
     onAfter?: Hook
     errorFromServerMapper?: ErrorFromServerMapper
@@ -100,7 +100,7 @@ export interface ActionOptions {
 
 export interface ActionInterface {
     [name: string]: {
-        permissions?: Permission
+        permission?: Permission
         action: (_: any, args: any, context: any, info: any) => any | Promise<any>
         fields?: string[] | {
             [field: string]: Permission

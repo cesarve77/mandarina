@@ -162,7 +162,7 @@ export class Bridge {
 
             }
 
-            let placeholder
+            let placeholder=uniforms.placeholder
 
             if (props.placeholder === true && uniforms.placeholder) {
                 placeholder = uniforms.placeholder;

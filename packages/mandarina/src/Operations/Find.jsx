@@ -46,6 +46,10 @@ var FindBase = /** @class */ (function (_super) {
         _this.buildQueryFromFields = function (fields) { return utils_1.buildQueryFromFields(fields); };
         return _this;
     }
+    FindBase.prototype.componentWillMount = function () {
+        FindBase.queries = FindBase.queries || [];
+        //todo: **1
+    };
     FindBase.prototype.componentWillUnmount = function () {
         if (!Array.isArray(FindBase.queries))
             return;
@@ -53,10 +57,9 @@ var FindBase = /** @class */ (function (_super) {
     };
     FindBase.prototype.render = function () {
         var _a;
-        FindBase.queries = FindBase.queries || [];
-        var _b = this.props, optionalFields = _b.fields, table = _b.table, after = _b.after, first = _b.first, type = _b.type, where = _b.where, skip = _b.skip, children = _b.children, pollInterval = _b.pollInterval, notifyOnNetworkStatusChange = _b.notifyOnNetworkStatusChange, _c = _b.fetchPolicy, fetchPolicy = _c === void 0 ? 'cache-and-network' : _c, errorPolicy = _b.errorPolicy, ssr = _b.ssr, displayName = _b.displayName, onCompleted = _b.onCompleted, onError = _b.onError, context = _b.context, partialRefetch = _b.partialRefetch, props = __rest(_b, ["fields", "table", "after", "first", "type", "where", "skip", "children", "pollInterval", "notifyOnNetworkStatusChange", "fetchPolicy", "errorPolicy", "ssr", "displayName", "onCompleted", "onError", "context", "partialRefetch"]);
-        var fields = optionalFields || table.getFields();
-        var names = table.names;
+        var _b = this.props, optionalFields = _b.fields, schema = _b.schema, after = _b.after, first = _b.first, type = _b.type, where = _b.where, skip = _b.skip, children = _b.children, pollInterval = _b.pollInterval, notifyOnNetworkStatusChange = _b.notifyOnNetworkStatusChange, _c = _b.fetchPolicy, fetchPolicy = _c === void 0 ? 'cache-and-network' : _c, errorPolicy = _b.errorPolicy, ssr = _b.ssr, displayName = _b.displayName, onCompleted = _b.onCompleted, onError = _b.onError, context = _b.context, partialRefetch = _b.partialRefetch, props = __rest(_b, ["fields", "schema", "after", "first", "type", "where", "skip", "children", "pollInterval", "notifyOnNetworkStatusChange", "fetchPolicy", "errorPolicy", "ssr", "displayName", "onCompleted", "onError", "context", "partialRefetch"]);
+        var fields = optionalFields || schema.getFields();
+        var names = schema.names;
         var defaultQuery = this.buildQueryFromFields(fields);
         var queryString;
         if (type === 'connection') {
@@ -86,7 +89,9 @@ var FindBase = /** @class */ (function (_super) {
                     data = data && data[names.query[type]];
                 }
             }
-            return children(__assign({ table: table, query: QUERY, data: data,
+            if (!children)
+                return null;
+            return children(__assign({ schema: schema, query: QUERY, data: data,
                 loading: loading,
                 error: error,
                 variables: variables,

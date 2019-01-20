@@ -27,13 +27,13 @@ exports.maxDate = new ValidatorCreator_1.ValidatorCreator(function (value, param
     if (param === void 0) { param = true; }
     return value.getTime() >= param.getTime();
 }, 'maxDate', '{{label}} cannot be after {{param}}');
-exports.minCount = new ValidatorCreator_1.ValidatorCreator(function (value, param) { return value.length >= param; }, 'minCount', 'You must specify at least {{param}} values');
-exports.maxCount = new ValidatorCreator_1.ValidatorCreator(function (value, param) { return value.length <= param; }, 'maxCount', 'You cannot specify more than {{param}} values');
+exports.minCount = new ValidatorCreator_1.ValidatorCreator(function (value, param) { return value.length >= param; }, 'minCount', 'You must specify at least {{param}} values', true);
+exports.maxCount = new ValidatorCreator_1.ValidatorCreator(function (value, param) { return value.length <= param; }, 'maxCount', 'You cannot specify more than {{param}} values', true);
 exports.isAllowed = new ValidatorCreator_1.ValidatorCreator(function (value, param) { return !exists(value) || param.includes(value); }, 'isAllowed', '{{value}} is not an allowed value');
 exports.isNumber = new ValidatorCreator_1.ValidatorCreator(function (value) { return !exists(value) || typeof value === 'number'; }, 'isNumber', '{{label}} must be an integer');
 exports.isInteger = new ValidatorCreator_1.ValidatorCreator(function (value) { return !exists(value) || typeof value === 'number' && value % 1 === 0; }, 'isInteger', '{{label}} must be an integer');
 exports.isString = new ValidatorCreator_1.ValidatorCreator(function (value) { return !exists(value) || typeof value === 'string'; }, 'isString', '{{label}} must be an string');
 exports.isDate = new ValidatorCreator_1.ValidatorCreator(function (value) { return !exists(value) || value instanceof Date; }, 'isDate', '{{label}} is not a valid date');
-exports.isArray = new ValidatorCreator_1.ValidatorCreator(function (value) { return !exists(value) || Array.isArray(value); }, 'isArray', "{{label}} should be a array");
+exports.isArray = new ValidatorCreator_1.ValidatorCreator(function (value) { return !exists(value) || Array.isArray(value); }, 'isArray', "{{label}} should be a array", true);
 exports.isRegEx = new ValidatorCreator_1.ValidatorCreator(function (value, param) { return !exists(value) || param.test(value); }, 'isRegEx', "{{label}} has an invalid format");
 exports.isEmail = new ValidatorCreator_1.ValidatorCreator(function (value) { return !exists(value) || /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/.test(value); }, 'isEmail', "{{label}} has an invalid format");

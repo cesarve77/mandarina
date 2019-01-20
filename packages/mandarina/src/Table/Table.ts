@@ -11,6 +11,7 @@ import {TableInstanceNotFound} from "../Errors/TableInstanceNotFound";
 import {Mandarina} from "../Mandarina";
 import {capitalize} from './utils';
 import {FieldsPermissionsError} from '../Errors/FieldsPermissionsError';
+import {MissingIdTableError} from "../Errors/MissingIDTableError";
 
 
 const getDefaultPermissions = () => ({read: {}, create: {}, update: {}, delete: {}});
@@ -26,8 +27,6 @@ const defaultActions = Object.keys(getDefaultPermissions());
 export class Table {
     // An object with all table instances created
     static instances: { [name: string]: Table };
-
-
     public schema: Schema;
     public name: string;
     public options: TableSchemaOptions & TableShapeOptions;
@@ -45,13 +44,11 @@ export class Table {
     constructor(schema: Schema, tableOptions: TableShapeOptions) {
         Table.instances = Table.instances || {};
         this.schema = schema;
-        this.schema.extend({
-            id: {
-                type: String,
-                permissions: {read: this.schema.permissions.read, create: 'nobody', update: 'nobody',}
-            }
-        })
         this.name = this.schema.name;
+
+        if (!this.schema.keys.includes('id')){
+            throw new MissingIdTableError(this.name);
+        }
 
         if (Table.instances[this.name]) {
             throw new UniqueTableError(this.name);
@@ -97,7 +94,7 @@ export class Table {
                     }
 
                     if (def.permissions[action] === 'nobody') return
-                    const roles: string[] = def.permissions[action].split('|')
+                    const roles: string[] = def.permissions[action]
                     roles.forEach((role) => {
                         this.permissions[action][role] = this.permissions[action][role] || []
                         this.permissions[action][role].push(field)
@@ -159,18 +156,20 @@ export class Table {
                 if (type === 'mutation') {
                     this.callHook('beforeValidate', action, _, args, context, info);
 
-                    // TODO: Flatting nested fields operation (context, update, create)
-                    const errors = this.schema.validate(this.flatFields(args.data));
+                    //TODO: Flatting nested fields operation (context, update, create)
+                    console.log('args.data',args.data)
+                    // console.log('123123123',this.flatFields(args.data))
+                    // const errors = this.schema.validate(this.flatFields(args.data));
 
-                    if (errors.length > 0) {
-                        await this.callHook('validationFailed', action, _, args, context, info);
-                    } else {
-                        await this.callHook('afterValidate', action, _, args, context, info);
-                    }
+                    // if (errors.length > 0) {
+                    //     await this.callHook('validationFailed', action, _, args, context, info);
+                    // } else {
+                    //     await this.callHook('afterValidate', action, _, args, context, info);
+                    // }
 
                     await this.callHook(<HookName>`before${capitalize(action)}`, action, _, args, context, info);
 
-                    this.validatePermissions(action, roles, args.data);
+                    //this.validatePermissions(action, roles, args.data);
 
                     result = await prismaMethod(args, info);
                     context.result = result
@@ -251,31 +250,31 @@ export class Table {
             .reduce((res, fieldName) => ({...res, [fieldName]: this.schema.shape[fieldName]}), {});
     }
 
-    private flatFields(model: any) {
-        const fieldWrappers = ['connect', 'create', 'udpate', 'delete'];
-        const composedFields = Object.keys(model).filter(key => {
-            const wrapperKey = Object.keys(model[key]).pop() || '';
-            return fieldWrappers.includes(wrapperKey);
-        });
-
-        if (composedFields.length > 0) {
-            const mappedFields = composedFields.reduce((p, key) => {
-                const wrapperKey = Object.keys(model[key]).pop() || '';
-
-                return {
-                    ...p,
-                    [key]: model[key][wrapperKey]
-                };
-            }, {});
-
-            return {
-                ...model,
-                ...mappedFields
-            };
-        }
-
-        return model;
-    }
+    // private flatFields(model: any) {
+    //     const fieldWrappers = ['connect', 'create', 'udpate', 'delete', 'set'];
+    //     const composedFields = Object.keys(model).filter(key => {
+    //         const wrapperKey = model[key] && Object.keys(model[key]).pop() || '';
+    //         return fieldWrappers.includes(wrapperKey);
+    //     });
+    //
+    //     if (composedFields.length > 0) {
+    //         const mappedFields = composedFields.reduce((p, key) => {
+    //             const wrapperKey = Object.keys(model[key]).pop() || '';
+    //
+    //             return {
+    //                 ...p,
+    //                 [key]: model[key][wrapperKey]
+    //             };
+    //         }, {});
+    //
+    //         return {
+    //             ...model,
+    //             ...mappedFields
+    //         };
+    //     }
+    //
+    //     return model;
+    // }
 
 
 }
@@ -291,7 +290,7 @@ export interface ContextAfter<Result> extends ContextParameters {
 }
 
 
-export type Permission = 'everyone' | 'nobody' | string
+export type Permission = ['everyone'] | ['nobody'] | string[]
 
 export interface Permissions {
     read?: Permission

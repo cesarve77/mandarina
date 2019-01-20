@@ -19,12 +19,17 @@
     "lodash.isempty": "^4.4.0",
     "lodash.set": "^4.3.2",
     "lodash.unset": "^4.5.2",
+    "mandarina": "latest",
     "react-resizable": "^1.7.5",
     "react-window": "latest",
-    "uniforms": "latest",
-    "mandarina": "latest"
+    "uniforms": "latest"
   },
   "devDependencies": {
+    "@babel/cli": "^7.2.3",
+    "@babel/core": "^7.2.2",
+    "@babel/plugin-proposal-class-properties": "^7.2.3",
+    "@babel/preset-env": "^7.2.3",
+    "@babel/preset-react": "^7.0.0",
     "@types/enzyme-adapter-react-16": "^1.0.3",
     "@types/flat": "^0.0.28",
     "@types/graphql": "^14.0.3",
@@ -39,12 +44,6 @@
     "@types/react-window": "latest",
     "apollo-cache": "^1.1.21",
     "apollo-client": "^2.4.7",
-    "babel-cli": "^6.26.0",
-    "babel-core": "^6.26.3",
-    "babel-jest": "^23.6.0",
-    "babel-plugin-transform-class-properties": "^6.24.1",
-    "babel-preset-env": "^1.7.0",
-    "babel-preset-react": "^6.24.1",
     "enzyme": "^3.7.0",
     "enzyme-adapter-react-16": "^1.7.0",
     "graphql": "^14.0.2",
@@ -55,8 +54,8 @@
     "prisma-binding": "^2.2.8",
     "prop-types": "^15.6.2",
     "react": "16.7.0-alpha.2",
-    "react-dom": "16.7.0-alpha.2",
     "react-apollo": "^2.3.2",
+    "react-dom": "16.7.0-alpha.2",
     "react-test-renderer": "^16.6.3",
     "ts-jest": "^23.10.5",
     "typescript": "^3.2.1",
@@ -71,8 +70,8 @@
     "graphql": "^14.0.2",
     "graphql-tag": "^2.10.0",
     "react": "16.7.0-alpha.2",
-    "react-dom": "16.7.0-alpha.2",
-    "react-apollo": "^2.3.2"
+    "react-apollo": "^2.3.2",
+    "react-dom": "16.7.0-alpha.2"
   },
   "scripts": {
     "postinstall": "tsc && tsc -d --emitDeclarationOnly --allowJs false"
