@@ -45,7 +45,6 @@ class CustomAuto extends BaseField {
                         break;
 
                     case !!props.query:
-                        console.log(props.name)
                         props.component = TableField;
                         break;
                     case (Array.isArray(props.fieldType) || props.fieldType === Array):

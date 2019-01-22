@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 import yaml from "node-yaml";
 import {getParents} from "./utils";
-import {buildInterfaceName, capitalize, getDeclarations, getGraphQLInput, getGraphQLModel} from "./Table/utils";
+import {capitalize, getGraphQLInput, getGraphQLModel} from "./Table/utils";
 import {Context, Table} from "./Table/Table";
 import {Schema} from "./Schema/Schema";
 import {CustomAction} from "./Operations/CustomAction";
@@ -41,9 +41,6 @@ export class Mandarina {
         return response;
     }
 
-    static saveDeclarationFile(schema: Schema): void {
-        fs.writeFileSync(path.join(schema.getFilePath(), `${buildInterfaceName(schema.name)}.ts`), getDeclarations(schema));
-    }
 
     static reset() {
         const prismaDir = Mandarina.config.prismaDir;
@@ -71,7 +68,6 @@ export class Mandarina {
             if (subSchema && !Mandarina.processed[subSchema]) {
                 const schema = Schema.getInstance(subSchema)
                 Mandarina.saveFile(schema)
-                Mandarina.saveDeclarationFile(schema)
                 Mandarina.saveSubSchemas(schema)
             }
         })
@@ -83,7 +79,6 @@ export class Mandarina {
         for (const tableName in Table.instances) {
             const table = Table.getInstance(tableName)
             Mandarina.saveFile(table.schema)
-            Mandarina.saveDeclarationFile(table.schema)
             Mandarina.saveSubSchemas(table.schema)
         }
         for (const actionName in CustomAction.instances) {
@@ -91,7 +86,6 @@ export class Mandarina {
             if (action.schema) {
 
                 Mandarina.saveFile(action.schema)
-                Mandarina.saveDeclarationFile(action.schema)
             } else {
                 Mandarina.saveActionSchema(action.name)
 

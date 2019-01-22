@@ -3,7 +3,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var inflection = require("inflection");
 var Schema_1 = require("../Schema/Schema");
 var utils_1 = require("../Schema/utils");
-var Table_1 = require("./Table");
 /**
  * Upper case the first latter
  * @param  string - string to be upper cased
@@ -104,26 +103,34 @@ exports.getGraphQLType = function (type, key, required) {
             return typeName;
     }
 };
-exports.buildInterfaceName = function (schema) { return schema instanceof Table_1.Table ? schema.name + "TableInterface" : schema + "TableInterface"; };
+exports.buildInterfaceName = function (schema) { return schema instanceof Schema_1.Schema ? schema.name + "Interface" : schema + "Interface"; };
 exports.getDeclarations = function (schema) {
     var headers = [];
     var path = require('path');
-    var declarations = ["export interface " + exports.buildInterfaceName(schema) + " {"];
+    var schemaDeclarationName = exports.buildInterfaceName(schema);
+    var declarations = ["export interface " + schemaDeclarationName + " {"];
     for (var _i = 0, _a = schema.keys; _i < _a.length; _i++) {
         var key = _a[_i];
         var field = schema.getFieldDefinition(key);
-        var optional = utils_1.isRequired(field) ? '' : '?';
+        var optional = utils_1.isRequired(field) || key === 'id' ? '' : '?';
         var fieldType = exports.getDeclarationType(field.type, key);
         var schemaName = "";
-        if (Array.isArray(field.type) && typeof field.type[0] === 'string')
+        if (Array.isArray(field.type) && typeof field.type[0] === 'string') {
             schemaName = field.type[0];
+        }
         if (typeof field.type === 'string')
             schemaName = field.type;
         if (schemaName) {
             var childSchema = Schema_1.Schema.getInstance(schemaName);
             var interfaceName = exports.buildInterfaceName(schemaName);
             var dir = path.relative(schema.getFilePath(), childSchema.getFilePath());
-            headers.push("import {" + interfaceName + "} from \"" + (dir ? dir : '.') + "/" + interfaceName + "\"");
+            if (!dir) {
+                dir = '.';
+            }
+            else if (dir.indexOf('.') !== 0) {
+                dir = './' + dir;
+            }
+            headers.push("import { " + interfaceName + " } from \"" + dir + "/" + interfaceName + "\"");
         }
         field.description && declarations.push("// " + field.description);
         declarations.push("    " + key + optional + ": " + fieldType);

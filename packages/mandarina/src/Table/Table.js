@@ -46,12 +46,15 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-var utils_1 = require("./utils");
+var graphql_fields_list_1 = require("graphql-fields-list");
 var InvalidActionError_1 = require("../Errors/InvalidActionError");
 var UniqueTableError_1 = require("../Errors/UniqueTableError");
 var TableInstanceNotFound_1 = require("../Errors/TableInstanceNotFound");
-var defaultPermissions = { read: {}, create: {}, update: {}, delete: {} };
-var defaultActions = Object.keys(defaultPermissions);
+var Mandarina_1 = require("../Mandarina");
+var utils_1 = require("./utils");
+var FieldsPermissionsError_1 = require("../Errors/FieldsPermissionsError");
+var getDefaultPermissions = function () { return ({ read: {}, create: {}, update: {}, delete: {} }); };
+var defaultActions = Object.keys(getDefaultPermissions());
 /**
  *
  * A Table instance is the representation of the one of several of the followings:
@@ -67,37 +70,18 @@ var Table = /** @class */ (function () {
      */
     function Table(schema, tableOptions) {
         Table.instances = Table.instances || {};
+        this.schema = schema;
+        this.schema.extend({
+            id: {
+                type: String,
+                permissions: { read: this.schema.permissions.read, create: 'nobody', update: 'nobody', }
+            }
+        });
         this.name = this.schema.name;
         if (Table.instances[this.name]) {
             throw new UniqueTableError_1.UniqueTableError(this.name);
         }
-        this.schema = schema;
         this.options = __assign({}, schema.options, tableOptions);
-        var single = utils_1.singularize(this.name);
-        var singleUpper = utils_1.capitalize(single);
-        var plural = utils_1.pluralize(this.name);
-        var pluralUpper = utils_1.capitalize(plural);
-        var connection = plural + "Connection";
-        this.names = {
-            // Example user, users, usersConnection
-            query: { single: single, plural: plural, connection: connection },
-            mutation: {
-                create: "create" + singleUpper,
-                update: "update" + singleUpper,
-                delete: "delete" + singleUpper,
-                updateMany: "updateMany" + pluralUpper,
-                deleteMany: "deleteMany" + pluralUpper
-            },
-            input: {
-                where: {
-                    single: singleUpper + "WhereUniqueInput!",
-                    plural: singleUpper + "WhereInput",
-                    connection: singleUpper + "WhereInput",
-                },
-                create: singleUpper + "CreateInput!",
-                update: singleUpper + "UpdateInput!",
-            }
-        };
         Table.instances[this.name] = this;
     }
     Table.getInstance = function (name) {
@@ -108,6 +92,186 @@ var Table = /** @class */ (function () {
     };
     Table.prototype.getFields = function () {
         return this.schema.getFields();
+    };
+    /**
+     * Returns the the authorization schema definition for the instance
+     *
+     * @return Permissions
+     */
+    Table.prototype.getPermissions = function () {
+        var _this = this;
+        var fields = this.getFields();
+        if (!this.permissions) {
+            this.permissions = getDefaultPermissions();
+            fields.forEach(function (field) {
+                var def = _this.schema.getPathDefinition(field);
+                defaultActions.forEach(function (action) {
+                    def.permissions = def.permissions || {};
+                    if (!def.permissions[action]) {
+                        _this.permissions[action].everyone = _this.permissions[action].everyone || [];
+                        _this.permissions[action].everyone.push(field);
+                        return;
+                    }
+                    if (def.permissions[action] === 'nobody')
+                        return;
+                    var roles = def.permissions[action].split('|');
+                    roles.forEach(function (role) {
+                        _this.permissions[action][role] = _this.permissions[action][role] || [];
+                        _this.permissions[action][role].push(field);
+                    });
+                });
+            });
+        }
+        return this.permissions;
+    };
+    /**
+     * It apply the fields permissions policy by action and roles, throw an exception if is not a valid request
+     *
+     * @param action
+     * @param role
+     * @param model
+     */
+    Table.prototype.validatePermissions = function (action, role, model) {
+        var fields = this.getFields();
+        var allowedFields = Object.keys(this.getSchema(action, role));
+        var modelFields = (Array.isArray(model) ? model : Object.keys(model)).filter(function (f) { return fields.includes(f); });
+        var intersection = allowedFields.filter(function (af) { return modelFields.includes(af); });
+        if (modelFields.length > intersection.length) {
+            var invalidFields = modelFields.filter(function (mf) { return !intersection.includes(mf); });
+            throw new FieldsPermissionsError_1.FieldsPermissionsError(action, invalidFields);
+        }
+    };
+    Table.prototype.getDefaultActions = function (type) {
+        var _this = this;
+        var result = {};
+        // OperationName for query is user or users, for mutation are createUser, updateUser ....
+        var operationNames = Object.values(this.schema.names[type]);
+        operationNames.forEach(function (operationName) {
+            result[operationName] = function (_, args, context, info) {
+                if (args === void 0) { args = {}; }
+                return __awaiter(_this, void 0, void 0, function () {
+                    var time, bm, middlewares, user, subOperationName, action, prismaMethod, roles, result;
+                    return __generator(this, function (_a) {
+                        switch (_a.label) {
+                            case 0:
+                                time = new Date().getTime();
+                                bm = function () {
+                                    var description = [];
+                                    for (var _i = 0; _i < arguments.length; _i++) {
+                                        description[_i] = arguments[_i];
+                                    }
+                                    if (description) {
+                                        console.log(description, new Date().getTime() - time);
+                                    }
+                                    time = new Date().getTime();
+                                };
+                                bm();
+                                middlewares = this.options.middlewares || [];
+                                return [4 /*yield*/, Mandarina_1.Mandarina.config.getUser(context)];
+                            case 1:
+                                user = _a.sent();
+                                subOperationName = operationName.substr(0, 6);
+                                action = (['create', 'update', 'delete'].includes(subOperationName) ? subOperationName : 'read');
+                                prismaMethod = context.prisma[type][operationName];
+                                roles = user && user.roles;
+                                bm(operationName + ' init');
+                                if (!(middlewares.length > 0)) return [3 /*break*/, 3];
+                                return [4 /*yield*/, Promise.all(middlewares.map(function (m) { return m(user, context, info); }))];
+                            case 2:
+                                _a.sent();
+                                _a.label = 3;
+                            case 3:
+                                bm(operationName + ' middlewares');
+                                if (!(type === 'mutation')) return [3 /*break*/, 7];
+                                this.callHook('beforeValidate', action, _, args, context, info);
+                                //TODO: Flatting nested fields operation (context, update, create)
+                                console.log('args.data', args.data);
+                                // console.log('123123123',this.flatFields(args.data))
+                                // const errors = this.schema.validate(this.flatFields(args.data));
+                                // if (errors.length > 0) {
+                                //     await this.callHook('validationFailed', action, _, args, context, info);
+                                // } else {
+                                //     await this.callHook('afterValidate', action, _, args, context, info);
+                                // }
+                                return [4 /*yield*/, this.callHook("before" + utils_1.capitalize(action), action, _, args, context, info)];
+                            case 4:
+                                // console.log('123123123',this.flatFields(args.data))
+                                // const errors = this.schema.validate(this.flatFields(args.data));
+                                // if (errors.length > 0) {
+                                //     await this.callHook('validationFailed', action, _, args, context, info);
+                                // } else {
+                                //     await this.callHook('afterValidate', action, _, args, context, info);
+                                // }
+                                _a.sent();
+                                return [4 /*yield*/, prismaMethod(args, info)];
+                            case 5:
+                                //this.validatePermissions(action, roles, args.data);
+                                result = _a.sent();
+                                context.result = result;
+                                return [4 /*yield*/, this.callHook("after" + utils_1.capitalize(action), action, _, args, context, info)];
+                            case 6:
+                                _a.sent();
+                                this.validatePermissions('read', roles, graphql_fields_list_1.fieldsList(info));
+                                bm('*********************');
+                                _a.label = 7;
+                            case 7:
+                                bm('mutation');
+                                if (!(type === 'query')) return [3 /*break*/, 11];
+                                bm(operationName + ' 1 beforeQuery');
+                                return [4 /*yield*/, this.callHook('beforeQuery', action, _, args, context, info)];
+                            case 8:
+                                _a.sent();
+                                bm(operationName + ' beforeQuery');
+                                this.validatePermissions('read', roles, graphql_fields_list_1.fieldsList(info));
+                                bm(operationName + ' validatePermissions');
+                                return [4 /*yield*/, prismaMethod(args, info)];
+                            case 9:
+                                result = _a.sent();
+                                context.result = result;
+                                bm(operationName + ' prismaMethod');
+                                return [4 /*yield*/, this.callHook('afterQuery', action, _, args, context, info)];
+                            case 10:
+                                _a.sent();
+                                bm(operationName + ' afterQuery');
+                                bm(operationName + ' query');
+                                _a.label = 11;
+                            case 11: return [2 /*return*/, result];
+                        }
+                    });
+                });
+            };
+        });
+        return result;
+    };
+    Table.prototype.register = function () {
+        // TODO: Do we need to implement this method?
+    };
+    /**
+     * Simple wrapper to execute the table hook if exists
+     *
+     * @param name
+     * @param actionType
+     * @param _
+     * @param args
+     * @param context
+     * @param info
+     */
+    Table.prototype.callHook = function (name, actionType, _, args, context, info) {
+        return __awaiter(this, void 0, void 0, function () {
+            var hookHandler;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        hookHandler = this.options.hooks && this.options.hooks[name];
+                        if (!hookHandler) return [3 /*break*/, 2];
+                        return [4 /*yield*/, hookHandler(actionType, _, args, context, info)];
+                    case 1:
+                        _a.sent();
+                        _a.label = 2;
+                    case 2: return [2 /*return*/];
+                }
+            });
+        });
     };
     /**
      * Returns the resource schema appliying the authorization and data exposition policy
@@ -135,84 +299,6 @@ var Table = /** @class */ (function () {
             var _a;
             return (__assign({}, res, (_a = {}, _a[fieldName] = _this.schema.shape[fieldName], _a)));
         }, {});
-    };
-    /**
-     * Returns the the authorization schema definition for the instance
-     *
-     * @return Permissions
-     */
-    Table.prototype.getPermissions = function () {
-        var _this = this;
-        var fields = this.getFields();
-        if (!this.permissions) {
-            this.permissions = defaultPermissions;
-            fields.forEach(function (field) {
-                var def = _this.schema.getPathDefinition(field);
-                defaultActions.forEach(function (action) {
-                    def.permissions = def.permissions || {};
-                    if (!def.permissions[action]) {
-                        _this.permissions[action].everyone = _this.permissions[action].everyone || [];
-                        _this.permissions[action].everyone.push(field);
-                        return;
-                    }
-                    if (def.permissions[action] === 'nobody')
-                        return;
-                    var roles = def.permissions[action].split('|');
-                    roles.forEach(function (role) {
-                        _this.permissions[action][role] = _this.permissions[action][role] || [];
-                        _this.permissions[action][role].push(field);
-                    });
-                });
-            });
-        }
-        return this.permissions;
-    };
-    Table.prototype.getDefaultActions = function (type) {
-        var _this = this;
-        var result = {};
-        // OperationName for query is user or users, for mutation are createUser, updateUser ....
-        var operationNames = Object.values(this.names[type]);
-        var _a = this.options, onBefore = _a.onBefore, onAfter = _a.onAfter;
-        operationNames.forEach(function (operationName) {
-            result[operationName] = function (_, args, context, info) {
-                if (args === void 0) { args = {}; }
-                return __awaiter(_this, void 0, void 0, function () {
-                    var subOperationName, action, result;
-                    return __generator(this, function (_a) {
-                        switch (_a.label) {
-                            case 0:
-                                subOperationName = operationName.substr(0, 6);
-                                action = (['create', 'update', 'delete'].includes(subOperationName) ? subOperationName : 'read');
-                                if (!onBefore) return [3 /*break*/, 2];
-                                return [4 /*yield*/, onBefore(action, _, args, context, info)];
-                            case 1:
-                                _a.sent();
-                                _a.label = 2;
-                            case 2: return [4 /*yield*/, context.prisma[type][operationName](args, info)];
-                            case 3:
-                                result = _a.sent();
-                                context.result = result;
-                                if (!onAfter) return [3 /*break*/, 5];
-                                return [4 /*yield*/, onAfter(action, _, args, context, info)];
-                            case 4:
-                                _a.sent();
-                                _a.label = 5;
-                            case 5: 
-                            // TODO: remove in production
-                            return [4 /*yield*/, utils_1.sleep(400)];
-                            case 6:
-                                // TODO: remove in production
-                                _a.sent();
-                                return [2 /*return*/, result];
-                        }
-                    });
-                });
-            };
-        });
-        return result;
-    };
-    Table.prototype.register = function () {
-        // TODO: Do we need to implement this method?
     };
     return Table;
 }());

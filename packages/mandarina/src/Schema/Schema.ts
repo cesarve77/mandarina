@@ -223,7 +223,6 @@ export class Schema {
     }
 
     clean(model: Model, transform: boolean = false) {
-        console.log(this.name, this.keys)
         this.original = model;
         this._clean(model, transform);
     }
@@ -263,7 +262,6 @@ export class Schema {
         }
 
         this.keys.forEach((key): any => {
-            console.log(key)
             const definition = this.getFieldDefinition(key);
             const type = definition.type;
 
@@ -371,9 +369,7 @@ export class Schema {
 
             if (Array.isArray(type)) {
                 for (const validator of definition.validators) {
-                    console.log('validator.arrayValidator', validator.arrayValidator, validator.validatorName)
                     if (!validator.arrayValidator) continue
-                    console.log('**************************', key, path, definition, value)
                     const instance = new validator({key, path, definition, value});
                     const error = instance.validate(originalModel);
                     if (error) {
@@ -540,7 +536,7 @@ export type FilterMethod = (filter: any) => Where
 
 export type FilterComponent = ((props: any) => JSX.Element) | null
 
-export type CellComponent = (props: { columnIndex: number, rowIndex: number, data: any[], field: string }) => JSX.Element
+export type CellComponent = (props: { columnIndex: number, rowIndex: number, data: any[], field: string }) => JSX.Element | null
 
 
 export interface UserFieldDefinition {

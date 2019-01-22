@@ -82,7 +82,7 @@ interface ColumnProps {
     title: string
     width: number
     CellComponent?: CellComponent
-    LoadingElement?: JSX.Element
+    loadingElement?: JSX.Element
 }
 
 const estimatedColumnWidthDefault = 200
@@ -129,7 +129,7 @@ export class ListVirtualized extends React.Component<ListProps, { columns: Colum
         //this.definitions=definitions
     }
 
-    defaultProps = {
+    static defaultProps = {
         estimatedRowHeight: estimatedRowHeightDefault
 
     }
@@ -173,7 +173,7 @@ export class ListVirtualized extends React.Component<ListProps, { columns: Colum
         if (fieldDefinition.list.hidden) return
         return {
             field,
-            LoadingElement: fieldDefinition.list.LoadingElement,
+            loadingElement: fieldDefinition.list.loadingElement,
             CellComponent: fieldDefinition.list.CellComponent,
             title: fieldDefinition.label ? fieldDefinition.label : "",
             width: fieldDefinition.list.width || estimatedColumnWidthDefault
@@ -253,7 +253,11 @@ export class ListVirtualized extends React.Component<ListProps, { columns: Colum
 
                     const tHeadHeight = this.tHead.current && this.tHead.current.offsetHeight || 0
                     const itemData = {data: this.data, columns}
-
+                    console.log('height + tHeadHeight', height + tHeadHeight)
+                    console.log('tHeadHeight ', tHeadHeight)
+                    console.log('height ', height)
+                    console.log('rowHeight ', estimatedRowHeight || estimatedRowHeightDefault)
+                    console.log('estimatedRowHeight ', estimatedRowHeight)
                     return (
                         <div className={'mandarina-list'} ref={this.container}
                              style={{
@@ -274,7 +278,7 @@ export class ListVirtualized extends React.Component<ListProps, { columns: Colum
                                     </div>)}
                                 </div>
                             </div>
-                            <Grid
+                            {height!==0 && <Grid
                                 onScroll={this.onScroll}
                                 height={height}
                                 rowCount={count}
@@ -303,11 +307,9 @@ export class ListVirtualized extends React.Component<ListProps, { columns: Colum
 
                                 }}
                             >
-                                {
-                                    Cell
-                                }
+                                {Cell}
 
-                            </Grid>
+                            </Grid>}
                         </div>
                     )
                 }}
@@ -318,18 +320,17 @@ export class ListVirtualized extends React.Component<ListProps, { columns: Colum
 }
 
 
-
 const DefaultCellComponent: CellComponent = ({columnIndex, rowIndex, data, field}) => {
     const children = (data[rowIndex] && get(data[rowIndex], field.split('.'))) || []
-    return <>{children.map(child => <>{child}<br/></>)}</>
+    return <>{children.map((child, i) => <span key={i}>{child}<br/></span>)}</>
 }
-const DefaultLoadingElement='...'
+const defaultLoadingElement = '...'
 
 const Cell = memo(
     ({columnIndex, rowIndex, data: {data, columns}, style}: ListChildComponentProps & GridChildComponentProps & { data: { data: any, columns: ColumnProps[] } }) => {
         const field = columns[columnIndex].field
-        const CellComponent=columns[columnIndex].CellComponent || DefaultCellComponent
-        const LoadingElement=columns[columnIndex].LoadingElement || DefaultLoadingElement
+        const CellComponent = columns[columnIndex].CellComponent || DefaultCellComponent
+        const LoadingElement = columns[columnIndex].loadingElement || defaultLoadingElement
         return (
             <div className={'mandarina-list-cell'}
                  style={style}>

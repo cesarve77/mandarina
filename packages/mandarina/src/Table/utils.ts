@@ -146,7 +146,7 @@ export const getDeclarations = (schema: Schema): string => {
             headers.push(`import { ${interfaceName} } from "${dir}/${interfaceName}"`);
         }
         field.description && declarations.push(`// ${field.description}`);
-        declarations.push(`    ${key}${optional}: ${fieldType}`);
+        declarations.push(`    ${key}${optional}: ${fieldType} ${optional ? ' | null' : ''}`);
     }
     declarations.push('}')
     return headers.concat(declarations).join('\n')

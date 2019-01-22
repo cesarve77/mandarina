@@ -15,11 +15,13 @@ exports.compileMessage = function (_a) {
     return message;
 };
 var ValidatorCreator = /** @class */ (function () {
-    function ValidatorCreator(validation, name, template) {
+    function ValidatorCreator(validation, name, template, arrayValidator) {
         if (template === void 0) { template = '{{field}} is invalid.'; }
+        if (arrayValidator === void 0) { arrayValidator = false; }
         this.validation = validation;
         this.template = template;
         this.name = name;
+        this.arrayValidator = arrayValidator;
         ValidatorCreator.instances = ValidatorCreator.instances || {};
         if (ValidatorCreator.instances[name])
             throw new Error("Validator named " + name + " already exists, names should be uniques");
@@ -53,6 +55,7 @@ var ValidatorCreator = /** @class */ (function () {
         var name = this.name;
         var validation = this.validation;
         var template = this.template;
+        var arrayValidator = this.arrayValidator;
         var validator = (_a = /** @class */ (function () {
                 function Validator(_a) {
                     var key = _a.key, definition = _a.definition, path = _a.path, value = _a.value;
@@ -79,9 +82,11 @@ var ValidatorCreator = /** @class */ (function () {
                 };
                 return Validator;
             }()),
+            _a.arrayValidator = arrayValidator,
             _a.validatorName = name,
             _a);
         validator.param = param;
+        validator.arrayValidator = arrayValidator;
         return validator;
     };
     return ValidatorCreator;

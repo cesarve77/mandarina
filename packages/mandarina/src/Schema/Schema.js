@@ -19,6 +19,7 @@ var Validators_1 = require("./Validators");
 var utils_1 = require("./utils");
 var UniqueSchemaError_1 = require("../Errors/UniqueSchemaError");
 var SchemaInstanceNotFound_1 = require("../Errors/SchemaInstanceNotFound");
+var utils_2 = require("../Table/utils");
 var Schema = /** @class */ (function () {
     function Schema(shape, options) {
         var _this = this;
@@ -36,6 +37,32 @@ var Schema = /** @class */ (function () {
         this.permissions = permissions || {};
         this.shape = lodash_1.mapValues(shape, function (field, key) { return _this.applyDefinitionsDefaults(field, key); });
         this.keys = Object.keys(this.shape);
+        this.filePath = this.getFilePath();
+        var single = utils_2.singularize(this.name);
+        var singleUpper = utils_2.capitalize(single);
+        var plural = utils_2.pluralize(this.name);
+        var pluralUpper = utils_2.capitalize(plural);
+        var connection = plural + "Connection";
+        this.names = {
+            // Example user, users, usersConnection
+            query: { single: single, plural: plural, connection: connection },
+            mutation: {
+                create: "create" + singleUpper,
+                update: "update" + singleUpper,
+                delete: "delete" + singleUpper,
+                updateMany: "updateMany" + pluralUpper,
+                deleteMany: "deleteMany" + pluralUpper
+            },
+            input: {
+                where: {
+                    single: singleUpper + "WhereUniqueInput!",
+                    plural: singleUpper + "WhereInput",
+                    connection: singleUpper + "WhereInput",
+                },
+                create: singleUpper + "CreateInput!",
+                update: singleUpper + "UpdateInput!",
+            }
+        };
     }
     Schema.getInstance = function (name) {
         if (!Schema.instances[name]) {
@@ -64,6 +91,7 @@ var Schema = /** @class */ (function () {
         var isDateValidator = Validators_1.isDate.getValidatorWithParam();
         var isIntegerValidator = Validators_1.isInteger.getValidatorWithParam();
         var isStringValidator = Validators_1.isString.getValidatorWithParam();
+        var isRequired = Validators_1.required.getValidatorWithParam();
         if (definition.type === Number && (!utils_1.hasValidator(fieldDefinition.validators, isNumberValidator.validatorName))) {
             definition.validators.unshift(isNumberValidator);
         }
@@ -76,9 +104,17 @@ var Schema = /** @class */ (function () {
         if (definition.type === String && (!utils_1.hasValidator(fieldDefinition.validators, isStringValidator.validatorName))) {
             definition.validators.unshift(isStringValidator);
         }
+        if (Array.isArray(definition.type) && typeof definition.type[0] !== 'string' && (!utils_1.hasValidator(fieldDefinition.validators, isRequired.validatorName))) {
+            definition.validators.unshift(isRequired);
+        }
         // set default -> default values
         if (Array.isArray(definition.type)) {
-            fieldDefinition.defaultValue = definition.defaultValue || [];
+            if (typeof definition.type[0] === 'string') {
+                fieldDefinition.defaultValue = definition.defaultValue || {};
+            }
+            else {
+                fieldDefinition.defaultValue = definition.defaultValue || null;
+            }
         }
         else if (typeof definition.type === 'string') {
             fieldDefinition.defaultValue = definition.defaultValue || {};
@@ -139,6 +175,98 @@ var Schema = /** @class */ (function () {
         }
         return this.pathDefinitions[key];
     };
+    Schema.prototype.validate = function (model) {
+        return this._validate(model, '', [{ schema: this.name, path: '' }], model);
+    };
+    Schema.prototype.getFields = function () {
+        if (!this.fields) {
+            this.fields = this._getFields();
+        }
+        return this.fields;
+    };
+    Schema.prototype.clean = function (model, transform) {
+        if (transform === void 0) { transform = false; }
+        console.log(this.name, this.keys);
+        this.original = model;
+        this._clean(model, transform);
+    };
+    Schema.prototype.getFilePath = function () {
+        if (!this.filePath) {
+            var origPrepareStackTrace = Error.prepareStackTrace;
+            Error.prepareStackTrace = function (_, stack) {
+                return stack;
+            };
+            var err = new Error();
+            var stack = err.stack;
+            Error.prepareStackTrace = origPrepareStackTrace;
+            var path = require('path');
+            // @ts-ignore
+            if (!stack || !stack[2] || !stack[2].getFileName)
+                return '';
+            // @ts-ignore
+            this.filePath = path.dirname(stack[2].getFileName());
+        }
+        return this.filePath;
+    };
+    /**
+     * Mutate the model,with all keys  proper types and null for undefined
+     * TODO: Refactor to prevent mutation, fix it creating a new cloned model and returning it
+     * @param model
+     * @param transform
+     * @param removeExtraKeys
+     */
+    Schema.prototype._clean = function (model, transform, removeExtraKeys) {
+        var _this = this;
+        if (transform === void 0) { transform = false; }
+        if (removeExtraKeys === void 0) { removeExtraKeys = true; }
+        if (removeExtraKeys && model && typeof model === 'object') {
+            Object.keys(model).forEach(function (key) {
+                if (!_this.keys.includes(key)) {
+                    delete model[key];
+                }
+            });
+        }
+        this.keys.forEach(function (key) {
+            console.log(key);
+            var definition = _this.getFieldDefinition(key);
+            var type = definition.type;
+            if (typeof type === "function" && typeof model === 'object' && model !== undefined && model !== null) {
+                model[key] = utils_1.forceType(model[key], definition.type);
+                model[key] = model[key] === 0 ? 0 : model[key] || definition.defaultValue;
+            }
+            else if (typeof type === "string" && typeof model === 'object' && model !== undefined && model !== null) {
+                if (model[key] !== 0 && !model[key]) {
+                    return model[key] = definition.defaultValue;
+                }
+                var schema = Schema.getInstance(type);
+                schema._clean(model[key], transform);
+                return;
+            }
+            else if (Array.isArray(type) && typeof model === 'object' && model !== undefined && model !== null) {
+                model[key] = utils_1.forceType(model[key], Array);
+                if (typeof type[0] === 'string') {
+                    var schema_1 = Schema.getInstance(type[0]);
+                    model[key] = model[key].map(function (value) {
+                        schema_1._clean(value, transform);
+                        return value;
+                    });
+                }
+                else {
+                    model[key] = model[key].map(function (value) { return utils_1.forceType(value, type[0]); });
+                }
+                return;
+            }
+            else if (Array.isArray(type) && typeof model !== 'object' && model !== undefined && model !== null) {
+                console.log('NOOOOO DETERMINADO', key, model);
+            }
+            if (transform && model) {
+                model[key] = definition.transformValue.call({
+                    model: _this.original,
+                    siblings: model
+                }, model[key]);
+            }
+        });
+    };
     Schema.prototype.generatePathDefinition = function (key) {
         var paths = key.split('.');
         var schema = this;
@@ -164,78 +292,6 @@ var Schema = /** @class */ (function () {
             }
         });
         return def;
-    };
-    Schema.prototype.validate = function (model) {
-        return this._validate(model, '', [{ schema: this.name, path: '' }], model);
-    };
-    Schema.prototype.getFields = function () {
-        if (!this.fields) {
-            this.fields = this._getFields();
-        }
-        return this.fields;
-    };
-    Schema.prototype.clean = function (model, transform) {
-        if (transform === void 0) { transform = false; }
-        this.original = model;
-        this._clean(model, transform);
-    };
-    /**
-     * Mutate the model,with all keys  proper types and null for undefined
-     * TODO: Refactor to prevent mutation, fix it creating a new cloned model and returning it
-     * @param model
-     * @param transform
-     * @param removeExtraKeys
-     */
-    Schema.prototype._clean = function (model, transform, removeExtraKeys) {
-        var _this = this;
-        if (transform === void 0) { transform = false; }
-        if (removeExtraKeys === void 0) { removeExtraKeys = true; }
-        if (removeExtraKeys && model && typeof model === 'object') {
-            Object.keys(model).forEach(function (key) {
-                if (!_this.keys.includes(key)) {
-                    delete model[key];
-                }
-            });
-        }
-        this.keys.forEach(function (key) {
-            var definition = _this.getFieldDefinition(key);
-            var type = definition.type;
-            if (typeof type === "function" && typeof model === 'object' && model !== undefined && model !== null) {
-                model[key] = utils_1.forceType(model[key], definition.type);
-                model[key] = model[key] === 0 ? 0 : model[key] || definition.defaultValue;
-            }
-            else if (typeof type === "string" && typeof model === 'object' && model !== undefined && model !== null) {
-                if (model[key] !== 0 && !model[key]) {
-                    return model[key] = definition.defaultValue;
-                }
-                var schema = Schema.getInstance(type);
-                schema._clean(model[key], transform);
-                return;
-            }
-            else if (Array.isArray(type) && typeof model === 'object' && model !== undefined && model !== null) {
-                model[key] = utils_1.forceType(model[key], Array);
-                if (typeof type[0] === 'string') {
-                    var schema_1 = Schema.getInstance(type[0]);
-                    model[key] = model[key].map(function (value) {
-                        schema_1._clean(value, transform);
-                        return value;
-                    });
-                }
-                else {
-                    model[key] = model[key].map(function (value) {
-                        _this._clean(value, transform);
-                        return value;
-                    });
-                }
-                return;
-            }
-            if (transform && model) {
-                model[key] = definition.transformValue.call({
-                    model: _this.original,
-                    siblings: model
-                }, model[key]);
-            }
-        });
     };
     Schema.prototype._validate = function (model, parent, pathHistory, originalModel) {
         var _this = this;
@@ -265,6 +321,18 @@ var Schema = /** @class */ (function () {
                 return errors = errors.concat(internalErrors);
             }
             if (Array.isArray(type)) {
+                for (var _i = 0, _a = definition.validators; _i < _a.length; _i++) {
+                    var validator = _a[_i];
+                    console.log('validator.arrayValidator', validator.arrayValidator, validator.validatorName);
+                    if (!validator.arrayValidator)
+                        continue;
+                    console.log('**************************', key, path, definition, value);
+                    var instance = new validator({ key: key, path: path, definition: definition, value: value });
+                    var error = instance.validate(originalModel);
+                    if (error) {
+                        return errors.push(error);
+                    }
+                }
                 // TODO: Tal vez es mejor chequear en default value que siempre tenga un valor
                 if (typeof type[0] === 'string' && value) {
                     var schema_2 = Schema.getInstance(type[0]);
@@ -286,6 +354,8 @@ var Schema = /** @class */ (function () {
                     value.forEach(function (value, i) {
                         for (var _i = 0, _a = definition.validators; _i < _a.length; _i++) {
                             var validator = _a[_i];
+                            if (validator.arrayValidator)
+                                continue;
                             var instance = new validator({ key: key, path: path, definition: definition, value: value });
                             var error = instance.validate(originalModel);
                             if (error) {
@@ -297,8 +367,10 @@ var Schema = /** @class */ (function () {
                 }
                 return errors;
             }
-            for (var _i = 0, _a = definition.validators; _i < _a.length; _i++) {
-                var validator = _a[_i];
+            for (var _b = 0, _c = definition.validators; _b < _c.length; _b++) {
+                var validator = _c[_b];
+                if (validator.arrayValidator)
+                    continue;
                 var instance = new validator({ key: key, path: path, definition: definition, value: value });
                 var error = instance.validate(originalModel);
                 if (error) {
@@ -308,18 +380,19 @@ var Schema = /** @class */ (function () {
         });
         var extraKeys = Object.keys(shape);
         if (extraKeys.length) {
-            var extraKeysErrors = extraKeys.map(function (key) {
+            extraKeys.forEach(function (key) {
+                if (key === 'id')
+                    return;
                 var Validator = Validators_1.extraKey.getValidatorWithParam();
                 // Mock definition for a not existent key
                 var definition = _this.applyDefinitionsDefaults({ label: key, type: String }, key);
-                return new Validator({
+                errors.push(new Validator({
                     key: key,
                     definition: definition,
                     path: parent,
                     value: key
-                }).validate(originalModel);
+                }).validate(originalModel));
             });
-            errors = errors.concat(extraKeysErrors);
         }
         return errors;
     };
@@ -362,18 +435,6 @@ var Schema = /** @class */ (function () {
             }
         });
         return fields;
-    };
-    Schema.prototype.getFilePath = function () {
-        var origPrepareStackTrace = Error.prepareStackTrace;
-        Error.prepareStackTrace = function (_, stack) {
-            return stack;
-        };
-        var err = new Error();
-        var stack = err.stack;
-        Error.prepareStackTrace = origPrepareStackTrace;
-        var path = require('path');
-        // @ts-ignore
-        return path.dirname(stack[2].getFileName());
     };
     return Schema;
 }());
