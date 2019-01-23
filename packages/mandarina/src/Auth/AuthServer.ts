@@ -68,8 +68,6 @@ export const AuthServer: AuthInterface = {
 
             userRoles.forEach((role) => {
                 if (allRoles.includes(role)) {
-                    console.log('authFields[args.table][args.action][role]', authFields[args.table][args.action][role])
-                    console.log(args.table, args.action, role, authFields[args.table][args.action][role])
                     addToSet(fields, authFields[args.table][args.action][role] || [])
                 } else {
                     extraRoles.push(role)

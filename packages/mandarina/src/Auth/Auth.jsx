@@ -27,10 +27,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var react_1 = require("react");
 var graphql_tag_1 = require("graphql-tag");
 var react_apollo_1 = require("react-apollo");
-var __1 = require("..");
 exports.AuthTable = function (_a) {
     var action = _a.action, schema = _a.schema, children = _a.children, props = __rest(_a, ["action", "schema", "children"]);
-    var table = (schema instanceof __1.Schema) ? schema.name : schema;
+    var table = schema.name;
     var QUERY = graphql_tag_1.default(templateObject_1 || (templateObject_1 = __makeTemplateObject(["query AuthFields($action: String!, $table:String!) {AuthFields(action: $action, table: $table) }"], ["query AuthFields($action: String!, $table:String!) {AuthFields(action: $action, table: $table) }"])));
     return (<react_apollo_1.Query query={QUERY} variables={{ action: action, table: table }}>
             {function (_a) {

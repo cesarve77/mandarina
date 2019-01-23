@@ -15,7 +15,6 @@ exports.forceType = function (value, type) {
     }
     // Convert to Number type
     if (type === Number || type === Schema_1.Integer) {
-        console.log(value, type, Number(value));
         if (typeof value === 'string' && value.length > 0) {
             // Try to convert numeric strings to numbers
             var numberVal = Number(value);

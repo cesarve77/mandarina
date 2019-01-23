@@ -7,6 +7,7 @@ import pull from 'lodash.pull'
 import {ApolloError, ErrorPolicy, FetchPolicy, NetworkStatus} from "apollo-client";
 import {DocumentNode} from "graphql";
 import ApolloClient from "apollo-client/ApolloClient";
+import {filterFields} from "../utils";
 
 type TVariables = { [key: string]: any }
 type TData = any
@@ -87,7 +88,7 @@ export class FindBase extends PureComponent<FindProps & FindBaseProps, FindBaseS
 
         const {
             fields: optionalFields = [], schema, after, first, type, where, skip,
-            omitFields: optionalOmitFields = [],
+            omitFields,
             omitFieldsRegEx,
             children,
             pollInterval,
@@ -102,12 +103,7 @@ export class FindBase extends PureComponent<FindProps & FindBaseProps, FindBaseS
             partialRefetch,
             ...props
         } = this.props;
-        let fields = optionalFields || schema.getFields()
-        const omitFields = optionalOmitFields.map(omit => omit.replace('.', '\\.'))
-        fields = fields.filter(field => !omitFields.some(omit => !!field.match(new RegExp(`^${omit}$|^${omit}\\.`))))
-        if (omitFieldsRegEx) {
-            fields = fields.filter(field => !field.match(omitFieldsRegEx))
-        }
+        let fields = filterFields(optionalFields || schema.getFields(), omitFields,omitFieldsRegEx)
         const {names} = schema
         const defaultQuery = this.buildQueryFromFields(fields)
         let queryString: string

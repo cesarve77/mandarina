@@ -1,10 +1,6 @@
 endpoint: 'http://192.168.99.100:4466'
 datamodel:
-  - datamodel/post.graphql
-  - datamodel/user.graphql
-  - datamodel/address.graphql
-  - datamodel/category.graphql
-  - datamodel/table2.graphql
+  - datamodel/table2.model.graphql
 hooks:
   post-deploy:
     - graphql get-schema -p prisma

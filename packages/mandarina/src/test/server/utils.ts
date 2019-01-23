@@ -1,6 +1,5 @@
 import {client} from "./client";
 import gql from "graphql-tag";
-import { UserInterface} from "../tables/User";
 import {CategoryInterface} from "../tables/Category";
 import {PostInterface} from "../tables/Post";
 import {AddressInterface} from "../tables/Address";

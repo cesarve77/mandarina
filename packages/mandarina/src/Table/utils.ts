@@ -155,7 +155,6 @@ const getMainSchema = (schema: Schema, type: 'input' | 'type') => {
     let mainSchema = []
     for (const key of schema.keys) {
         if (key === 'id' && type==='type' ) {
-            console.log(schema.name,!!Table.instances[schema.name])
             if (!!Table.instances[schema.name]){
                 mainSchema.push(`id: ID! @unique`);
             }

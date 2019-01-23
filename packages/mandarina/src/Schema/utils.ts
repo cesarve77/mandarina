@@ -17,7 +17,6 @@ export const forceType = (value: any, type: Native): any => {
 
     // Convert to Number type
     if (type === Number || type === Integer) {
-        console.log(value,type,Number(value))
         if (typeof value === 'string' && value.length > 0) {
             // Try to convert numeric strings to numbers
             const numberVal = Number(value);

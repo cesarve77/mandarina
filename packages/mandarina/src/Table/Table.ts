@@ -4,7 +4,7 @@ import {fieldsList} from 'graphql-fields-list';
 
 import {ActionType} from "../Auth/Auth";
 import {AuthArgs} from "../Auth/AuthServer";
-import {Schema, SchemaOptions} from "../Schema/Schema";
+import {FieldDefinition, Schema, SchemaOptions} from "../Schema/Schema";
 import {InvalidActionError} from '../Errors/InvalidActionError';
 import {UniqueTableError} from '../Errors/UniqueTableError';
 import {TableInstanceNotFound} from "../Errors/TableInstanceNotFound";
@@ -46,7 +46,7 @@ export class Table {
         this.schema = schema;
         this.name = this.schema.name;
 
-        if (!this.schema.keys.includes('id')){
+        if (!this.schema.keys.includes('id')) {
             throw new MissingIdTableError(this.name);
         }
 
@@ -83,23 +83,40 @@ export class Table {
 
             fields.forEach((field) => {
                 const def = this.schema.getPathDefinition(field)
+                const parentPath = field.split('.').shift() as string
+                let parentDef: FieldDefinition | undefined
+                if (parentPath) {
+                    parentDef = this.schema.getPathDefinition(parentPath)
+                }
 
+                if (field === 'groupFamily.id') {
+                    console.log('def', def)
+                    console.log('def', this.schema.getPathDefinition('groupFamily'))
+                }
                 defaultActions.forEach((action) => {
-                    def.permissions = def.permissions || {}
-
-                    if (!def.permissions[action]) {
-                        this.permissions[action].everyone = this.permissions[action].everyone || []
-                        this.permissions[action].everyone.push(field)
+                    const parentRoles = parentDef && parentDef.permissions[action]
+                    const roles: string[] = def.permissions[action]
+                    if ((parentRoles && parentRoles.includes('nobody')) || (roles && roles.includes('nobody'))) { // if the first parent has nobody the there no permission for any children
                         return
                     }
 
-                    if (def.permissions[action] === 'nobody') return
-                    const roles: string[] = def.permissions[action]
-                    roles.forEach((role) => {
-                        this.permissions[action][role] = this.permissions[action][role] || []
-                        this.permissions[action][role].push(field)
-                    })
+                    if (!roles && !parentRoles) {
+                        this.permissions[action].everyone = this.permissions[action].everyone || []
+                        this.permissions[action].everyone.push(field)
+                        return
+                    } else {
+                        roles.forEach((role) => {
+                            if (parentRoles && parentRoles.includes(role)) {
+                                this.permissions[action][role] = this.permissions[action][role] || []
+                                this.permissions[action][role].push(field)
+                            } else {
+                                this.permissions[action][role] = this.permissions[action][role] || []
+                                this.permissions[action][role].push(field)
+                            }
 
+                        })
+
+                    }
                 })
             });
         }
@@ -157,7 +174,6 @@ export class Table {
                     this.callHook('beforeValidate', action, _, args, context, info);
 
                     //TODO: Flatting nested fields operation (context, update, create)
-                    console.log('args.data',args.data)
                     // console.log('123123123',this.flatFields(args.data))
                     // const errors = this.schema.validate(this.flatFields(args.data));
 

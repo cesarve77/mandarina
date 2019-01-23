@@ -1,7 +1,0 @@
-# Type for Address
-type Address {
-	country: String
-	city: String
-	user: User
-	id: ID! @unique
-}

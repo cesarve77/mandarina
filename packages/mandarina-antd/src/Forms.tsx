@@ -7,6 +7,7 @@ import {MutationUpdaterFn, OperationVariables, RefetchQueriesProviderFn} from "r
 import {DocumentNode} from "graphql";
 import ApolloClient, {ApolloError, PureQueryOptions} from "apollo-client";
 import {Bridge} from "./Bridge";
+import {filterFields} from "mandarina/build/utils";
 //
 const ErrorsField: any = require("./uniforms/ErrorsField").default
 const AutoFields: any = require("./uniforms/AutoFields").default
@@ -21,6 +22,8 @@ export interface FormProps<TData = any, TVariables = OperationVariables> {
     schema: Schema
     id: string
     fields?: string[]
+    omitFields?: string[]
+    omitFieldsRegEx?: RegExp
     children: (FormChildrenParams: any) => React.ReactNode | React.ReactNode | React.ReactNode[]
     showInlineError: boolean
     autosaveDelay: number
@@ -33,7 +36,7 @@ export interface FormProps<TData = any, TVariables = OperationVariables> {
     onChange: (key: string, value: any) => void
     onSubmitFailure: () => void
     onSubmitSuccess: () => void
-    onSubmit: (model: object) =>void
+    onSubmit: (model: object) => void
     placeholder: boolean
     ref: (form: object) => void
 
@@ -56,10 +59,13 @@ export interface ChildFunc {
     (props: any): JSX.Element
 }
 
-const Form = ({Component, fields, schema, id, onSubmit, children, showInlineError, omitFields, ...props}: FormProps) => {
+const Form = ({Component, fields: optionalFields, schema, id, onSubmit, children, showInlineError, omitFields, omitFieldsRegEx, ...props}: FormProps) => {
     const bridge = new Bridge(schema)
+    console.log('fields111', optionalFields, omitFields, omitFieldsRegEx)
+    const fields = filterFields(optionalFields || schema.getFields(), omitFields, omitFieldsRegEx)
+    console.log('fields222', fields)
     return (
-        <Component id={id} schema={schema}>
+        <Component id={id} schema={schema} fields={fields}>
             {({mutate, doc, loading, ...rest}) => {
                 return (
                     <AutoForm
@@ -75,16 +81,16 @@ const Form = ({Component, fields, schema, id, onSubmit, children, showInlineErro
                         {...props}
                     >
                         {children && Array.isArray(children) && children.map((child: ReactElement<ReactChild> | ChildFunc) => {
-                            if (typeof  child === "function") {
+                            if (typeof child === "function") {
                                 return child({doc, loading, ...props})
                             }
                             return React.cloneElement(child)
                         })}
-                        {children && typeof  children === "function" && children({doc, loading,...rest, ...props})}
-                        {children && typeof  children !== "function" && React.cloneElement(children)}
+                        {children && typeof children === "function" && children({doc, loading, ...rest, ...props})}
+                        {children && typeof children !== "function" && React.cloneElement(children)}
                         {!children && (
                             <div>
-                                <AutoFields autoField={AutoField} fields={fields} omitFields={omitFields}/>
+                                <AutoFields autoField={AutoField} fields={fields}/>
                                 <ErrorsField style={{marginBottom: '15px'}}/>
                                 <SubmitField size='large' loading={loading}/>
                             </div>)

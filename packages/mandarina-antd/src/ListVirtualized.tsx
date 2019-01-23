@@ -13,6 +13,7 @@ import {
 } from 'react-window';
 import ListFilter, {onFilterChange, Where} from "./ListFilter";
 import {CellComponent} from "mandarina/build/Schema/Schema";
+import {filterFields} from "mandarina/build/utils";
 
 declare module "react-window" {
     const areEqual: any
@@ -27,6 +28,8 @@ declare module "react-window" {
 export interface ListProps {
     schema: Schema
     fields?: string[]
+    omitFields?: string[]
+    omitFieldsRegEx?: RegExp
     pageSize?: number
     first?: number
     where?: any
@@ -110,9 +113,11 @@ export class ListVirtualized extends React.Component<ListProps, { columns: Colum
             estimatedRowHeight = estimatedRowHeightDefault,
             schema,
             fields,
+            omitFields,
+            omitFieldsRegEx
         } = props
         //const definitions: Partial<FieldDefinitions> = {}
-        this.fields = fields || schema.getFields()
+        this.fields = filterFields(fields || schema.getFields(), omitFields, omitFieldsRegEx)
         const columns = this.fields.reduce((result, field) => {
             const column = this.getColumnDefinition(field)
             if (column) result.push(column)
@@ -278,7 +283,7 @@ export class ListVirtualized extends React.Component<ListProps, { columns: Colum
                                     </div>)}
                                 </div>
                             </div>
-                            {height!==0 && <Grid
+                            {height !== 0 && <Grid
                                 onScroll={this.onScroll}
                                 height={height}
                                 rowCount={count}
@@ -330,11 +335,11 @@ const Cell = memo(
     ({columnIndex, rowIndex, data: {data, columns}, style}: ListChildComponentProps & GridChildComponentProps & { data: { data: any, columns: ColumnProps[] } }) => {
         const field = columns[columnIndex].field
         const CellComponent = columns[columnIndex].CellComponent || DefaultCellComponent
-        const LoadingElement = columns[columnIndex].loadingElement || defaultLoadingElement
+        const loadingElement = columns[columnIndex].loadingElement || defaultLoadingElement
         return (
             <div className={'mandarina-list-cell'}
                  style={style}>
-                {!data[rowIndex] && LoadingElement}
+                {!data[rowIndex] && loadingElement}
                 <CellComponent columnIndex={columnIndex} rowIndex={rowIndex} data={data} field={field}/>
             </div>
         )

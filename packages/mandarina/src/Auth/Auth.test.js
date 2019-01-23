@@ -11,4 +11,6 @@ describe('Auth', function () {
         Auth_1.addToSet(array1, [5, 2, 3, 4, 1, 6, 7, 7, 7, 8]);
         expect(array1).toMatchObject([1, 2, 3, 4, 5, 6, 7, 8]);
     });
+    test('getRoles', function () {
+    });
 });

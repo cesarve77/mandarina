@@ -552,7 +552,7 @@ export interface UserFieldDefinition {
         filterMethod?: FilterMethod
         filterComponent?: FilterComponent
         CellComponent?: CellComponent
-        LoadingElement?: JSX.Element
+        loadingElement?: JSX.Element
         filter?: boolean
         width?: number
 
@@ -578,12 +578,12 @@ export interface FieldDefinition extends UserFieldDefinition{
         filterMethod?: FilterMethod
         filterComponent?: FilterComponent
         CellComponent?: CellComponent
-        LoadingElement?: JSX.Element
+        loadingElement?: JSX.Element
         filter?: boolean
         width?: number
     }
     unique: boolean
-    permissions?: Permissions
+    permissions: Permissions
 }
 
 export type Label = string | false;

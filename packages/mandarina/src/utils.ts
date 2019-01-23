@@ -18,3 +18,14 @@ export const getParents = (keys: string[]) => {
 }
 
 
+export const filterFields=(fields: string[],omitFields?: string[],omitRegEx?: RegExp)=>{
+    let result=[...fields]
+    if (omitFields){
+        omitFields = omitFields.map(omit => omit.replace('.', '\\.'))
+        result = fields.filter(field => !(omitFields as string[]).some(omit => !!field.match(new RegExp(`^${omit}$|^${omit}\\.`))))
+    }
+    if (omitRegEx) {
+        result = result.filter(field => !field.match(omitRegEx))
+    }
+    return result
+}

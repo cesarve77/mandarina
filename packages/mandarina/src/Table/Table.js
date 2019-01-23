@@ -53,6 +53,7 @@ var TableInstanceNotFound_1 = require("../Errors/TableInstanceNotFound");
 var Mandarina_1 = require("../Mandarina");
 var utils_1 = require("./utils");
 var FieldsPermissionsError_1 = require("../Errors/FieldsPermissionsError");
+var MissingIDTableError_1 = require("../Errors/MissingIDTableError");
 var getDefaultPermissions = function () { return ({ read: {}, create: {}, update: {}, delete: {} }); };
 var defaultActions = Object.keys(getDefaultPermissions());
 /**
@@ -71,13 +72,10 @@ var Table = /** @class */ (function () {
     function Table(schema, tableOptions) {
         Table.instances = Table.instances || {};
         this.schema = schema;
-        this.schema.extend({
-            id: {
-                type: String,
-                permissions: { read: this.schema.permissions.read, create: 'nobody', update: 'nobody', }
-            }
-        });
         this.name = this.schema.name;
+        if (!this.schema.keys.includes('id')) {
+            throw new MissingIDTableError_1.MissingIdTableError(this.name);
+        }
         if (Table.instances[this.name]) {
             throw new UniqueTableError_1.UniqueTableError(this.name);
         }
@@ -114,7 +112,7 @@ var Table = /** @class */ (function () {
                     }
                     if (def.permissions[action] === 'nobody')
                         return;
-                    var roles = def.permissions[action].split('|');
+                    var roles = def.permissions[action];
                     roles.forEach(function (role) {
                         _this.permissions[action][role] = _this.permissions[action][role] || [];
                         _this.permissions[action][role].push(field);
@@ -185,7 +183,6 @@ var Table = /** @class */ (function () {
                                 if (!(type === 'mutation')) return [3 /*break*/, 7];
                                 this.callHook('beforeValidate', action, _, args, context, info);
                                 //TODO: Flatting nested fields operation (context, update, create)
-                                console.log('args.data', args.data);
                                 // console.log('123123123',this.flatFields(args.data))
                                 // const errors = this.schema.validate(this.flatFields(args.data));
                                 // if (errors.length > 0) {
@@ -195,6 +192,7 @@ var Table = /** @class */ (function () {
                                 // }
                                 return [4 /*yield*/, this.callHook("before" + utils_1.capitalize(action), action, _, args, context, info)];
                             case 4:
+                                //TODO: Flatting nested fields operation (context, update, create)
                                 // console.log('123123123',this.flatFields(args.data))
                                 // const errors = this.schema.validate(this.flatFields(args.data));
                                 // if (errors.length > 0) {

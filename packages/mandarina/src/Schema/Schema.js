@@ -186,7 +186,6 @@ var Schema = /** @class */ (function () {
     };
     Schema.prototype.clean = function (model, transform) {
         if (transform === void 0) { transform = false; }
-        console.log(this.name, this.keys);
         this.original = model;
         this._clean(model, transform);
     };
@@ -227,7 +226,6 @@ var Schema = /** @class */ (function () {
             });
         }
         this.keys.forEach(function (key) {
-            console.log(key);
             var definition = _this.getFieldDefinition(key);
             var type = definition.type;
             if (typeof type === "function" && typeof model === 'object' && model !== undefined && model !== null) {
@@ -323,10 +321,8 @@ var Schema = /** @class */ (function () {
             if (Array.isArray(type)) {
                 for (var _i = 0, _a = definition.validators; _i < _a.length; _i++) {
                     var validator = _a[_i];
-                    console.log('validator.arrayValidator', validator.arrayValidator, validator.validatorName);
                     if (!validator.arrayValidator)
                         continue;
-                    console.log('**************************', key, path, definition, value);
                     var instance = new validator({ key: key, path: path, definition: definition, value: value });
                     var error = instance.validate(originalModel);
                     if (error) {

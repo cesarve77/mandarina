@@ -1,5 +1,6 @@
 
 import {addToSet} from "./Auth";
+import {Table} from "..";
 
 
 describe('Auth', () => {
@@ -11,6 +12,10 @@ describe('Auth', () => {
         expect(array1).toMatchObject([1,2,3,4,5,6])
         addToSet(array1,[5,2,3,4,1,6,7,7,7,8])
         expect(array1).toMatchObject([1,2,3,4,5,6,7,8])
+
+    })
+
+    test('getRoles',()=>{
 
     })
 })

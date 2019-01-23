@@ -1,8 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var inflection = require("inflection");
-var Schema_1 = require("../Schema/Schema");
+var __1 = require("..");
 var utils_1 = require("../Schema/utils");
+var Table_1 = require("./Table");
 /**
  * Upper case the first latter
  * @param  string - string to be upper cased
@@ -52,7 +53,7 @@ exports.getDeclarationType = function (type, key) {
             return "number";
         case 'Array':
             if (typeof type[0] === 'string') {
-                var schema = Schema_1.Schema.getInstance(type[0]);
+                var schema = __1.Schema.getInstance(type[0]);
                 var interfaceName = exports.buildInterfaceName(schema);
                 return interfaceName + "[]";
             }
@@ -64,7 +65,7 @@ exports.getDeclarationType = function (type, key) {
             return "Date";
         default:
             if (typeof type === 'string') {
-                var schema = Schema_1.Schema.getInstance(type);
+                var schema = __1.Schema.getInstance(type);
                 var interfaceName = exports.buildInterfaceName(schema);
                 return "" + interfaceName;
             }
@@ -90,7 +91,7 @@ exports.getGraphQLType = function (type, key, required) {
             return "Int" + required;
         case 'Array':
             if (typeof type[0] === 'string') {
-                var schemaName = Schema_1.Schema.getInstance(type[0]).name;
+                var schemaName = __1.Schema.getInstance(type[0]).name;
                 return "[" + schemaName + "!]!";
             }
             var scalarName = exports.getGraphQLType(type[0], key);
@@ -103,7 +104,7 @@ exports.getGraphQLType = function (type, key, required) {
             return typeName;
     }
 };
-exports.buildInterfaceName = function (schema) { return schema instanceof Schema_1.Schema ? schema.name + "Interface" : schema + "Interface"; };
+exports.buildInterfaceName = function (schema) { return schema instanceof __1.Schema ? schema.name + "Interface" : schema + "Interface"; };
 exports.getDeclarations = function (schema) {
     var headers = [];
     var path = require('path');
@@ -121,7 +122,7 @@ exports.getDeclarations = function (schema) {
         if (typeof field.type === 'string')
             schemaName = field.type;
         if (schemaName) {
-            var childSchema = Schema_1.Schema.getInstance(schemaName);
+            var childSchema = __1.Schema.getInstance(schemaName);
             var interfaceName = exports.buildInterfaceName(schemaName);
             var dir = path.relative(schema.getFilePath(), childSchema.getFilePath());
             if (!dir) {
@@ -133,7 +134,7 @@ exports.getDeclarations = function (schema) {
             headers.push("import { " + interfaceName + " } from \"" + dir + "/" + interfaceName + "\"");
         }
         field.description && declarations.push("// " + field.description);
-        declarations.push("    " + key + optional + ": " + fieldType);
+        declarations.push("    " + key + optional + ": " + fieldType + " " + (optional ? ' | null' : ''));
     }
     declarations.push('}');
     return headers.concat(declarations).join('\n');
@@ -142,8 +143,10 @@ var getMainSchema = function (schema, type) {
     var mainSchema = [];
     for (var _i = 0, _a = schema.keys; _i < _a.length; _i++) {
         var key = _a[_i];
-        if (key === 'id' && !schema.options.virtual) {
-            mainSchema.push("id: ID! @unique");
+        if (key === 'id' && type === 'type') {
+            if (!!Table_1.Table.instances[schema.name]) {
+                mainSchema.push("id: ID! @unique");
+            }
             continue;
         }
         var field = schema.getFieldDefinition(key);

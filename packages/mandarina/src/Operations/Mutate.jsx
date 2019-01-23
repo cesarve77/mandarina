@@ -39,6 +39,7 @@ var graphql_tag_1 = require("graphql-tag");
 var react_apollo_1 = require("react-apollo");
 var utils_1 = require("./utils");
 var Find_1 = require("./Find");
+var utils_2 = require("../utils");
 var deepClone = function (obj) { return JSON.parse(JSON.stringify(obj)); };
 var Mutate = /** @class */ (function (_super) {
     __extends(Mutate, _super);
@@ -212,7 +213,8 @@ var Mutate = /** @class */ (function (_super) {
     };
     Mutate.prototype.render = function () {
         var _this = this;
-        var _a = this.props, type = _a.type, children = _a.children, schema = _a.schema, fields = _a.fields, findLoading = _a.loading, variables = _a.variables, update = _a.update, ignoreResults = _a.ignoreResults, optimisticResponse = _a.optimisticResponse, _b = _a.refetchQueries, refetchQueries = _b === void 0 ? this.refetchQueries : _b, awaitRefetchQueries = _a.awaitRefetchQueries, onCompleted = _a.onCompleted, onError = _a.onError, context = _a.context, props = __rest(_a, ["type", "children", "schema", "fields", "loading", "variables", "update", "ignoreResults", "optimisticResponse", "refetchQueries", "awaitRefetchQueries", "onCompleted", "onError", "context"]);
+        var _a = this.props, type = _a.type, children = _a.children, schema = _a.schema, optionalFields = _a.fields, omitFields = _a.omitFields, omitFieldsRegEx = _a.omitFieldsRegEx, findLoading = _a.loading, variables = _a.variables, update = _a.update, ignoreResults = _a.ignoreResults, optimisticResponse = _a.optimisticResponse, _b = _a.refetchQueries, refetchQueries = _b === void 0 ? this.refetchQueries : _b, awaitRefetchQueries = _a.awaitRefetchQueries, onCompleted = _a.onCompleted, onError = _a.onError, context = _a.context, props = __rest(_a, ["type", "children", "schema", "fields", "omitFields", "omitFieldsRegEx", "loading", "variables", "update", "ignoreResults", "optimisticResponse", "refetchQueries", "awaitRefetchQueries", "onCompleted", "onError", "context"]);
+        var fields = utils_2.filterFields(optionalFields || schema.getFields(), omitFields, omitFieldsRegEx);
         var names = schema.names;
         this.query = fields ? utils_1.buildQueryFromFields(fields) : this.buildQueryFromFields();
         var queryString;
@@ -243,11 +245,11 @@ exports.Create = function (_a) {
 exports.Update = function (_a) {
     var id = _a.id, schema = _a.schema, children = _a.children, fields = _a.fields, optimisticResponse = _a.optimisticResponse, props = __rest(_a, ["id", "schema", "children", "fields", "optimisticResponse"]);
     return (<Find_1.FindOne schema={schema} where={{ id: id }} fields={fields} {...props}>
-        {function (_a) {
+            {function (_a) {
         var data = _a.data, findOneProps = __rest(_a, ["data"]);
         return (<MutateWithApollo where={{ id: id }} type='update' schema={schema} doc={data} optimisticResponse={optimisticResponse} {...findOneProps}>
-                {children}
-            </MutateWithApollo>);
+                    {children}
+                </MutateWithApollo>);
     }}
-    </Find_1.FindOne>);
+        </Find_1.FindOne>);
 };

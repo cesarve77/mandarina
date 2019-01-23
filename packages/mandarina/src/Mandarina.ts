@@ -28,6 +28,7 @@ export class Mandarina {
 // string with virtual schemas
     static getGraphQLOperations(schema: Schema) {
         let response = '';
+        CustomAction.instances = CustomAction.instances || {}
         const action = CustomAction.instances[schema.name]
         if (!action) return response
         const actions = action.actions;

@@ -1,6 +1,0 @@
-# Type for Table2
-type Table2 {
-	# name
-	name: String!
-	id: ID! @unique
-}

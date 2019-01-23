@@ -11,6 +11,7 @@ import {ApolloError, OperationVariables} from "apollo-client";
 import {DocumentNode} from "graphql";
 import {DataProxy} from "apollo-cache";
 import ApolloClient from "apollo-client/ApolloClient";
+import {filterFields} from "../utils";
 
 type TVariables = any
 type TData = any
@@ -22,6 +23,8 @@ export interface MutateProps {
     children: MutateChildren
     schema: Schema
     fields?: string[]
+    omitFields?: string[]
+    omitFieldsRegEx?: RegExp
     where?: object
     variables?: { [key: string]: any }
     update?: (cache: DataProxy, mutationResult: FetchResult) => void
@@ -247,7 +250,7 @@ class Mutate extends PureComponent<WithApolloClient<MutateProps & { type: 'creat
 
     render() {
         const {
-            type, children, schema, fields, loading: findLoading,
+            type, children, schema, fields: optionalFields,omitFields,omitFieldsRegEx, loading: findLoading,
             variables,
             update,
             ignoreResults,
@@ -259,6 +262,8 @@ class Mutate extends PureComponent<WithApolloClient<MutateProps & { type: 'creat
             context,
             ...props
         } = this.props;
+        let fields = filterFields(optionalFields || schema.getFields(), omitFields,omitFieldsRegEx)
+
         const {names} = schema
         this.query = fields ? buildQueryFromFields(fields) : this.buildQueryFromFields()
         let queryString
@@ -311,13 +316,15 @@ export const Create = ({schema, optimisticResponse, ...props}: CreateProps): JSX
 )
 
 
-export const Update = ({id, schema, children, fields, optimisticResponse, ...props}: UpdateProps): JSX.Element => (
-    <FindOne schema={schema} where={{id}} fields={fields} {...props}>
-        {({data, ...findOneProps}) => (
-            <MutateWithApollo where={{id}} type='update' schema={schema} doc={data}
-                              optimisticResponse={optimisticResponse} {...findOneProps} >
-                {children}
-            </MutateWithApollo>
-        )}
-    </FindOne>
-)
+export const Update = ({id, schema, children, fields, optimisticResponse, ...props}: UpdateProps): JSX.Element => {
+    return (
+        <FindOne schema={schema} where={{id}} fields={fields} {...props}>
+            {({data, ...findOneProps}) => (
+                <MutateWithApollo where={{id}} type='update' schema={schema} doc={data}
+                                  optimisticResponse={optimisticResponse} {...findOneProps} >
+                    {children}
+                </MutateWithApollo>
+            )}
+        </FindOne>
+    );
+}
