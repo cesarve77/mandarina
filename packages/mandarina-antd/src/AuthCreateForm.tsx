@@ -4,7 +4,7 @@ import {CreateForm} from "./Forms";
 import {Spin} from "antd";
 
 interface AuthUpdateFormStateProps {
-    schema: Schema | string
+    schema: Schema
     denied?: JSX.Element
 
 }

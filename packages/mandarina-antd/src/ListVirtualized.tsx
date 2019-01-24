@@ -80,7 +80,7 @@ export interface Edge {
 }
 
 
-interface ColumnProps {
+export interface ColumnProps {
     field: string
     title: string
     width: number
