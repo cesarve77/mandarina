@@ -16,7 +16,7 @@ exports.compileMessage = function (_a) {
 };
 var ValidatorCreator = /** @class */ (function () {
     function ValidatorCreator(validation, name, template, arrayValidator) {
-        if (template === void 0) { template = '{{field}} is invalid.'; }
+        if (template === void 0) { template = '{{label}} is invalid.'; }
         if (arrayValidator === void 0) { arrayValidator = false; }
         this.validation = validation;
         this.template = template;
@@ -69,6 +69,7 @@ var ValidatorCreator = /** @class */ (function () {
                 Validator.prototype.validate = function (model) {
                     var context = { model: model };
                     if (!validation.call(context, this.value, Validator.param)) {
+                        console.log(context, this, this.value, Validator.param);
                         return {
                             key: this.key,
                             label: this.label,

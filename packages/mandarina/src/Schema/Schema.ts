@@ -211,6 +211,7 @@ export class Schema {
     }
 
     validate(model: Model): ErrorValidator[] {
+        this.clean(model)
         return this._validate(model, '', [{schema: this.name, path: ''}], model);
     }
 

@@ -46,7 +46,6 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-var graphql_fields_list_1 = require("graphql-fields-list");
 var InvalidActionError_1 = require("../Errors/InvalidActionError");
 var UniqueTableError_1 = require("../Errors/UniqueTableError");
 var TableInstanceNotFound_1 = require("../Errors/TableInstanceNotFound");
@@ -103,20 +102,38 @@ var Table = /** @class */ (function () {
             this.permissions = getDefaultPermissions();
             fields.forEach(function (field) {
                 var def = _this.schema.getPathDefinition(field);
+                var parentPath = field.split('.').shift();
+                var parentDef;
+                if (parentPath) {
+                    parentDef = _this.schema.getPathDefinition(parentPath);
+                }
+                if (field === 'groupFamily.id') {
+                    console.log('def', def);
+                    console.log('parentDef', parentDef);
+                }
                 defaultActions.forEach(function (action) {
-                    def.permissions = def.permissions || {};
-                    if (!def.permissions[action]) {
+                    var parentRoles = parentDef && parentDef.permissions[action];
+                    var roles = def.permissions[action];
+                    if ((parentRoles && parentRoles.includes('nobody')) || (roles && roles.includes('nobody'))) { // if the first parent has nobody the there no permission for any children
+                        return;
+                    }
+                    if (!roles && !parentRoles) {
                         _this.permissions[action].everyone = _this.permissions[action].everyone || [];
                         _this.permissions[action].everyone.push(field);
                         return;
                     }
-                    if (def.permissions[action] === 'nobody')
-                        return;
-                    var roles = def.permissions[action];
-                    roles.forEach(function (role) {
-                        _this.permissions[action][role] = _this.permissions[action][role] || [];
-                        _this.permissions[action][role].push(field);
-                    });
+                    else if (roles) {
+                        roles.forEach(function (role) {
+                            if (parentRoles && parentRoles.includes(role)) {
+                                _this.permissions[action][role] = _this.permissions[action][role] || [];
+                                _this.permissions[action][role].push(field);
+                            }
+                            else {
+                                _this.permissions[action][role] = _this.permissions[action][role] || [];
+                                _this.permissions[action][role].push(field);
+                            }
+                        });
+                    }
                 });
             });
         }
@@ -148,7 +165,7 @@ var Table = /** @class */ (function () {
             result[operationName] = function (_, args, context, info) {
                 if (args === void 0) { args = {}; }
                 return __awaiter(_this, void 0, void 0, function () {
-                    var time, bm, middlewares, user, subOperationName, action, prismaMethod, roles, result;
+                    var time, bm, middlewares, user, subOperationName, action, prismaMethod, result;
                     return __generator(this, function (_a) {
                         switch (_a.label) {
                             case 0:
@@ -171,7 +188,7 @@ var Table = /** @class */ (function () {
                                 subOperationName = operationName.substr(0, 6);
                                 action = (['create', 'update', 'delete'].includes(subOperationName) ? subOperationName : 'read');
                                 prismaMethod = context.prisma[type][operationName];
-                                roles = user && user.roles;
+                                //const roles = user && user.roles
                                 bm(operationName + ' init');
                                 if (!(middlewares.length > 0)) return [3 /*break*/, 3];
                                 return [4 /*yield*/, Promise.all(middlewares.map(function (m) { return m(user, context, info); }))];
@@ -209,7 +226,7 @@ var Table = /** @class */ (function () {
                                 return [4 /*yield*/, this.callHook("after" + utils_1.capitalize(action), action, _, args, context, info)];
                             case 6:
                                 _a.sent();
-                                this.validatePermissions('read', roles, graphql_fields_list_1.fieldsList(info));
+                                //this.validatePermissions('read', roles, fieldsList(info));
                                 bm('*********************');
                                 _a.label = 7;
                             case 7:
@@ -220,7 +237,7 @@ var Table = /** @class */ (function () {
                             case 8:
                                 _a.sent();
                                 bm(operationName + ' beforeQuery');
-                                this.validatePermissions('read', roles, graphql_fields_list_1.fieldsList(info));
+                                //this.validatePermissions('read', roles, fieldsList(info));
                                 bm(operationName + ' validatePermissions');
                                 return [4 /*yield*/, prismaMethod(args, info)];
                             case 9:

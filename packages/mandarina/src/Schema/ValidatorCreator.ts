@@ -23,7 +23,7 @@ export class ValidatorCreator {
     public validation: Validation;
     public arrayValidator: boolean;
 
-    constructor(validation: Validation, name: string, template: string = '{{field}} is invalid.', arrayValidator: boolean = false) {
+    constructor(validation: Validation, name: string, template: string = '{{label}} is invalid.', arrayValidator: boolean = false) {
         this.validation = validation
         this.template = template
         this.name = name
@@ -89,6 +89,7 @@ export class ValidatorCreator {
             validate(model?: object): undefined | ErrorValidator {
                 const context = {model}
                 if (!validation.call(context, this.value, Validator.param)) {
+                    console.log(context,this, this.value, Validator.param)
                     return {
                         key: this.key,
                         label: this.label,

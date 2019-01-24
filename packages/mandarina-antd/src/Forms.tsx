@@ -78,6 +78,15 @@ const Form = ({Component, fields: optionalFields, schema, id, onSubmit, children
                         disabled={loading}
                         showInlineError={showInlineError}
                         autoField={AutoField}
+                        onValidate={(model: Object, error: any, callback: any) => {
+                            try{
+                                bridge.getValidator({fields})(model)
+                            }catch (e) {
+                                console.log('e',e)
+                                return callback(e)
+                            }
+                            callback(null)
+                        }}
                         {...props}
                     >
                         {children && Array.isArray(children) && children.map((child: ReactElement<ReactChild> | ChildFunc) => {

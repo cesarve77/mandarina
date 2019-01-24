@@ -176,6 +176,7 @@ var Schema = /** @class */ (function () {
         return this.pathDefinitions[key];
     };
     Schema.prototype.validate = function (model) {
+        this.clean(model);
         return this._validate(model, '', [{ schema: this.name, path: '' }], model);
     };
     Schema.prototype.getFields = function () {

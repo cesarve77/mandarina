@@ -22,11 +22,11 @@ export const minDate = new ValidatorCreator((value, param = true) => value.getTi
 
 export const maxDate = new ValidatorCreator((value, param = true) => value.getTime() >= param.getTime(), 'maxDate', '{{label}} cannot be after {{param}}')
 
-export const minCount = new ValidatorCreator((value, param) => value.length >= param, 'minCount', 'You must specify at least {{param}} values', true)
+export const minCount = new ValidatorCreator((value, param) => value.length >= param, 'minCount', '{{label}} must specify at least {{param}} values', true)
 
-export const maxCount = new ValidatorCreator((value, param) => value.length <= param, 'maxCount', 'You cannot specify more than {{param}} values', true)
+export const maxCount = new ValidatorCreator((value, param) => value.length <= param, 'maxCount', '{{label}} cannot specify more than {{param}} values', true)
 
-export const isAllowed = new ValidatorCreator((value, param) => !exists(value) || param.includes(value), 'isAllowed', '{{value}} is not an allowed value')
+export const isAllowed = new ValidatorCreator((value, param) => !exists(value) || param.includes(value), 'isAllowed', '{{label}} has not an allowed value "{{value}}"')
 
 export const isNumber = new ValidatorCreator((value) => !exists(value) || typeof value === 'number', 'isNumber', '{{label}} must be an integer')
 

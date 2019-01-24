@@ -1,6 +1,5 @@
 import {Prisma} from "prisma-binding";
 import {ContextParameters} from "graphql-yoga/dist/types";
-import {fieldsList} from 'graphql-fields-list';
 
 import {ActionType} from "../Auth/Auth";
 import {AuthArgs} from "../Auth/AuthServer";
@@ -91,7 +90,7 @@ export class Table {
 
                 if (field === 'groupFamily.id') {
                     console.log('def', def)
-                    console.log('def', this.schema.getPathDefinition('groupFamily'))
+                    console.log('parentDef', parentDef)
                 }
                 defaultActions.forEach((action) => {
                     const parentRoles = parentDef && parentDef.permissions[action]
@@ -104,7 +103,7 @@ export class Table {
                         this.permissions[action].everyone = this.permissions[action].everyone || []
                         this.permissions[action].everyone.push(field)
                         return
-                    } else {
+                    } else if (roles) {
                         roles.forEach((role) => {
                             if (parentRoles && parentRoles.includes(role)) {
                                 this.permissions[action][role] = this.permissions[action][role] || []
@@ -162,7 +161,7 @@ export class Table {
                 const subOperationName: ActionType | string = operationName.substr(0, 6)
                 const action: ActionType = <ActionType>(['create', 'update', 'delete'].includes(subOperationName) ? subOperationName : 'read')
                 const prismaMethod = context.prisma[type][operationName];
-                const roles = user && user.roles
+                //const roles = user && user.roles
                 bm(operationName + ' init')
                 if (middlewares.length > 0) {
                     await Promise.all(middlewares.map((m: any) => m(user, context, info)));
@@ -192,7 +191,7 @@ export class Table {
 
                     await this.callHook(<HookName>`after${capitalize(action)}`, action, _, args, context, info);
 
-                    this.validatePermissions('read', roles, fieldsList(info));
+                    //this.validatePermissions('read', roles, fieldsList(info));
                     bm('*********************')
                 }
                 bm('mutation')
@@ -200,7 +199,7 @@ export class Table {
                     bm(operationName + ' 1 beforeQuery')
                     await this.callHook('beforeQuery', action, _, args, context, info);
                     bm(operationName + ' beforeQuery')
-                    this.validatePermissions('read', roles, fieldsList(info));
+                    //this.validatePermissions('read', roles, fieldsList(info));
                     bm(operationName + ' validatePermissions')
                     result = await prismaMethod(args, info);
                     context.result = result
