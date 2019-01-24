@@ -89,7 +89,6 @@ export class ValidatorCreator {
             validate(model?: object): undefined | ErrorValidator {
                 const context = {model}
                 if (!validation.call(context, this.value, Validator.param)) {
-                    console.log(context,this, this.value, Validator.param)
                     return {
                         key: this.key,
                         label: this.label,

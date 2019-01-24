@@ -82,7 +82,6 @@ const Form = ({Component, fields: optionalFields, schema, id, onSubmit, children
                             try{
                                 bridge.getValidator({fields})(model)
                             }catch (e) {
-                                console.log('e',e)
                                 return callback(e)
                             }
                             callback(null)

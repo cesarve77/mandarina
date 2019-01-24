@@ -4,6 +4,7 @@ import gql from "graphql-tag";
 import SelectField from "uniforms-antd/SelectField";
 import {Spin} from "antd";
 import {Schema} from 'mandarina'
+import wrapField from "uniforms-antd/wrapField";
 
 const defaultLabeler = (doc) => {
     const clone = {...doc}
@@ -57,18 +58,18 @@ export default React.memo(({query, mode, labeler = defaultLabeler, ...props}) =>
                     if (props.fieldType === Array) {
                         mode = mode || "multiple"
                         value = props.value || []
-                        onChange = values => props.onChange(values.map(id => ({id})))
+                        onChange = (values) => props.onChange(values.map(id => ({id})))
                     }
-                    return <SelectField {...props}
-                                        transform={transform}
-                                        placeholder={props.loading ? '.... ... .. .' : props.placeholder}
-                                        disabled={loading || props.disabled}
-                                        onChange={onChange}
-                                        value={value}
-                                        notFoundContent={loading ? <Spin size="small"/> : null}
-                                        mode={mode}
-                                        allowedValues={allowedValues}
-                    />
+                    return wrapField(props, <SelectField {...props}
+                                                         transform={transform}
+                                                         placeholder={props.loading ? '.... ... .. .' : props.placeholder}
+                                                         disabled={loading || props.disabled}
+                                                         onChange={onChange}
+                                                         value={value}
+                                                         notFoundContent={loading ? <Spin size="small"/> : null}
+                                                         mode={mode}
+                                                         allowedValues={allowedValues}
+                    />)
                 }}
             </Query>
         )

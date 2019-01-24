@@ -71,6 +71,7 @@ export class Schema {
                 update: `${singleUpper}UpdateInput!`,
             }
         };
+        console.log(this.name, this)
     }
 
     static getInstance(name: string): Schema {
@@ -110,23 +111,23 @@ export class Schema {
         const isRequired = required.getValidatorWithParam();
 
         if (definition.type === Number && (!hasValidator(fieldDefinition.validators, isNumberValidator.validatorName))) {
-            definition.validators.unshift(isNumberValidator);
+            fieldDefinition.validators.unshift(isNumberValidator);
         }
 
         if (definition.type === Date && (!hasValidator(fieldDefinition.validators, isDateValidator.validatorName))) {
-            definition.validators.unshift(isDateValidator);
+            fieldDefinition.validators.unshift(isDateValidator);
         }
 
         if (definition.type === Integer && (!hasValidator(fieldDefinition.validators, isIntegerValidator.validatorName))) {
-            definition.validators.unshift(isIntegerValidator);
+            fieldDefinition.validators.unshift(isIntegerValidator);
         }
 
         if (definition.type === String && (!hasValidator(fieldDefinition.validators, isStringValidator.validatorName))) {
-            definition.validators.unshift(isStringValidator);
+            fieldDefinition.validators.unshift(isStringValidator);
         }
 
         if (Array.isArray(definition.type) && typeof definition.type[0] !== 'string' && (!hasValidator(fieldDefinition.validators, isRequired.validatorName))) {
-            definition.validators.unshift(isRequired);
+            fieldDefinition.validators.unshift(isRequired);
         }
 
         // set default -> default values
@@ -210,10 +211,6 @@ export class Schema {
         return this.pathDefinitions[key];
     }
 
-    validate(model: Model): ErrorValidator[] {
-        this.clean(model)
-        return this._validate(model, '', [{schema: this.name, path: ''}], model);
-    }
 
     getFields(): string[] {
         if (!this.fields) {
@@ -244,6 +241,11 @@ export class Schema {
             this.filePath = path.dirname(stack[2].getFileName())
         }
         return this.filePath
+    }
+
+    validate(model: Model): ErrorValidator[] {
+        this.clean(model)
+        return this._validate(model, '', [{schema: this.name, path: ''}], model);
     }
 
     /**
@@ -369,6 +371,7 @@ export class Schema {
 
 
             if (Array.isArray(type)) {
+                //check arrayValidators (min array count for example)
                 for (const validator of definition.validators) {
                     if (!validator.arrayValidator) continue
                     const instance = new validator({key, path, definition, value});
@@ -377,6 +380,7 @@ export class Schema {
                         return errors.push(error);
                     }
                 }
+                //Check no array validators
                 // TODO: Tal vez es mejor chequear en default value que siempre tenga un valor
                 if (typeof type[0] === 'string' && value) {
                     const schema = Schema.getInstance(<string>type[0]);
@@ -390,6 +394,7 @@ export class Schema {
                     });
                     errors = [...errors, ...internalErrors];
                 } else if (value) {
+                    console.log('fielddddd222', key, value, definition.validators)
                     // TODO: Es mejor chquear en default value que siempre tenga un valor
                     value.forEach((value: any, i: number): any => {
                         for (const validator of definition.validators) {
@@ -566,7 +571,7 @@ export interface ValidatorFinder {
     [validator: string]: any
 }
 
-export interface FieldDefinition extends UserFieldDefinition{
+export interface FieldDefinition extends UserFieldDefinition {
     type: Native | string | Array<string> | Array<Native>,
     label: Label
     description?: string
