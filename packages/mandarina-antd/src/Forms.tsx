@@ -61,9 +61,7 @@ export interface ChildFunc {
 
 const Form = ({Component, fields: optionalFields, schema, id, onSubmit, children, showInlineError, omitFields, omitFieldsRegEx, ...props}: FormProps) => {
     const bridge = new Bridge(schema)
-    console.log('fields111', optionalFields, omitFields, omitFieldsRegEx)
     const fields = filterFields(optionalFields || schema.getFields(), omitFields, omitFieldsRegEx)
-    console.log('fields222', fields)
     return (
         <Component id={id} schema={schema} fields={fields}>
             {({mutate, doc, loading, ...rest}) => {

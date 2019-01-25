@@ -4,7 +4,6 @@ import {Spin} from "antd";
 import {ColumnProps, ListProps, ListVirtualized} from "./ListVirtualized";
 import {FindProps} from "mandarina/build/Operations/Find";
 
-
 const AuthListComponent = ({schema, denied, Component, ...props}: FindProps & { Component: React.ComponentClass<ListProps, { columns: ColumnProps[], height: number, width: number }>, schema: Schema, denied?: JSX.Element } ) => {
     return (
         <AuthTable schema={schema} action='read'>
@@ -21,11 +20,12 @@ const AuthListComponent = ({schema, denied, Component, ...props}: FindProps & { 
     )
 }
 
-//
+
+
 // export const AuthList = (props: ColumnProps & FindProps & { schema: Schema, denied?: JSX.Element }) =>
 //     <AuthListComponent Component={List} {...props}/>
-export const AuthList = (props: ColumnProps & FindProps & { schema: Schema, denied?: JSX.Element }) =>
+export const AuthList = (props:  FindProps & { schema: Schema, denied?: JSX.Element }) =>
     <AuthListComponent Component={ListVirtualized} {...props}/>
 
-export const AuthListVirtualized = (props: ColumnProps & FindProps & { schema: Schema, denied?: JSX.Element }) =>
+export const AuthListVirtualized = (props: FindProps & { schema: Schema, denied?: JSX.Element }) =>
     <AuthListComponent Component={ListVirtualized} {...props}/>

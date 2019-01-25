@@ -17,8 +17,6 @@ describe('Table', () => {
             validators: ['required']
         }
     }, {name: 'Table1'})
-    console.log(schema)
-
 
     const schema2 = new Schema({
         id: {type: String},
@@ -33,7 +31,6 @@ describe('Table', () => {
 
     test("saveFiles ", () => {
         const table2 = new Table(schema2, {name: 'Table2'})
-        console.log(table2.name)
         Mandarina.saveFiles()
         const filePath = path.join(prismaDir, 'datamodel/table2.graphql')
         const fileContent = fs.readFileSync(filePath, 'utf8')

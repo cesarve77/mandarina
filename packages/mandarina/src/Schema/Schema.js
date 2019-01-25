@@ -93,19 +93,19 @@ var Schema = /** @class */ (function () {
         var isStringValidator = Validators_1.isString.getValidatorWithParam();
         var isRequired = Validators_1.required.getValidatorWithParam();
         if (definition.type === Number && (!utils_1.hasValidator(fieldDefinition.validators, isNumberValidator.validatorName))) {
-            definition.validators.unshift(isNumberValidator);
+            fieldDefinition.validators.unshift(isNumberValidator);
         }
         if (definition.type === Date && (!utils_1.hasValidator(fieldDefinition.validators, isDateValidator.validatorName))) {
-            definition.validators.unshift(isDateValidator);
+            fieldDefinition.validators.unshift(isDateValidator);
         }
         if (definition.type === Integer && (!utils_1.hasValidator(fieldDefinition.validators, isIntegerValidator.validatorName))) {
-            definition.validators.unshift(isIntegerValidator);
+            fieldDefinition.validators.unshift(isIntegerValidator);
         }
         if (definition.type === String && (!utils_1.hasValidator(fieldDefinition.validators, isStringValidator.validatorName))) {
-            definition.validators.unshift(isStringValidator);
+            fieldDefinition.validators.unshift(isStringValidator);
         }
         if (Array.isArray(definition.type) && typeof definition.type[0] !== 'string' && (!utils_1.hasValidator(fieldDefinition.validators, isRequired.validatorName))) {
-            definition.validators.unshift(isRequired);
+            fieldDefinition.validators.unshift(isRequired);
         }
         // set default -> default values
         if (Array.isArray(definition.type)) {
@@ -175,10 +175,6 @@ var Schema = /** @class */ (function () {
         }
         return this.pathDefinitions[key];
     };
-    Schema.prototype.validate = function (model) {
-        this.clean(model);
-        return this._validate(model, '', [{ schema: this.name, path: '' }], model);
-    };
     Schema.prototype.getFields = function () {
         if (!this.fields) {
             this.fields = this._getFields();
@@ -207,6 +203,10 @@ var Schema = /** @class */ (function () {
             this.filePath = path.dirname(stack[2].getFileName());
         }
         return this.filePath;
+    };
+    Schema.prototype.validate = function (model) {
+        this.clean(model);
+        return this._validate(model, '', [{ schema: this.name, path: '' }], model);
     };
     /**
      * Mutate the model,with all keys  proper types and null for undefined
@@ -320,6 +320,7 @@ var Schema = /** @class */ (function () {
                 return errors = errors.concat(internalErrors);
             }
             if (Array.isArray(type)) {
+                //check arrayValidators (min array count for example)
                 for (var _i = 0, _a = definition.validators; _i < _a.length; _i++) {
                     var validator = _a[_i];
                     if (!validator.arrayValidator)
@@ -330,6 +331,7 @@ var Schema = /** @class */ (function () {
                         return errors.push(error);
                     }
                 }
+                //Check no array validators
                 // TODO: Tal vez es mejor chequear en default value que siempre tenga un valor
                 if (typeof type[0] === 'string' && value) {
                     var schema_2 = Schema.getInstance(type[0]);

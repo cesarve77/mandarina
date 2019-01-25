@@ -46,7 +46,8 @@ export class ActionForm extends PureComponent<ActionFormProps> {
         return (
             // @ts-ignore
             <Mutation mutation={MUTATION}
-                      onCompleted={(data) => console.log('ActionForm onCompleted', data)}>
+                      //onCompleted={(data) => console.log('ActionForm onCompleted', data)}
+            >
                 {(mutation, {loading, error, ...restMutation}) => {
                     return (
                         <AutoForm disabled={loading}

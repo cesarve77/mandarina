@@ -213,7 +213,6 @@ export class Bridge {
         return (model: any) => {
             let enter = false
             const errors = this.schema.validate(model)
-            console.log('errors',errors)
             if (errors.length) {
                 const error = {}
                 errors.forEach((e) => {

@@ -107,10 +107,6 @@ var Table = /** @class */ (function () {
                 if (parentPath) {
                     parentDef = _this.schema.getPathDefinition(parentPath);
                 }
-                if (field === 'groupFamily.id') {
-                    console.log('def', def);
-                    console.log('parentDef', parentDef);
-                }
                 defaultActions.forEach(function (action) {
                     var parentRoles = parentDef && parentDef.permissions[action];
                     var roles = def.permissions[action];

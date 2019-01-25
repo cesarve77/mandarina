@@ -38,7 +38,7 @@ const ListFilter = React.memo(({onFilterChange, field, schema}: ListFilterProps)
     const bridge = new Bridge(filterSchema)
     return FieldComponent && (
         <AutoForm schema={bridge} autosave autosaveDelay={400}
-                  onChangeModel={(model: any) => console.log(model)}
+                 // onChangeModel={(model: any) => console.log(model)}
                   onSubmit={({filter}: { filter: any }) => {
                       onFilterChange(field, filterMethod.call({fieldDefinition, schema}, filter))
                   }}

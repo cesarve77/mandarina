@@ -69,7 +69,6 @@ var ValidatorCreator = /** @class */ (function () {
                 Validator.prototype.validate = function (model) {
                     var context = { model: model };
                     if (!validation.call(context, this.value, Validator.param)) {
-                        console.log(context, this, this.value, Validator.param);
                         return {
                             key: this.key,
                             label: this.label,

@@ -88,10 +88,7 @@ export class Table {
                     parentDef = this.schema.getPathDefinition(parentPath)
                 }
 
-                if (field === 'groupFamily.id') {
-                    console.log('def', def)
-                    console.log('parentDef', parentDef)
-                }
+
                 defaultActions.forEach((action) => {
                     const parentRoles = parentDef && parentDef.permissions[action]
                     const roles: string[] = def.permissions[action]

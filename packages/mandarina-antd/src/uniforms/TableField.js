@@ -53,6 +53,7 @@ export default React.memo(({query, mode, labeler = defaultLabeler, ...props}) =>
                     const docs = loading ? [] : data[queryName]
                     const allowedValues = docs.map(({id}) => id)
                     const transform = getTransform(docs, labeler)
+                    console.log('docs',docs)
                     let mode = props.mode, value = props.value && props.value.id || ''
                     let onChange = value => props.onChange({id: value})
                     if (props.fieldType === Array) {

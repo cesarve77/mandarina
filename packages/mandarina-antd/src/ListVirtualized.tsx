@@ -197,7 +197,6 @@ export class ListVirtualized extends React.Component<ListProps, { columns: Colum
         //this.setState({row: this.visibleRowStartIndex})
         this.onScrollTimeoutId && window.clearTimeout(this.onScrollTimeoutId)
         this.onScrollTimeoutId = window.setTimeout(() => {
-            console.log('scroll stop')
             //If all visible are loaded, then not refetch
             if (this.data.slice(this.visibleRowStartIndex, this.visibleRowStopIndex).every((val) => val !== undefined)) return
 
@@ -205,7 +204,6 @@ export class ListVirtualized extends React.Component<ListProps, { columns: Colum
             //TODO: maybe if we are in gap, then just query for that data
 
             const {overLoad = 0} = this.props
-            console.log('refetch')
             this.refetch(
                 {
                     skip: this.overscanRowStartIndex,
@@ -258,11 +256,6 @@ export class ListVirtualized extends React.Component<ListProps, { columns: Colum
 
                     const tHeadHeight = this.tHead.current && this.tHead.current.offsetHeight || 0
                     const itemData = {data: this.data, columns}
-                    console.log('height + tHeadHeight', height + tHeadHeight)
-                    console.log('tHeadHeight ', tHeadHeight)
-                    console.log('height ', height)
-                    console.log('rowHeight ', estimatedRowHeight || estimatedRowHeightDefault)
-                    console.log('estimatedRowHeight ', estimatedRowHeight)
                     return (
                         <div className={'mandarina-list'} ref={this.container}
                              style={{

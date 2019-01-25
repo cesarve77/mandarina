@@ -11,7 +11,6 @@ export const AuthUpdateForm = ({schema, denied, ...props}: AuthUpdateFormStatePr
     return (
         <AuthTable schema={schema} action='update'>
             {({fields, loading}) => {
-                console.log('asl;kjdas',props)
                 return (
                     <Spin spinning={loading} style={{width: '100%'}}>
                         {!loading && fields.length > 0 && <UpdateForm schema={schema} {...props} fields={fields}/>}

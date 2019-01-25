@@ -71,7 +71,6 @@ export class Schema {
                 update: `${singleUpper}UpdateInput!`,
             }
         };
-        console.log(this.name, this)
     }
 
     static getInstance(name: string): Schema {
@@ -394,7 +393,6 @@ export class Schema {
                     });
                     errors = [...errors, ...internalErrors];
                 } else if (value) {
-                    console.log('fielddddd222', key, value, definition.validators)
                     // TODO: Es mejor chquear en default value que siempre tenga un valor
                     value.forEach((value: any, i: number): any => {
                         for (const validator of definition.validators) {

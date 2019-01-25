@@ -193,9 +193,7 @@ var Mutate = /** @class */ (function (_super) {
         var _a;
         var _b = this.props, schema = _b.schema, where = _b.where, type = _b.type, optimisticResponse = _b.optimisticResponse;
         var cleaned = deepClone(model);
-        console.log(111, model);
         schema.clean(cleaned); // fill null all missing keys
-        console.log(222, model);
         var names = schema.names;
         var data = this.getSubSchemaMutations(cleaned, schema);
         var mutation = { variables: { data: data } };
