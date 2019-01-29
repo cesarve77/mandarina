@@ -1,6 +1,6 @@
 {
   "name": "mandarina",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "",
   "main": "build/index.js",
   "types": "build/index.d.ts",
@@ -81,6 +81,7 @@
     "docker-mysql-ip": "docker inspect myfw_mysql_1 | grep \"IPAddress\"",
     "postinstall": "tsc"
   },
+
   "jest": {
     "coverageDirectory": "coverage",
     "testEnvironment": "node",

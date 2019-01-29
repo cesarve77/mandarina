@@ -1,0 +1,30 @@
+{
+  "name": "mandarina-cli",
+  "version": "0.0.8",
+  "description": "mandarina command line",
+  "main": "./build/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cesarve77/mandarina/tree/master/packages/cli"
+  },
+  "keywords": [
+    "mandarina",
+    "react",
+    "apollo",
+    "prisma",
+    "graphql"
+  ],
+  "bin": {
+    "manda-cli": "./build/index.js"
+  },
+  "author": "Cesar Ramos",
+  "license": "ISC",
+  "dependencies": {
+    "@types/react": "^16.7.22",
+    "mandarina": "lastest",
+    "node-yaml": "^3.1.1"
+  }
+}

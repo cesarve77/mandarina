@@ -29,7 +29,7 @@ export interface MutateProps {
     variables?: { [key: string]: any }
     update?: (cache: DataProxy, mutationResult: FetchResult) => void
     ignoreResults?: boolean
-    optimisticResponse?: Object | false
+    optimisticResponse?: TData
     refetchQueries?: (mutationResult: FetchResult) => Array<{ query: DocumentNode, variables?: TVariables } | string>
     awaitRefetchQueries?: boolean
     onCompleted?: (data: TData) => void

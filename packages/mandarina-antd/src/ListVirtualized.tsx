@@ -262,8 +262,9 @@ export class ListVirtualized extends React.Component<ListProps, { columns: Colum
                                  width,
                                  height: height + tHeadHeight
                              }}>
-                            Total:{count}
+
                             <div ref={this.tHead} className='mandarina-list-thead' style={{width}}>
+                                Total:{count}
                                 <div className={'mandarina-list-thead-row'}
                                      style={{width: this.estimatedColumnWidth * columns.length}}>
                                     {columns.map(({title, field}, columnIndex) => <div key={field}
