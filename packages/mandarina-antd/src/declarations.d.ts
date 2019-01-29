@@ -67,6 +67,9 @@ declare module "uniforms/SimpleSchema2Bridge" {
     const SimpleSchema2Bridge: any
     export default SimpleSchema2Bridge
 }
+declare module 'react-resizable' {
+    export const  Resizable: any
+}
 
 declare module "uniforms-antd" {
     export const AutoForm: any
