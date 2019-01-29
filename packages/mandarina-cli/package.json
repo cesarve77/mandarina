@@ -29,5 +29,8 @@
   },
   "peerDependencies": {
     "mandarina": "latest"
+  },
+  "devDependencies": {
+    "@types/node": "^10.12.19"
   }
 }
