@@ -1,6 +1,6 @@
 {
   "name": "mandarina",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "",
   "main": "build/index.js",
   "types": "build/index.d.ts",
@@ -13,8 +13,8 @@
   "dependencies": {
     "browser-or-node": "^1.1.0",
     "flat": "^4.1.0",
-    "graphql-fields-list": "^1.1.2",
     "graphql": "^14.1.1",
+    "graphql-fields-list": "^1.1.2",
     "inflection": "^1.12.0",
     "lodash.clonedeep": "^4.5.0",
     "lodash.get": "^4.4.2",
