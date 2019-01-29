@@ -25,7 +25,9 @@
   "license": "ISC",
   "dependencies": {
     "@types/react": "^16.7.22",
-    "mandarina": "lastest",
     "node-yaml": "^3.1.1"
+  },
+  "peerDependencies": {
+    "mandarina": "latest"
   }
 }

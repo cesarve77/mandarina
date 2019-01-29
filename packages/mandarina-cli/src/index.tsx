@@ -13,7 +13,6 @@ switch (cmd) {
         createProject(project)
         break
     case 'gen-files':
-        console.log('gen-files')
         genFiles()
         break;
     case 'deploy':

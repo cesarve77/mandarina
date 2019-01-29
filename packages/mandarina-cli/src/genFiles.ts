@@ -2,8 +2,7 @@ import fs from "fs";
 import path from "path";
 import {getParents} from "mandarina/build/utils";
 import {capitalize, getGraphQLInput, getGraphQLModel} from "mandarina/build/Table/utils";
-import {Table} from "mandarina/build/Table/Table";
-import {CustomAction, Schema} from "mandarina";
+import {Table,CustomAction, Schema} from "mandarina";
 import {getConfig, loadSchemas} from "./utils";
 
 const yaml: any = require("node-yaml")
@@ -125,6 +124,7 @@ export const genFiles = () => {
     loadSchemas(config.dir)
     processed = {}
     reset()
+    console.log('Table.instances',Table.instances)
     for (const tableName in Table.instances) {
         const table = Table.getInstance(tableName)
         saveFile(table.schema)
