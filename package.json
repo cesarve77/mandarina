@@ -4,10 +4,11 @@
     "docusaurus": "^1.5.1"
   },
   "scripts": {
-    "start": "cd website && yarn start"
+    "start": "cd website && yarn start",
+    "dump" : "cd packages/mandarina && yarn version --minor && npm publish && cd ../mandarina-antd && yarn version --minor && npm publish && cd ../mandarina-cli && yarn version --minor && npm publish"
   },
-  "name": "mandarina",
-  "version": "0.0.1",
+  "name": "mandarina-repo",
+  "version": "0.0.8",
   "main": "index.js",
   "directories": {
     "doc": "docs"
