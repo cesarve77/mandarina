@@ -1,14 +1,15 @@
 {
   "dependencies": {
+    "@types/aws-lambda": "^8.10.18",
     "@types/lodash.get": "^4.4.4",
     "docusaurus": "^1.5.1"
   },
   "scripts": {
     "start": "cd website && yarn start",
-    "dump" : "cd packages/mandarina && yarn version --minor && npm publish && cd ../mandarina-antd && yarn version --minor && npm publish && cd ../mandarina-cli && yarn version --minor && npm publish"
+    "publish": "yarn version --patch && cd packages/mandarina && yarn version --patch && npm publish && cd ../mandarina-antd && yarn version --patch && npm publish && cd ../mandarina-cli && yarn version --patch && npm publish"
   },
   "name": "mandarina-repo",
-  "version": "0.0.8",
+  "version": "0.1.1",
   "main": "index.js",
   "directories": {
     "doc": "docs"
