@@ -1,19 +1,18 @@
 {
   "name": "mandarina",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "",
   "main": "build/index.js",
   "types": "build/index.d.ts",
   "author": "",
   "license": "ISC",
   "resolutions": {
-    "**/@types/react": "16.8.0-alpha.1",
+    "**/@types/react": "16.7.22",
     "**/graphql": "14.1.1"
   },
   "dependencies": {
     "browser-or-node": "^1.1.0",
     "flat": "^4.1.0",
-    "graphql": "^14.1.1",
     "graphql-fields-list": "^1.1.2",
     "inflection": "^1.12.0",
     "lodash.clonedeep": "^4.5.0",
@@ -28,6 +27,7 @@
     "apollo-cache-inmemory": "^1.4.2",
     "apollo-client": "^2.4.12",
     "apollo-link-http": "^1.5.9",
+    "graphql": "^14.1.1",
     "graphql-tag": "^2.10.1",
     "prisma-binding": "^2.3.0",
     "react": "^16.8.0-alpha.1",
