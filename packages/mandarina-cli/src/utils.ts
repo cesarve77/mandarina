@@ -9,7 +9,7 @@ export const getConfig = (): ConfigInterface | void => {
         console.error('Error: Be sure you are in a mandarina project and has a madarina.json file')
         return
     }
-    let config = JSON.parse(rawData)
+    const config = JSON.parse(rawData)
     if (!config.secret) {
         console.error('Error: please set "secret" in  madarina.json file')
         return
