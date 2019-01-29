@@ -138,4 +138,35 @@ export const genFiles = () => {
             saveActionSchema(action.name)
         }
     }
+    if (config.options && config.options.auth){
+        saveAuthFiles()
+    }
+}
+
+
+const saveAuthFiles=() => { //todo unify with Table save files
+    if (!config) return
+    const model = `type AuthTable {
+                        role: String!
+                        table: String!
+                        action: String!
+                        field: String
+                        id: ID! @unique
+                  }`
+    const operation = `extend type Query {
+                            AuthFields(action: String!, table: String!) :  [String!]
+                       }`
+    const prismaDir = config.dir.prisma
+    const fileName = 'mandarina.auth'
+    const fileAbsOperation = `${prismaDir}/datamodel/${fileName}.operations.graphql`
+    const fileAbsModel = `${prismaDir}/datamodel/${fileName}.model.graphql`
+    const fileRelModel = `datamodel/${fileName}.model.graphql`
+    fs.writeFileSync(fileAbsModel, model)
+    fs.writeFileSync(fileAbsOperation, operation)
+    const prismaYaml = `${prismaDir}/prisma.yml`
+    const prisma: { datamodel: string[] | string } = yaml.readSync(prismaYaml) || {}
+    prisma.datamodel = prisma.datamodel || []
+    if (!Array.isArray(prisma.datamodel)) prisma.datamodel = [prisma.datamodel]
+    if (!prisma.datamodel.includes(fileRelModel)) prisma.datamodel.push(fileRelModel)
+    yaml.writeSync(prismaYaml, prisma)
 }
