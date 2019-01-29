@@ -67,9 +67,6 @@ declare module "uniforms/SimpleSchema2Bridge" {
     const SimpleSchema2Bridge: any
     export default SimpleSchema2Bridge
 }
-declare module 'react-resizable' {
-    export const  Resizable: any
-}
 
 declare module "uniforms-antd" {
     export const AutoForm: any
@@ -82,4 +79,26 @@ declare module "uniforms-antd" {
     export const TextField: any
     export const RadioField: any
     export const SelectField: any
+}
+declare module 'react-window' {
+    export const Resizable: any
+    export const areEqual: any
+    export const VariableSizeGrid: any
+    export interface CommonProps {
+        overscanColumnsCount: number
+        overscanRowsCount: number
+
+    }
+
+    export interface GridChildComponentProps {
+        [key: string]: any
+    }
+
+    export interface GridOnScrollProps {
+        [key: string]: any
+    }
+
+    export interface ListChildComponentProps {
+        [key: string]: any
+    }
 }

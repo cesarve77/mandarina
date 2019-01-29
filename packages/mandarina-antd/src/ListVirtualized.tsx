@@ -3,7 +3,6 @@ import React, {memo} from "react";
 import '../styles.css'
 import {get} from "mandarina/build/Schema/utils";
 import isEmpty from 'lodash.isempty'
-//@ts-ignore
 import {
     areEqual,
     GridChildComponentProps,
@@ -14,15 +13,6 @@ import {
 import ListFilter, {onFilterChange, Where} from "./ListFilter";
 import {CellComponent} from "mandarina/build/Schema/Schema";
 import {filterFields} from "mandarina/build/utils";
-
-declare module "react-window" {
-    const areEqual: any
-
-    interface CommonProps {
-        overscanColumnsCount: number
-        overscanRowsCount: number
-    }
-}
 
 
 export interface ListProps {
@@ -285,7 +275,7 @@ export class ListVirtualized extends React.Component<ListProps, { columns: Colum
                                 estimatedRowHeight={estimatedRowHeight}
                                 columnCount={columns.length}
                                 columnWidth={this.getColumnWidth}
-                                rowHeight={index => estimatedRowHeight || estimatedRowHeightDefault}
+                                rowHeight={(index: number) => estimatedRowHeight || estimatedRowHeightDefault}
                                 width={width}
                                 itemData={itemData}
                                 overscanColumnsCount={overscanColumnsCount}
@@ -296,7 +286,7 @@ export class ListVirtualized extends React.Component<ListProps, { columns: Colum
                                                       visibleRowStartIndex,
                                                       visibleRowStopIndex,
 
-                                                  }) => {
+                                                  }:any) => {
 
 
                                     this.overscanRowStartIndex = overscanRowStartIndex
