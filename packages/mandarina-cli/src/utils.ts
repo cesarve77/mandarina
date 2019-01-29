@@ -6,29 +6,30 @@ export const getConfig = (): ConfigInterface | void => {
     try {
         rawData = fs.readFileSync(path.join(process.cwd(), 'mandarina.json'), 'utf8')
     } catch (e) {
-        console.error('Error: Be sure you are in a mandarina project and has a madarina.json file')
+        console.log('Error: Be sure you are in a mandarina project and has a madarina.json file')
         return
     }
     const config = JSON.parse(rawData)
     if (!config.secret) {
-        console.error('Error: please set "secret" in  madarina.json file')
+        console.log('Error: please set "secret" in  madarina.json file')
         return
     }
     if (!config.dir) {
-        console.error('Error: please set "dir" in  madarina.json file')
+        console.log('Error: please set "dir" in  madarina.json file')
         return
     }
     if (!config.dir.schemas || !Array.isArray(config.dir.schemas) || config.dir.schemas.length === 0) {
-        console.error('Error: please set "dir.schemas" in  madarina.json file. Make sure it is a array')
+        console.log('Error: please set "dir.schemas" in  madarina.json file. Make sure it is a array')
         return
     }
     if (config.dir.tables && !Array.isArray(config.dir.tables)) {
-        console.error('Error: please make sure "dir.tables" is a array')
+        console.log('Error: please make sure "dir.tables" is a array')
     }
     if (!config.dir.prisma ) {
-        console.error('Error: please set "dir.prisma" in  madarina.json file')
+        console.log('Error: please set "dir.prisma" in  madarina.json file')
         return
     }
+    console.log(config)
     return (config)
 }
 
