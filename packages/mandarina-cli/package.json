@@ -24,7 +24,6 @@
   "author": "Cesar Ramos",
   "license": "ISC",
   "dependencies": {
-    "@types/react": "^16.7.22",
     "node-yaml": "^3.1.1"
   },
   "peerDependencies": {

@@ -1,16 +1,16 @@
 import {Prisma} from "prisma-binding";
 import {ContextParameters} from "graphql-yoga/dist/types";
 
-import {ActionType} from "../Auth/Auth";
-import {AuthArgs} from "../Auth/AuthServer";
-import {FieldDefinition, Schema, SchemaOptions} from "../Schema/Schema";
-import {InvalidActionError} from '../Errors/InvalidActionError';
-import {UniqueTableError} from '../Errors/UniqueTableError';
-import {TableInstanceNotFound} from "../Errors/TableInstanceNotFound";
-import {Mandarina} from "../Mandarina";
-import {capitalize} from './utils';
-import {FieldsPermissionsError} from '../Errors/FieldsPermissionsError';
-import {MissingIdTableError} from "../Errors/MissingIDTableError";
+import {ActionType} from "mandarina/build/Auth/Auth";
+import {FieldDefinition, SchemaOptions} from "mandarina/build/Schema/Schema";
+import {Schema} from "mandarina";
+import {InvalidActionError} from 'mandarina/build/Errors/InvalidActionError';
+import {UniqueTableError} from 'mandarina/build/Errors/UniqueTableError';
+import {TableInstanceNotFound} from "mandarina/build/Errors/TableInstanceNotFound";
+import Mandarina from "../Mandarina";
+import {capitalize} from 'mandarina/build/Schema/utils';
+import {FieldsPermissionsError} from 'mandarina/build/Errors/FieldsPermissionsError';
+import {MissingIdTableError} from "mandarina/build/Errors/MissingIDTableError";
 
 
 const getDefaultPermissions = () => ({read: {}, create: {}, update: {}, delete: {}});
@@ -297,20 +297,9 @@ export interface Context extends ContextParameters {
     [others: string]: any
 }
 
-export interface ContextAfter<Result> extends ContextParameters {
-    result: Result
-}
 
 
-export type Permission = ['everyone'] | ['nobody'] | string[]
 
-export interface Permissions {
-    read?: Permission
-    create?: Permission
-    update?: Permission
-    delete?: Permission
-    filter?: (this: any, user: { userId: string, roles: string[] }, args: AuthArgs) => Promise<Object> | Object | undefined
-}
 
 export interface Hook {
     (actionType: string, _: any, args: any, context: any, info: any): Promise<any> | void | any

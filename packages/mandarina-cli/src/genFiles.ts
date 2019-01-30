@@ -1,8 +1,10 @@
 import fs from "fs";
 import path from "path";
 import {getParents} from "mandarina/build/utils";
-import {capitalize, getGraphQLInput, getGraphQLModel} from "mandarina/build/Table/utils";
-import {Table,CustomAction, Schema} from "mandarina";
+import {getGraphQLInput, getGraphQLModel} from "./genFilesUtils";
+import {capitalize} from "mandarina/build/Schema/utils";
+import {Table,CustomAction,} from "mandarina-server";
+import {Schema } from "mandarina";
 import {getConfig, loadSchemas} from "./utils";
 
 const yaml: any = require("node-yaml")

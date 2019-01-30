@@ -1,5 +1,5 @@
 import 'jsdom-global/register'
-import {Table} from "../../../Table/Table";
+import {Table} from "../../../../../mandarina-server/src/Table/Table";
 //import * as fs from 'fs'
 import * as path from 'path'
 

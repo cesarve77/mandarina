@@ -1,5 +1,5 @@
 import React, {PureComponent} from "react"
-import {Schema} from '../Schema/Schema'
+import {Schema} from '..'
 import gql from "graphql-tag";
 import {Mutation, MutationFn, withApollo, WithApolloClient} from "react-apollo";
 import {buildQueryFromFields} from "./utils";

@@ -4,7 +4,7 @@ import {CategoryInterface} from "../tables/Category";
 import {PostInterface} from "../tables/Post";
 import {AddressInterface} from "../tables/Address";
 import {buildQueryFromFields} from "../../Operations/utils";
-import {Table} from "../../Table/Table";
+import {Table} from "../../../../mandarina-server/src/Table/Table";
 import {ApolloQueryResult} from "apollo-client";
 
 

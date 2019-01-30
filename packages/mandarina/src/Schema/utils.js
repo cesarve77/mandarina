@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var Schema_1 = require("./Schema");
+var inflection = require("inflection");
 //code borrowed from https://github.com/aldeed/simple-schema-js/blob/master/package/lib/clean/convertToProperType.js
 exports.forceType = function (value, type) {
     if (Array.isArray(value) ||
@@ -99,4 +100,36 @@ exports.get = function (obj, paths) {
             return state_1.value;
     }
     return result;
+};
+/**
+ * Upper case the first latter
+ * @param  string - string to be upper cased
+ */
+exports.capitalize = function (string) {
+    var result = string.trim();
+    return result.charAt(0).toUpperCase() + result.slice(1);
+};
+/**
+ * Lower case the first latter
+ * @param  string - string to be Lower cased
+ */
+exports.lowerize = function (string) {
+    var result = string.trim();
+    return result.charAt(0).toLowerCase() + result.slice(1);
+};
+exports.pluralize = function (str) {
+    var result = inflection.underscore(str).trim();
+    result = inflection.humanize(result);
+    var resultSplit = result.split(' ');
+    var lastWord = resultSplit.pop();
+    lastWord = inflection.pluralize(lastWord);
+    return inflection.camelize(resultSplit.concat([lastWord]).join('_'), true);
+};
+exports.singularize = function (str) {
+    var result = inflection.underscore(str).trim();
+    result = inflection.humanize(result);
+    var resultSplit = result.split(' ');
+    var lastWord = resultSplit.pop();
+    lastWord = inflection.singularize(lastWord);
+    return inflection.camelize(resultSplit.concat([lastWord]).join('_'), true);
 };

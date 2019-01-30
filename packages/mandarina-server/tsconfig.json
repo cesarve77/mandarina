@@ -3,14 +3,11 @@
     "**/*.test.ts*",
     "build",
     "src/test/**",
-    "src/uniforms/**",
     "node_modules"
   ],
   "compilerOptions": {
-    "allowJs": true,
+    "allowJs": false,
     "types": [
-      "jest",
-      "react",
       "node"
     ],
     "baseUrl": ".",
@@ -24,7 +21,6 @@
       "esnext"
     ],
     "sourceMap": true,
-    "jsx": "react",
     "moduleResolution": "node",
     "rootDir": "src",
     "forceConsistentCasingInFileNames": true,
@@ -36,12 +32,9 @@
     "noUnusedLocals": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
-    "maxNodeModuleJsDepth": 1
+    "declaration": true
   },
   "include": [
     "src"
   ]
 }
-
-
-

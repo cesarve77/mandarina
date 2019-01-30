@@ -1,9 +1,8 @@
-import {Context, Table} from "./Table/Table";
-import {CustomAction} from "./Operations/CustomAction";
+import {Table, Context} from "./Table/Table";
+import {CustomAction} from "./Action/CustomAction";
 
 
-
-export class Mandarina {
+export default class Mandarina {
     static config: MandarinaConfigDefault = {
         prismaDir: '/prisma',
         getUser: ({user}) => user,

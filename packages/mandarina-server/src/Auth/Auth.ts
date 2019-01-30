@@ -1,6 +1,6 @@
 import {Table} from "..";
-import {Mandarina} from "../Mandarina";
-import {ActionType, addToSet} from "./Auth";
+import Mandarina from "../Mandarina";
+import {ActionType, addToSet} from "mandarina/build/Auth/Auth";
 
 
 interface AuthInterface {
@@ -24,7 +24,7 @@ let authFields: {
 
 export const actions = ['read', 'create', 'update', 'delete']
 
-export const AuthServer: AuthInterface = {
+export const Auth: AuthInterface = {
     reset: () => {
         roles = []
         authFields = {}
@@ -52,10 +52,10 @@ export const AuthServer: AuthInterface = {
     },
     resolvers: {
         AuthFields: async (_: any, args: AuthArgs, context: any, info: any) => {
-            const allRoles = AuthServer.getRoles()
+            const allRoles = Auth.getRoles()
             const user = await Mandarina.config.getUser(context)
 
-            const userRoles = (user && user.roles) || []
+            const userRoles:string[] = (user && user.roles) || []
             if (!actions.includes(args.action)) throw new Error(`Action only can be one of ['read', 'create', 'update', 'delete'] now is: ${args.action} `)
             if (!authFields[args.table]) throw new Error(`Table ${args.table} not found getting AuthFields `)
             const table = Table.getInstance(args.table)

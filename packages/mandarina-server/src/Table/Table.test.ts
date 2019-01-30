@@ -1,8 +1,8 @@
-import {Schema} from "../Schema/Schema";
+import {Schema} from "mandarina";
 import {Table} from "./Table";
 import * as fs from 'fs'
 import * as path from 'path'
-import {Mandarina} from "../Mandarina";
+import Mandarina from "mandarina";
 
 describe('Table', () => {
 

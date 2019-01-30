@@ -1,13 +1,10 @@
 import React from "react"
 import gql from "graphql-tag";
-import {Query, QueryResult} from "react-apollo";
+import {Query} from "react-apollo";
 import {Schema} from "..";
 
 export type ActionType = 'create' | 'read' | 'update' | 'delete'
 
-type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>
-
-export type AuthQueryResult = Omit<QueryResult, 'data'> & { fields: string[] };
 
 
 interface AuthTableProps {

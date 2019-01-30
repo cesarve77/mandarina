@@ -1,0 +1,33 @@
+{
+  "name": "mandarina-server",
+  "version": "0.2.13",
+  "description": "Mandarina for server side",
+  "main": "build/index.js",
+  "types": "build/index.d.ts",
+  "author": "Cesar Ramos",
+  "license": "ISC",
+  "resolutions": {
+    "**/graphql": "14.1.1"
+  },
+  "dependencies": {
+
+  },
+  "peerDependencies": {
+    "mandarina": "latest",
+    "prisma-binding": "^2.3.0",
+    "graphql-yoga": "^1.17.1"
+  },
+  "devDependencies": {
+    "@types/ws": "^6.0.1",
+    "@types/react": "^16.7.22",
+    "mandarina": "latest",
+    "@types/jest": "^23.3.13",
+    "@types/node": "^10.12.19",
+    "prisma-binding": "^2.3.0",
+    "graphql-yoga": "^1.17.1",
+    "jest": "^24.0.0"
+  },
+  "scripts": {
+    "postinstall": "tsc"
+  }
+}

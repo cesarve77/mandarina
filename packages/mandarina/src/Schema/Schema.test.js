@@ -4,7 +4,7 @@ var Schema_1 = require("./Schema");
 var Validators_1 = require("./Validators");
 var utils_1 = require("./utils");
 require("./Validators");
-var utils_2 = require("../Table/utils");
+var utils_2 = require("../../../mandarina-server/src/Table/utils");
 describe('Schema', function () {
     var userShape = {
         name: {

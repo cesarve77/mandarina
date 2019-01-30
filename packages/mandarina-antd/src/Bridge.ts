@@ -71,7 +71,7 @@ export class Bridge {
     // Field's definition (`field` prop).
     getField(name: string): FieldDefinition {
         if (!this.fields[name]) this.fields[name] = this.schema.getPathDefinition(name);
-        if (!this.fields[name] || !this.fields[name].type) throw new Error(`No field named "${name}" in table ${this.schema.name}`)
+        if (!this.fields[name] || !this.fields[name].type) throw new Error(`No field named "${name}" in schema ${this.schema.name}`)
         return this.fields[name]
     }
 

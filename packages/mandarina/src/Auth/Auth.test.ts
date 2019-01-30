@@ -1,6 +1,5 @@
 
 import {addToSet} from "./Auth";
-import {Table} from "..";
 
 
 describe('Auth', () => {

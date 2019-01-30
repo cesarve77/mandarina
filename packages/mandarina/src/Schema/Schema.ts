@@ -1,14 +1,12 @@
 // @ts-ignore
-import {mapValues} from 'lodash';
+import mapValues from 'lodash.mapvalues';
 import * as inflection from "inflection";
-
 import {ErrorValidator, Validator, ValidatorCreator} from "./ValidatorCreator";
 import {extraKey, isDate, isInteger, isNumber, isString, required} from "./Validators";
 import {forceType, hasValidator} from "./utils";
-import {Permissions} from "../Table/Table";
 import {UniqueSchemaError} from '../Errors/UniqueSchemaError';
 import {SchemaInstanceNotFound} from '../Errors/SchemaInstanceNotFound';
-import {capitalize, pluralize, singularize} from "../Table/utils";
+import {capitalize, pluralize, singularize} from "../Schema/utils";
 
 export class Schema {
 
@@ -540,7 +538,7 @@ export type FilterMethod = (filter: any) => Where
 
 export type FilterComponent = ((props: any) => JSX.Element) | null
 
-export type CellComponent = (props: { columnIndex: number, rowIndex: number, data: any[], field: string }) => JSX.Element | null
+export type CellComponent = (props: { columnIndex: number, rowIndex: number, data: any[], field: string }) =>  JSX.Element | null
 
 
 export interface UserFieldDefinition {
@@ -613,4 +611,13 @@ export interface Names {
         create: string,
         update: string,
     }
+}
+
+export type Permission = ['everyone'] | ['nobody'] | string[]
+
+export interface Permissions {
+    read?: Permission
+    create?: Permission
+    update?: Permission
+    delete?: Permission
 }

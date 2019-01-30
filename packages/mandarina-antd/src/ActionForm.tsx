@@ -6,7 +6,7 @@ import {AutoField, AutoFields, ErrorsField} from './index'
 
 import AutoForm from 'uniforms-antd/AutoForm'
 import {Bridge} from "./Bridge";
-import {capitalize} from "mandarina/build/Table/utils";
+import {capitalize} from "mandarina/build/Schema/utils";
 import {buildQueryFromFields} from "mandarina/build/Operations/utils";
 import SubmitField from "uniforms-antd/SubmitField";
 import {ChildFunc} from "./Forms";

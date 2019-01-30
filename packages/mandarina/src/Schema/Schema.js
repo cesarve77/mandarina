@@ -12,14 +12,14 @@ var __assign = (this && this.__assign) || function () {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 // @ts-ignore
-var lodash_1 = require("lodash");
+var lodash_mapvalues_1 = require("lodash.mapvalues");
 var inflection = require("inflection");
 var ValidatorCreator_1 = require("./ValidatorCreator");
 var Validators_1 = require("./Validators");
 var utils_1 = require("./utils");
 var UniqueSchemaError_1 = require("../Errors/UniqueSchemaError");
 var SchemaInstanceNotFound_1 = require("../Errors/SchemaInstanceNotFound");
-var utils_2 = require("../Table/utils");
+var utils_2 = require("../Schema/utils");
 var Schema = /** @class */ (function () {
     function Schema(shape, options) {
         var _this = this;
@@ -35,7 +35,7 @@ var Schema = /** @class */ (function () {
         this.errorFromServerMapper = errorFromServerMapper;
         this.options = { recursive: recursive, forceType: forceType, virtual: virtual };
         this.permissions = permissions || {};
-        this.shape = lodash_1.mapValues(shape, function (field, key) { return _this.applyDefinitionsDefaults(field, key); });
+        this.shape = lodash_mapvalues_1.default(shape, function (field, key) { return _this.applyDefinitionsDefaults(field, key); });
         this.keys = Object.keys(this.shape);
         this.filePath = this.getFilePath();
         var single = utils_2.singularize(this.name);
@@ -147,7 +147,7 @@ var Schema = /** @class */ (function () {
     };
     Schema.prototype.extend = function (shape) {
         var _this = this;
-        this.shape = __assign({}, this.shape, lodash_1.mapValues(shape, function (def, key) { return _this.applyDefinitionsDefaults(def, key); }));
+        this.shape = __assign({}, this.shape, lodash_mapvalues_1.default(shape, function (def, key) { return _this.applyDefinitionsDefaults(def, key); }));
         this.keys = Object.keys(this.shape);
     };
     Schema.prototype.getFieldDefinition = function (key) {

@@ -1,5 +1,7 @@
 import {FieldDefinition, Integer, Native} from "./Schema";
 import {Validator} from "./ValidatorCreator";
+import * as inflection from "inflection";
+
 
 //code borrowed from https://github.com/aldeed/simple-schema-js/blob/master/package/lib/clean/convertToProperType.js
 export const forceType = (value: any, type: Native): any => {
@@ -96,3 +98,40 @@ export const get = (obj: any={}, paths: string[]): any[] => {
     return result
 }
 
+
+
+/**
+ * Upper case the first latter
+ * @param  string - string to be upper cased
+ */
+export const capitalize = (string: string): string => {
+    const result = string.trim()
+    return result.charAt(0).toUpperCase() + result.slice(1)
+}
+
+/**
+ * Lower case the first latter
+ * @param  string - string to be Lower cased
+ */
+export const lowerize = (string: string): string => {
+    const result = string.trim()
+    return result.charAt(0).toLowerCase() + result.slice(1)
+}
+
+export const pluralize = (str: string): string => {
+    let result: string = inflection.underscore(str).trim()
+    result = inflection.humanize(result)
+    const resultSplit: string[] = result.split(' ')
+    let lastWord = <string>resultSplit.pop();
+    lastWord = inflection.pluralize(lastWord)
+    return inflection.camelize([...resultSplit, lastWord].join('_'), true)
+}
+
+export const singularize = (str: string): string => {
+    let result = inflection.underscore(str).trim()
+    result = inflection.humanize(result)
+    const resultSplit: string[] = result.split(' ')
+    let lastWord = <string>resultSplit.pop()
+    lastWord = inflection.singularize(lastWord)
+    return inflection.camelize([...resultSplit, lastWord].join('_'), true)
+}

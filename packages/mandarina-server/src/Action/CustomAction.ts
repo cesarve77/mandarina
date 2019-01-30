@@ -1,7 +1,9 @@
-import {ErrorFromServerMapper, Schema} from "../Schema/Schema";
+import {ErrorFromServerMapper, Schema} from "mandarina/build/Schema/Schema";
 import {TableInstanceNotFound} from "../Errors/TableInstanceNotFound";
 import {UniqueActionError} from "../Errors/UniqueActionError";
-import {Hook, operationType, Permission} from "../Table/Table";
+
+import {Permission} from "mandarina/build/Schema/Schema";
+import {Hook, operationType} from '../Table/Table'
 
 /**
  *

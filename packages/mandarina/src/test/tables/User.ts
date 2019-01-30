@@ -1,4 +1,4 @@
-import {Table} from '../../Table/Table'
+import {Table} from '../../../../mandarina-server/src/Table/Table'
 import {Integer} from "../../Schema/Schema";
 import {CategoryInterface} from "./Category";
 import {PostInterface} from "./Post";

@@ -1,4 +1,4 @@
-import BaseError from './BaseError';
+import BaseError from 'mandarina/build/Errors/BaseError';
 
 export class TableInstanceNotFound extends BaseError {
 	constructor(schemaName: string) {

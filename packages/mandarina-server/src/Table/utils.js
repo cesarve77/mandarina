@@ -1,41 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-var inflection = require("inflection");
-var __1 = require("..");
-var utils_1 = require("../Schema/utils");
+var mandarina_1 = require("mandarina");
+var utils_1 = require("mandarina/build/Schema/utils");
 var Table_1 = require("./Table");
-/**
- * Upper case the first latter
- * @param  string - string to be upper cased
- */
-exports.capitalize = function (string) {
-    var result = string.trim();
-    return result.charAt(0).toUpperCase() + result.slice(1);
-};
-/**
- * Lower case the first latter
- * @param  string - string to be Lower cased
- */
-exports.lowerize = function (string) {
-    var result = string.trim();
-    return result.charAt(0).toLowerCase() + result.slice(1);
-};
-exports.pluralize = function (str) {
-    var result = inflection.underscore(str).trim();
-    result = inflection.humanize(result);
-    var resultSplit = result.split(' ');
-    var lastWord = resultSplit.pop();
-    lastWord = inflection.pluralize(lastWord);
-    return inflection.camelize(resultSplit.concat([lastWord]).join('_'), true);
-};
-exports.singularize = function (str) {
-    var result = inflection.underscore(str).trim();
-    result = inflection.humanize(result);
-    var resultSplit = result.split(' ');
-    var lastWord = resultSplit.pop();
-    lastWord = inflection.singularize(lastWord);
-    return inflection.camelize(resultSplit.concat([lastWord]).join('_'), true);
-};
 exports.getDeclarationType = function (type, key) {
     var typeName = type;
     if (type.name)
@@ -53,7 +20,7 @@ exports.getDeclarationType = function (type, key) {
             return "number";
         case 'Array':
             if (typeof type[0] === 'string') {
-                var schema = __1.Schema.getInstance(type[0]);
+                var schema = mandarina_1.Schema.getInstance(type[0]);
                 var interfaceName = exports.buildInterfaceName(schema);
                 return interfaceName + "[]";
             }
@@ -65,7 +32,7 @@ exports.getDeclarationType = function (type, key) {
             return "Date";
         default:
             if (typeof type === 'string') {
-                var schema = __1.Schema.getInstance(type);
+                var schema = mandarina_1.Schema.getInstance(type);
                 var interfaceName = exports.buildInterfaceName(schema);
                 return "" + interfaceName;
             }
@@ -91,7 +58,7 @@ exports.getGraphQLType = function (type, key, required) {
             return "Int" + required;
         case 'Array':
             if (typeof type[0] === 'string') {
-                var schemaName = __1.Schema.getInstance(type[0]).name;
+                var schemaName = mandarina_1.Schema.getInstance(type[0]).name;
                 return "[" + schemaName + "!]!";
             }
             var scalarName = exports.getGraphQLType(type[0], key);
@@ -104,7 +71,7 @@ exports.getGraphQLType = function (type, key, required) {
             return typeName;
     }
 };
-exports.buildInterfaceName = function (schema) { return schema instanceof __1.Schema ? schema.name + "Interface" : schema + "Interface"; };
+exports.buildInterfaceName = function (schema) { return schema instanceof mandarina_1.Schema ? schema.name + "Interface" : schema + "Interface"; };
 exports.getDeclarations = function (schema) {
     var headers = [];
     var path = require('path');
@@ -122,7 +89,7 @@ exports.getDeclarations = function (schema) {
         if (typeof field.type === 'string')
             schemaName = field.type;
         if (schemaName) {
-            var childSchema = __1.Schema.getInstance(schemaName);
+            var childSchema = mandarina_1.Schema.getInstance(schemaName);
             var interfaceName = exports.buildInterfaceName(schemaName);
             var dir = path.relative(schema.getFilePath(), childSchema.getFilePath());
             if (!dir) {
@@ -162,7 +129,7 @@ var getGraphQL = function (type, schema) {
     var name = schema.name;
     //if (isBrowser) throw new Error('getGraphQLSchema is not available on browser')
     var mainSchema = getMainSchema(schema, type), graphQLSchema = '';
-    var description = exports.capitalize(type) + " for " + name;
+    var description = capitalize(type) + " for " + name;
     if (mainSchema.length) {
         graphQLSchema += "# " + description + "\n";
         graphQLSchema += type + " " + name + (type === 'input' ? 'Input' : '') + " {\n";

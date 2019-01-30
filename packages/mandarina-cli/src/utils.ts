@@ -22,6 +22,9 @@ export const getConfig = (): ConfigInterface | void => {
         console.log('Error: please set "dir.schemas" in  madarina.json file. Make sure it is a array')
         return
     }
+    if (config.dir.actions && !Array.isArray(config.dir.actions)) {
+        console.log('Error: please make sure "dir.actions" is a array')
+    }
     if (config.dir.tables && !Array.isArray(config.dir.tables)) {
         console.log('Error: please make sure "dir.tables" is a array')
     }
@@ -62,15 +65,22 @@ export interface ConfigInterface {
 export interface ConfigDirInterface {
     schemas: string[]
     tables?: string[]
+    actions?: string[]
     prisma: string
 }
 
 export const loadSchemas = (dir: ConfigDirInterface) => {
     let tables: string[] = []
     let schemas: string[] = []
+    let actions: string[] = []
     dir.schemas.forEach((dir) => {
         schemas = walkSync(path.join(process.cwd(), dir), schemas)
     })
+    if (dir.actions) {
+        dir.actions.forEach((dir) => {
+            actions = walkSync(path.join(process.cwd(), dir), actions)
+        })
+    }
     if (dir.tables) {
         dir.tables.forEach((dir) => {
             tables = walkSync(path.join(process.cwd(), dir), tables)
@@ -91,4 +101,13 @@ export const loadSchemas = (dir: ConfigDirInterface) => {
             require(table)
         }
     })
+    actions.forEach((action) => {
+        const content: string = fs.readFileSync(action, 'utf8');
+        if (true || content.match(/new *Table/)) {
+            console.log('loading action: ', action)
+            require(action)
+        }
+    })
 }
+
+

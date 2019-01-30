@@ -1,4 +1,4 @@
-import {Table} from '../../Table/Table'
+import {Table} from '../../../../mandarina-server/src/Table/Table'
 import {ID, UserInterface} from "./User";
 
 

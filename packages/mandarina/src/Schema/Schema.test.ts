@@ -2,7 +2,7 @@ import {Integer, Schema} from "./Schema";
 import {maxNumber} from "./Validators";
 import {isRequired} from "./utils";
 import './Validators'
-import {capitalize} from "../Table/utils";
+import {capitalize} from "../../../mandarina-server/src/Table/utils";
 
 
 describe('Schema', () => {

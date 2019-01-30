@@ -46,13 +46,13 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-var InvalidActionError_1 = require("../Errors/InvalidActionError");
-var UniqueTableError_1 = require("../Errors/UniqueTableError");
-var TableInstanceNotFound_1 = require("../Errors/TableInstanceNotFound");
+var InvalidActionError_1 = require("mandarina/build/Errors/InvalidActionError");
+var UniqueTableError_1 = require("mandarina/build/Errors/UniqueTableError");
+var TableInstanceNotFound_1 = require("mandarina/build/Errors/TableInstanceNotFound");
 var Mandarina_1 = require("../Mandarina");
-var utils_1 = require("./utils");
-var FieldsPermissionsError_1 = require("../Errors/FieldsPermissionsError");
-var MissingIDTableError_1 = require("../Errors/MissingIDTableError");
+var utils_1 = require("mandarina/build/Schema/utils");
+var FieldsPermissionsError_1 = require("mandarina/build/Errors/FieldsPermissionsError");
+var MissingIDTableError_1 = require("mandarina/build/Errors/MissingIDTableError");
 var getDefaultPermissions = function () { return ({ read: {}, create: {}, update: {}, delete: {} }); };
 var defaultActions = Object.keys(getDefaultPermissions());
 /**
@@ -178,7 +178,7 @@ var Table = /** @class */ (function () {
                                 };
                                 bm();
                                 middlewares = this.options.middlewares || [];
-                                return [4 /*yield*/, Mandarina_1.Mandarina.config.getUser(context)];
+                                return [4 /*yield*/, Mandarina_1.default.config.getUser(context)];
                             case 1:
                                 user = _a.sent();
                                 subOperationName = operationName.substr(0, 6);

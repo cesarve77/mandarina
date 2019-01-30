@@ -3,7 +3,7 @@ import {Address} from "../tables/Address";
 //require('uniforms') //shuld be imported for  extends simple schema options
 import {Prisma} from "prisma-binding";
 import {GraphQLServer} from "graphql-yoga";
-import {Table} from "../../Table/Table";
+import {Table} from "../../../../mandarina-server/src/Table/Table";
 import {User} from "../tables/User";
 import {Post} from "../tables/Post";
 import {Category} from "../tables/Category";

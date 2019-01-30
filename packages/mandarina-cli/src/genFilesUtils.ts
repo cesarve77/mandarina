@@ -1,43 +1,6 @@
-import * as inflection from "inflection";
-import {Schema} from "..";
-import {isRequired} from "../Schema/utils";
-import {Table} from "./Table";
-
-/**
- * Upper case the first latter
- * @param  string - string to be upper cased
- */
-export const capitalize = (string: string): string => {
-    const result = string.trim()
-    return result.charAt(0).toUpperCase() + result.slice(1)
-}
-
-/**
- * Lower case the first latter
- * @param  string - string to be Lower cased
- */
-export const lowerize = (string: string): string => {
-    const result = string.trim()
-    return result.charAt(0).toLowerCase() + result.slice(1)
-}
-
-export const pluralize = (str: string): string => {
-    let result: string = inflection.underscore(str).trim()
-    result = inflection.humanize(result)
-    const resultSplit: string[] = result.split(' ')
-    let lastWord = <string>resultSplit.pop();
-    lastWord = inflection.pluralize(lastWord)
-    return inflection.camelize([...resultSplit, lastWord].join('_'), true)
-}
-
-export const singularize = (str: string): string => {
-    let result = inflection.underscore(str).trim()
-    result = inflection.humanize(result)
-    const resultSplit: string[] = result.split(' ')
-    let lastWord = <string>resultSplit.pop()
-    lastWord = inflection.singularize(lastWord)
-    return inflection.camelize([...resultSplit, lastWord].join('_'), true)
-}
+import {Schema} from "mandarina";
+import {capitalize, isRequired} from "mandarina/build/Schema/utils";
+import {Table} from "mandarina-server";
 
 export const getDeclarationType = (type: any, key: string): string => {
 

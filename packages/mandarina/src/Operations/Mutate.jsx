@@ -34,7 +34,7 @@ var __rest = (this && this.__rest) || function (s, e) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 var react_1 = require("react");
-var Schema_1 = require("../Schema/Schema");
+var __1 = require("..");
 var graphql_tag_1 = require("graphql-tag");
 var react_apollo_1 = require("react-apollo");
 var utils_1 = require("./utils");
@@ -112,7 +112,7 @@ var Mutate = /** @class */ (function (_super) {
                 if (typeof value === "object" && value !== null && value !== undefined && !(value instanceof Date)) {
                     if (Array.isArray(definition.type)) {
                         if (typeof definition.type[0] === 'string') {
-                            var schema_1 = Schema_1.Schema.getInstance(definition.type[0]);
+                            var schema_1 = __1.Schema.getInstance(definition.type[0]);
                             data_1[key] = wrapper(_this.spider(value, schema_1, wrapper, initiator), schema_1);
                         }
                         else {
@@ -122,7 +122,7 @@ var Mutate = /** @class */ (function (_super) {
                     }
                     else {
                         if (typeof definition.type === 'string') {
-                            var schema_2 = Schema_1.Schema.getInstance(definition.type);
+                            var schema_2 = __1.Schema.getInstance(definition.type);
                             data_1[key] = wrapper(_this.spider(value, schema_2, wrapper, initiator), schema_2);
                         }
                         else {
@@ -142,7 +142,7 @@ var Mutate = /** @class */ (function (_super) {
         var clone = deepClone(model);
         delete clone.id;
         var wrapper = function (result, type) {
-            if (type instanceof Schema_1.Schema) {
+            if (type instanceof __1.Schema) {
                 //todo check next statement id is always there?
                 if (Array.isArray(result) && result[0] && result[0].id !== undefined) {
                     var clone_1 = result.slice();
