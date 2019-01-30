@@ -1,6 +1,6 @@
 {
   "name": "mandarina-cli",
-  "version": "0.3.0",
+  "version": "0.3.3",
   "description": "mandarina command line",
   "main": "./build/index.js",
   "scripts": {
@@ -27,9 +27,11 @@
     "node-yaml": "^3.1.1"
   },
   "peerDependencies": {
-    "mandarina": "latest"
+    "mandarina": "latest",
+    "mandarina-server": "latest"
   },
   "devDependencies": {
-    "@types/node": "^10.12.19"
+    "@types/node": "^10.12.19",
+    "mandarina-server": "latest"
   }
 }

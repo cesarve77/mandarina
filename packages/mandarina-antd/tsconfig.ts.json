@@ -1,0 +1,19 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "allowJs": true,
+    "declaration": false
+  },
+  "files": [
+    "src/uniforms/AutoField.js",
+    "src/uniforms/AutoFields.js",
+    "src/uniforms/ErrorsField.js",
+    "src/uniforms/ListField.js",
+    "src/uniforms/TableField.js",
+    "src/uniforms/ListItemField.js",
+    "src/uniforms/NestField.js"
+  ]
+}
+
+
+
