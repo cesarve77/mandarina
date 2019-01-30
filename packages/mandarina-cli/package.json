@@ -1,6 +1,6 @@
 {
   "name": "mandarina-cli",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "description": "mandarina command line",
   "main": "./build/index.js",
   "scripts": {
@@ -9,7 +9,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/cesarve77/mandarina/tree/master/packages/cli"
+    "url": "https://github.com/cesarve77/mandarina/tree/master/packages/mandarina-cli"
   },
   "keywords": [
     "mandarina",
@@ -32,6 +32,7 @@
   },
   "devDependencies": {
     "@types/node": "^10.12.19",
+    "mandarina": "latest",
     "mandarina-server": "latest"
   }
 }
