@@ -1,6 +1,6 @@
 {
   "name": "mandarina-cli",
-  "version": "0.2.10",
+  "version": "0.2.13",
   "description": "mandarina command line",
   "main": "./build/index.js",
   "scripts": {

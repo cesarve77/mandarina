@@ -29,6 +29,10 @@ export const getConfig = (): ConfigInterface | void => {
         console.log('Error: please set "dir.prisma" in  madarina.json file')
         return
     }
+    if (!config.dir.generated ) {
+        console.log('Error: please set "dir.generated" in  madarina.json file')
+        return
+    }
     return (config)
 }
 
@@ -64,11 +68,9 @@ export interface ConfigDirInterface {
 export const loadSchemas = (dir: ConfigDirInterface) => {
     let tables: string[] = []
     let schemas: string[] = []
-    console.log(' dir.schemas', dir.schemas)
     dir.schemas.forEach((dir) => {
         schemas = walkSync(path.join(process.cwd(), dir), schemas)
     })
-    console.log('scehmas',schemas)
     if (dir.tables) {
         dir.tables.forEach((dir) => {
             tables = walkSync(path.join(process.cwd(), dir), tables)

@@ -124,7 +124,6 @@ export const genFiles = () => {
     loadSchemas(config.dir)
     processed = {}
     reset()
-    console.log('Table.instances',Table.instances)
     for (const tableName in Table.instances) {
         const table = Table.getInstance(tableName)
         saveFile(table.schema)
@@ -156,7 +155,7 @@ const saveAuthFiles=() => { //todo unify with Table save files
     const operation = `extend type Query {
                             AuthFields(action: String!, table: String!) :  [String!]
                        }`
-    const prismaDir = config.dir.prisma
+    const prismaDir =  path.join(process.cwd(), config.dir.prisma)
     const fileName = 'mandarina.auth'
     const fileAbsOperation = `${prismaDir}/datamodel/${fileName}.operations.graphql`
     const fileAbsModel = `${prismaDir}/datamodel/${fileName}.model.graphql`

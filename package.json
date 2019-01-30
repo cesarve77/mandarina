@@ -6,8 +6,7 @@
   },
   "scripts": {
     "start": "cd website && yarn start",
-    "bump": "cd packages/mandarina && yarn version --patch &&cd ../mandarina-antd && yarn version --patch && cd ../mandarina-cli && yarn version --patch",
-    "publish": "cd packages/mandarina && npm publish && cd ../mandarina-antd &&  npm publish  && cd ../mandarina-cli &&  npm publish "
+    "publish": "cd packages/mandarina && npm version patch && npm publish && cd ../mandarina-antd && npm version patch  && npm publish && cd ../mandarina-cli && npm version patch  && npm publish "
   },
   "name": "mandarina-repo",
   "version": "0.1.2",

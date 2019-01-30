@@ -14,7 +14,7 @@
       "node"
     ],
     "baseUrl": ".",
-    "outDir": "build/",
+    "outDir": "   /",
     "module": "commonjs",
     "target": "es5",
     "lib": [
