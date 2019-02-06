@@ -58,7 +58,7 @@ export interface FormChildrenParams {
     [rest: string]: any
 }
 
-export interface MutateChildrenParams extends FormChildrenParams{
+export interface MutateChildrenParams extends FormChildrenParams {
     mutate: (model: Model) => Promise<void | FetchResult<Model>>
 
 }
@@ -87,7 +87,7 @@ class Mutate extends PureComponent<WithApolloClient<MutateProps & { type: 'creat
 
     query: string
 
-    buildQueryFromFields = () => buildQueryFromFields(this.props.fields  || this.props.schema.getFields())
+    buildQueryFromFields = () => buildQueryFromFields(this.props.fields || this.props.schema.getFields())
 
     /**
      * walk al properties of the model add new properties with initiator, and wrap values with wrapper
@@ -185,7 +185,7 @@ class Mutate extends PureComponent<WithApolloClient<MutateProps & { type: 'creat
     mutate(model: Model, mutationFn: MutationFn): Promise<void | FetchResult<Model>> {
         const {schema, where, type, optimisticResponse} = this.props
         const cleaned = deepClone(model)
-        schema.clean(cleaned)// fill null all missing keys
+        schema.clean(cleaned, this.filteredFields)// fill null all missing keys
         const {names} = schema
         const data = this.getSubSchemaMutations(cleaned, schema)
         const mutation: MutationBaseOptions = {variables: {data}}
@@ -245,11 +245,11 @@ class Mutate extends PureComponent<WithApolloClient<MutateProps & { type: 'creat
             }
         })*/
     }
-
+    filteredFields: string[]
 
     render() {
         const {
-            type, children, schema, fields: optionalFields,omitFields,omitFieldsRegEx, loading: findLoading,
+            type, children, schema, fields: optionalFields, omitFields, omitFieldsRegEx, loading: findLoading,
             variables,
             update,
             ignoreResults,
@@ -261,7 +261,8 @@ class Mutate extends PureComponent<WithApolloClient<MutateProps & { type: 'creat
             context,
             ...props
         } = this.props;
-        let fields = filterFields(optionalFields || schema.getFields(), omitFields,omitFieldsRegEx)
+        let fields = filterFields(schema.getFields(), optionalFields, omitFields, omitFieldsRegEx)
+        this.filteredFields = fields
 
         const {names} = schema
         this.query = fields ? buildQueryFromFields(fields) : this.buildQueryFromFields()

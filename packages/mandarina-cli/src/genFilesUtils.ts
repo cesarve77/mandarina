@@ -101,9 +101,9 @@ export const getDeclarations = (schema: Schema): string => {
             const childSchema = Schema.getInstance(schemaName)
             const interfaceName = buildInterfaceName(schemaName)
             let dir = path.relative(schema.getFilePath(), childSchema.getFilePath())
-            if (!dir){
-                dir='.'
-            }else if (dir.indexOf('.') !== 0) {
+            if (!dir) {
+                dir = '.'
+            } else if (dir.indexOf('.') !== 0) {
                 dir = './' + dir
             }
             headers.push(`import { ${interfaceName} } from "${dir}/${interfaceName}"`);
@@ -117,8 +117,8 @@ export const getDeclarations = (schema: Schema): string => {
 const getMainSchema = (schema: Schema, type: 'input' | 'type') => {
     let mainSchema = []
     for (const key of schema.keys) {
-        if (key === 'id' && type==='type' ) {
-            if (!!Table.instances[schema.name]){
+        if (key === 'id' && type === 'type') {
+            if (!!Table.instances[schema.name]) {
                 mainSchema.push(`id: ID! @unique`);
             }
             continue
@@ -126,10 +126,36 @@ const getMainSchema = (schema: Schema, type: 'input' | 'type') => {
         const field = schema.getFieldDefinition(key)
 
         const required = isRequired(field) ? '!' : ''
-        const unique = type === 'type' && field.unique ? '@unique' : ''
+        const unique = type === 'type' && field.table.unique ? '@unique' : ''
+        let defaultValue = ''
+        if (type === 'type' && field.table.default !== undefined) {
+            const wrapper = (field.type === String) ? '"' : ''
+            defaultValue = `@default(value: ${wrapper}}${field.table.default}${wrapper})`
+        }
+        const rename = (type === 'type' && field.table.rename !== undefined) ? `@rename(oldName: "${field.table.default}")` : ''
+        let relation = ''
+        if (type === 'type' && field.table.relation !== undefined) {
+            if (typeof field.table.relation === "string") {
+                relation = `@relation(name: "${field.table.relation}")`
+            } else {
+                let name = '', onDelete = ''
+                if (field.table.relation.name) {
+                    name = `name: "${field.table.relation.name}"`
+                }
+                if (field.table.relation.onDelete) {
+                    onDelete = `onDelete: ${field.table.relation.onDelete}`
+                }
+                if (name || onDelete) {
+                    relation = `@relation(${name} ${onDelete})`
+                }
+
+
+            }
+        }
+
         const fieldType = getGraphQLType(field.type, key, required);
         field.description && mainSchema.push(`# ${field.description}`);
-        mainSchema.push(`${key}: ${fieldType} ${unique}`);
+        mainSchema.push(`${key}: ${fieldType} ${unique} ${defaultValue} ${relation} ${rename}`);
     }
     return mainSchema
 }

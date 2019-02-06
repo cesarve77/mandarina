@@ -159,15 +159,13 @@ export class Table {
                 const action: ActionType = <ActionType>(['create', 'update', 'delete'].includes(subOperationName) ? subOperationName : 'read')
                 const prismaMethod = context.prisma[type][operationName];
                 //const roles = user && user.roles
-                bm(operationName + ' init')
                 if (middlewares.length > 0) {
                     await Promise.all(middlewares.map((m: any) => m(user, context, info)));
                 }
-                bm(operationName + ' middlewares')
                 let result: any
                 // TODO: Review the hooks architecture for adding a way to execute hooks of nested operations
                 if (type === 'mutation') {
-                    this.callHook('beforeValidate', action, _, args, context, info);
+                    this.callHook('beforeValidate', _, args, context, info);
 
                     //TODO: Flatting nested fields operation (context, update, create)
                     // console.log('123123123',this.flatFields(args.data))
@@ -179,33 +177,27 @@ export class Table {
                     //     await this.callHook('afterValidate', action, _, args, context, info);
                     // }
 
-                    await this.callHook(<HookName>`before${capitalize(action)}`, action, _, args, context, info);
+                    await this.callHook(<HookName>`before${capitalize(action)}`,  _, args, context, info);
 
                     //this.validatePermissions(action, roles, args.data);
 
                     result = await prismaMethod(args, info);
                     context.result = result
 
-                    await this.callHook(<HookName>`after${capitalize(action)}`, action, _, args, context, info);
+                    await this.callHook(<HookName>`after${capitalize(action)}`,  _, args, context, info);
 
                     //this.validatePermissions('read', roles, fieldsList(info));
-                    bm('*********************')
                 }
-                bm('mutation')
                 if (type === 'query') {
-                    bm(operationName + ' 1 beforeQuery')
-                    await this.callHook('beforeQuery', action, _, args, context, info);
-                    bm(operationName + ' beforeQuery')
+                    await this.callHook('beforeQuery',  _, args, context, info);
                     //this.validatePermissions('read', roles, fieldsList(info));
-                    bm(operationName + ' validatePermissions')
                     result = await prismaMethod(args, info);
                     context.result = result
-                    bm(operationName + ' prismaMethod')
-                    await this.callHook('afterQuery', action, _, args, context, info);
-                    bm(operationName + ' afterQuery')
-                    bm(operationName + ' query')
+                    await this.callHook('afterQuery',  _, args, context, info);
 
                 }
+                bm('done')
+
                 return result;
             }
         });
@@ -227,10 +219,10 @@ export class Table {
      * @param context
      * @param info
      */
-    private async callHook(name: HookName, actionType: ActionType, _: any, args: any, context: any, info: any) {
+    private async callHook(name: HookName,  _: any, args: any, context: any, info: any) {
         const hookHandler = this.options.hooks && this.options.hooks[name];
         if (hookHandler) {
-            await hookHandler(actionType, _, args, context, info);
+            await hookHandler(_, args, context, info);
         }
     }
 
@@ -302,7 +294,7 @@ export interface Context extends ContextParameters {
 
 
 export interface Hook {
-    (actionType: string, _: any, args: any, context: any, info: any): Promise<any> | void | any
+    ( _: any, args: any, context: any, info: any): Promise<any> | void | any
 }
 
 export type operationType = "mutation" | "query"

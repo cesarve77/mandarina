@@ -61,7 +61,7 @@ export interface ChildFunc {
 
 const Form = ({Component, fields: optionalFields, schema, id, onSubmit, children, showInlineError, omitFields, omitFieldsRegEx, ...props}: FormProps) => {
     const bridge = new Bridge(schema)
-    const fields = filterFields(optionalFields || schema.getFields(), omitFields, omitFieldsRegEx)
+    const fields = filterFields(schema.getFields(),optionalFields , omitFields, omitFieldsRegEx)
     return (
         <Component id={id} schema={schema} fields={fields}>
             {({mutate, doc, loading, ...rest}) => {
@@ -80,6 +80,7 @@ const Form = ({Component, fields: optionalFields, schema, id, onSubmit, children
                             try{
                                 bridge.getValidator({fields})(model)
                             }catch (e) {
+                                console.error(e)
                                 return callback(e)
                             }
                             callback(null)
@@ -93,12 +94,12 @@ const Form = ({Component, fields: optionalFields, schema, id, onSubmit, children
                             return React.cloneElement(child)
                         })}
                         {children && typeof children === "function" && children({doc, loading, ...rest, ...props})}
-                        {children && typeof children !== "function" && React.cloneElement(children)}
+                        {children && typeof children !== "function" && children}
                         {!children && (
                             <div>
                                 <AutoFields autoField={AutoField} fields={fields}/>
                                 <ErrorsField style={{marginBottom: '15px'}}/>
-                                <SubmitField size='large' loading={loading}/>
+                                {!props.autosave && <SubmitField size='large' loading={loading}/>}
                             </div>)
                         }
                     </AutoForm>

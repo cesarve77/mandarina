@@ -53,7 +53,6 @@ export const getDefaultFilterMethod = (field: string, schema: Schema): Where => 
 
     return (filter: { operator: string, filter: any }) => {
         //todo forzar el tipo de verdad para que si escriben un string donde va un numero no mande el query
-        console.log('filter method', filter)
         const search = filter.filter
         const original = path[last]
         if (search === 0 || search) {
@@ -74,10 +73,8 @@ export const getDefaultFilterMethod = (field: string, schema: Schema): Where => 
             }
 
             path[last] = original
-            console.log('where,', where)
             return where
         } else {
-            console.log('NOOOO search,', search)
             return
         }
     }

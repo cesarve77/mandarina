@@ -5,6 +5,8 @@ import SelectField from "uniforms-antd/SelectField";
 import {Spin} from "antd";
 import {Schema} from 'mandarina'
 import wrapField from "uniforms-antd/wrapField";
+import connectField from "uniforms/connectField";
+import CustomAuto from "./AutoField";
 
 const defaultLabeler = (doc) => {
     const clone = {...doc}
@@ -41,8 +43,10 @@ export const joinValues = (obj, defaultValue, divider = ' ') => {
 }
 
 
-export default React.memo(({query, mode, labeler = defaultLabeler, ...props}) => {
+const Table=React.memo(({query, mode, labeler = defaultLabeler, ...props}) => {
     if (typeof query === 'string') {
+
+        console.log('props',props)
         const schema = Schema.getInstance(props.field.type)
         const queryName = schema.names.query.plural
         const QUERY = gql(`query {${queryName} { id ${query} }}`)
@@ -78,3 +82,12 @@ export default React.memo(({query, mode, labeler = defaultLabeler, ...props}) =>
 
     }
 })
+
+export default connectField(Table, {
+    ensureValue: false,
+    includeInChain: false,
+    initialValue: false
+})
+
+
+

@@ -3,10 +3,10 @@ import mapValues from 'lodash.mapvalues';
 import * as inflection from "inflection";
 import {ErrorValidator, Validator, ValidatorCreator} from "./ValidatorCreator";
 import {extraKey, isDate, isInteger, isNumber, isString, required} from "./Validators";
-import {forceType, hasValidator} from "./utils";
+import {capitalize, forceType, hasValidator, pluralize, singularize} from "./utils";
 import {UniqueSchemaError} from '../Errors/UniqueSchemaError';
 import {SchemaInstanceNotFound} from '../Errors/SchemaInstanceNotFound';
-import {capitalize, pluralize, singularize} from "../Schema/utils";
+import {getDecendents} from "../utils";
 
 export class Schema {
 
@@ -151,7 +151,7 @@ export class Schema {
         fieldDefinition.type = definition.type;
         fieldDefinition.form = definition.form || {};
         fieldDefinition.list = definition.list || {};
-        fieldDefinition.unique = !!definition.unique;
+        fieldDefinition.table = definition.table || {};
         fieldDefinition.transformValue = definition.transformValue || ((value: any): any => value);
 
         if (typeof definition.label === 'string') {
@@ -217,9 +217,9 @@ export class Schema {
         return this.fields;
     }
 
-    clean(model: Model, transform: boolean = false) {
+    clean(model: Model, fields = this.getFields()) {
         this.original = model;
-        this._clean(model, transform);
+        this._clean(model, fields);
     }
 
     getFilePath() {
@@ -240,8 +240,9 @@ export class Schema {
         return this.filePath
     }
 
-    validate(model: Model): ErrorValidator[] {
-        this.clean(model)
+    validate(model: Model, fields: string[] = this.getFields()): ErrorValidator[] {
+        console.log('validate')
+        this.clean(model, fields)
         return this._validate(model, '', [{schema: this.name, path: ''}], model);
     }
 
@@ -252,7 +253,7 @@ export class Schema {
      * @param transform
      * @param removeExtraKeys
      */
-    protected _clean(model: Model | undefined | null, transform = false, removeExtraKeys = true) {
+    protected _clean(model: Model | undefined | null, fields: string[], removeExtraKeys = true) {
         if (removeExtraKeys && model && typeof model === 'object') {
             Object.keys(model).forEach((key) => {
                 if (!this.keys.includes(key)) {
@@ -262,6 +263,9 @@ export class Schema {
         }
 
         this.keys.forEach((key): any => {
+            if (key !== '___typename' && fields.every((field) => field !== key && field.indexOf(key + '.') < 0)) {
+                return model && delete model[key]
+            }
             const definition = this.getFieldDefinition(key);
             const type = definition.type;
 
@@ -275,7 +279,7 @@ export class Schema {
                 }
 
                 const schema = Schema.getInstance(type);
-                schema._clean(model[key], transform);
+                schema._clean(model[key], getDecendents(fields, key));
                 return;
 
             } else if (Array.isArray(type) && typeof model === 'object' && model !== undefined && model !== null) {
@@ -284,7 +288,7 @@ export class Schema {
                 if (typeof type[0] === 'string') {
                     const schema = Schema.getInstance(<string>type[0]);
                     model[key] = model[key].map((value: any) => {
-                        schema._clean(value, transform)
+                        schema._clean(value, getDecendents(fields, key))
                         return value
                     });
                 } else {
@@ -297,7 +301,7 @@ export class Schema {
             }
 
 
-            if (transform && model) {
+            if (model) {
                 model[key] = definition.transformValue.call({
                     model: this.original,
                     siblings: model
@@ -538,7 +542,16 @@ export type FilterMethod = (filter: any) => Where
 
 export type FilterComponent = ((props: any) => JSX.Element) | null
 
-export type CellComponent = (props: { columnIndex: number, rowIndex: number, data: any[], field: string }) =>  JSX.Element | null
+
+export interface CellComponentProps {
+    columnIndex: number
+    rowIndex: number
+    data: any[]
+    field: string
+    [rest: string]: any
+}
+
+export type CellComponent = (props: CellComponentProps) => JSX.Element | null
 
 
 export interface UserFieldDefinition {
@@ -559,7 +572,15 @@ export interface UserFieldDefinition {
         width?: number
 
     }
-    unique?: boolean
+    table?: {
+        default?: any
+        rename?: string
+        unique?: boolean,
+        relation?: string | {
+            name?: string
+            onDelete?: 'SET_NULL' | 'CASCADE'
+        }
+    },
     permissions?: Permissions
 }
 
@@ -574,6 +595,7 @@ export interface FieldDefinition extends UserFieldDefinition {
     validators: Array<Validator>
     defaultValue: any
     transformValue: (value: any) => any
+
     form: any;
     list: {
         hidden?: true
@@ -584,7 +606,15 @@ export interface FieldDefinition extends UserFieldDefinition {
         filter?: boolean
         width?: number
     }
-    unique: boolean
+    table: {
+        default?: any
+        rename?: string
+        unique?: boolean,
+        relation?: string | {
+            name?: string
+            onDelete?: 'SET_NULL' | 'CASCADE'
+        }
+    },
     permissions: Permissions
 }
 

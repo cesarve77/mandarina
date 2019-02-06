@@ -112,6 +112,7 @@ export class Bridge {
             const table = field.type
             if (typeof table === 'string') {
                 const schema = Schema.getInstance(table)
+                console.log('get initial22')
                 schema.clean(item)
             }
             return item
@@ -212,7 +213,7 @@ export class Bridge {
     getValidator({fields}: { fields?: string[] } = {}): (model: any) => void {
         return (model: any) => {
             let enter = false
-            const errors = this.schema.validate(model)
+            const errors = this.schema.validate(model,fields)
             if (errors.length) {
                 const error = {}
                 errors.forEach((e) => {

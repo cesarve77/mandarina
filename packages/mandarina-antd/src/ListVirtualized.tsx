@@ -107,7 +107,7 @@ export class ListVirtualized extends React.Component<ListProps, { columns: Colum
             omitFieldsRegEx
         } = props
         //const definitions: Partial<FieldDefinitions> = {}
-        this.fields = filterFields(fields || schema.getFields(), omitFields, omitFieldsRegEx)
+        this.fields = filterFields(schema.getFields(), fields, omitFields, omitFieldsRegEx)
         const columns = this.fields.reduce((result, field) => {
             const column = this.getColumnDefinition(field)
             if (column) result.push(column)
@@ -286,7 +286,7 @@ export class ListVirtualized extends React.Component<ListProps, { columns: Colum
                                                       visibleRowStartIndex,
                                                       visibleRowStopIndex,
 
-                                                  }:any) => {
+                                                  }: any) => {
 
 
                                     this.overscanRowStartIndex = overscanRowStartIndex
@@ -324,7 +324,7 @@ const Cell = memo(
             <div className={'mandarina-list-cell'}
                  style={style}>
                 {!data[rowIndex] && loadingElement}
-                <CellComponent columnIndex={columnIndex} rowIndex={rowIndex} data={data} field={field}/>
+                {data[rowIndex] && <CellComponent columnIndex={columnIndex} rowIndex={rowIndex} data={data} field={field}/>}
             </div>
         )
     },

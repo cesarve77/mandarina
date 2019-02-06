@@ -14,7 +14,7 @@ type TData = any
 
 export interface FindChildrenParams {
     schema: Schema
-    data: object | object[]
+    data: any | any[]
     fields?: string[]
     loading: boolean
     error?: ApolloError
@@ -87,7 +87,7 @@ export class FindBase extends PureComponent<FindProps & FindBaseProps, FindBaseS
     render() {
 
         const {
-            fields: optionalFields = [], schema, after, first, type, where, skip,
+            fields: optionalFields , schema, after, first, type, where, skip,
             omitFields,
             omitFieldsRegEx,
             children,
@@ -103,7 +103,8 @@ export class FindBase extends PureComponent<FindProps & FindBaseProps, FindBaseS
             partialRefetch,
             ...props
         } = this.props;
-        let fields = filterFields(optionalFields || schema.getFields(), omitFields,omitFieldsRegEx)
+        let fields = filterFields( schema.getFields(),optionalFields , omitFields,omitFieldsRegEx)
+
         const {names} = schema
         const defaultQuery = this.buildQueryFromFields(fields)
         let queryString: string

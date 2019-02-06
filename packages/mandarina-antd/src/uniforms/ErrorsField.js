@@ -4,8 +4,8 @@ import filterDOMProps from 'uniforms/filterDOMProps';
 import nothing from 'uniforms/nothing';
 
 
-
 const ErrorsField = ({children, ...props}, {uniforms: {error, schema}}) => {
+        console.log(error)
         return (!error && !children) ? nothing : (
             <div {...filterDOMProps(props)}>
                 <div style={{clear: 'both'}}/>

@@ -88,10 +88,4 @@ class CustomAuto extends BaseField {
 
 };
 
-export default connectField(CustomAuto, {
-    ensureValue: false,
-    includeInChain: false,
-    initialValue: false
-})
-
-
+export default CustomAuto
