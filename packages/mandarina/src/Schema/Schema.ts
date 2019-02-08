@@ -8,6 +8,7 @@ import {UniqueSchemaError} from '../Errors/UniqueSchemaError';
 import {SchemaInstanceNotFound} from '../Errors/SchemaInstanceNotFound';
 import {getDecendents} from "../utils";
 
+
 export class Schema {
 
     static instances: Schema[]
@@ -548,6 +549,7 @@ export interface CellComponentProps {
     rowIndex: number
     data: any[]
     field: string
+
     [rest: string]: any
 }
 

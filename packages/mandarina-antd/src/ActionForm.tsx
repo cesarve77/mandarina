@@ -10,6 +10,7 @@ import {capitalize} from "mandarina/build/Schema/utils";
 import {buildQueryFromFields} from "mandarina/build/Operations/utils";
 import SubmitField from "uniforms-antd/SubmitField";
 import {ChildFunc} from "./Forms";
+import {filterFields} from "mandarina/build/utils";
 
 export interface ActionFormProps {
     schema: Schema
@@ -18,25 +19,46 @@ export interface ActionFormProps {
     fields?: string[]
     omitFields?: string[]
     children?: (props: any) => React.ReactNode | React.ReactNode | React.ReactNode[]
+    omitFieldsRegEx?: RegExp
 
     [key: string]: any //replace for uniforms autoform props
 }
 
 export class ActionForm extends PureComponent<ActionFormProps> {
     state: { changed: boolean } = {changed: false}
+
     render() {
-        const {result,actionName, schema, omitFields, children, fields: fieldsProp, onSubmit, ...rest} = this.props
+        const {
+            result,
+            actionName,
+            schema,
+            omitFields,
+            children,
+            onChange,
+            refetchQueries,
+            onCompleted,
+            fields: optionalFields,
+            omitFieldsRegEx,
+            onSubmit,
+            update,
+            ignoreResults,
+            optimisticResponse,
+            awaitRefetchQueries,
+            onError,
+            context,
+            ...rest
+        } = this.props
         const {changed} = this.state
         const resultSchema = Schema.instances[result]
-        let fields, queryFromFields
-        if (resultSchema) fields = fieldsProp || resultSchema.getFields()
+        let fields: string[] | undefined, queryFromFields
+        if (resultSchema) fields = filterFields(resultSchema.getFields(), optionalFields, omitFields, omitFieldsRegEx)
         if (fields) {
             queryFromFields = buildQueryFromFields(fields)
         } else {
             queryFromFields = ''
         }
         const gqlString = `
-            mutation ${actionName}($data: ${capitalize(actionName)}Input!) {
+            mutation ${actionName}($data: ${capitalize(schema.name)}Input!) {
                 ${actionName}(data: $data)
                     ${queryFromFields}
             }
@@ -44,9 +66,15 @@ export class ActionForm extends PureComponent<ActionFormProps> {
         const bridge = new Bridge(schema)
         const MUTATION = gql(gqlString)
         return (
-            // @ts-ignore
             <Mutation mutation={MUTATION}
-                      //onCompleted={(data) => console.log('ActionForm onCompleted', data)}
+                      onCompleted={onCompleted}
+                      refetchQueries={refetchQueries}
+                      update={update}
+                      ignoreResults={ignoreResults}
+                      optimisticResponse={optimisticResponse}
+                      awaitRefetchQueries={awaitRefetchQueries}
+                      onError={onError}
+                      context={context}
             >
                 {(mutation, {loading, error, ...restMutation}) => {
                     return (
@@ -57,8 +85,19 @@ export class ActionForm extends PureComponent<ActionFormProps> {
                                       return mutation({variables: {data}});
                                   }}
                                   schema={bridge}
-                                  onChange={() => {
+                                  onValidate={(model: Object, error: any, callback: any) => {
+                                      try {
+                                          bridge.getValidator({})(model)
+
+                                      } catch (e) {
+                                          console.error(e)
+                                          return callback(e)
+                                      }
+                                      return callback(null)
+                                  }}
+                                  onChange={(key: string, value: any) => {
                                       if (error) this.setState({changed: true})
+                                      onChange && onChange(key, value)
                                   }}
                                   error={changed ? undefined : error}
 

@@ -6,7 +6,6 @@ import {Spin} from "antd";
 import {Schema} from 'mandarina'
 import wrapField from "uniforms-antd/wrapField";
 import connectField from "uniforms/connectField";
-import CustomAuto from "./AutoField";
 
 const defaultLabeler = (doc) => {
     const clone = {...doc}
@@ -43,21 +42,20 @@ export const joinValues = (obj, defaultValue, divider = ' ') => {
 }
 
 
-const Table=React.memo(({query, mode, labeler = defaultLabeler, ...props}) => {
+const Table = ({query, where, mode, labeler = defaultLabeler, ...props}) => {
     if (typeof query === 'string') {
-
-        console.log('props',props)
         const schema = Schema.getInstance(props.field.type)
         const queryName = schema.names.query.plural
-        const QUERY = gql(`query {${queryName} { id ${query} }}`)
+        const inputName = schema.names.input.where.plural
+        const QUERY = gql(`query ${queryName}($where: ${inputName}) {${queryName} (where: $where) { id ${query} }}`)
         return (
-            <Query query={QUERY}>
+            <Query query={QUERY} variables={{where}}>
                 {({loading, error, data, variables, refetch}) => {
                     if (error) return <Error variables={variables} error={error} refetch={refetch}/> //todo create ERROR component
                     const docs = loading ? [] : data[queryName]
                     const allowedValues = docs.map(({id}) => id)
                     const transform = getTransform(docs, labeler)
-                    console.log('docs',docs)
+                    console.log('docs', docs)
                     let mode = props.mode, value = props.value && props.value.id || ''
                     let onChange = value => props.onChange({id: value})
                     if (props.fieldType === Array) {
@@ -81,13 +79,13 @@ const Table=React.memo(({query, mode, labeler = defaultLabeler, ...props}) => {
     } else {
 
     }
-})
+}
 
-export default connectField(Table, {
+export default React.memo(connectField(Table, {
     ensureValue: false,
     includeInChain: false,
     initialValue: false
-})
+}), () => true)
 
 
 

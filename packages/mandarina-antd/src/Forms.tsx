@@ -83,7 +83,7 @@ const Form = ({Component, fields: optionalFields, schema, id, onSubmit, children
                                 console.error(e)
                                 return callback(e)
                             }
-                            callback(null)
+                            return callback(null)
                         }}
                         {...props}
                     >

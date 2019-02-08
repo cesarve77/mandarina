@@ -1,6 +1,5 @@
 import {Find, Schema} from 'mandarina';
-import React, {memo} from "react";
-import '../styles.css'
+import React from "react";
 import {get} from "mandarina/build/Schema/utils";
 import isEmpty from 'lodash.isempty'
 import {
@@ -13,6 +12,9 @@ import {
 import ListFilter, {onFilterChange, Where} from "./ListFilter";
 import {CellComponent} from "mandarina/build/Schema/Schema";
 import {filterFields} from "mandarina/build/utils";
+import {Empty} from "antd";
+import {RefetchQueriesProviderFn} from "react-apollo";
+import {DocumentNode} from "graphql";
 
 
 export interface ListProps {
@@ -205,7 +207,6 @@ export class ListVirtualized extends React.Component<ListProps, { columns: Colum
     filters: { [field: string]: Where } = {}
 
     onFilterChange: onFilterChange = (field, where) => {
-        console.log('this. onFilterChange', field, where)
         if (where && !isEmpty(where)) {
             this.filters[field] = where
         } else {
@@ -230,12 +231,14 @@ export class ListVirtualized extends React.Component<ListProps, { columns: Colum
 
         return (
             <Find schema={schema} where={where} skip={0} first={this.firstLoad + overLoad} fields={this.fields}
+                  onCompleted={(xx) => console.log('xx onCompleted', xx)}
                   notifyOnNetworkStatusChange>
-                {({data = [], variables, refetch, loading, count}) => {
-                    const dataCollection = data as any[]
+                {({data = [], query, variables, refetch, loading, count}) => {
+                    let dataCollection = data
                     if (this.data.length === 0 && data && !loading) {
                         this.data = Array(count).fill(undefined)
                     }
+
                     if (dataCollection.length && !loading) {
                         this.data.splice(variables.skip, dataCollection.length, ...dataCollection);
                     }
@@ -245,7 +248,7 @@ export class ListVirtualized extends React.Component<ListProps, { columns: Colum
 
 
                     const tHeadHeight = this.tHead.current && this.tHead.current.offsetHeight || 0
-                    const itemData = {data: this.data, columns}
+                    const itemData = {data: this.data, columns, refetch, query, variables,}
                     return (
                         <div className={'mandarina-list'} ref={this.container}
                              style={{
@@ -267,6 +270,7 @@ export class ListVirtualized extends React.Component<ListProps, { columns: Colum
                                     </div>)}
                                 </div>
                             </div>
+                            {!loading && !count && <Empty style={{margin: '40px'}}/>}
                             {height !== 0 && <Grid
                                 onScroll={this.onScroll}
                                 height={height}
@@ -315,8 +319,8 @@ const DefaultCellComponent: CellComponent = ({columnIndex, rowIndex, data, field
 }
 const defaultLoadingElement = '...'
 
-const Cell = memo(
-    ({columnIndex, rowIndex, data: {data, columns}, style}: ListChildComponentProps & GridChildComponentProps & { data: { data: any, columns: ColumnProps[] } }) => {
+const Cell = React.memo(
+    ({columnIndex, rowIndex, data: {data, columns, query, refetch, variables}, style}: ListChildComponentProps & GridChildComponentProps & { data: { variables: any, query: DocumentNode, refetch: RefetchQueriesProviderFn, data: any, columns: ColumnProps[] } }) => {
         const field = columns[columnIndex].field
         const CellComponent = columns[columnIndex].CellComponent || DefaultCellComponent
         const loadingElement = columns[columnIndex].loadingElement || defaultLoadingElement
@@ -324,10 +328,11 @@ const Cell = memo(
             <div className={'mandarina-list-cell'}
                  style={style}>
                 {!data[rowIndex] && loadingElement}
-                {data[rowIndex] && <CellComponent columnIndex={columnIndex} rowIndex={rowIndex} data={data} field={field}/>}
+                {data[rowIndex] &&
+                <CellComponent columnIndex={columnIndex} rowIndex={rowIndex} data={data} field={field}
+                               refetch={refetch} variables={variables} query={query}/>}
             </div>
         )
-    },
-    areEqual
-);
+    }
+    , areEqual);
 
