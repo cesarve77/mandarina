@@ -111,11 +111,11 @@ export class ActionForm extends PureComponent<ActionFormProps> {
                             {children && !Array.isArray(children) && (typeof children === "function") && children({loading})}
                             {children && !Array.isArray(children) && (typeof children !== "function") && children}
                             {!children && (
-                                <div>
+                                <>
                                     <AutoFields autoField={AutoField} omitFields={omitFields}/>
                                     <ErrorsField style={{marginBottom: '15px'}}/>
                                     <SubmitField size='large' loading={loading}/>
-                                </div>)
+                                </>)
                             }
                         </AutoForm>
                     );

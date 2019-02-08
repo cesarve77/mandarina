@@ -325,7 +325,7 @@ const Cell = React.memo(
         const CellComponent = columns[columnIndex].CellComponent || DefaultCellComponent
         const loadingElement = columns[columnIndex].loadingElement || defaultLoadingElement
         return (
-            <div className={'mandarina-list-cell'}
+            <div className={'mandarina-list-cell ' + field.replace('.', '-')}
                  style={style}>
                 {!data[rowIndex] && loadingElement}
                 {data[rowIndex] &&

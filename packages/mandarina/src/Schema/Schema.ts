@@ -553,7 +553,7 @@ export interface CellComponentProps {
     [rest: string]: any
 }
 
-export type CellComponent = (props: CellComponentProps) => JSX.Element | null
+export type CellComponent = (props: CellComponentProps,context: any) => JSX.Element | null
 
 
 export interface UserFieldDefinition {
