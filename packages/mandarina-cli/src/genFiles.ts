@@ -3,8 +3,8 @@ import path from "path";
 import {getParents} from "mandarina/build/utils";
 import {getGraphQLInput, getGraphQLModel} from "./genFilesUtils";
 import {capitalize} from "mandarina/build/Schema/utils";
-import {Table,CustomAction,} from "mandarina-server";
-import {Schema } from "mandarina";
+import {CustomAction,} from "mandarina-server";
+import {Schema} from "mandarina";
 import {getConfig, loadSchemas} from "./utils";
 
 const yaml: any = require("node-yaml")
@@ -59,6 +59,29 @@ const saveSubSchemas = (schema: Schema) => {
     })
 }
 
+const saveSubActionSchema = (schema: Schema) => {
+    const parents = getParents(schema.getFields())
+    parents.forEach((field) => {
+        const fieldDefinition = schema.getPathDefinition(field)
+        let subSchema = ''
+        if (typeof fieldDefinition.type === 'string') {
+            subSchema = fieldDefinition.type
+        }
+        if (Array.isArray(fieldDefinition.type) && typeof fieldDefinition.type[0] === 'string') {
+            subSchema = <string>fieldDefinition.type[0]
+        }
+        if (subSchema) {
+            const schema = Schema.getInstance(subSchema)
+            if (!config) return
+            const prismaDir = path.join(process.cwd(), config.dir.prisma)
+            const fileName = schema.name.toLowerCase();
+            const fileAbsInput = `${prismaDir}/datamodel/${fileName}.input.graphql`;
+            fs.writeFileSync(fileAbsInput, getGraphQLInput(schema));
+            saveSubActionSchema(schema)
+        }
+    })
+}
+
 
 const saveActionSchema = (name: string) => {
     if (!config) return
@@ -88,10 +111,13 @@ const saveFile = (schema: Schema) => {
     const fileName = schema.name.toLowerCase();
     const operations = getGraphQLOperations(schema);
     if (operations) {
-        const fileAbsInput = `${prismaDir}/datamodel/${fileName}.input.graphql`;
+
         const fileAbsOperations = `${prismaDir}/datamodel/${fileName}.operations.graphql`;
         fs.writeFileSync(fileAbsOperations, operations);
+
+        const fileAbsInput = `${prismaDir}/datamodel/${fileName}.input.graphql`;
         fs.writeFileSync(fileAbsInput, getGraphQLInput(schema));
+
     }
 
 
@@ -126,26 +152,28 @@ export const genFiles = () => {
     loadSchemas(config.dir)
     processed = {}
     reset()
-    for (const tableName in Table.instances) {
-        const table = Table.getInstance(tableName)
-        saveFile(table.schema)
-        saveSubSchemas(table.schema)
+    for (const schemaName in Schema.instances) {
+        const schema = Schema.getInstance(schemaName)
+        saveFile(schema)
+        saveSubSchemas(schema)
     }
     for (const actionName in CustomAction.instances) {
         const action = CustomAction.getInstance(actionName)
-        if (action.schema) {
-            saveFile(action.schema)
-        } else {
-            saveActionSchema(action.name)
+
+        saveActionSchema(action.name)
+        if (action.name) {
+            const schema = action.schema && typeof action.schema === 'string' ? Schema.getInstance(action.schema) : action.schema
+            if (schema) saveSubActionSchema(schema)
         }
+
     }
-    if (config.options && config.options.auth){
+    if (config.options && config.options.auth) {
         saveAuthFiles()
     }
 }
 
 
-const saveAuthFiles=() => { //todo unify with Table save files
+const saveAuthFiles = () => { //todo unify with Table save files
     if (!config) return
     const model = `type AuthTable {
                         role: String!
@@ -157,7 +185,7 @@ const saveAuthFiles=() => { //todo unify with Table save files
     const operation = `extend type Query {
                             AuthFields(action: String!, table: String!) :  [String!]
                        }`
-    const prismaDir =  path.join(process.cwd(), config.dir.prisma)
+    const prismaDir = path.join(process.cwd(), config.dir.prisma)
     const fileName = 'mandarina.auth'
     const fileAbsOperation = `${prismaDir}/datamodel/${fileName}.operations.graphql`
     const fileAbsModel = `${prismaDir}/datamodel/${fileName}.model.graphql`
