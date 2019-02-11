@@ -1,6 +1,6 @@
 {
   "name": "mandarina-cli",
-  "version": "0.4.4",
+  "version": "0.4.5",
   "description": "mandarina command line",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",

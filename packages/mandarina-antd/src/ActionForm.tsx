@@ -49,7 +49,7 @@ export class ActionForm extends PureComponent<ActionFormProps> {
             ...rest
         } = this.props
         const {changed} = this.state
-        const resultSchema = Schema.getInstance(result)
+        const resultSchema = Schema.instances[result]
         let fields: string[] | undefined, queryFromFields
         if (resultSchema) fields = filterFields(resultSchema.getFields(), optionalFields, omitFields, omitFieldsRegEx)
         if (fields) {

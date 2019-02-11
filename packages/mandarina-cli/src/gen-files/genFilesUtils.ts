@@ -125,7 +125,7 @@ const getMainSchema = (schema: Schema, type: 'input' | 'type') => {
             }
         }
 
-        const fieldType = getGraphQLType(field.type, key, required,false);
+        const fieldType = getGraphQLType(field.type, key, required,type==='input');
 
         field.description && mainSchema.push(`# ${field.description}`);
         mainSchema.push(`${key}: ${fieldType} ${unique} ${defaultValue} ${relation} ${rename}`);

@@ -6,7 +6,7 @@
   },
   "scripts": {
     "start": "cd website && yarn start",
-    "bump-publish": "npm whoami && cd packages/mandarina && npm version patch && npm publish && cd ../mandarina-antd && npm version patch  && npm publish && cd ../mandarina-cli && npm version patch  && npm publish  && cd ../mandarina-server && npm version patch  && npm publish ",
+    "bump-publish": "npm whoami && cd packages/mandarina && npm version patch && npm publish && cd ../mandarina-antd && npm version patch  && npm publish && cd ../mandarina-cli && npm version patch  && npm publish  && cd ../mandarina-server && npm version patch  && npm publish && \"PACKAGE_VERSION=$(cat packages/madanrina/package.json | grep version | head -1 | awk -F: '{ print $2 }' | sed 's/[\\\",]//g' | tr -d '[[:space:]]') && git tag $PACKAGE_VERSION && git push --tags",
     "publish": "npm whoami && cd packages/mandarina  && npm publish && cd ../mandarina-antd && npm publish && cd ../mandarina-cli  && npm publish && cd ../mandarina-server && npm publish "
   },
   "name": "mandarina-repo",
