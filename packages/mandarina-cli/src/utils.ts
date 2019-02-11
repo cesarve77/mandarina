@@ -1,40 +1,34 @@
 import fs from "fs";
 import path from "path";
 
-export const getConfig = (): ConfigInterface | void => {
+export const getConfig = (): ConfigInterface => {
     let rawData
     try {
         rawData = fs.readFileSync(path.join(process.cwd(), 'mandarina.json'), 'utf8')
     } catch (e) {
-        console.log('Error: Be sure you are in a mandarina project and has a madarina.json file')
-        return
+        throw Error('Error: Be sure you are in a mandarina project and has a madarina.json file')
     }
     const config = JSON.parse(rawData)
     if (!config.secret) {
-        console.log('Error: please set "secret" in  madarina.json file')
-        return
+        throw Error('Error: please set "secret" in  madarina.json file')
     }
     if (!config.dir) {
-        console.log('Error: please set "dir" in  madarina.json file')
-        return
+        throw Error('Error: please set "dir" in  madarina.json file')
     }
     if (!config.dir.schemas || !Array.isArray(config.dir.schemas) || config.dir.schemas.length === 0) {
-        console.log('Error: please set "dir.schemas" in  madarina.json file. Make sure it is a array')
-        return
+        throw Error('Error: please set "dir.schemas" in  madarina.json file. Make sure it is a array')
     }
     if (config.dir.actions && !Array.isArray(config.dir.actions)) {
-        console.log('Error: please make sure "dir.actions" is a array')
+        throw Error('Error: please make sure "dir.actions" is a array')
     }
     if (config.dir.tables && !Array.isArray(config.dir.tables)) {
-        console.log('Error: please make sure "dir.tables" is a array')
+        throw Error('Error: please make sure "dir.tables" is a array')
     }
     if (!config.dir.prisma ) {
-        console.log('Error: please set "dir.prisma" in  madarina.json file')
-        return
+        throw Error('Error: please set "dir.prisma" in  madarina.json file')
     }
     if (!config.dir.generated ) {
-        console.log('Error: please set "dir.generated" in  madarina.json file')
-        return
+        throw Error('Error: please set "dir.generated" in  madarina.json file')
     }
     return (config)
 }

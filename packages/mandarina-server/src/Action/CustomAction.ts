@@ -15,8 +15,7 @@ import {Hook, operationType} from '../Table/Table'
 
 export class CustomAction {
     // An object with all table instances created
-    static instances: { [name: string]: CustomAction };
-
+    static instances: { [actionName: string]: CustomAction };
 
     public schema?: Schema;
     public name: string;

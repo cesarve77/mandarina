@@ -2,7 +2,7 @@
 import {createProject} from "./createProject";
 import {watch} from "./watch";
 import {deploy} from "./deploy";
-import {genFiles} from "./genFiles";
+import {genFile_s} from "./gen-files/genFiles";
 
 //@ts-ignore
 const [nodeDir, dir, cmd, ...args] = process.argv
@@ -13,7 +13,7 @@ switch (cmd) {
         createProject(project)
         break
     case 'gen-files':
-        genFiles()
+        genFile_s()
         break;
     case 'deploy':
         deploy()

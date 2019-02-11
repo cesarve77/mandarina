@@ -11,7 +11,7 @@ import {getDecendents} from "../utils";
 
 export class Schema {
 
-    static instances: Schema[]
+    static instances:{ [actionName: string]: Schema };
     public name: string
     public keys: string[]
     public shape: SchemaShape;
@@ -29,7 +29,7 @@ export class Schema {
         const {name, recursive = [], forceType = true, virtual = false, errorFromServerMapper, permissions} = options;
         this.name = name;
 
-        Schema.instances = Schema.instances || [];
+        Schema.instances = Schema.instances || {};
 
         if (Schema.instances[this.name]) {
             throw new UniqueSchemaError(this.name);

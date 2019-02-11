@@ -36,7 +36,6 @@
     "newLine": "lf"
   },
   "include": [
-    "src",
-    "mandarina-cli.ts"
+    "src"
   ]
 }

@@ -1,6 +1,6 @@
 {
   "name": "mandarina-server",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "description": "Mandarina for server side",
   "main": "build/index.js",
   "types": "build/index.d.ts",
@@ -9,9 +9,7 @@
   "resolutions": {
     "**/graphql": "14.1.1"
   },
-  "dependencies": {
-
-  },
+  "dependencies": {},
   "peerDependencies": {
     "mandarina": "latest",
     "prisma-binding": "^2.3.0",
