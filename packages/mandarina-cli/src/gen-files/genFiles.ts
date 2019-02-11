@@ -28,25 +28,27 @@ export const genFile_s = () => {
     }
     savePrismaYaml(models, config.dir.prisma, config.secret)
     for (const schemaName in CustomAction.instances) {
-        if (!Schema.instances[schemaName]) continue
-        const schema = Schema.getInstance(schemaName)
-        const fileName = schema.name.toLowerCase()
+        const fileName = schemaName.toLowerCase()
+        const action=CustomAction.getInstance(schemaName)
+        const schema=Schema.instances[schemaName]
+        const operation = getGraphQLOperation(action,schema)
+        console.log('operation:',fileName, operation)
+        saveFile(config.dir.prisma, fileName, operation, 'operation')
+        if (!schema) continue
         const graphql = getGraphQLInput(schema)
         saveFile(config.dir.prisma, fileName, graphql, 'input',)
-
-        const operation = getGraphQLOperation(CustomAction.getInstance(schemaName))
-        saveFile(config.dir.prisma, fileName, operation, 'operation',)
-
         const subSchemas = getSubSchemas(schema)
         subSchemas.forEach((subsSchema) => {
             const schema = Schema.getInstance(subsSchema)
             const graphql = getGraphQLInput(schema)
+            const fileName = getFileName(schema)
             saveFile(config.dir.prisma, fileName, graphql, 'input',)
         })
-
     }
     if (config.options && config.options.auth){
         const authOperation=getAuthOperation()
-        saveFile(config.dir.prisma, 'mandarinaauth', authOperation, 'model',)
+        saveFile(config.dir.prisma, 'mandarinaauth', authOperation, 'operation',)
     }
 }
+
+const getFileName=(schema: Schema)=> schema.name.toLowerCase()

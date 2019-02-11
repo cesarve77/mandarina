@@ -47,9 +47,9 @@ export const getDeclarationType = (type: any, key: string): string => {
     }
 }
 
-export const getGraphQLType = (type: any, key: string, required: '' | '!' = ''): string => {
+export const getGraphQLType = (type: any, key: string, required: '' | '!' = '',isInput:boolean=false): string => {
     //if (isBrowser) throw new Error('_functionCreator is not avaiblabe on browser')
-
+    const input=isInput ? 'Input' : ''
     let typeName = type
     if (type.name) typeName = type.name
     if (Array.isArray(type)) typeName = 'Array'
@@ -70,7 +70,7 @@ export const getGraphQLType = (type: any, key: string, required: '' | '!' = ''):
 
             if (typeof type[0] === 'string') {
                 const schemaName = Schema.getInstance(type[0]).name
-                return `[${schemaName}!]!`
+                return `[${schemaName}${input}!]!`
             }
             const scalarName = getGraphQLType(type[0], key)
             return `[${scalarName}!]${required}`
@@ -80,7 +80,7 @@ export const getGraphQLType = (type: any, key: string, required: '' | '!' = ''):
         case 'Date':
             return `DateTime`;
         default:
-            return typeName;
+            return typeName + input;
     }
 }
 
@@ -125,7 +125,7 @@ const getMainSchema = (schema: Schema, type: 'input' | 'type') => {
             }
         }
 
-        const fieldType = getGraphQLType(field.type, key, required);
+        const fieldType = getGraphQLType(field.type, key, required,false);
 
         field.description && mainSchema.push(`# ${field.description}`);
         mainSchema.push(`${key}: ${fieldType} ${unique} ${defaultValue} ${relation} ${rename}`);
@@ -207,13 +207,14 @@ export const getSubSchemas = (schema: Schema): string[] => {
 }
 
 
-export const getGraphQLOperation = (action: CustomAction) => {
+export const getGraphQLOperation = (action: CustomAction,schema: Schema) => {
     let response=''
     const actions = action.actions;
     if (actions) {
         Object.keys(actions).forEach((actionName: string) => {
             const action = actions[actionName];
-            response += `extend type ${capitalize(action.type)} {\n\t${actionName}(data: ${capitalize(actionName)}Input!): ${action.result}\n}`;
+            const input=schema ? `(data: ${capitalize(actionName)}Input!)` : ''
+            response += `extend type ${capitalize(action.type)} {\n\t${actionName} ${input}: ${action.result}\n}`;
         })
     }
     return response;
@@ -222,9 +223,7 @@ export const getGraphQLOperation = (action: CustomAction) => {
 
 
 export const getAuthOperation = () => { //todo unify with Table save files
-    return  `extend type Query {
-                            AuthFields(action: String!, table: String!) :  [String!]
-                       }`
+    return  `extend type Query {\n\tAuthFields(action: String!, table: String!) :  [String!]\n}`
 }
 
 /*
