@@ -3,7 +3,7 @@ import path from "path";
 import {getParents} from "mandarina/build/utils";
 import {getGraphQLInput, getGraphQLModel} from "./genFilesUtils";
 import {capitalize} from "mandarina/build/Schema/utils";
-import {CustomAction,} from "mandarina-server";
+import {CustomAction} from "mandarina-server";
 import {Schema} from "mandarina";
 import {getConfig, loadSchemas} from "./utils";
 
