@@ -11,6 +11,7 @@ import {buildQueryFromFields} from "mandarina/build/Operations/utils";
 import SubmitField from "uniforms-antd/SubmitField";
 import {ChildFunc} from "./Forms";
 import {filterFields} from "mandarina/build/utils";
+import {Model} from "mandarina/build/Schema/Schema";
 
 export interface ActionFormProps {
     schema: Schema
@@ -18,13 +19,25 @@ export interface ActionFormProps {
     result: string,
     fields?: string[]
     omitFields?: string[]
-    children?: (props: any) => React.ReactNode | React.ReactNode | React.ReactNode[]
+    children?: React.ReactNode | ((props: any) => React.ReactNode | React.ReactNode[])
     omitFieldsRegEx?: RegExp
-
+    showInlineError: boolean
+    autosaveDelay: number
+    autosave: boolean
+    disabled: boolean
+    error: Error
+    label: boolean
+    model: object
+    modelTransform: (mode: 'form' | 'submit' | 'validate', model: object) => boolean
+    onChange: (key: string, value: any) => void
+    onSubmitFailure: () => void
+    onSubmitSuccess: () => void
+    onSubmit: (model: Model) => Promise<void>
+    placeholder: boolean
     [key: string]: any //replace for uniforms autoform props
 }
 
-export class ActionForm extends PureComponent<ActionFormProps> {
+class ActionForm extends PureComponent<ActionFormProps> {
     state: { changed: boolean } = {changed: false}
 
     render() {
@@ -44,12 +57,15 @@ export class ActionForm extends PureComponent<ActionFormProps> {
             ignoreResults,
             optimisticResponse,
             awaitRefetchQueries,
+            onSubmitSuccess,
+            onSubmitFailure,
             onError,
             context,
+            innerRef,
             ...rest
         } = this.props
         const {changed} = this.state
-        const resultSchema = Schema.instances[result]
+        const resultSchema = Schema.instances[result.replace(/[\[\]\!]/g, '')]
         let fields: string[] | undefined, queryFromFields
         if (resultSchema) fields = filterFields(resultSchema.getFields(), optionalFields, omitFields, omitFieldsRegEx)
         if (fields) {
@@ -63,6 +79,7 @@ export class ActionForm extends PureComponent<ActionFormProps> {
                     ${queryFromFields}
             }
         `;
+
         const bridge = new Bridge(schema)
         const MUTATION = gql(gqlString)
         return (
@@ -84,6 +101,8 @@ export class ActionForm extends PureComponent<ActionFormProps> {
                                       this.setState({changed: false})
                                       return mutation({variables: {data}});
                                   }}
+                                  onSubmitSuccess={onSubmitSuccess}
+                                  onSubmitFailure={onSubmitFailure}
                                   schema={bridge}
                                   onValidate={(model: Object, error: any, callback: any) => {
                                       try {
@@ -100,16 +119,18 @@ export class ActionForm extends PureComponent<ActionFormProps> {
                                       onChange && onChange(key, value)
                                   }}
                                   error={changed ? undefined : error}
-
+                                  ref={innerRef}
                                   {...rest}>
+
                             {children && Array.isArray(children) && children.map((child: ReactElement<ReactChild> | ChildFunc) => {
                                 if (typeof child === "function") {
                                     return child({loading})
                                 }
                                 return React.cloneElement(child)
                             })}
-                            {children && !Array.isArray(children) && (typeof children === "function") && children({loading})}
                             {children && !Array.isArray(children) && (typeof children !== "function") && children}
+
+                            {children && !Array.isArray(children) && (typeof children === "function") && children({loading})}
                             {!children && (
                                 <>
                                     <AutoFields autoField={AutoField} omitFields={omitFields}/>
@@ -124,3 +145,18 @@ export class ActionForm extends PureComponent<ActionFormProps> {
         )
     }
 }
+
+export default React.forwardRef<HTMLFormElement,ActionFormProps>((props, ref) =>
+    <ActionForm {...props} innerRef={ref}/>)
+
+
+
+
+
+
+
+
+
+
+
+

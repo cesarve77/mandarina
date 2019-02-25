@@ -4,6 +4,7 @@ import {CustomAction, Table} from "mandarina-server";
 import path from "path";
 import fs from "fs";
 import {getParents} from "mandarina/build/utils";
+import merge from 'lodash.merge'
 
 export const getDeclarationType = (type: any, key: string): string => {
 
@@ -174,16 +175,39 @@ export const resetDir = (dir: string) => {
     fs.readdirSync(datamodelDir).forEach((file: string) => fs.unlinkSync(path.join(datamodelDir, file)));
 }
 
-export const savePrismaYaml = (models: string[], dir: string, secret: string) => {
-    const yaml: any = require("node-yaml")
+export const savePrismaYaml = (models: string[], dir: string, secret: string, endpoint: string) => {
     const prismaDir = path.join(process.cwd(), dir)
     const prismaYaml = path.join(prismaDir, `prisma.yml`)
-    const prisma: { datamodel: string[], secret: string } = yaml.readSync(prismaYaml) || {};
-    prisma.secret = secret
-    prisma.datamodel = models;
-    yaml.writeSync(prismaYaml, prisma);
+    saveYaml(prismaYaml, {
+        endpoint,
+        secret,
+        models
+    })
 }
 
+export const saveDockerComposeYaml = (dir: string, port: string) => {
+    const prismaDir = path.join(process.cwd(), dir)
+    const dcYaml = path.join(prismaDir, `docker-compose.yml`)
+    saveYaml(dcYaml, {
+        services: {
+            prisma: {
+                ports: [`${port}:${port}`],
+                environment: {
+                    PRISMA_CONFIG: {
+                        port,
+                    }
+                }
+            }
+        }
+    })
+}
+
+const saveYaml = (file: string, data: any) => {
+    const yaml: any = require("node-yaml")
+    const originalData = yaml.readSync(file) || {};
+    const newData = merge(originalData, data)
+    yaml.writeSync(file, newData);
+}
 
 export const getSubSchemas = (schema: Schema): string[] => {
     const subSchemas: string[] = []

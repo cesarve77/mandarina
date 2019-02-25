@@ -8,12 +8,13 @@ import {
     getSubSchemas,
     resetDir,
     saveFile,
-    savePrismaYaml
+    savePrismaYaml,
+    saveDockerComposeYaml
 } from "./genFilesUtils";
 import {CustomAction} from "mandarina-server";
 
 
-export const genFile_s = () => {
+export const genFile = () => {
     const config = getConfig()
     loadSchemas(config.dir)
     createDir(config.dir.prisma)
@@ -26,7 +27,8 @@ export const genFile_s = () => {
         saveFile(config.dir.prisma, fileName, graphql, 'model',)
         models.push(`datamodel/${fileName}.model.graphql`)
     }
-    savePrismaYaml(models, config.dir.prisma, config.secret)
+    savePrismaYaml(models, config.dir.prisma, config.secret, `${config.prisma.host}:${config.prisma.port}`)
+    saveDockerComposeYaml(config.dir.prisma,config.prisma.port)
     for (const schemaName in CustomAction.instances) {
         const fileName = schemaName.toLowerCase()
         const action=CustomAction.getInstance(schemaName)

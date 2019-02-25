@@ -48,6 +48,10 @@ const walkSync = function (dir: string, fileList: string[]) {
 };
 
 export interface ConfigInterface {
+    prisma:{
+        port:string,
+        host: string,
+    }
     dir: ConfigDirInterface
     options?: {
         auth?: boolean

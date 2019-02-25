@@ -13,8 +13,8 @@ const ErrorsField: any = require("./uniforms/ErrorsField").default
 const AutoFields: any = require("./uniforms/AutoFields").default
 const AutoField: any = require("./uniforms/AutoField").default
 
-export const CreateForm = React.forwardRef<HTMLFormElement>((props: any,ref) => <Form Component={Create} {...props} innerRef={ref}/>)
-export const UpdateForm =  React.forwardRef<HTMLFormElement>((props: any,ref) => <Form Component={Update} {...props} innerRef={ref}/>)
+export const CreateForm = React.forwardRef<HTMLFormElement,FormProps>((props: FormProps,ref) => <Form Component={Create} {...props} innerRef={ref}/>)
+export const UpdateForm =  React.forwardRef<HTMLFormElement,FormProps>((props: FormProps,ref) => <Form Component={Update} {...props} innerRef={ref}/>)
 
 
 export interface FormProps<TData = any, TVariables = OperationVariables> {
@@ -38,7 +38,7 @@ export interface FormProps<TData = any, TVariables = OperationVariables> {
     onSubmitSuccess: () => void
     onSubmit: (model: object) => Promise<void>
     placeholder: boolean
-    innerRef: React.RefObject<HTMLFormElement>
+    innerRef: React.Ref<HTMLFormElement>
     [prop: string]: any
 
     mutation: DocumentNode;

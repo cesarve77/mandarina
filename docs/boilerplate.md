@@ -30,22 +30,24 @@ In the same terminal
 yarn install
 ```
 
-### 1.3) Init docker machine
-
-In the same terminal 
-```console
-yarn run init-docker
-```
-see: [docker machine](https://docs.docker.com/machine/reference/start/)
-
-### 1.4) Environment variables
+### 1.3) Environment variables
 
 For local environments in terminal you just need to
 ```console
 cp .env.example .env
 ```
+### 1.4) Generate Schema files
+
+```console
+npm run mandarina gen-files
+ ```
 
 ### 1.5) Deploy prisma server
+
+
+Make sure that docker is running
+
+see: [How to check if docker is running or not](https://stackoverflow.com/questions/43721513/how-to-check-if-docker-is-running-or-not/43723174)
 
 In the same terminal 
 ```console
