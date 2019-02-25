@@ -145,8 +145,11 @@ export class Table {
         const operationNames: string[] = Object.values(this.schema.names[type]);
         operationNames.forEach((operationName: string) => {
             result[operationName] = async (_: any, args: any = {}, context: Context, info: any) => {
+                console.log('*****************************************************')
+                console.log('operationName',operationName)
+                console.log('args',args)
                 let time = new Date().getTime()
-                const bm = (...description: any) => {
+                const bm = (description?: string) => {
                     if (description) {
                         console.log(description, new Date().getTime() - time)
                     }
@@ -196,8 +199,10 @@ export class Table {
                     await this.callHook('afterQuery',  _, args, context, info);
 
                 }
-                bm('done')
 
+                console.log('result',result)
+                bm('done in ')
+                console.log('*****************************************************')
                 return result;
             }
         });

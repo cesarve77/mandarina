@@ -47,9 +47,9 @@ export const getDeclarationType = (type: any, key: string): string => {
     }
 }
 
-export const getGraphQLType = (type: any, key: string, required: '' | '!' = '',isInput:boolean=false): string => {
+export const getGraphQLType = (type: any, key: string, required: '' | '!' = '', isInput: boolean = false): string => {
     //if (isBrowser) throw new Error('_functionCreator is not avaiblabe on browser')
-    const input=isInput ? 'Input' : ''
+    const input = isInput ? 'Input' : ''
     let typeName = type
     if (type.name) typeName = type.name
     if (Array.isArray(type)) typeName = 'Array'
@@ -70,7 +70,7 @@ export const getGraphQLType = (type: any, key: string, required: '' | '!' = '',i
 
             if (typeof type[0] === 'string') {
                 const schemaName = Schema.getInstance(type[0]).name
-                return `[${schemaName}${input}!]!`
+                return `[${schemaName}${input}!]${required}`
             }
             const scalarName = getGraphQLType(type[0], key)
             return `[${scalarName}!]${required}`
@@ -80,7 +80,7 @@ export const getGraphQLType = (type: any, key: string, required: '' | '!' = '',i
         case 'Date':
             return `DateTime`;
         default:
-            return typeName + input;
+            return typeName + input + required;
     }
 }
 
@@ -125,7 +125,7 @@ const getMainSchema = (schema: Schema, type: 'input' | 'type') => {
             }
         }
 
-        const fieldType = getGraphQLType(field.type, key, required,type==='input');
+        const fieldType = getGraphQLType(field.type, key, required, type === 'input');
 
         field.description && mainSchema.push(`# ${field.description}`);
         mainSchema.push(`${key}: ${fieldType} ${unique} ${defaultValue} ${relation} ${rename}`);
@@ -174,7 +174,7 @@ export const resetDir = (dir: string) => {
     fs.readdirSync(datamodelDir).forEach((file: string) => fs.unlinkSync(path.join(datamodelDir, file)));
 }
 
-export const savePrismaYaml = (models:string[],dir: string,secret: string) => {
+export const savePrismaYaml = (models: string[], dir: string, secret: string) => {
     const yaml: any = require("node-yaml")
     const prismaDir = path.join(process.cwd(), dir)
     const prismaYaml = path.join(prismaDir, `prisma.yml`)
@@ -185,20 +185,18 @@ export const savePrismaYaml = (models:string[],dir: string,secret: string) => {
 }
 
 
-
-
 export const getSubSchemas = (schema: Schema): string[] => {
-    const subSchemas:string[]=[]
+    const subSchemas: string[] = []
     const parents = getParents(schema.getFields())
     parents.forEach((field) => {
         const fieldDefinition = schema.getPathDefinition(field)
         if (typeof fieldDefinition.type === 'string') {
-            const schemaName=fieldDefinition.type
+            const schemaName = fieldDefinition.type
             subSchemas.push(schemaName)
             subSchemas.push(...getSubSchemas(Schema.getInstance(schemaName)))
         }
         if (Array.isArray(fieldDefinition.type) && typeof fieldDefinition.type[0] === 'string') {
-            const schemaName=<string>(fieldDefinition.type[0])
+            const schemaName = <string>(fieldDefinition.type[0])
             subSchemas.push(schemaName)
             subSchemas.push(...getSubSchemas(Schema.getInstance(schemaName)))
         }
@@ -207,13 +205,16 @@ export const getSubSchemas = (schema: Schema): string[] => {
 }
 
 
-export const getGraphQLOperation = (action: CustomAction,schema: Schema) => {
-    let response=''
+export const getGraphQLOperation = (action: CustomAction, schema: Schema) => {
+    let response = '', input = ''
     const actions = action.actions;
+    if (action.schema) {
+        const actionName = action.schema.name
+        input = schema ? `(data: ${capitalize(actionName)}Input!)` : ''
+    }
     if (actions) {
         Object.keys(actions).forEach((actionName: string) => {
             const action = actions[actionName];
-            const input=schema ? `(data: ${capitalize(actionName)}Input!)` : ''
             response += `extend type ${capitalize(action.type)} {\n\t${actionName} ${input}: ${action.result}\n}`;
         })
     }
@@ -221,9 +222,8 @@ export const getGraphQLOperation = (action: CustomAction,schema: Schema) => {
 }
 
 
-
 export const getAuthOperation = () => { //todo unify with Table save files
-    return  `extend type Query {\n\tAuthFields(action: String!, table: String!) :  [String!]\n}`
+    return `extend type Query {\n\tAuthFields(action: String!, table: String!) :  [String!]\n}`
 }
 
 /*

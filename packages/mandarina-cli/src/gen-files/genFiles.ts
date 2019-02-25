@@ -32,7 +32,6 @@ export const genFile_s = () => {
         const action=CustomAction.getInstance(schemaName)
         const schema=Schema.instances[schemaName]
         const operation = getGraphQLOperation(action,schema)
-        console.log('operation:',fileName, operation)
         saveFile(config.dir.prisma, fileName, operation, 'operation')
         if (!schema) continue
         const graphql = getGraphQLInput(schema)

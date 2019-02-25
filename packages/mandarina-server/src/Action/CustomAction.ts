@@ -69,8 +69,23 @@ export class CustomAction {
             if (actions[action].type === type) {
                 result[action] = async (_: any, args: any, context: any, info: any): Promise<any> => {
                     //todo: check permissions
+                    console.log('*****************************************************')
+                    console.log('action',action)
+                    console.log('args',args)
+                    let time = new Date().getTime()
+                    const bm = (description?: string) => {
+                        if (description) {
+                            console.log(description, new Date().getTime() - time)
+                        }
+                        time = new Date().getTime()
+                    }
+                    bm()
 
-                    return await actions[action].action(_, args, context, info)
+                    const result= await actions[action].action(_, args, context, info)
+                    console.log('result',result)
+                    bm('done in ')
+                    console.log('*****************************************************')
+                    return result
                     // console.error('Actions permissions are not checked', this.permissions)
                     // if (this.options.onBefore) {
                     //     await this.options.onBefore(action, _, args, context, info)

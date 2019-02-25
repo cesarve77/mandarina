@@ -5,7 +5,7 @@ const ListField: any=require("./uniforms/ListField").default
 const ListItemField: any=require("./uniforms/ListItemField").default
 const NestField: any=require("./uniforms/NestField").default
 const TableField: any=require("./uniforms/TableField").default
-import {ActionForm} from './ActionForm'
+import ActionForm from './ActionForm'
 import {AuthCreateForm} from './AuthCreateForm'
 import {AuthUpdateForm} from './AuthUpdateForm'
 import {AuthList} from './AuthList'

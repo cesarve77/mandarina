@@ -116,7 +116,6 @@ export class ListVirtualized extends React.Component<ListProps, { columns: Colum
             return result
         }, [] as ColumnProps[]);
 
-        this.fields.map(this.getColumnDefinition)
         this.estimatedColumnWidth = columns.reduce((mem, {width}) => width + mem, 0) / columns.length
         this.state = {columns, height: 0, width: 0}
         this.tHead = React.createRef()
@@ -261,7 +260,7 @@ export class ListVirtualized extends React.Component<ListProps, { columns: Colum
                                 <div className={'mandarina-list-thead-row'}
                                      style={{width: this.estimatedColumnWidth * columns.length}}>
                                     {columns.map(({title, field}, columnIndex) => <div key={field}
-                                                                                       className={'mandarina-list-thead-col'}
+                                                                                       className={'mandarina-list-thead-col ' + field.replace(/\./g, '-')}
                                                                                        style={{width: this.getColumnWidth(columnIndex)}}>
                                         {title}
                                         <ListFilter onFilterChange={this.onFilterChange}
@@ -313,7 +312,7 @@ export class ListVirtualized extends React.Component<ListProps, { columns: Colum
 }
 
 
-const DefaultCellComponent: CellComponent = ({columnIndex, rowIndex, data, field}) => {
+export const DefaultCellComponent: CellComponent = ({columnIndex, rowIndex, data, field}) => {
     const children = (data[rowIndex] && get(data[rowIndex], field.split('.'))) || []
     return <>{children.map((child, i) => <span key={i}>{child}<br/></span>)}</>
 }

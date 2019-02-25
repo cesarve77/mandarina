@@ -13,8 +13,8 @@ const ErrorsField: any = require("./uniforms/ErrorsField").default
 const AutoFields: any = require("./uniforms/AutoFields").default
 const AutoField: any = require("./uniforms/AutoField").default
 
-export const CreateForm = (props: any) => <Form Component={Create} {...props}/>
-export const UpdateForm = (props: any) => <Form Component={Update} {...props}/>
+export const CreateForm = React.forwardRef<HTMLFormElement>((props: any,ref) => <Form Component={Create} {...props} innerRef={ref}/>)
+export const UpdateForm =  React.forwardRef<HTMLFormElement>((props: any,ref) => <Form Component={Update} {...props} innerRef={ref}/>)
 
 
 export interface FormProps<TData = any, TVariables = OperationVariables> {
@@ -24,7 +24,7 @@ export interface FormProps<TData = any, TVariables = OperationVariables> {
     fields?: string[]
     omitFields?: string[]
     omitFieldsRegEx?: RegExp
-    children: (FormChildrenParams: any) => React.ReactNode | React.ReactNode | React.ReactNode[]
+    children?: ((props: any) => React.ReactNode  | React.ReactNode[] ) | React.ReactNode | React.ReactNode[]
     showInlineError: boolean
     autosaveDelay: number
     autosave: boolean
@@ -36,10 +36,9 @@ export interface FormProps<TData = any, TVariables = OperationVariables> {
     onChange: (key: string, value: any) => void
     onSubmitFailure: () => void
     onSubmitSuccess: () => void
-    onSubmit: (model: object) => void
+    onSubmit: (model: object) => Promise<void>
     placeholder: boolean
-    ref: (form: object) => void
-
+    innerRef: React.RefObject<HTMLFormElement>
     [prop: string]: any
 
     mutation: DocumentNode;
@@ -59,7 +58,7 @@ export interface ChildFunc {
     (props: any): JSX.Element
 }
 
-const Form = ({Component, fields: optionalFields, schema, id, onSubmit, children, showInlineError, omitFields, omitFieldsRegEx, ...props}: FormProps) => {
+const Form = ({Component, fields: optionalFields, schema,innerRef, id, onSubmit, children, showInlineError, omitFields, omitFieldsRegEx, ...props}: FormProps) => {
     const bridge = new Bridge(schema)
     const fields = filterFields(schema.getFields(),optionalFields , omitFields, omitFieldsRegEx)
     return (
@@ -73,6 +72,7 @@ const Form = ({Component, fields: optionalFields, schema, id, onSubmit, children
                             onSubmit && onSubmit(model)
                             return mutate(model)
                         }}
+                        ref={innerRef}
                         disabled={loading}
                         showInlineError={showInlineError}
                         autoField={AutoField}
@@ -93,8 +93,8 @@ const Form = ({Component, fields: optionalFields, schema, id, onSubmit, children
                             }
                             return React.cloneElement(child)
                         })}
-                        {children && typeof children === "function" && children({doc, loading, ...rest, ...props})}
                         {children && typeof children !== "function" && children}
+                        {children && typeof children === "function" && children({doc, loading, ...rest, ...props})}
                         {!children && (
                             <div>
                                 <AutoFields autoField={AutoField} fields={fields}/>

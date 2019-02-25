@@ -64,7 +64,7 @@ export interface MutateChildrenParams extends FormChildrenParams {
 }
 
 export interface MutateChildren {
-    (mutateChildrenParams: MutateChildrenParams): JSX.Element
+    (mutateChildrenParams: MutateChildrenParams): React.ReactNode
 }
 
 

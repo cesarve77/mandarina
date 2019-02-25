@@ -7,8 +7,8 @@ import {FieldDefinition} from 'mandarina/build/Schema/Schema'
 import {onFilterChange, Where} from "./ListFilter";
 import {getDecendents, getParents} from 'mandarina/build/utils'
 import {ColumnProps} from 'antd/lib/table';
-import {get} from "mandarina/build/Schema/utils";
 import isEmpty from "lodash.isempty";
+import {DefaultCellComponent} from "./ListVirtualized";
 
 export type onResize = (e: any, {size}: { size: { width: number } }) => void
 
@@ -75,7 +75,6 @@ export class List extends React.Component<ListProps, { columns: ColumnProps<any>
         const columns = this.getColumns(this.fields)
         this.state = {columns}
         this.me = React.createRef();
-
         //this.definitions=definitions
     }
 
@@ -101,7 +100,22 @@ export class List extends React.Component<ListProps, { columns: ColumnProps<any>
     }
 
     getColumnDefinition = (parent: string, decedents: string[], index: number): ColumnProps<any> | undefined => {
+
+        // getColumnDefinition = (field: string): ColumnProps | undefined => {
+        //     const fieldDefinition = this.props.schema.getPathDefinition(field)
+        //
+        //     return {
+        //         field,
+        //         loadingElement: fieldDefinition.list.loadingElement,
+        //         CellComponent: fieldDefinition.list.CellComponent,
+        //         title: fieldDefinition.label ? fieldDefinition.label : "",
+        //         width: fieldDefinition.list.width || estimatedColumnWidthDefault
+        //     }
+        // }
+
+
         const fieldDefinition = this.props.schema.getPathDefinition(parent)
+        if (fieldDefinition.list.hidden) return
         const defaultWidth = window.innerWidth / this.fields.length
         let width: number | undefined
         if (index !== this.fields.length - 1) {
@@ -118,8 +132,10 @@ export class List extends React.Component<ListProps, { columns: ColumnProps<any>
             children,
             title: fieldDefinition.label ? fieldDefinition.label : "",
             render: (value: any, row: any, index: any) => {
+                console.log('value: any, row: any, index: any',value, row, index)
+                const CellComponent=fieldDefinition.list.CellComponent || DefaultCellComponent
                 if (!dataIndex) return null
-                return get(row, dataIndex.split('.'))
+                return <CellComponent columnIndex={0} rowIndex={0} data={[row]} field={dataIndex}/>
             },
             onHeaderCell: (column: ColumnProps<any>) => ({
                 field: parent,

@@ -32,7 +32,7 @@ export interface FindChildrenParams {
 }
 
 export interface FindChildren {
-    (findChildrenParams: FindChildrenParams): JSX.Element
+    (findChildrenParams: FindChildrenParams):  React.ReactNode
 }
 
 export interface FindProps {
