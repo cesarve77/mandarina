@@ -1,6 +1,6 @@
 {
   "name": "mandarina-cli",
-  "version": "0.4.6",
+  "version": "0.4.9",
   "description": "mandarina command line",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -23,6 +23,8 @@
   "author": "Cesar Ramos",
   "license": "ISC",
   "dependencies": {
+    "@types/lodash.merge": "^4.6.5",
+    "lodash.merge": "^4.6.1",
     "node-yaml": "^3.1.1"
   },
   "peerDependencies": {
@@ -32,6 +34,7 @@
   "devDependencies": {
     "@types/node": "^11.9.5",
     "mandarina": "latest",
-    "mandarina-server": "latest"
+    "mandarina-server": "latest",
+    "typescript": "^3.3.3333"
   }
 }

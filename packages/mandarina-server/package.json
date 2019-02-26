@@ -1,6 +1,6 @@
 {
   "name": "mandarina-server",
-  "version": "0.4.6",
+  "version": "0.4.9",
   "description": "Mandarina for server side",
   "main": "build/index.js",
   "types": "build/index.d.ts",
@@ -11,19 +11,19 @@
   },
   "dependencies": {},
   "peerDependencies": {
+    "@types/node": "^11.9.5",
+    "graphql-yoga": "^1.17.4",
     "mandarina": "latest",
-    "prisma-binding": "^2.3.0",
-    "graphql-yoga": "^1.17.1"
+    "prisma-binding": "^2.3.3"
   },
   "devDependencies": {
+    "@types/jest": "^24.0.6",
+    "@types/react": "^16.8.4",
     "@types/ws": "^6.0.1",
-    "@types/react": "^16.7.22",
-    "mandarina": "latest",
-    "@types/jest": "^23.3.13",
-    "@types/node": "^10.12.19",
-    "prisma-binding": "^2.3.0",
-    "graphql-yoga": "^1.17.1",
-    "jest": "^24.0.0"
+    "graphql-yoga": "^1.17.4",
+    "jest": "^24.1.0",
+    "prisma-binding": "^2.3.3",
+    "typescript": "^3.3.3333"
   },
   "scripts": {
     "postinstall": "tsc"

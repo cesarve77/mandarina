@@ -39,7 +39,7 @@ cp .env.example .env
 ### 1.4) Generate Schema files
 
 ```console
-npm run mandarina gen-files
+yarn run mandarina gen-files
  ```
 
 ### 1.5) Deploy prisma server
@@ -60,20 +60,10 @@ Now prisma server should be running in http://localhost:5577
 
 see: [prisma](https://www.prisma.io/docs/run-prisma-server/) 
 
-### 1.6) Set secret keys
-
-It step is optional in dev 
-
-Go to this files and replace the content with your custom secret keys
-
-Files:
-
-* /app/lib/security/private.key
-* /app/lib/security/public-key.js
 
 See: [secret keys](http://travistidwell.com/blog/2013/09/06/an-online-rsa-public-and-private-key-generator/)
 
-### 1.7) Run app server
+### 1.6) Run app server
 In a new terminal go to your app directory and run
 ```console
 yarn run server
@@ -81,7 +71,7 @@ yarn run server
 Now your app server should be running in http://localhost:8000 
 
 
-### 1.8) Run app webpack
+### 1.7) Run app webpack
 In a new terminal go to your app directory and run
 ```console
 yarn run webpack

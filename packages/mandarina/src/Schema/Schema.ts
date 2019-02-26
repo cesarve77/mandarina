@@ -9,8 +9,20 @@ import {SchemaInstanceNotFound} from '../Errors/SchemaInstanceNotFound';
 import {getDecendents} from "../utils";
 
 
-export class Schema {
+/**
+ * Schema is the base of all components in Mandarina
+ *
+ * Form schemas mandarina is able to create:
+ *
+ * - Tables
+ * - Form
+ * - Lists
+ *
+ * Schemas are rigid and dynamic, maybe it is the biggest limitation of mandarina, you are no able to build a schema on the fly or programmatically.
+ */
 
+
+export class Schema {
     static instances:{ [actionName: string]: Schema };
     public name: string
     public keys: string[]

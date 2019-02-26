@@ -1,19 +1,30 @@
 ---
-title: Table Constructor
-sidebar_label: Constructor
+title: Schema
 ---
 
-class Table constructor  takes 2 params Schema and TableOptions
+Schema is the base of all components in Mandarina
 
-[schema](#TableSchema)
+Form schemas mandarina is able to create:
 
-[options](#TableOptions)
+- Tables
+- Form
+- Lists
+
+Schemas are rigid and dynamic, maybe it is the biggest limitation of mandarina, you are no able to build a schema on the fly or programmatically. 
+
+
+
+class Schema constructor  takes 2 params:
+
+1. [shape](#SchemaSchema)
+2. [options](#SchemaOptions)
+
 
 *e.g.*:
 ```typescript jsx
-const User=new Table(schema, options)
+const User=new Schema(shape, options)
 ```
-## 1) schema<a name="TableSchema"></a>
+## 1) shape<a name="TableSchema"></a>
 *where*: server && client
 
 *type*: UserSchemaShape
