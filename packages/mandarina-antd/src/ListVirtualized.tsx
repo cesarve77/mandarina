@@ -28,9 +28,7 @@ export interface ListProps {
     height?: number
     width?: number
     estimatedRowHeight?: number
-    paginatorFactor?: number
     overscanRowsCount?: number
-    overscanColumnsCount?: number
     overLoad?: number
 }
 
@@ -224,7 +222,7 @@ export class ListVirtualized extends React.Component<ListProps, { columns: Colum
 
 
     render() {
-        const {schema, where, estimatedRowHeight, overscanRowsCount = 2, overscanColumnsCount = 2, overLoad = 0} = this.props //todo rest props
+        const {schema, where, estimatedRowHeight, overscanRowsCount = 2,  overLoad = 0} = this.props //todo rest props
         const {columns, width, height} = this.state
 
 
@@ -281,7 +279,7 @@ export class ListVirtualized extends React.Component<ListProps, { columns: Colum
                                 rowHeight={(index: number) => estimatedRowHeight || estimatedRowHeightDefault}
                                 width={width}
                                 itemData={itemData}
-                                overscanColumnsCount={overscanColumnsCount}
+                                overscanColumnsCount={0}
                                 overscanRowsCount={overscanRowsCount}
                                 onItemsRendered={({
                                                       overscanRowStartIndex,

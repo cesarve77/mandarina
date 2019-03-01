@@ -7,6 +7,7 @@ import {capitalize, forceType, hasValidator, pluralize, singularize} from "./uti
 import {UniqueSchemaError} from '../Errors/UniqueSchemaError';
 import {SchemaInstanceNotFound} from '../Errors/SchemaInstanceNotFound';
 import {getDecendents} from "../utils";
+import * as React from "react";
 
 
 /**
@@ -38,7 +39,7 @@ export class Schema {
     private filePath: string;
 
     constructor(shape: UserSchemaShape, options: SchemaOptions) {
-        const {name, recursive = [], forceType = true, virtual = false, errorFromServerMapper, permissions} = options;
+        const {name, recursive = [], errorFromServerMapper, permissions} = options;
         this.name = name;
 
         Schema.instances = Schema.instances || {};
@@ -49,7 +50,7 @@ export class Schema {
 
         Schema.instances[this.name] = this;
         this.errorFromServerMapper = errorFromServerMapper;
-        this.options = {recursive, forceType, virtual};
+        this.options = {recursive};
         this.permissions = permissions || {};
         this.shape = mapValues(shape, (field, key) => this.applyDefinitionsDefaults(field, key));
         this.keys = Object.keys(this.shape);
@@ -522,16 +523,11 @@ export namespace Integer {
 export type ErrorFromServerMapper = (field: string, error: any) => string | undefined;
 
 export interface InstanceOptions {
-    virtual: boolean
-    forceType: boolean
     recursive?: string[]
 }
 
 export interface SchemaOptions {
     name: string
-    virtual?: boolean
-    forceType?: boolean
-    filterExtraKeys?: boolean
     recursive?: string[]
     errorFromServerMapper?: ErrorFromServerMapper
     permissions?: Permissions
@@ -575,7 +571,13 @@ export interface UserFieldDefinition {
     validators?: Array<Validator | string | ValidatorFinder>
     defaultValue?: any
     transformValue?: (value: any) => any
-    form?: any;
+    form?: {
+        initialCount?: number
+        transform?: (allowedValues: string[]) => string[]
+        component?: React.Component
+        placeholder?: string
+        col?: false | number | any
+    }
     list?: {
         hidden?: true
         filterMethod?: FilterMethod
@@ -610,7 +612,13 @@ export interface FieldDefinition extends UserFieldDefinition {
     defaultValue: any
     transformValue: (value: any) => any
 
-    form: any;
+    form: {
+        initialCount?: number
+        transform?: (allowedValues: string[]) => string[]
+        component?: React.Component
+        placeholder?: string
+        col?: false | number | any
+    }
     list: {
         hidden?: true
         filterMethod?: FilterMethod

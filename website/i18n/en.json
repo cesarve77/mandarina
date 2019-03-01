@@ -5,17 +5,39 @@
     "previous": "Previous",
     "tagline": "Full-stack react+apollo+graphql+prisma.io library",
     "docs": {
+      "action-form": {
+        "title": "Action Form"
+      },
+      "action": {
+        "title": "Action",
+        "sidebar_label": "Action"
+      },
       "auth-create-form": {
         "title": "auth-create-form"
       },
+      "auth-delete-form": {
+        "title": "auth-delete-form"
+      },
       "auth-list": {
         "title": "auth-list"
+      },
+      "auth-server": {
+        "title": "auth-server"
+      },
+      "auth-update-form": {
+        "title": "auth-update-form"
       },
       "auth": {
         "title": "Auth"
       },
       "boilerplate": {
         "title": "Boilerplate"
+      },
+      "bridge": {
+        "title": "Auth"
+      },
+      "config": {
+        "title": "Settings"
       },
       "create-form": {
         "title": "Create Form"
@@ -32,14 +54,62 @@
       "find": {
         "title": "Find"
       },
-      "list": {
-        "title": "List"
+      "generator": {
+        "title": "generator"
       },
-      "schema": {
-        "title": "Schema"
+      "includes/after": {
+        "title": "includes/after"
+      },
+      "includes/fields": {
+        "title": "includes/fields"
+      },
+      "includes/first": {
+        "title": "includes/first"
+      },
+      "includes/links/auto-form": {
+        "title": "includes/links/auto-form"
+      },
+      "includes/links/mutation-props": {
+        "title": "includes/links/mutation-props"
+      },
+      "includes/links/mutation-render-prop-function": {
+        "title": "includes/links/mutation-render-prop-function"
+      },
+      "includes/omitFields": {
+        "title": "includes/omitFields"
+      },
+      "includes/omitFieldsRegEx": {
+        "title": "includes/omitFieldsRegEx"
+      },
+      "includes/schema": {
+        "title": "includes/schema"
+      },
+      "includes/skip": {
+        "title": "includes/skip"
+      },
+      "includes/where": {
+        "title": "includes/where"
+      },
+      "list-virtualized": {
+        "title": "List Virtualized"
+      },
+      "list": {
+        "title": "List-Virtualized"
+      },
+      "schema-constructor": {
+        "title": "Schema - Constructor",
+        "sidebar_label": "Constructor"
+      },
+      "schema-methods": {
+        "title": "Schema - Methods",
+        "sidebar_label": "Methods"
+      },
+      "schema-static-methods": {
+        "title": "Schema - Static Methods",
+        "sidebar_label": "Static Methods"
       },
       "table-constructor": {
-        "title": "Table Constructor",
+        "title": "Schema - Constructor",
         "sidebar_label": "Constructor"
       },
       "table-form": {
@@ -71,10 +141,10 @@
     },
     "categories": {
       "Quick start": "Quick start",
-      "Table": "Table",
+      "Schema": "Schema",
       "Operations": "Operations",
       "UI components": "UI components",
-      "Auth": "Auth"
+      "Server side": "Server side"
     }
   },
   "pages-strings": {

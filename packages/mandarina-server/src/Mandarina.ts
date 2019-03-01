@@ -3,8 +3,11 @@ import {CustomAction} from "./Action/CustomAction";
 
 
 export default class Mandarina {
+    static startup() {
+
+    }
+
     static config: MandarinaConfigDefault = {
-        prismaDir: '/prisma',
         getUser: ({user}) => user,
 
     }
@@ -21,10 +24,6 @@ export default class Mandarina {
             const table = Table.getInstance(tableName)
             Query = {...Query, ...table.getDefaultActions('query')}
         }
-        for (const actionName in CustomAction.instances) {
-            const action = CustomAction.getInstance(actionName)
-            Query = {...Query, ...action.getActions('query')}
-        }
         return Query
     }
 
@@ -36,7 +35,7 @@ export default class Mandarina {
         }
         for (const actionName in CustomAction.instances) {
             const action = CustomAction.getInstance(actionName)
-            Mutation = {...Mutation, ...action.getActions('mutation')}
+            Mutation = {...Mutation, ...action.getActions()}
         }
         return Mutation
     }
@@ -49,7 +48,6 @@ export interface MandarinaConfigOptions {
 }
 
 export interface MandarinaConfigDefault extends MandarinaConfigOptions {
-    prismaDir: string
     getUser: getUser
 }
 

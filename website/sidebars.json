@@ -4,16 +4,16 @@
       "boilerplate",
       "your-first-crud"
     ],
-    "Table": [
+    "Schema": [
       {
         "type": "subcategory",
-        "label": "Table",
+        "label": "Schema",
         "ids": [
-          "table-constructor",
-          "table-static-methods"
+          "schema-constructor",
+          "schema-methods",
+          "schema-static-methods"
         ]
       },
-      "schema",
       "validator-creator",
       "validators"
     ],
@@ -25,12 +25,30 @@
     ],
     "UI components": [
       "list",
+      "list-virtualized",
       "create-form",
       "update-form",
-      "delete-form"
+      "delete-form",
+      "action-form",
+      "auth",
+      "auth-create-form",
+      "auth-update-form",
+      "auth-delete-form",
+      {
+        "type": "subcategory",
+        "label": "Uniform",
+        "ids": [
+          "bridge"
+        ]
+      }
     ],
-    "Auth": [
-      "auth"
+
+    "Server side":  [
+      "config",
+      "generator",
+      "auth-server",
+      "table",
+      "action"
     ]
   }
 }

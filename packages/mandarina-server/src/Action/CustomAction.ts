@@ -3,15 +3,8 @@ import {TableInstanceNotFound} from "../Errors/TableInstanceNotFound";
 import {UniqueActionError} from "../Errors/UniqueActionError";
 
 import {Permission} from "mandarina/build/Schema/Schema";
-import {Hook, operationType} from '../Table/Table'
 
-/**
- *
- * A Table instance is the representation of the one of several of the followings:
- * Physic table in the data base
- * Form
- * List of results
- */
+
 
 export class CustomAction {
     // An object with all table instances created
@@ -21,7 +14,6 @@ export class CustomAction {
     public name: string;
     public options: ActionOptions
     public actions: ActionInterface
-    public permission: string[];
 
 
     /**
@@ -42,7 +34,6 @@ export class CustomAction {
         if (CustomAction.instances[this.name]) {
             throw new UniqueActionError(this.name);
         }
-        this.permission = actionOptions.permission || ['everyone']
         this.actions = actionOptions.actions
         CustomAction.instances[this.name] = this;
     }
@@ -61,12 +52,11 @@ export class CustomAction {
     }
 
 
-    getActions(type: operationType) {
+    getActions() {
         const actions = this.actions || {};
         let result = {};
 
         Object.keys(actions).forEach((action) => {
-            if (actions[action].type === type) {
                 result[action] = async (_: any, args: any, context: any, info: any): Promise<any> => {
                     //todo: check permissions
                     console.log('*****************************************************')
@@ -97,7 +87,6 @@ export class CustomAction {
                     // return result
                 }
                 ;
-            }
         });
 
         return result;
@@ -106,11 +95,7 @@ export class CustomAction {
 
 export interface ActionOptions {
     actions: ActionInterface
-    permission?: Permission
-    onBefore?: Hook
-    onAfter?: Hook
     errorFromServerMapper?: ErrorFromServerMapper
-
 }
 
 
@@ -121,7 +106,6 @@ export interface ActionInterface {
         fields?: string[] | {
             [field: string]: Permission
         }
-        type: operationType
         result: string
     }
 }

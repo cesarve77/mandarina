@@ -19,7 +19,6 @@ export interface ListProps {
     pageSize?: number
     first?: number
     where?: any
-
 }
 
 export interface FieldDefinitions {
@@ -165,7 +164,7 @@ export class List extends React.Component<ListProps, { columns: ColumnProps<any>
             this.fetchMore()
         }
     }
-    buildFetchMore = (fetchMore: (fetchMoreOptions: any) => Promise<any>, endCursor: string) => {//FetchMoreQueryOptions<{ variables: { offset: any } }, any>) => void, data: any[]) => {
+    buildFetchMore = (fetchMore: (fetchMoreOptions: any) => Promise<any>, endCursor?: string) => {//FetchMoreQueryOptions<{ variables: { offset: any } }, any>) => void, data: any[]) => {
         const name = this.props.schema.names.query.connection
         this.fetchMore = () => {
             this.refetching = true
@@ -243,7 +242,7 @@ export class List extends React.Component<ListProps, { columns: ColumnProps<any>
                         this.refetch = refetch
                         this.variables = variables
                         this.buildFetchMore(fetchMore, pageInfo && pageInfo.endCursor)
-                        this.hasNextPage = pageInfo && pageInfo.hasNextPage
+                        this.hasNextPage = !!(pageInfo && pageInfo.hasNextPage)
                         const dataSource: any[] = loading && this.hasNextPage ? [...data as any[], ...new Array(first).fill({})] : data as any[]
                         if (!loading) this.firstLoad = false
                         //this.lastHeight = this.me && this.me.current && this.me.current.offsetHeight || 0// && this.me.current && this.me.current.clientHeight || document.body.clientHeight + scrollTop + 200

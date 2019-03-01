@@ -1,0 +1,1 @@
+[uniform autoform](https://github.com/vazco/uniforms/blob/master/API.md#autoform)

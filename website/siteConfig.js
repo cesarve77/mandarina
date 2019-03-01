@@ -21,8 +21,10 @@ const users = [
         pinned: true,
     },
 ];
+const markdownInclude = require('./include')
 
 const siteConfig = {
+    docsSideNavCollapsible:true,
     title: 'Mandarina', // Title for your website.
     tagline: 'Full-stack react+apollo+graphql+prisma.io library',
     url: 'https://cesarve77.github.io', // Your website URL
@@ -48,8 +50,8 @@ const siteConfig = {
     users,
 
     /* path to images for header/footer */
-    headerIcon: 'img/docusaurus.svg',
-    footerIcon: 'img/docusaurus.svg',
+    headerIcon: 'img/mandarina_logo.png',
+    footerIcon: 'img/mandarina_logo.png',
     favicon: 'img/favicon.png',
 
     /* Colors for website */
@@ -74,7 +76,7 @@ const siteConfig = {
 
     // This copyright info is used in /core/Footer.js and blog RSS/Atom feeds.
     copyright: `Copyright © ${new Date().getFullYear()} Cesar Ramos`,
-    usePrism: ['jsx','typescript','javascript'],
+    usePrism: ['jsx', 'typescript', 'javascript'],
     highlight: {
         // Highlight.js theme to use for syntax highlighting in code blocks.
         theme: 'dracula',
@@ -90,8 +92,8 @@ const siteConfig = {
     cleanUrl: true,
 
     // Open Graph and Twitter card images.
-    ogImage: 'img/docusaurus.png',
-    twitterImage: 'img/docusaurus.png',
+    ogImage: 'img/mandarina_logo.png',
+    twitterImage: 'img/mandarina_logo.png',
 
     // Show documentation's last contributor's name.
     // enableUpdateBy: true,
@@ -102,6 +104,9 @@ const siteConfig = {
     // You may provide arbitrary config keys to be used as needed by your
     // template. For example, if you need your repo's URL...
     //   repoUrl: 'https://github.com/facebook/test-site',
+    markdownPlugins: [function (md) {
+        md.use(markdownInclude,'../docs/includes')
+    }]
 };
 
 module.exports = siteConfig;

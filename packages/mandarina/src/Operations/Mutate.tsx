@@ -1,61 +1,54 @@
 import React, {PureComponent} from "react"
 import {Schema} from '..'
 import gql from "graphql-tag";
-import {Mutation, MutationFn, withApollo, WithApolloClient} from "react-apollo";
+import {
+    Mutation,
+    MutationFn,
+    MutationProps, MutationResult,
+    withApollo,
+    WithApolloClient
+} from "react-apollo";
 import {buildQueryFromFields} from "./utils";
 import {FindOne} from './Find'
 import {Native} from "../Schema/Schema";
 import {MutationBaseOptions} from "apollo-client/core/watchQueryOptions";
 import {FetchResult} from "react-apollo/Mutation";
-import {ApolloError, OperationVariables} from "apollo-client";
+import { OperationVariables} from "apollo-client";
 import {DocumentNode} from "graphql";
-import {DataProxy} from "apollo-cache";
-import ApolloClient from "apollo-client/ApolloClient";
 import {filterFields} from "../utils";
-
-type TVariables = any
-type TData = any
 
 const deepClone = (obj: any): any => JSON.parse(JSON.stringify(obj))
 
+export type MutateResultProps=Pick<MutationProps, 'client'|'ignoreResults'|'variables'|'optimisticResponse'|'refetchQueries'|'awaitRefetchQueries'|'update'|'onCompleted'|'onError'|'context'|'fetchPolicy'>
 
-export interface MutateProps {
+export interface MutateProps extends MutateResultProps{
     children: MutateChildren
     schema: Schema
     fields?: string[]
     omitFields?: string[]
     omitFieldsRegEx?: RegExp
     where?: object
-    variables?: { [key: string]: any }
-    update?: (cache: DataProxy, mutationResult: FetchResult) => void
-    ignoreResults?: boolean
-    optimisticResponse?: TData
-    refetchQueries?: (mutationResult: FetchResult) => Array<{ query: DocumentNode, variables?: TVariables } | string>
-    awaitRefetchQueries?: boolean
-    onCompleted?: (data: TData) => void
-    onError?: (error: ApolloError) => void
-    context?: Record<string, any>
+    loading?: boolean
+    doc?: Object
 
-    [rest: string]: any
+
 }
 
-export interface UpdateProps extends MutateProps {
+type BasicMutateProps=Exclude<MutateProps,'loading'| 'doc'>
+
+export interface UpdateProps extends BasicMutateProps{
     id: string
+
 }
 
 
-export interface CreateProps extends MutateProps {
+export interface CreateProps extends  BasicMutateProps {
 }
 
-export interface FormChildrenParams {
+export interface FormChildrenParams extends MutationResult{
     schema: Schema,
-    data: TData
-    loading: boolean
-    error?: ApolloError
-    called?: boolean
-    client?: ApolloClient<any>
+    doc?: Object
 
-    [rest: string]: any
 }
 
 export interface MutateChildrenParams extends FormChildrenParams {

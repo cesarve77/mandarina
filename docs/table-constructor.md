@@ -1,6 +1,8 @@
 ---
-title: Schema
+title: Schema - Constructor
+sidebar_label: Constructor
 ---
+
 
 Schema is the base of all components in Mandarina
 
@@ -35,7 +37,7 @@ interface UserSchemaShape {
 ```
 
 
-*description*: SchemaShape is a object where each property is a [field name](#fieldName) and the value is its fieldDefinition (#fieldDefinition)
+*description*: SchemaShapeStrict is a object where each property is a [field name](#fieldName) and the value is its fieldDefinition (#fieldDefinition)
 
 ```typescript jsx
 const schema={'fieldName': fieldDefinition}

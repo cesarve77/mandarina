@@ -2,7 +2,8 @@
   "dependencies": {
     "@types/aws-lambda": "^8.10.18",
     "@types/lodash.get": "^4.4.4",
-    "docusaurus": "^1.5.1"
+    "docusaurus": "^1.5.1",
+    "markdown-it-include": "^1.1.0"
   },
   "scripts": {
     "start": "cd website && yarn start",

@@ -1,60 +1,45 @@
 import React, {PureComponent} from 'react'
 import {Schema} from '..'
 import gql from "graphql-tag";
-import {Query} from "react-apollo";
+import {Query, QueryProps, QueryResult} from "react-apollo";
 import {buildQueryFromFields} from "./utils";
 import pull from 'lodash.pull'
-import {ApolloError, ErrorPolicy, FetchPolicy, NetworkStatus} from "apollo-client";
-import {DocumentNode} from "graphql";
-import ApolloClient from "apollo-client/ApolloClient";
 import {filterFields} from "../utils";
 
-type TVariables = { [key: string]: any }
-type TData = any
+export type FindQueryResult = Pick<QueryResult ,'data' | 'loading' | 'error' | 'variables' | 'networkStatus' | 'refetch' | 'fetchMore' | 'startPolling' | 'stopPolling' | 'subscribeToMore' | 'updateQuery' | 'client' >
 
-export interface FindChildrenParams {
+export interface FindChildrenParams extends FindQueryResult{
     schema: Schema
-    data: any | any[]
-    fields?: string[]
-    loading: boolean
-    error?: ApolloError
-    variables: TVariables
-    networkStatus: NetworkStatus
-    refetch: (variables?: TVariables) => Promise<any>
-    fetchMore: (args: { query?: DocumentNode, variables?: TVariables, updateQuery: Function }) => Promise<any>
-    startPolling: (interval: number) => void
-    stopPolling: () => void
-    subscribeToMore: (options: { document: DocumentNode, variables?: TVariables, updateQuery?: Function, onError?: Function }) => () => void
-    updateQuery: (previousResult: TData, options: { variables: TVariables }) => TData
-    client: ApolloClient<any>
+    fields: string[]
+    query: Query
+    count: number
+    pageInfo?: {
+        hasNextPage: boolean
+        hasPreviousPage: boolean
+        endCursor: string
+        startCursor: string
+    }
 
-    [rest: string]: any
 }
 
 export interface FindChildren {
-    (findChildrenParams: FindChildrenParams):  React.ReactNode
+    (findChildrenParams: FindChildrenParams): React.ReactNode
 }
 
-export interface FindProps {
+export type FindQueryProps = Pick<QueryProps ,'pollInterval' | 'notifyOnNetworkStatusChange' | 'fetchPolicy' | 'errorPolicy' | 'ssr' | 'displayName' | 'onCompleted' | 'onError'|'context'|'partialRefetch'>
+
+
+export interface FindProps extends FindQueryProps{
     children?: FindChildren
     schema: Schema
     fields?: string[]
     omitFields?: string[]
     omitFieldsRegEx?: RegExp
+    skip?: number
+
     where?: object
     after?: string
     first?: number
-    pollInterval?: number
-    notifyOnNetworkStatusChange?: boolean
-    fetchPolicy?: FetchPolicy
-    errorPolicy?: ErrorPolicy
-    ssr?: boolean
-    displayName?: string
-    skip?: number
-    onCompleted?: (data: any | {}) => void
-    onError?: (error: ApolloError) => void
-    context?: Record<string, any>
-    partialRefetch?: boolean
     //todo: crear un parametro para hacer el refrescamiento de los quieres **1
 }
 
@@ -87,7 +72,7 @@ export class FindBase extends PureComponent<FindProps & FindBaseProps, FindBaseS
     render() {
 
         const {
-            fields: optionalFields , schema, after, first, type, where, skip,
+            fields: optionalFields, schema, after, first, type, where, skip,
             omitFields,
             omitFieldsRegEx,
             children,
@@ -103,7 +88,7 @@ export class FindBase extends PureComponent<FindProps & FindBaseProps, FindBaseS
             partialRefetch,
             ...props
         } = this.props;
-        let fields = filterFields( schema.getFields(),optionalFields , omitFields,omitFieldsRegEx)
+        let fields = filterFields(schema.getFields(), optionalFields, omitFields, omitFieldsRegEx)
 
         const {names} = schema
         const defaultQuery = this.buildQueryFromFields(fields)

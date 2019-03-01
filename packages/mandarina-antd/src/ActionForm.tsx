@@ -13,14 +13,7 @@ import {ChildFunc} from "./Forms";
 import {filterFields} from "mandarina/build/utils";
 import {Model} from "mandarina/build/Schema/Schema";
 
-export interface ActionFormProps {
-    schema: Schema
-    actionName: string,
-    result: string,
-    fields?: string[]
-    omitFields?: string[]
-    children?: React.ReactNode | ((props: any) => React.ReactNode | React.ReactNode[])
-    omitFieldsRegEx?: RegExp
+export interface AutoForm{
     showInlineError: boolean
     autosaveDelay: number
     autosave: boolean
@@ -29,11 +22,23 @@ export interface ActionFormProps {
     label: boolean
     model: object
     modelTransform: (mode: 'form' | 'submit' | 'validate', model: object) => boolean
+    onChangeModel: (model: Model) => void
     onChange: (key: string, value: any) => void
     onSubmitFailure: () => void
     onSubmitSuccess: () => void
     onSubmit: (model: Model) => Promise<void>
     placeholder: boolean
+}
+
+export interface ActionFormProps extends AutoForm{
+    schema: Schema
+    actionName: string,
+    result: string,
+    fields?: string[]
+    omitFields?: string[]
+    children?: React.ReactNode | ((props: any) => React.ReactNode | React.ReactNode[])
+    omitFieldsRegEx?: RegExp
+
     [key: string]: any //replace for uniforms autoform props
 }
 
