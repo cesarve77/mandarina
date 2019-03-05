@@ -64,6 +64,7 @@ export interface ConfigDirInterface {
     schemas: string[]
     tables?: string[]
     actions?: string[]
+    generated: string
     prisma: string
 }
 

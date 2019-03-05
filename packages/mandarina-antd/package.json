@@ -1,6 +1,6 @@
 {
   "name": "mandarina-antd",
-  "version": "0.4.10",
+  "version": "0.4.12",
   "description": "Antd styling for mandarina",
   "main": "build/index.js",
   "types": "build/index.d.ts",
@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "uniforms-antd": "^1.31.0",
-    "antd": "^3.14.1",
+    "antd": "^3.14.0",
     "@types/lodash.isempty": "^4.4.6",
     "@types/lodash.get": "^4.4.6",
     "@types/lodash.set": "^4.3.6",

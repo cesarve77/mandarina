@@ -577,6 +577,7 @@ export interface UserFieldDefinition {
         component?: React.Component
         placeholder?: string
         col?: false | number | any
+        [restFormProps: string]: any
     }
     list?: {
         hidden?: true
