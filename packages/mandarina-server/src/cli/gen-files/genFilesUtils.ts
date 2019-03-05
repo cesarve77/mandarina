@@ -1,6 +1,6 @@
 import {Schema} from "mandarina";
 import {capitalize, isRequired} from "mandarina/build/Schema/utils";
-import {CustomAction, Table} from "mandarina-server";
+import {CustomAction, Table} from "../../";
 import path from "path";
 import fs from "fs";
 import {getParents} from "mandarina/build/utils";
@@ -239,7 +239,7 @@ export const getGraphQLOperation = (action: CustomAction, schema: Schema) => {
     if (actions) {
         Object.keys(actions).forEach((actionName: string) => {
             const action = actions[actionName];
-            response += `extend type ${capitalize(action.type)} {\n\t${actionName} ${input}: ${action.result}\n}`;
+            response += `extend type Mutation {\n\t${actionName} ${input}: ${action.result}\n}`;
         })
     }
     return response;

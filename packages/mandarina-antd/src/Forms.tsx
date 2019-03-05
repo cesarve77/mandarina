@@ -10,32 +10,45 @@ import {filterFields} from "mandarina/build/utils";
 const ErrorsField: any = require("./uniforms/ErrorsField").default
 const AutoFields: any = require("./uniforms/AutoFields").default
 const AutoField: any = require("./uniforms/AutoField").default
+export type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>
 
-export const CreateForm = React.forwardRef<HTMLFormElement, FormProps>((props: FormProps, ref) => <Form
-    Component={Create} {...props} innerRef={ref}/>)
-export const UpdateForm = React.forwardRef<HTMLFormElement, FormProps>((props: FormProps, ref) => <Form
-    Component={Update} {...props} innerRef={ref}/>)
+type Component = (props: CreateProps | UpdateProps) => JSX.Element
 
-export interface AutoFormProps{
-    showInlineError: boolean
-    autosaveDelay: number
-    autosave: boolean
-    disabled: boolean
-    error: Error
-    label: boolean
-    model: object
-    modelTransform: (mode: 'form' | 'submit' | 'validate', model: object) => boolean
-    onChange: (key: string, value: any) => void
-    onSubmitFailure: () => void
-    onSubmitSuccess: () => void
-    onSubmit: (model: object) => Promise<void>
-    placeholder: boolean
-    innerRef: React.Ref<HTMLFormElement>
+type FormPropsOmitComponent=Omit<FormProps,'Component'>
+
+export interface CreateFormProps extends  FormPropsOmitComponent{
 }
-export interface FormProps<TData = any, TVariables = OperationVariables> extends MutateResultProps ,AutoFormProps{
-    Component: (props: CreateProps | UpdateProps) => JSX.Element
-    schema: Schema
+
+export interface UpdateFormProps extends FormPropsOmitComponent {
     id: string
+}
+
+export const CreateForm = React.forwardRef<HTMLFormElement, CreateFormProps>((props: CreateFormProps, ref) =>
+    <Form Component={Create} {...props} innerRef={ref}/>)
+export const UpdateForm = React.forwardRef<HTMLFormElement, UpdateFormProps>((props: UpdateFormProps, ref) =>
+    <Form Component={Update} {...props} innerRef={ref}/>)
+
+export interface AutoFormProps {
+    showInlineError?: boolean
+    autosaveDelay?: number
+    autosave?: boolean
+    disabled?: boolean
+    error?: Error
+    label?: boolean
+    model?: object
+    modelTransform?: (mode: 'form' | 'submit' | 'validate', model: object) => boolean
+    onChange?: (key: string, value: any) => void
+    onSubmitFailure?: () => void
+    onSubmitSuccess?: () => void
+    onSubmit?: (model: object) => Promise<void>
+    placeholder?: boolean
+    innerRef?: React.Ref<HTMLFormElement>
+}
+
+ interface FormProps<TData = any, TVariables = OperationVariables> extends MutateResultProps, AutoFormProps {
+    Component: Component
+    schema: Schema
+    id?: string
     fields?: string[]
     omitFields?: string[]
     omitFieldsRegEx?: RegExp

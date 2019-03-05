@@ -1,10 +1,12 @@
 import {Table, Context} from "./Table/Table";
 import {CustomAction} from "./Action/CustomAction";
+import {getConfig, loadSchemas} from "./cli/utils";
 
 
 export default class Mandarina {
-    static startup() {
-
+    static load() {
+        const config=getConfig()
+        loadSchemas(config.dir)
     }
 
     static config: MandarinaConfigDefault = {
@@ -41,14 +43,14 @@ export default class Mandarina {
     }
 }
 
-type getUser = (context: Context) => Promise<UserType | null | undefined> | UserType | null | undefined
+type GetUser = (context: Context) => Promise<UserType | null | undefined> | UserType | null | undefined
 
 export interface MandarinaConfigOptions {
-    getUser?: getUser
+    getUser?: GetUser
 }
 
 export interface MandarinaConfigDefault extends MandarinaConfigOptions {
-    getUser: getUser
+    getUser: GetUser
 }
 
 export type UserType = {

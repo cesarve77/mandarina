@@ -1,6 +1,6 @@
 {
   "name": "mandarina",
-  "version": "0.4.9",
+  "version": "0.4.10",
   "description": "",
   "main": "build/index.js",
   "types": "build/index.d.ts",
@@ -12,9 +12,9 @@
   },
   "dependencies": {
     "@types/inflection": "^1.5.28",
-    "@types/lodash.get": "^4.4.5",
-    "@types/lodash.mapvalues": "^4.6.5",
-    "@types/lodash.pull": "^4.1.5",
+    "@types/lodash.get": "^4.4.6",
+    "@types/lodash.mapvalues": "^4.6.6",
+    "@types/lodash.pull": "^4.1.6",
     "flat": "^4.1.0",
     "inflection": "^1.12.0",
     "lodash.get": "^4.4.2",

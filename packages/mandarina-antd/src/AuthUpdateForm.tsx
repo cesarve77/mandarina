@@ -1,9 +1,9 @@
 import React from "react"
 import {AuthTable} from 'mandarina'
-import {FormProps, UpdateForm} from "./Forms";
+import {UpdateFormProps, UpdateForm} from "./Forms";
 import {Spin} from "antd";
 
-interface AuthUpdateFormStateProps extends FormProps{
+interface AuthUpdateFormStateProps extends UpdateFormProps{
     denied?: JSX.Element
 }
 

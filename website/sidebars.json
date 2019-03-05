@@ -44,7 +44,7 @@
     ],
 
     "Server side":  [
-      "config",
+      "mandarina",
       "generator",
       "auth-server",
       "table",

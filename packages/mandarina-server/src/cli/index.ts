@@ -24,7 +24,7 @@ switch (cmd) {
     case undefined:
         console.log(`You need to pass a command at first argument`)
         break
-    default:""
+    default:
         console.log(`command ${cmd} not found, available commands: "create","gen-files","deploy","watch`)
 }
 

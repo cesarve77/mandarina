@@ -5,11 +5,11 @@ sidebar_label: Constructor
 
 Schema is the base of all components in Mandarina
 
-Form schemas mandarina is able to create:
+From schemas mandarina is able to create:
 
-- Tables
-- Form
-- Lists
+- Data base Tables
+- UI Forms (create, update, delete)
+- UI Lists
 
 Schemas are rigid and dynamic, maybe it is the biggest limitation of mandarina, you are no able to build a schema on the fly or programmatically. 
 

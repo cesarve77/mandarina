@@ -36,9 +36,6 @@
       "bridge": {
         "title": "Auth"
       },
-      "config": {
-        "title": "Settings"
-      },
       "create-form": {
         "title": "Create Form"
       },
@@ -57,8 +54,20 @@
       "generator": {
         "title": "generator"
       },
+      "id": {
+        "title": "id"
+      },
       "includes/after": {
         "title": "includes/after"
+      },
+      "includes/autosave": {
+        "title": "includes/autosave"
+      },
+      "includes/autosaveDelay": {
+        "title": "includes/autosaveDelay"
+      },
+      "includes/disabled": {
+        "title": "includes/disabled"
       },
       "includes/fields": {
         "title": "includes/fields"
@@ -75,14 +84,41 @@
       "includes/links/mutation-render-prop-function": {
         "title": "includes/links/mutation-render-prop-function"
       },
+      "includes/model": {
+        "title": "includes/model"
+      },
+      "includes/modelTransform": {
+        "title": "includes/modelTransform"
+      },
       "includes/omitFields": {
         "title": "includes/omitFields"
       },
       "includes/omitFieldsRegEx": {
         "title": "includes/omitFieldsRegEx"
       },
+      "includes/onChange": {
+        "title": "includes/onChange"
+      },
+      "includes/onSubmit": {
+        "title": "includes/onSubmit"
+      },
+      "includes/onSubmitFailure": {
+        "title": "includes/onSubmitFailure"
+      },
+      "includes/onSubmitSuccess": {
+        "title": "includes/onSubmitSuccess"
+      },
+      "includes/placeholder": {
+        "title": "includes/placeholder"
+      },
+      "includes/ref": {
+        "title": "includes/ref"
+      },
       "includes/schema": {
         "title": "includes/schema"
+      },
+      "includes/showInlineError": {
+        "title": "includes/showInlineError"
       },
       "includes/skip": {
         "title": "includes/skip"
@@ -94,7 +130,10 @@
         "title": "List Virtualized"
       },
       "list": {
-        "title": "List-Virtualized"
+        "title": "List"
+      },
+      "mandarina": {
+        "title": "Mandarina"
       },
       "schema-constructor": {
         "title": "Schema - Constructor",
@@ -108,6 +147,9 @@
         "title": "Schema - Static Methods",
         "sidebar_label": "Static Methods"
       },
+      "settings": {
+        "title": "settings"
+      },
       "table-constructor": {
         "title": "Schema - Constructor",
         "sidebar_label": "Constructor"
@@ -120,7 +162,7 @@
         "sidebar_label": "Static methods"
       },
       "update-form": {
-        "title": "Update Form"
+        "title": "Create Form"
       },
       "update": {
         "title": "Update"

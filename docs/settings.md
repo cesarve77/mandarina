@@ -1,8 +1,8 @@
----
-title: Settings
----
 
-The easiest way to start with mandarina
+
+
+*e.g.*:
+```json
 {
   "dir": {
     "schemas": [
@@ -23,3 +23,4 @@ The easiest way to start with mandarina
   },
   "secret": "my-super-secret-string"
 }
+```

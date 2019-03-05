@@ -18,7 +18,6 @@ import {DocumentNode} from "graphql";
 import {filterFields} from "../utils";
 
 const deepClone = (obj: any): any => JSON.parse(JSON.stringify(obj))
-
 export type MutateResultProps=Pick<MutationProps, 'client'|'ignoreResults'|'variables'|'optimisticResponse'|'refetchQueries'|'awaitRefetchQueries'|'update'|'onCompleted'|'onError'|'context'|'fetchPolicy'>
 
 export interface MutateProps extends MutateResultProps{
@@ -27,7 +26,7 @@ export interface MutateProps extends MutateResultProps{
     fields?: string[]
     omitFields?: string[]
     omitFieldsRegEx?: RegExp
-    where?: object
+    where?: any
     loading?: boolean
     doc?: Object
 
@@ -252,7 +251,8 @@ class Mutate extends PureComponent<WithApolloClient<MutateProps & { type: 'creat
             onCompleted,
             onError,
             context,
-            ...props
+            client,
+            fetchPolicy,
         } = this.props;
         let fields = filterFields(schema.getFields(), optionalFields, omitFields, omitFieldsRegEx)
         this.filteredFields = fields
@@ -279,6 +279,8 @@ class Mutate extends PureComponent<WithApolloClient<MutateProps & { type: 'creat
                 onCompleted={onCompleted}
                 onError={onError}
                 context={context}
+                client={client}
+                fetchPolicy={fetchPolicy}
             >
                 {(mutationFn: MutationFn, {
                     loading,
@@ -295,7 +297,6 @@ class Mutate extends PureComponent<WithApolloClient<MutateProps & { type: 'creat
                     error,
                     called,
                     client,
-                    ...props
                 })}
             </Mutation>
         )

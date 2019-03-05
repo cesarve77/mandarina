@@ -1,6 +1,7 @@
 import {Schema} from "mandarina";
 import {FieldDefinition, Native} from "mandarina/build/Schema/Schema";
 import {Validator} from "mandarina/build/Schema/ValidatorCreator";
+import * as React from "react";
 
 export interface ErrorInterface {
     [field: string]: string
@@ -9,8 +10,8 @@ export interface ErrorInterface {
 export interface FieldProps {
     label: string
     allowedValues?: any[] | undefined
-    transform: (value: any) => any
-    component: JSX.ElementClass
+    transform?: (allowedValues: string[]) => string[]
+    component?: React.Component;
     required: boolean
     placeholder?: string
     minCount?: number

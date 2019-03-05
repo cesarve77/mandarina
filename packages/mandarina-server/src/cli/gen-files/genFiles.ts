@@ -11,7 +11,7 @@ import {
     savePrismaYaml,
     saveDockerComposeYaml
 } from "./genFilesUtils";
-import {CustomAction} from "mandarina-server";
+import {CustomAction} from "../../Action/CustomAction";
 
 
 export const genFile = () => {
