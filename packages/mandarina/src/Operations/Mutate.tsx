@@ -1,26 +1,22 @@
 import React, {PureComponent} from "react"
 import {Schema} from '..'
 import gql from "graphql-tag";
-import {
-    Mutation,
-    MutationFn,
-    MutationProps, MutationResult,
-    withApollo,
-    WithApolloClient
-} from "react-apollo";
+import {Mutation, MutationFn, MutationProps, MutationResult, withApollo, WithApolloClient} from "react-apollo";
 import {buildQueryFromFields} from "./utils";
 import {FindOne} from './Find'
 import {Native} from "../Schema/Schema";
 import {MutationBaseOptions} from "apollo-client/core/watchQueryOptions";
 import {FetchResult} from "react-apollo/Mutation";
-import { OperationVariables} from "apollo-client";
+import {OperationVariables} from "apollo-client";
 import {DocumentNode} from "graphql";
 import {filterFields} from "../utils";
 
 const deepClone = (obj: any): any => JSON.parse(JSON.stringify(obj))
-export type MutateResultProps=Pick<MutationProps, 'client'|'ignoreResults'|'variables'|'optimisticResponse'|'refetchQueries'|'awaitRefetchQueries'|'update'|'onCompleted'|'onError'|'context'|'fetchPolicy'>
+export type MutateResultProps =
+    { refetchQueriesNames?: string[] }
+    & Pick<MutationProps, 'client' | 'ignoreResults' | 'variables' | 'optimisticResponse' | 'refetchQueries' | 'awaitRefetchQueries' | 'update' | 'onCompleted' | 'onError' | 'context' | 'fetchPolicy'>
 
-export interface MutateProps extends MutateResultProps{
+export interface MutateProps extends MutateResultProps {
     children: MutateChildren
     schema: Schema
     fields?: string[]
@@ -33,18 +29,18 @@ export interface MutateProps extends MutateResultProps{
 
 }
 
-type BasicMutateProps=Exclude<MutateProps,'loading'| 'doc'>
+type BasicMutateProps = Exclude<MutateProps, 'loading' | 'doc'>
 
-export interface UpdateProps extends BasicMutateProps{
+export interface UpdateProps extends BasicMutateProps {
     id: string
 
 }
 
 
-export interface CreateProps extends  BasicMutateProps {
+export interface CreateProps extends BasicMutateProps {
 }
 
-export interface FormChildrenParams extends MutationResult{
+export interface FormChildrenParams extends MutationResult {
     schema: Schema,
     doc?: Object
 
@@ -124,37 +120,39 @@ class Mutate extends PureComponent<WithApolloClient<MutateProps & { type: 'creat
     }
 
     getSubSchemaMutations(model: Model, schema: Schema) {
+        console.log('original model', model)
         const clone = deepClone(model)
 
         delete clone.id
         const wrapper: Wrapper = (result, type): object => {
             if (type instanceof Schema) {
                 //todo check next statement id is always there?
-                if (Array.isArray(result) && result[0] && result[0].id !== undefined) {
-                    const clone = [...result]
-                    for (const i in clone) {
-                        clone[i] && delete clone[i].id
+                if (Array.isArray(result)) {
+                    if (result.every(item => item && item.id !== undefined && Object.keys(result[0]).length === 1)) {
+                        return {connect: result}
+                    } else if (result.every(item => item && item.id)) {
+                        return {update: result}
+                    } else {
+                        return {create: result}
                     }
-                    if (this.props.type === 'create') return {create: clone}
-                    if (this.props.type === 'update') return {connect: clone}
                 } else {
-                    let clone = result
-                    if (clone.id !== undefined) {
-                        clone = {...clone}
-                        delete clone.id
+                    if (result && result.id !== undefined && Object.keys(result).length === 1) {
+                        return {connect: result}
+                    } else if (result && result.id) {
+                        return {update: result}
+                    } else {
+                        return {create: result}
                     }
-                    if (this.props.type === 'create') return {create: clone}
-                    if (this.props.type === 'update') return {create: clone}
                 }
 
             } else {
                 return {set: result}
 
             }
-
             return result
         }
         const initiator = () => ({})
+        console.log('result model', this.spider(clone, schema, wrapper, initiator))
         return this.spider(clone, schema, wrapper, initiator)
     }
 
@@ -197,12 +195,17 @@ class Mutate extends PureComponent<WithApolloClient<MutateProps & { type: 'creat
     }
 
     refetchQueries = (mutationResult: FetchResult) => {
+        const {refetchQueriesNames = []} = this.props
         const refetchQueries: { query: DocumentNode, variables?: OperationVariables }[] = []
         const {single, plural, connection} = this.props.schema.names.query
+        console.log('refetchQueriesNames',refetchQueriesNames)
         // @ts-ignore
         this.props.client.cache.watches.forEach(({query, variables}) => {
+            console.log('refetchQueries', query, variables)
             const queryName = query.definitions[0].selectionSet.selections[0].name.value
-            if (queryName === single || queryName === plural || queryName === connection) {
+            console.log('queryName', queryName)
+            console.log('single', single, plural, connection)
+            if (queryName === single || queryName === plural || queryName === connection || refetchQueriesNames.includes(queryName)) {
                 refetchQueries.push({query, variables})
             }
         })
@@ -306,7 +309,7 @@ class Mutate extends PureComponent<WithApolloClient<MutateProps & { type: 'creat
 const MutateWithApollo = withApollo(Mutate);
 
 export const Create = ({schema, optimisticResponse, ...props}: CreateProps): JSX.Element => (
-    <MutateWithApollo type='create' schema={schema} optimisticResponse={optimisticResponse} {...props}/>
+    <MutateWithApollo type='create' schema={schema} optimisticResponse={optimisticResponse}  {...props}/>
 )
 
 

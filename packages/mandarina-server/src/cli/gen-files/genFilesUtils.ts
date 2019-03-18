@@ -175,13 +175,13 @@ export const resetDir = (dir: string) => {
     fs.readdirSync(datamodelDir).forEach((file: string) => fs.unlinkSync(path.join(datamodelDir, file)));
 }
 
-export const savePrismaYaml = (models: string[], dir: string, secret: string, endpoint: string) => {
+export const savePrismaYaml = (datamodel: string[], dir: string, secret: string, endpoint: string) => {
     const prismaDir = path.join(process.cwd(), dir)
     const prismaYaml = path.join(prismaDir, `prisma.yml`)
     saveYaml(prismaYaml, {
         endpoint,
         secret,
-        models
+        datamodel,
     })
 }
 
@@ -203,10 +203,13 @@ export const saveDockerComposeYaml = (dir: string, port: string) => {
 }
 
 const saveYaml = (file: string, data: any) => {
-    const yaml: any = require("node-yaml")
-    const originalData = yaml.readSync(file) || {};
+    const yaml: any = require("yaml")
+    const contentFile=fs.readFileSync(file,{encoding:'utf8'}).replace(/([\t ]*)PRISMA_CONFIG *: *(\||>)?\n/,'$1PRISMA_CONFIG:\n')
+    let originalData = yaml.parse(contentFile) || {};
+
     const newData = merge(originalData, data)
-    yaml.writeSync(file, newData);
+    const str=yaml.stringify(newData).replace(/([\t ]*)PRISMA_CONFIG *: *\n/,'$1PRISMA_CONFIG: |\n')
+    fs.writeFileSync(file , str);
 }
 
 export const getSubSchemas = (schema: Schema): string[] => {

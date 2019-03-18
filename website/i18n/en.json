@@ -12,23 +12,21 @@
         "title": "Action",
         "sidebar_label": "Action"
       },
-      "auth-create-form": {
-        "title": "auth-create-form"
-      },
-      "auth-delete-form": {
-        "title": "auth-delete-form"
-      },
       "auth-list": {
         "title": "auth-list"
       },
       "auth-server": {
-        "title": "auth-server"
+        "title": "Auth server",
+        "sidebar_label": "Auth server"
       },
       "auth-update-form": {
         "title": "auth-update-form"
       },
       "auth": {
         "title": "Auth"
+      },
+      "before": {
+        "title": "Before start"
       },
       "boilerplate": {
         "title": "Boilerplate"
@@ -52,7 +50,8 @@
         "title": "Find"
       },
       "generator": {
-        "title": "generator"
+        "title": "Generator",
+        "sidebar_label": "Generator"
       },
       "id": {
         "title": "id"
@@ -123,6 +122,9 @@
       "includes/skip": {
         "title": "includes/skip"
       },
+      "includes/user-post-schema-example": {
+        "title": "includes/user-post-schema-example"
+      },
       "includes/where": {
         "title": "includes/where"
       },
@@ -142,10 +144,6 @@
       "schema-methods": {
         "title": "Schema - Methods",
         "sidebar_label": "Methods"
-      },
-      "schema-static-methods": {
-        "title": "Schema - Static Methods",
-        "sidebar_label": "Static Methods"
       },
       "settings": {
         "title": "settings"

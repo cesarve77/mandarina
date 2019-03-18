@@ -10,11 +10,12 @@ import {
     VariableSizeGrid as Grid
 } from 'react-window';
 import ListFilter, {onFilterChange, Where} from "./ListFilter";
-import {CellComponent} from "mandarina/build/Schema/Schema";
+import {CellComponent, OverwriteDefinition} from "mandarina/build/Schema/Schema";
 import {filterFields} from "mandarina/build/utils";
 import {Empty} from "antd";
 import {RefetchQueriesProviderFn} from "react-apollo";
 import {DocumentNode} from "graphql";
+import merge from 'lodash.merge'
 
 
 export interface ListProps {
@@ -30,6 +31,8 @@ export interface ListProps {
     estimatedRowHeight?: number
     overscanRowsCount?: number
     overLoad?: number
+    overwrite?: OverwriteDefinition
+
 }
 
 
@@ -163,7 +166,8 @@ export class ListVirtualized extends React.Component<ListProps, { columns: Colum
         this.onResizeTimeoutId = window.setTimeout(this.resize, 200)
     }
     getColumnDefinition = (field: string): ColumnProps | undefined => {
-        const fieldDefinition = this.props.schema.getPathDefinition(field)
+        const overwrite=this.props.overwrite && this.props.overwrite[field]
+        const fieldDefinition =overwrite ? merge(this.props.schema.getPathDefinition(field),overwrite) : this.props.schema.getPathDefinition(field)
         if (fieldDefinition.list.hidden) return
         return {
             field,

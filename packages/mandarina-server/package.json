@@ -1,6 +1,6 @@
 {
   "name": "mandarina-server",
-  "version": "0.4.10",
+  "version": "0.5.1",
   "description": "Mandarina for server side",
   "main": "build/index.js",
   "types": "build/index.d.ts",
@@ -10,12 +10,13 @@
     "**/graphql": "14.1.1"
   },
   "bin": {
-    "manda-cli": "build/index.js"
+    "manda-cli": "build/cli/index.js"
   },
   "dependencies": {
     "@types/lodash.merge": "^4.6.5",
     "lodash.merge": "^4.6.1",
-    "node-yaml": "^3.1.1"
+    "yaml": "^1.4.0",
+    "@types/aws-lambda": "^8.10.23"
   },
   "peerDependencies": {
     "@types/node": "^11.9.5",

@@ -1,7 +1,8 @@
 import {Schema} from "mandarina";
-import {FieldDefinition, Native} from "mandarina/build/Schema/Schema";
+import {FieldDefinition, Native, OverwriteDefinition} from "mandarina/build/Schema/Schema";
 import {Validator} from "mandarina/build/Schema/ValidatorCreator";
 import * as React from "react";
+import merge from "lodash.merge";
 
 export interface ErrorInterface {
     [field: string]: string
@@ -20,11 +21,13 @@ export interface FieldProps {
 
 export class Bridge {
     protected schema: Schema
+    protected overwrite?: OverwriteDefinition
     protected fields: { [field: string]: FieldDefinition } = {}
     protected fieldProps: { [field: string]: FieldProps } = {}
 
-    constructor(schema: Schema) {
+    constructor(schema: Schema,overwrite?:OverwriteDefinition) {
         this.schema = schema
+        this.overwrite = overwrite
     }
 
     static check(schema: any) {
@@ -71,7 +74,7 @@ export class Bridge {
 
     // Field's definition (`field` prop).
     getField(name: string): FieldDefinition {
-        if (!this.fields[name]) this.fields[name] = this.schema.getPathDefinition(name);
+        if (!this.fields[name]) this.fields[name] = this.overwrite ? merge(this.schema.getPathDefinition(name),this.overwrite) : this.schema.getPathDefinition(name)
         if (!this.fields[name] || !this.fields[name].type) throw new Error(`No field named "${name}" in schema ${this.schema.name}`)
         return this.fields[name]
     }
@@ -113,7 +116,6 @@ export class Bridge {
             const table = field.type
             if (typeof table === 'string') {
                 const schema = Schema.getInstance(table)
-                console.log('get initial22')
                 schema.clean(item)
             }
             return item

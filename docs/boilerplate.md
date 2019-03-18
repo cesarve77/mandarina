@@ -11,6 +11,7 @@ The easiest way to start with mandarina
 * [git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
 * [node](https://nodejs.org/es/) / [yarn](https://yarnpkg.com/lang/en/docs/install)
 * [prisma](https://www.prisma.io/) (npm i -g prisma)
+* [graphql-cli](https://github.com/graphql-cli/graphql-cli) (npm i -g graphql-cli)
 
 
 ## 1) Install boilerplate 

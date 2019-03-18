@@ -27,7 +27,9 @@ export const genFile = () => {
         saveFile(config.dir.prisma, fileName, graphql, 'model',)
         models.push(`datamodel/${fileName}.model.graphql`)
     }
-    savePrismaYaml(models, config.dir.prisma, config.secret, `${config.prisma.host}:${config.prisma.port}`)
+    const database=config.prisma.database || 'default'
+    const stage=config.prisma.stage|| 'default'
+    savePrismaYaml(models, config.dir.prisma, config.secret, `${config.prisma.host}:${config.prisma.port}/${database}/${stage}`)
     saveDockerComposeYaml(config.dir.prisma,config.prisma.port)
     for (const schemaName in CustomAction.instances) {
         const fileName = schemaName.toLowerCase()

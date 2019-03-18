@@ -51,13 +51,17 @@ export interface ConfigInterface {
     prisma:{
         port:string,
         host: string,
+        database?: string,
+        stage?: string,
     }
     dir: ConfigDirInterface
     options?: {
         auth?: boolean
     }
     secret: string
-
+    customSettings: {
+        [props:string]: any
+    }
 }
 
 export interface ConfigDirInterface {

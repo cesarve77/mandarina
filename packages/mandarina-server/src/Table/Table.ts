@@ -7,7 +7,6 @@ import {Schema} from "mandarina";
 import {InvalidActionError} from 'mandarina/build/Errors/InvalidActionError';
 import {UniqueTableError} from 'mandarina/build/Errors/UniqueTableError';
 import {TableInstanceNotFound} from "mandarina/build/Errors/TableInstanceNotFound";
-import Mandarina from "../Mandarina";
 import {capitalize} from 'mandarina/build/Schema/utils';
 import {FieldsPermissionsError} from 'mandarina/build/Errors/FieldsPermissionsError';
 import {MissingIdTableError} from "mandarina/build/Errors/MissingIDTableError";
@@ -146,8 +145,8 @@ export class Table {
         operationNames.forEach((operationName: string) => {
             result[operationName] = async (_: any, args: any = {}, context: Context, info: any) => {
                 console.log('*****************************************************')
-                console.log('operationName',operationName)
-                console.log('args',args)
+                console.log('operationName', operationName)
+                console.log('args', args)
                 let time = new Date().getTime()
                 const bm = (description?: string) => {
                     if (description) {
@@ -156,19 +155,20 @@ export class Table {
                     time = new Date().getTime()
                 }
                 bm()
-                const middlewares = this.options.middlewares || [];
-                const user = await Mandarina.config.getUser(context);
+                //const user = await Mandarina.config.getUser(context);
                 const subOperationName: ActionType | string = operationName.substr(0, 6)
                 const action: ActionType = <ActionType>(['create', 'update', 'delete'].includes(subOperationName) ? subOperationName : 'read')
                 const prismaMethod = context.prisma[type][operationName];
-                //const roles = user && user.roles
-                if (middlewares.length > 0) {
-                    await Promise.all(middlewares.map((m: any) => m(user, context, info)));
-                }
+                //const roles = use zr && user.roles
+
                 let result: any
+                console.log('type', type)
+                console.log('action', action)
+                console.log('before', `before${capitalize(action)}`)
                 // TODO: Review the hooks architecture for adding a way to execute hooks of nested operations
                 if (type === 'mutation') {
-                    this.callHook('beforeValidate', _, args, context, info);
+
+                    await this.callHook('beforeValidate', _, args, context, info);
 
                     //TODO: Flatting nested fields operation (context, update, create)
                     // console.log('123123123',this.flatFields(args.data))
@@ -180,27 +180,27 @@ export class Table {
                     //     await this.callHook('afterValidate', action, _, args, context, info);
                     // }
 
-                    await this.callHook(<HookName>`before${capitalize(action)}`,  _, args, context, info);
+                    await this.callHook(<HookName>`before${capitalize(action)}`, _, args, context, info);
 
                     //this.validatePermissions(action, roles, args.data);
 
                     result = await prismaMethod(args, info);
                     context.result = result
 
-                    await this.callHook(<HookName>`after${capitalize(action)}`,  _, args, context, info);
+                    await this.callHook(<HookName>`after${capitalize(action)}`, _, args, context, info);
 
                     //this.validatePermissions('read', roles, fieldsList(info));
                 }
                 if (type === 'query') {
-                    await this.callHook('beforeQuery',  _, args, context, info);
+                    await this.callHook('beforeQuery', _, args, context, info);
                     //this.validatePermissions('read', roles, fieldsList(info));
                     result = await prismaMethod(args, info);
                     context.result = result
-                    await this.callHook('afterQuery',  _, args, context, info);
+                    await this.callHook('afterQuery', _, args, context, info);
 
                 }
 
-                console.log('result',result)
+                console.log('result', result)
                 bm('done in ')
                 console.log('*****************************************************')
                 return result;
@@ -224,7 +224,8 @@ export class Table {
      * @param context
      * @param info
      */
-    private async callHook(name: HookName,  _: any, args: any, context: any, info: any) {
+    private async callHook(name: HookName, _: any, args: any, context: any, info: any) {
+        console.log('this.options.hooks', name, this.options.hooks)
         const hookHandler = this.options.hooks && this.options.hooks[name];
         if (hookHandler) {
             await hookHandler(_, args, context, info);
@@ -295,11 +296,8 @@ export interface Context extends ContextParameters {
 }
 
 
-
-
-
 export interface Hook {
-    ( _: any, args: any, context: any, info: any): Promise<any> | void | any
+    (_: any, args: any, context: any, info: any): Promise<any> | void | any
 }
 
 export type operationType = "mutation" | "query"
@@ -308,7 +306,6 @@ export type operationType = "mutation" | "query"
 export interface TableSchemaOptions {
     virtual?: boolean
     hooks?: {
-        // Mutation opearion hooks
         beforeValidate?: Hook
         afterValidate?: Hook
         validationFailed?: Hook

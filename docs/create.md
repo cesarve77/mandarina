@@ -153,11 +153,12 @@ NOTE: This above schemas had to be used to create table in the server
 !inc(links/mutation-props.md)!
 ### 1.6) refetchQueries
 !inc(links/mutation-props.md)!
-### 1.7) awaitRefetchQueries
+### 1.7) refetchQueriesNames
+### 1.8) awaitRefetchQueries
 !inc(links/mutation-props.md)!
-### 1.8) onCompleted
+### 1.9) onCompleted
 !inc(links/mutation-props.md)!
-### 1.9) onError
+### 1.10) onError
 !inc(links/mutation-props.md)!
-### 1.10) context
+### 1.11) context
 !inc(links/mutation-props.md)!

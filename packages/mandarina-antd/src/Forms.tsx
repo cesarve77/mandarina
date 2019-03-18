@@ -6,6 +6,7 @@ import {CreateProps, MutateResultProps, UpdateProps} from "mandarina/build/Opera
 import {OperationVariables} from "react-apollo";
 import {Bridge} from "./Bridge";
 import {filterFields} from "mandarina/build/utils";
+import {OverwriteDefinition} from "mandarina/build/Schema/Schema";
 //
 const ErrorsField: any = require("./uniforms/ErrorsField").default
 const AutoFields: any = require("./uniforms/AutoFields").default
@@ -14,9 +15,9 @@ export type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>
 
 type Component = (props: CreateProps | UpdateProps) => JSX.Element
 
-type FormPropsOmitComponent=Omit<FormProps,'Component'>
+type FormPropsOmitComponent = Omit<FormProps, 'Component'>
 
-export interface CreateFormProps extends  FormPropsOmitComponent{
+export interface CreateFormProps extends FormPropsOmitComponent {
 }
 
 export interface UpdateFormProps extends FormPropsOmitComponent {
@@ -45,11 +46,13 @@ export interface AutoFormProps {
     innerRef?: React.Ref<HTMLFormElement>
 }
 
- interface FormProps<TData = any, TVariables = OperationVariables> extends MutateResultProps, AutoFormProps {
+interface FormProps<TData = any, TVariables = OperationVariables> extends MutateResultProps, AutoFormProps {
     Component: Component
     schema: Schema
     id?: string
     fields?: string[]
+    overwrite?: OverwriteDefinition
+
     omitFields?: string[]
     omitFieldsRegEx?: RegExp
     children?: ((props: any) => React.ReactNode | React.ReactNode[]) | React.ReactNode | React.ReactNode[]
@@ -71,6 +74,7 @@ const Form = ({
                   showInlineError,
                   autosaveDelay,
                   autosave,
+                  model,
                   disabled,
                   onChange,
                   error,
@@ -80,13 +84,15 @@ const Form = ({
                   onSubmitSuccess,
                   onSubmitFailure,
                   omitFieldsRegEx,
+                  overwrite,
                   ...mutationProps
               }: FormProps) => {
-    const bridge = new Bridge(schema)
+    const bridge = new Bridge(schema,overwrite)
     const fields = filterFields(schema.getFields(), optionalFields, omitFields, omitFieldsRegEx)
+    console.log('fields222222',fields)
     return (
         <Component id={id} schema={schema} fields={fields} {...mutationProps}>
-            {({mutate, doc, loading, ...rest}) => {
+            {({mutate, doc=model, loading, ...rest}) => {
                 return (
                     <AutoForm
                         schema={bridge}

@@ -24,6 +24,7 @@ export const forceType = (value: any, type: Native): any => {
             const numberVal = Number(value);
             if (!isNaN(numberVal)) return numberVal;
         }
+
         // Leave it; will fail validation
         return value;
     }

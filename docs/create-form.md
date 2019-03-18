@@ -32,11 +32,11 @@ const CreatPostForm=()=><CreateForm schema={Post} />
 
 ```typescript jsx
 import {AutoFields,AutoField,ErrorsField,SubmitField} from 'mandarina-antd'
- 
+ ...
 <div>
     <AutoFields autoField={AutoField}/>
     <ErrorsField />
-    <SubmitField size='large'/>}
+    <SubmitField size='large'/>
 </div>
 ```
 

@@ -24,7 +24,7 @@ import * as React from "react";
 
 
 export class Schema {
-    static instances:{ [actionName: string]: Schema };
+    static instances: { [actionName: string]: Schema };
     public name: string
     public keys: string[]
     public shape: SchemaShape;
@@ -94,7 +94,130 @@ export class Schema {
         return Schema.instances[name];
     }
 
-    applyDefinitionsDefaults(definition: UserFieldDefinition, key: string): FieldDefinition {
+    extend(shape: UserSchemaShape) {
+        this.shape = {
+            ...this.shape,
+            ...mapValues(shape, (def, key) => this.applyDefinitionsDefaults(def, key))
+        };
+        this.keys = Object.keys(this.shape);
+    }
+
+    getFieldDefinition(key: string): FieldDefinition {
+        return {...this.shape[key]};
+    }
+
+    getPathDefinition(key: string): FieldDefinition {
+        if (!this.pathDefinitions[key]) {
+            this.pathDefinitions[key] = this.generatePathDefinition(key);
+        }
+
+        return this.pathDefinitions[key];
+    }
+
+    getFields(): string[] {
+        if (!this.fields) {
+            this.fields = this._getFields();
+        }
+
+        return this.fields;
+    }
+
+    clean(model: Model, fields = this.getFields()) {
+        this.original = model;
+        this._clean(model, fields);
+    }
+
+    getFilePath() {
+        if (!this.filePath) {
+            const origPrepareStackTrace = Error.prepareStackTrace
+            Error.prepareStackTrace = function (_, stack) {
+                return stack
+            }
+            const err = new Error()
+            const stack = err.stack
+            Error.prepareStackTrace = origPrepareStackTrace
+            const path = require('path')
+            // @ts-ignore
+            if (!stack || !stack[2] || !stack[2].getFileName) return ''
+            // @ts-ignore
+            this.filePath = path.dirname(stack[2].getFileName())
+        }
+        return this.filePath
+    }
+
+    validate(model: Model, fields: string[] = this.getFields()): ErrorValidator[] {
+        console.log('fields',fields)
+        console.log('model',model)
+        this.clean(model, fields)
+        console.log('model clean',model)
+        return this._validate(model, '', [{schema: this.name, path: ''}], model);
+    }
+
+    /**
+     * Mutate the model,with all keys  proper types and null for undefined
+     * TODO: Refactor to prevent mutation, fix it creating a new cloned model and returning it
+     * @param model
+     * @param transform
+     * @param removeExtraKeys
+     */
+    protected _clean(model: Model | undefined | null, fields: string[], removeExtraKeys = true) {
+        if (removeExtraKeys && model && typeof model === 'object') {
+            Object.keys(model).forEach((key) => {
+                if (!this.keys.includes(key)) {
+                    delete model[key]
+                }
+            });
+        }
+
+        this.keys.forEach((key): any => {
+            if (key !== '___typename' && fields.every((field) => field !== key && field.indexOf(key + '.') < 0)) {
+                return model && delete model[key]
+            }
+            const definition = this.getFieldDefinition(key);
+            const type = definition.type;
+
+            if (typeof type === "function" && typeof model === 'object' && model !== undefined && model !== null) {
+                model[key] = forceType(model[key], <Native>definition.type);
+                model[key] = model[key] === 0 ? 0 : model[key] || definition.defaultValue;
+
+            } else if (typeof type === "string" && typeof model === 'object' && model !== undefined && model !== null) {
+                if (model[key] !== 0 && !model[key]) {
+                    return model[key] = definition.defaultValue;
+                }
+
+                const schema = Schema.getInstance(type);
+                schema._clean(model[key], getDecendents(fields, key));
+                return;
+
+            } else if (Array.isArray(type) && typeof model === 'object' && model !== undefined && model !== null) {
+                model[key] = forceType(model[key], Array)
+
+                if (typeof type[0] === 'string') {
+                    const schema = Schema.getInstance(<string>type[0]);
+                    model[key] = model[key].map((value: any) => {
+                        schema._clean(value, getDecendents(fields, key))
+                        return value
+                    });
+                } else {
+                    model[key] = model[key].map((value: any) => forceType(value, <Native>type[0]));
+                }
+                return;
+            } else if (Array.isArray(type) && typeof model !== 'object' && model !== undefined && model !== null) {
+                console.log('NOOOOO DETERMINADO', key, model)
+
+            }
+
+
+            if (model) {
+                model[key] = definition.transformValue.call({
+                    model: this.original,
+                    siblings: model
+                }, model[key]);
+            }
+        })
+    }
+
+    private applyDefinitionsDefaults(definition: UserFieldDefinition, key: string): FieldDefinition {
         const fieldDefinition = <FieldDefinition>{};
 
         if (!definition.validators) {
@@ -183,147 +306,6 @@ export class Schema {
         return fieldDefinition;
     }
 
-    extend(shape: UserSchemaShape) {
-        this.shape = {
-            ...this.shape,
-            ...mapValues(shape, (def, key) => this.applyDefinitionsDefaults(def, key))
-        };
-        this.keys = Object.keys(this.shape);
-    }
-
-    getFieldDefinition(key: string): FieldDefinition {
-        return {...this.shape[key]};
-    }
-
-    /**
-     *
-     * @param permissions
-     */
-    inheritPermission(permissions?: Permissions) {
-        return this
-        // TODO: this is has very bad performance for deep nested tables
-        // if (!permissions) {
-        //     return this
-        // }
-
-        // const clone: Schema = cloneDeep(this);
-        // clone.permissions = permissions;
-        // clone.shape = mapValues(clone.shape, (def, key) => clone.applyDefinitionsDefaults(def, key));
-
-        // clone.keys = Object.keys(clone.shape);
-        // return clone;
-    }
-
-    getPathDefinition(key: string): FieldDefinition {
-        if (!this.pathDefinitions[key]) {
-            this.pathDefinitions[key] = this.generatePathDefinition(key);
-        }
-
-        return this.pathDefinitions[key];
-    }
-
-
-    getFields(): string[] {
-        if (!this.fields) {
-            this.fields = this._getFields();
-        }
-
-        return this.fields;
-    }
-
-    clean(model: Model, fields = this.getFields()) {
-        this.original = model;
-        this._clean(model, fields);
-    }
-
-    getFilePath() {
-        if (!this.filePath) {
-            const origPrepareStackTrace = Error.prepareStackTrace
-            Error.prepareStackTrace = function (_, stack) {
-                return stack
-            }
-            const err = new Error()
-            const stack = err.stack
-            Error.prepareStackTrace = origPrepareStackTrace
-            const path = require('path')
-            // @ts-ignore
-            if (!stack || !stack[2] || !stack[2].getFileName) return ''
-            // @ts-ignore
-            this.filePath = path.dirname(stack[2].getFileName())
-        }
-        return this.filePath
-    }
-
-    validate(model: Model, fields: string[] = this.getFields()): ErrorValidator[] {
-        console.log('validate')
-        this.clean(model, fields)
-        return this._validate(model, '', [{schema: this.name, path: ''}], model);
-    }
-
-    /**
-     * Mutate the model,with all keys  proper types and null for undefined
-     * TODO: Refactor to prevent mutation, fix it creating a new cloned model and returning it
-     * @param model
-     * @param transform
-     * @param removeExtraKeys
-     */
-    protected _clean(model: Model | undefined | null, fields: string[], removeExtraKeys = true) {
-        if (removeExtraKeys && model && typeof model === 'object') {
-            Object.keys(model).forEach((key) => {
-                if (!this.keys.includes(key)) {
-                    delete model[key]
-                }
-            });
-        }
-
-        this.keys.forEach((key): any => {
-            if (key !== '___typename' && fields.every((field) => field !== key && field.indexOf(key + '.') < 0)) {
-                return model && delete model[key]
-            }
-            const definition = this.getFieldDefinition(key);
-            const type = definition.type;
-
-            if (typeof type === "function" && typeof model === 'object' && model !== undefined && model !== null) {
-                model[key] = forceType(model[key], <Native>definition.type);
-                model[key] = model[key] === 0 ? 0 : model[key] || definition.defaultValue;
-
-            } else if (typeof type === "string" && typeof model === 'object' && model !== undefined && model !== null) {
-                if (model[key] !== 0 && !model[key]) {
-                    return model[key] = definition.defaultValue;
-                }
-
-                const schema = Schema.getInstance(type);
-                schema._clean(model[key], getDecendents(fields, key));
-                return;
-
-            } else if (Array.isArray(type) && typeof model === 'object' && model !== undefined && model !== null) {
-                model[key] = forceType(model[key], Array)
-
-                if (typeof type[0] === 'string') {
-                    const schema = Schema.getInstance(<string>type[0]);
-                    model[key] = model[key].map((value: any) => {
-                        schema._clean(value, getDecendents(fields, key))
-                        return value
-                    });
-                } else {
-                    model[key] = model[key].map((value: any) => forceType(value, <Native>type[0]));
-                }
-                return;
-            } else if (Array.isArray(type) && typeof model !== 'object' && model !== undefined && model !== null) {
-                console.log('NOOOOO DETERMINADO', key, model)
-
-            }
-
-
-            if (model) {
-                model[key] = definition.transformValue.call({
-                    model: this.original,
-                    siblings: model
-                }, model[key]);
-            }
-        })
-    }
-
     private generatePathDefinition(key: string): FieldDefinition {
         const paths = key.split('.')
         let schema: Schema = this;
@@ -334,26 +316,31 @@ export class Schema {
                 def = schema.getFieldDefinition(path)
 
                 if (typeof def.type === 'string') {
-                    schema = Schema.getInstance(def.type).inheritPermission(def.permissions);
+                    schema = Schema.getInstance(def.type)
                 }
 
                 if (Array.isArray(def.type)) {
                     const tableName = def.type[0];
 
                     if (typeof tableName === 'string') {
-                        schema = Schema.getInstance(tableName).inheritPermission(def.permissions);
+                        schema = Schema.getInstance(tableName)
                     }
 
                 }
             } else if (Array.isArray(def.type)) { //should be
                 def.type = def.type[0];
                 if (typeof def.type === 'string') {
-                    schema = Schema.getInstance(def.type).inheritPermission(def.permissions);
+                    schema = Schema.getInstance(def.type)
                 }
             }
         });
 
         return def
+    }
+
+    private _isConnectingTable = (value: any) => {
+        console.log('value',value,(value && value.hasOwnProperty &&  value.hasOwnProperty('id') && typeof value.id === 'string'))
+        return (value && value.hasOwnProperty &&  value.hasOwnProperty('id') && typeof value.id === 'string')
     }
 
     private _validate(model: Model, parent: string = '', pathHistory: { schema: string, path: string }[] = [], originalModel: Model): ErrorValidator[] {
@@ -374,9 +361,11 @@ export class Schema {
                 const schema = Schema.getInstance(type);
                 const schemaName = schema.name;
                 let internalErrors: ErrorValidator[] = [];
+                console.log('path',path)
 
                 // Check if we are entering in a recursive table, if actual table has been used before, reviewing the history
-                if (!pathHistory.some(({schema, path}) => schemaName === schema)) {
+                if (!pathHistory.some(({schema, path}) => schemaName === schema) && !this._isConnectingTable(value)) {
+                    console.log('entro')
                     internalErrors = schema._validate(value, path, pathHistory, originalModel);
                 }
                 pathHistory.push({path: path, schema: schemaName});
@@ -402,7 +391,10 @@ export class Schema {
                     const schemaName = schema.name;
                     let internalErrors: ErrorValidator[] = [];
                     value.forEach((value: any, i: number) => {
-                        if (!pathHistory.some(({schema, path}) => schemaName === schema)) {
+                        console.log('path',path)
+
+                        if (!pathHistory.some(({schema, path}) => schemaName === schema) && !this._isConnectingTable(value)) {
+                            console.log('entro')
                             internalErrors = [...internalErrors, ...schema._validate(value, `${path}.${i}`, pathHistory, originalModel)];
                         }
                         pathHistory.push({path, schema: schemaName});
@@ -561,7 +553,7 @@ export interface CellComponentProps {
     [rest: string]: any
 }
 
-export type CellComponent = (props: CellComponentProps,context: any) => JSX.Element | null
+export type CellComponent = React.ComponentType<CellComponentProps> //React.ComponentClass<CellComponentProps> | React.ComponentType<CellComponentProps> | React.FunctionComponent<CellComponentProps> | ReactNode
 
 
 export interface UserFieldDefinition {
@@ -577,7 +569,7 @@ export interface UserFieldDefinition {
         component?: React.Component
         placeholder?: string
         col?: false | number | any
-        [restFormProps: string]: any
+        props?: any
     }
     list?: {
         hidden?: true
@@ -587,6 +579,7 @@ export interface UserFieldDefinition {
         loadingElement?: JSX.Element
         filter?: boolean
         width?: number
+        props?: any
 
     }
     table?: {
@@ -612,13 +605,14 @@ export interface FieldDefinition extends UserFieldDefinition {
     validators: Array<Validator>
     defaultValue: any
     transformValue: (value: any) => any
-
     form: {
         initialCount?: number
         transform?: (allowedValues: string[]) => string[]
         component?: React.Component
         placeholder?: string
         col?: false | number | any
+        props?: any
+
     }
     list: {
         hidden?: true
@@ -628,6 +622,7 @@ export interface FieldDefinition extends UserFieldDefinition {
         loadingElement?: JSX.Element
         filter?: boolean
         width?: number
+        props?: any
     }
     table: {
         default?: any
@@ -639,6 +634,34 @@ export interface FieldDefinition extends UserFieldDefinition {
         }
     },
     permissions: Permissions
+}
+
+
+export interface OverwriteDefinition {
+    type?: Native | string | Array<string> | Array<Native>,
+    label?: Label
+    description?: string
+    validators?: Array<Validator>
+    defaultValue?: any
+    form?: {
+        initialCount?: number
+        transform?: (allowedValues: string[]) => string[]
+        component?: React.Component
+        placeholder?: string
+        col?: false | number | any
+        props?: any
+
+    }
+    list?: {
+        hidden?: true
+        filterMethod?: FilterMethod
+        filterComponent?: FilterComponent
+        CellComponent?: CellComponent
+        loadingElement?: JSX.Element
+        filter?: boolean
+        width?: number
+        props?: any
+    }
 }
 
 export type Label = string | false;
@@ -674,3 +697,5 @@ export interface Permissions {
     update?: Permission
     delete?: Permission
 }
+
+

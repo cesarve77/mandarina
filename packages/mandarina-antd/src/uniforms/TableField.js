@@ -51,11 +51,10 @@ const Table = ({query, where, mode, labeler = defaultLabeler, ...props}) => {
         return (
             <Query query={QUERY} variables={{where}}>
                 {({loading, error, data, variables, refetch}) => {
-                    if (error) return <Error variables={variables} error={error} refetch={refetch}/> //todo create ERROR component
+                    if (error) return <Error variables={variables} error={error} refetch={refetch}/> //TODO: create ERROR component
                     const docs = loading ? [] : data[queryName]
                     const allowedValues = docs.map(({id}) => id)
                     const transform = getTransform(docs, labeler)
-                    console.log('docs', docs)
                     let mode = props.mode, value = props.value && props.value.id || ''
                     let onChange = value => props.onChange({id: value})
                     if (props.fieldType === Array) {

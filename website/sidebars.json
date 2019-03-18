@@ -10,8 +10,7 @@
         "label": "Schema",
         "ids": [
           "schema-constructor",
-          "schema-methods",
-          "schema-static-methods"
+          "schema-methods"
         ]
       },
       "validator-creator",

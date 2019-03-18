@@ -1,7 +1,7 @@
 import {Table as TableAntD} from 'antd';
 import {Find, Schema} from 'mandarina';
 import * as React from "react";
-import {FieldDefinition} from 'mandarina/build/Schema/Schema'
+import {FieldDefinition, OverwriteDefinition} from 'mandarina/build/Schema/Schema'
 //import ListHeader from "./ListHeader";
 
 import {onFilterChange, Where} from "./ListFilter";
@@ -9,13 +9,15 @@ import {getDecendents, getParents} from 'mandarina/build/utils'
 import {ColumnProps} from 'antd/lib/table';
 import isEmpty from "lodash.isempty";
 import {DefaultCellComponent} from "./ListVirtualized";
-
+import merge from 'lodash.merge'
+import {FindQueryProps} from "mandarina/build/Operations/Find";
 export type onResize = (e: any, {size}: { size: { width: number } }) => void
 
 
-export interface ListProps {
+export interface ListProps extends FindQueryProps{
     schema: Schema
     fields?: string[]
+    overwrite?: {[field: string]: OverwriteDefinition}
     pageSize?: number
     first?: number
     where?: any
@@ -111,9 +113,8 @@ export class List extends React.Component<ListProps, { columns: ColumnProps<any>
         //         width: fieldDefinition.list.width || estimatedColumnWidthDefault
         //     }
         // }
-
-
-        const fieldDefinition = this.props.schema.getPathDefinition(parent)
+        const overwrite=this.props.overwrite && this.props.overwrite[parent]
+        const fieldDefinition =overwrite ? merge(this.props.schema.getPathDefinition(parent),overwrite) : this.props.schema.getPathDefinition(parent)
         if (fieldDefinition.list.hidden) return
         const defaultWidth = window.innerWidth / this.fields.length
         let width: number | undefined
@@ -131,16 +132,16 @@ export class List extends React.Component<ListProps, { columns: ColumnProps<any>
             children,
             title: fieldDefinition.label ? fieldDefinition.label : "",
             render: (value: any, row: any, index: any) => {
-                console.log('value: any, row: any, index: any',value, row, index)
+
                 const CellComponent=fieldDefinition.list.CellComponent || DefaultCellComponent
                 if (!dataIndex) return null
-                return <CellComponent columnIndex={0} rowIndex={0} data={[row]} field={dataIndex}/>
+                return   <CellComponent columnIndex={0} rowIndex={0} data={[row]} field={dataIndex} {...fieldDefinition.list.props} />
             },
             onHeaderCell: (column: ColumnProps<any>) => ({
                 field: parent,
                 fieldDefinition,
                 onFilterChange,
-                width: column.width,
+                //width: column.width,
                 onResize: this.handleResize(index),
             })
         }
@@ -231,12 +232,15 @@ export class List extends React.Component<ListProps, { columns: ColumnProps<any>
     firstLoad: boolean = true
 
     render() {
-        const {schema, first, where, ...props} = this.props
+        const {schema, first, where, ...findBaseProps} = this.props
         const {columns} = this.state
         return (
-            <div id="list-wrapper" style={{width: 'max-content', height: '100%'}} ref={this.me}>
+            <div className="list-wrapper" style={{width: '100%', height: '100%'}} ref={this.me}>
                 <Find schema={schema} where={where} first={first} fields={this.fields}
-                      onCompleted={this.onScroll}>
+
+                      onCompleted={this.onScroll}
+                      {...findBaseProps}
+                >
                     {({data = [], variables, refetch, loading, count, pageInfo, fetchMore, error}) => {
 
                         this.refetch = refetch
@@ -263,8 +267,6 @@ export class List extends React.Component<ListProps, { columns: ColumnProps<any>
                                     columns={columns}
                                     loading={this.firstLoad}
                                     dataSource={dataSource}
-                                    {...props}
-                                    scroll={{x: 300, y: 1000}}
                                 />
                             </div>
                         )
