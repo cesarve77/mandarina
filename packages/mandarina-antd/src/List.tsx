@@ -11,6 +11,7 @@ import isEmpty from "lodash.isempty";
 import {DefaultCellComponent} from "./ListVirtualized";
 import merge from 'lodash.merge'
 import {FindQueryProps} from "mandarina/build/Operations/Find";
+import {deepClone} from "mandarina/build/Operations/Mutate";
 export type onResize = (e: any, {size}: { size: { width: number } }) => void
 
 
@@ -73,11 +74,14 @@ export class List extends React.Component<ListProps, { columns: ColumnProps<any>
         //const definitions: Partial<FieldDefinitions> = {}
         const {schema, fields} = this.props
         this.fields = fields || schema.getFields()
+        console.log('component constructor',this.props)
         const columns = this.getColumns(this.fields)
         this.state = {columns}
         this.me = React.createRef();
         //this.definitions=definitions
+
     }
+
 
     static defaultProps = {
         first: 10,
@@ -114,7 +118,7 @@ export class List extends React.Component<ListProps, { columns: ColumnProps<any>
         //     }
         // }
         const overwrite=this.props.overwrite && this.props.overwrite[parent]
-        const fieldDefinition =overwrite ? merge(this.props.schema.getPathDefinition(parent),overwrite) : this.props.schema.getPathDefinition(parent)
+        const fieldDefinition =overwrite ? merge(deepClone(this.props.schema.getPathDefinition(parent)),overwrite) : this.props.schema.getPathDefinition(parent)
         if (fieldDefinition.list.hidden) return
         const defaultWidth = window.innerWidth / this.fields.length
         let width: number | undefined
@@ -147,13 +151,7 @@ export class List extends React.Component<ListProps, { columns: ColumnProps<any>
         }
     }
 
-    componentWillUnmount() {
-        window.removeEventListener("scroll", this.onScroll);
-    }
 
-    componentDidMount() {
-        window.addEventListener("scroll", this.onScroll);
-    }
 
     onScroll = () => {
         if (this.refetching || !this.hasNextPage) return // || this.lastHeight === clientHeight) return
@@ -235,7 +233,7 @@ export class List extends React.Component<ListProps, { columns: ColumnProps<any>
         const {schema, first, where, ...findBaseProps} = this.props
         const {columns} = this.state
         return (
-            <div className="list-wrapper" style={{width: '100%', height: '100%'}} ref={this.me}>
+            <div className="list-wrapper" style={{width: '100%'}} ref={this.me}>
                 <Find schema={schema} where={where} first={first} fields={this.fields}
 
                       onCompleted={this.onScroll}

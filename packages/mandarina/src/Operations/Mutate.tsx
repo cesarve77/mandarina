@@ -11,7 +11,7 @@ import {OperationVariables} from "apollo-client";
 import {DocumentNode} from "graphql";
 import {filterFields} from "../utils";
 
-const deepClone = (obj: any): any => JSON.parse(JSON.stringify(obj))
+export const deepClone = (obj: any): any => JSON.parse(JSON.stringify(obj))
 export type MutateResultProps =
     { refetchQueriesNames?: string[] }
     & Pick<MutationProps, 'client' | 'ignoreResults' | 'variables' | 'optimisticResponse' | 'refetchQueries' | 'awaitRefetchQueries' | 'update' | 'onCompleted' | 'onError' | 'context' | 'fetchPolicy'>
@@ -255,6 +255,7 @@ class Mutate extends PureComponent<WithApolloClient<MutateProps & { type: 'creat
             onError,
             context,
             client,
+            doc,
             fetchPolicy,
         } = this.props;
         let fields = filterFields(schema.getFields(), optionalFields, omitFields, omitFieldsRegEx)
@@ -300,6 +301,7 @@ class Mutate extends PureComponent<WithApolloClient<MutateProps & { type: 'creat
                     error,
                     called,
                     client,
+                    doc,
                 })}
             </Mutation>
         )
@@ -316,12 +318,14 @@ export const Create = ({schema, optimisticResponse, ...props}: CreateProps): JSX
 export const Update = ({id, schema, children, fields, optimisticResponse, ...props}: UpdateProps): JSX.Element => {
     return (
         <FindOne schema={schema} where={{id}} fields={fields} {...props}>
-            {({data, ...findOneProps}) => (
-                <MutateWithApollo where={{id}} type='update' schema={schema} doc={data}
-                                  optimisticResponse={optimisticResponse} {...findOneProps} >
-                    {children}
-                </MutateWithApollo>
-            )}
+            {({data, ...findOneProps}) => {
+                return (
+                    <MutateWithApollo where={{id}} type='update' schema={schema} doc={data}
+                                      optimisticResponse={optimisticResponse} {...findOneProps} >
+                        {children}
+                    </MutateWithApollo>
+                );
+            }}
         </FindOne>
     );
 }

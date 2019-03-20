@@ -9,28 +9,12 @@ import {Bridge} from "./Bridge";
 import {capitalize} from "mandarina/build/Schema/utils";
 import {buildQueryFromFields} from "mandarina/build/Operations/utils";
 import SubmitField from "uniforms-antd/SubmitField";
-import {ChildFunc} from "./Forms";
+import {AutoFormProps, ChildFunc} from "./Forms";
 import {filterFields} from "mandarina/build/utils";
-import {Model} from "mandarina/build/Schema/Schema";
 
-export interface AutoForm{
-    showInlineError: boolean
-    autosaveDelay: number
-    autosave: boolean
-    disabled: boolean
-    error: Error
-    label: boolean
-    model: object
-    modelTransform: (mode: 'form' | 'submit' | 'validate', model: object) => boolean
-    onChangeModel: (model: Model) => void
-    onChange: (key: string, value: any) => void
-    onSubmitFailure: () => void
-    onSubmitSuccess: () => void
-    onSubmit: (model: Model) => Promise<void>
-    placeholder: boolean
-}
 
-export interface ActionFormProps extends AutoForm{
+
+export interface ActionFormProps extends AutoFormProps{
     schema: Schema
     actionName: string,
     result: string,

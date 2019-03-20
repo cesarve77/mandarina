@@ -1,4 +1,4 @@
-import React, {ReactChild, ReactElement} from 'react'
+import React from 'react'
 import {Create, Schema, Update} from "mandarina";
 import AutoForm from "uniforms-antd/AutoForm"
 import SubmitField from "uniforms-antd/SubmitField";
@@ -41,7 +41,7 @@ export interface AutoFormProps {
     onChange?: (key: string, value: any) => void
     onSubmitFailure?: () => void
     onSubmitSuccess?: () => void
-    onSubmit?: (model: object) => Promise<void>
+    onSubmit?: (model: object) => Promise<void> | void
     placeholder?: boolean
     innerRef?: React.Ref<HTMLFormElement>
 }
@@ -87,12 +87,13 @@ const Form = ({
                   overwrite,
                   ...mutationProps
               }: FormProps) => {
-    const bridge = new Bridge(schema,overwrite)
+    const bridge = new Bridge(schema, overwrite)
     const fields = filterFields(schema.getFields(), optionalFields, omitFields, omitFieldsRegEx)
-    console.log('fields222222',fields)
     return (
         <Component id={id} schema={schema} fields={fields} {...mutationProps}>
-            {({mutate, doc=model, loading, ...rest}) => {
+            {({mutate, doc = model, loading, ...rest}) => {
+                console.log('doc',doc)
+                console.log('model',model   )
                 return (
                     <AutoForm
                         schema={bridge}
@@ -123,20 +124,15 @@ const Form = ({
                             return callback(null)
                         }}
                     >
-                        {children && Array.isArray(children) && children.map((child: ReactElement<ReactChild> | ChildFunc) => {
-                            if (typeof child === "function") {
-                                return child({doc, loading})
-                            }
-                            return React.cloneElement(child)
-                        })}
+
                         {children && typeof children !== "function" && children}
                         {children && typeof children === "function" && children({doc, loading, ...rest})}
                         {!children && (
-                            <div>
+                            <>
                                 <AutoFields autoField={AutoField} fields={fields}/>
                                 <ErrorsField style={{marginBottom: '15px'}}/>
                                 {!autosave && <SubmitField size='large' loading={loading}/>}
-                            </div>)
+                            </>)
                         }
                     </AutoForm>
                 )
