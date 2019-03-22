@@ -1,5 +1,5 @@
-import React, {PureComponent, ReactChild, ReactElement} from 'react'
-import {Mutation} from 'react-apollo'
+import React, {PureComponent} from 'react'
+import {FetchResult, Mutation, withApollo, WithApolloClient} from 'react-apollo'
 import gql from "graphql-tag";
 import {Schema} from 'mandarina'
 import {AutoField, AutoFields, ErrorsField} from './index'
@@ -9,12 +9,12 @@ import {Bridge} from "./Bridge";
 import {capitalize} from "mandarina/build/Schema/utils";
 import {buildQueryFromFields} from "mandarina/build/Operations/utils";
 import SubmitField from "uniforms-antd/SubmitField";
-import {AutoFormProps, ChildFunc} from "./Forms";
+import {AutoFormProps} from "./Forms";
 import {filterFields} from "mandarina/build/utils";
+import {refetchQueries} from "mandarina/build/Operations/Mutate";
 
 
-
-export interface ActionFormProps extends AutoFormProps{
+export interface ActionFormProps extends AutoFormProps {
     schema: Schema
     actionName: string,
     result: string,
@@ -22,12 +22,16 @@ export interface ActionFormProps extends AutoFormProps{
     omitFields?: string[]
     children?: React.ReactNode | ((props: any) => React.ReactNode | React.ReactNode[])
     omitFieldsRegEx?: RegExp
+    refetchSchemas?: string[]
 
     [key: string]: any //replace for uniforms autoform props
 }
 
-class ActionForm extends PureComponent<ActionFormProps> {
+class ActionForm extends PureComponent<WithApolloClient<ActionFormProps>>{
     state: { changed: boolean } = {changed: false}
+    refetchQueries = (mutationResult: FetchResult) => {
+        return refetchQueries(mutationResult, this.props.schema,this.props.client, this.props.refetchSchemas)
+    }
 
     render() {
         const {
@@ -37,7 +41,7 @@ class ActionForm extends PureComponent<ActionFormProps> {
             omitFields,
             children,
             onChange,
-            refetchQueries,
+            refetchQueries = this.refetchQueries,
             onCompleted,
             fields: optionalFields,
             omitFieldsRegEx,
@@ -111,12 +115,7 @@ class ActionForm extends PureComponent<ActionFormProps> {
                                   ref={innerRef}
                                   {...rest}>
 
-                            {children && Array.isArray(children) && children.map((child: ReactElement<ReactChild> | ChildFunc) => {
-                                if (typeof child === "function") {
-                                    return child({loading})
-                                }
-                                return React.cloneElement(child)
-                            })}
+                            {children && Array.isArray(children) && children}
                             {children && !Array.isArray(children) && (typeof children !== "function") && children}
 
                             {children && !Array.isArray(children) && (typeof children === "function") && children({loading})}
@@ -135,8 +134,10 @@ class ActionForm extends PureComponent<ActionFormProps> {
     }
 }
 
-export default React.forwardRef<HTMLFormElement,ActionFormProps>((props, ref) =>
-    <ActionForm {...props} innerRef={ref}/>)
+const ActionFormWithApollo=withApollo(ActionForm)
+
+export default React.forwardRef<HTMLFormElement, ActionFormProps>((props, ref) =>
+    <ActionFormWithApollo {...props} innerRef={ref}/>)
 
 
 

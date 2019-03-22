@@ -1,6 +1,4 @@
 import React, {createElement} from "react";
-import connectField from "uniforms/connectField";
-
 import {Col} from "antd";
 import BaseField from 'uniforms/BaseField';
 import NumField from 'uniforms-antd/NumField';
@@ -17,11 +15,11 @@ import {Integer} from 'mandarina'
 import HiddenField from "uniforms-antd/HiddenField";
 import filterDOMProps from "uniforms/filterDOMProps";
 
-filterDOMProps.register('col', 'loading', 'omitFields', 'minCount', 'maxCount', 'submitting', 'validating')
+filterDOMProps.register('col', 'loading', 'omitFields', 'minCount', 'maxCount', 'fields', 'submitting', 'validating', 'fieldDefinition')
 
 
 class CustomAuto extends BaseField {
-    static displayName = 'AutoField';
+    static displayName = 'CustomAutoField';
 
     getChildContextName() {
         return this.context.uniforms.name;
@@ -29,6 +27,7 @@ class CustomAuto extends BaseField {
 
 
     render() {
+
         const props = this.getFieldProps(undefined, {ensureValue: false});
         let {field: {form: {col = 24} = {}}} = props
         if (props.component === undefined) {
@@ -48,10 +47,11 @@ class CustomAuto extends BaseField {
                         props.component = TableField;
                         break;
                     case (Array.isArray(props.fieldType) || props.fieldType === Array):
+                        console.log('ListField', props)
                         props.component = ListField;
                         break;
                     case (typeof props.fieldType === 'string' || props.fieldType === Object):
-
+                        console.log('NestField')
                         props.component = NestField;
                         break;
                     case props.fieldType === Date:

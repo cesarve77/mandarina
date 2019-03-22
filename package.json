@@ -1,4 +1,10 @@
 {
+  "name": "mandarina-repo",
+  "version": "0.5.4",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
   "dependencies": {
     "@types/lodash.get": "^4.4.4",
     "docusaurus": "^1.5.1",
@@ -9,12 +15,6 @@
     "start": "cd website && yarn start",
     "bump-publish": "npm whoami && npm version patch && cd packages/mandarina && npm version patch && npm publish && cd ../mandarina-antd && npm version patch  && npm publish && cd ../mandarina-server && npm version patch  && npm publish && PACKAGE_VERSION=$( cat package.json | grep version | awk '{ print $2 }' | sed s/\\\"//g | sed s/,//g ) && git tag $PACKAGE_VERSION && git push --tags",
     "publish": "npm whoami && cd packages/mandarina  && npm publish && cd ../mandarina-antd && npm publish && cd ../mandarina-server && npm publish "
-  },
-  "name": "mandarina-repo",
-  "version": "0.5.2",
-  "main": "index.js",
-  "directories": {
-    "doc": "docs"
   },
   "devDependencies": {
     "coffee-script": "^1.12.7"

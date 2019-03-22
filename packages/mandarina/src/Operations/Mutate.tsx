@@ -7,13 +7,13 @@ import {FindOne} from './Find'
 import {Native} from "../Schema/Schema";
 import {MutationBaseOptions} from "apollo-client/core/watchQueryOptions";
 import {FetchResult} from "react-apollo/Mutation";
-import {OperationVariables} from "apollo-client";
+import {ApolloClient, OperationVariables} from "apollo-client";
 import {DocumentNode} from "graphql";
 import {filterFields} from "../utils";
 
 export const deepClone = (obj: any): any => JSON.parse(JSON.stringify(obj))
 export type MutateResultProps =
-    { refetchQueriesNames?: string[] }
+    { refetchSchemas?: string[] }
     & Pick<MutationProps, 'client' | 'ignoreResults' | 'variables' | 'optimisticResponse' | 'refetchQueries' | 'awaitRefetchQueries' | 'update' | 'onCompleted' | 'onError' | 'context' | 'fetchPolicy'>
 
 export interface MutateProps extends MutateResultProps {
@@ -195,21 +195,7 @@ class Mutate extends PureComponent<WithApolloClient<MutateProps & { type: 'creat
     }
 
     refetchQueries = (mutationResult: FetchResult) => {
-        const {refetchQueriesNames = []} = this.props
-        const refetchQueries: { query: DocumentNode, variables?: OperationVariables }[] = []
-        const {single, plural, connection} = this.props.schema.names.query
-        console.log('refetchQueriesNames',refetchQueriesNames)
-        // @ts-ignore
-        this.props.client.cache.watches.forEach(({query, variables}) => {
-            console.log('refetchQueries', query, variables)
-            const queryName = query.definitions[0].selectionSet.selections[0].name.value
-            console.log('queryName', queryName)
-            console.log('single', single, plural, connection)
-            if (queryName === single || queryName === plural || queryName === connection || refetchQueriesNames.includes(queryName)) {
-                refetchQueries.push({query, variables})
-            }
-        })
-        return refetchQueries
+        return refetchQueries(mutationResult, this.props.schema,this.props.client, this.props.refetchSchemas)
 
         /*if (this.props.type === 'update') return //for updates the cache is automatic updated by apollo
 
@@ -328,4 +314,26 @@ export const Update = ({id, schema, children, fields, optimisticResponse, ...pro
             }}
         </FindOne>
     );
+}
+
+export const refetchQueries = (mutationResult: FetchResult, schema: Schema, client: ApolloClient<any>, refetchSchemas: string[] = [],) => {
+    const refetchQueries: { query: DocumentNode, variables?: OperationVariables }[] = []
+    const {single, plural, connection} = schema.names.query
+    // @ts-ignore
+    client.cache.watches.forEach(({query, variables}) => {
+        const queryName = query.definitions[0].selectionSet.selections[0].name.value
+        const names: string[] = []
+        if (refetchSchemas) {
+            refetchSchemas.forEach((schemaName) => {
+                const schema = Schema.getInstance(schemaName)
+                names.push(schema.names.query.single)
+                names.push(schema.names.query.plural)
+                names.push(schema.names.query.connection)
+            })
+        }
+        if (queryName === single || queryName === plural || queryName === connection || names.includes(queryName)) {
+            refetchQueries.push({query, variables})
+        }
+    })
+    return refetchQueries
 }

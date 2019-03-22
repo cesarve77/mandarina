@@ -3,6 +3,7 @@ import {FieldDefinition, Native, OverwriteDefinition} from "mandarina/build/Sche
 import {Validator} from "mandarina/build/Schema/ValidatorCreator";
 import * as React from "react";
 import merge from "lodash.merge";
+import {deepClone} from "mandarina/build/Operations/Mutate";
 
 export interface ErrorInterface {
     [field: string]: string
@@ -25,7 +26,7 @@ export class Bridge {
     protected fields: { [field: string]: FieldDefinition } = {}
     protected fieldProps: { [field: string]: FieldProps } = {}
 
-    constructor(schema: Schema,overwrite?:OverwriteDefinition) {
+    constructor(schema: Schema, overwrite?: OverwriteDefinition) {
         this.schema = schema
         this.overwrite = overwrite
     }
@@ -74,7 +75,7 @@ export class Bridge {
 
     // Field's definition (`field` prop).
     getField(name: string): FieldDefinition {
-        if (!this.fields[name]) this.fields[name] = this.overwrite ? merge(this.schema.getPathDefinition(name),this.overwrite) : this.schema.getPathDefinition(name)
+        if (!this.fields[name]) this.fields[name] = this.overwrite ? merge(deepClone(this.schema.getPathDefinition(name)), this.overwrite) : this.schema.getPathDefinition(name)
         if (!this.fields[name] || !this.fields[name].type) throw new Error(`No field named "${name}" in schema ${this.schema.name}`)
         return this.fields[name]
     }
@@ -124,10 +125,13 @@ export class Bridge {
     }
 
     getSubfields(name: string) {
-        if (!name) return this.schema.keys
+        if (!name) {
+            return this.schema.keys
+        }
         const field = this.getField(name)
-        if (typeof field.type === 'string') {
-            const schema = Schema.getInstance(field.type)
+        const type = Array.isArray(field.type) ? field.type[0] : field.type
+        if (typeof type === 'string') {
+            const schema = Schema.getInstance(type)
             return schema.keys
         } else {
             return []
@@ -160,13 +164,8 @@ export class Bridge {
             const required = !!this.findValidator('required', field)
 
             let uniforms = field.form, component = field.form.component
-            if (typeof uniforms === 'string' || typeof uniforms === 'function') {
-                component = uniforms
-                uniforms = {}
 
-            }
-
-            let placeholder=uniforms.placeholder
+            let placeholder = uniforms.placeholder
 
             if (props.placeholder === true && uniforms.placeholder) {
                 placeholder = uniforms.placeholder;
@@ -189,6 +188,8 @@ export class Bridge {
                 required,
                 placeholder,
                 ...uniforms,
+                ...field.form.props,
+
             }
         }
         return this.fieldProps[name]
@@ -216,7 +217,7 @@ export class Bridge {
     getValidator({fields}: { fields?: string[] } = {}): (model: any) => void {
         return (model: any) => {
             let enter = false
-            const errors = this.schema.validate(model,fields)
+            const errors = this.schema.validate(model, fields)
             if (errors.length) {
                 const error = {}
                 errors.forEach((e) => {
