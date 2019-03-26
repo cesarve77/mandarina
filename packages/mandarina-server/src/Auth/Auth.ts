@@ -31,7 +31,6 @@ export const Auth: AuthInterface = {
     },
     getRoles: () => {
         if (roles.length === 0) {
-
             const tables = Object.values(Table.instances)
             tables.forEach((table: Table) => {
                 authFields[table.name] = authFields[table.name] || {read: {}, create: {}, update: {}, delete: {}}

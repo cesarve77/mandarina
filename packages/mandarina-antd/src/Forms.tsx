@@ -21,7 +21,7 @@ export interface CreateFormProps extends FormPropsOmitComponent {
 }
 
 export interface UpdateFormProps extends FormPropsOmitComponent {
-    id: string
+    id: string | any
 }
 
 export const CreateForm = React.forwardRef<HTMLFormElement, CreateFormProps>((props: CreateFormProps, ref) =>
@@ -49,7 +49,7 @@ export interface AutoFormProps {
 interface FormProps<TData = any, TVariables = OperationVariables> extends MutateResultProps, AutoFormProps {
     Component: Component
     schema: Schema
-    id?: string
+    id?: string | any
     fields?: string[]
     overwrite?: OverwriteDefinition
 

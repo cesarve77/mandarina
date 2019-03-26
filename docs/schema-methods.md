@@ -11,7 +11,7 @@ validate: ErrorValidator[]
 
 *where*: sever & client
 
-*type*: (model: Model, fields: string[] = this.getFields()) : ValidatorError[]
+*type*: (model: Model, fields: string[]     = this.getFields()) : ValidatorError[]
 
 *description*: used to validate a object against the schema
 

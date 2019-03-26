@@ -32,7 +32,7 @@ export interface MutateProps extends MutateResultProps {
 type BasicMutateProps = Exclude<MutateProps, 'loading' | 'doc'>
 
 export interface UpdateProps extends BasicMutateProps {
-    id: string
+    id: string | any
 
 }
 
@@ -195,7 +195,7 @@ class Mutate extends PureComponent<WithApolloClient<MutateProps & { type: 'creat
     }
 
     refetchQueries = (mutationResult: FetchResult) => {
-        return refetchQueries(mutationResult, this.props.schema,this.props.client, this.props.refetchSchemas)
+        return refetchQueries(mutationResult, this.props.schema, this.props.client, this.props.refetchSchemas)
 
         /*if (this.props.type === 'update') return //for updates the cache is automatic updated by apollo
 
@@ -302,11 +302,23 @@ export const Create = ({schema, optimisticResponse, ...props}: CreateProps): JSX
 
 
 export const Update = ({id, schema, children, fields, optimisticResponse, ...props}: UpdateProps): JSX.Element => {
+    let where: any = undefined
+    if (id) {
+        if (typeof id === 'string') {
+            where = {id}
+
+        } else {
+            where = id
+        }
+    }
+
+    console.log('where', where)
     return (
-        <FindOne schema={schema} where={{id}} fields={fields} {...props}>
+        <FindOne schema={schema} where={where} fields={fields} {...props}>
             {({data, ...findOneProps}) => {
+                console.log('data',data)
                 return (
-                    <MutateWithApollo where={{id}} type='update' schema={schema} doc={data}
+                    <MutateWithApollo where={where} type='update' schema={schema} doc={data}
                                       optimisticResponse={optimisticResponse} {...findOneProps} >
                         {children}
                     </MutateWithApollo>

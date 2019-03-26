@@ -143,6 +143,7 @@ export class Table {
         // OperationName for query is user or users, for mutation are createUser, updateUser ....
         const operationNames: string[] = Object.values(this.schema.names[type]);
         operationNames.forEach((operationName: string) => {
+
             result[operationName] = async (_: any, args: any = {}, context: Context, info: any) => {
                 console.log('*****************************************************')
                 console.log('operationName', operationName)
