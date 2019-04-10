@@ -5,12 +5,6 @@
     "src/test/**",
     "node_modules"
   ],
-  "typedocOptions": {
-    "mode": "modules",
-    "json": "../../docs/mandarina.json",
-    "includes": "src",
-    "theme": "minimal"
-  },
   "compilerOptions": {
     "allowJs": false,
     "types": [

@@ -1,82 +1,44 @@
-import {Table} from "..";
 import Mandarina from "../Mandarina";
-import {ActionType, addToSet} from "mandarina/build/Auth/Auth";
-
+import {ActionType, getRoles, getFields, addToSet, authFields} from "mandarina/build/Auth/Auth";
+import {Schema} from "mandarina";
 
 interface AuthInterface {
-    getRoles: (args?: { table: string, action: string, role?: string }) => string[]
+    getRoles: () => string[]
     resolvers: {
         AuthFields: (_: any, args: any, context: any, info: any) => Promise<string[] | undefined>
     }
-    reset: () => void
 }
 
-
-let roles: string[] = []
-let authFields: {
-    [tableName: string]: {
-        [action in ActionType]: {
-            [role: string]: string[]
-        }
-    }
-} = {}
 
 
 export const actions = ['read', 'create', 'update', 'delete']
 
 export const Auth: AuthInterface = {
-    reset: () => {
-        roles = []
-        authFields = {}
-    },
-    getRoles: () => {
-        if (roles.length === 0) {
-            const tables = Object.values(Table.instances)
-            tables.forEach((table: Table) => {
-                authFields[table.name] = authFields[table.name] || {read: {}, create: {}, update: {}, delete: {}}
-                const permissions = table.getPermissions()
-                actions.forEach((action) => {
-                    const tableRoles = Object.keys(permissions[action])
-                    tableRoles.forEach(role => {
-                        authFields[table.name][action][role] = permissions[action][role]
-                        if (role && !roles.includes(role)) {
-                            roles.push(role)
-                        }
-                    })
-
-                })
-            })
-        }
-        return roles
-    },
+    getRoles,
     resolvers: {
-        AuthFields: async (_: any, args: AuthArgs, context: any, info: any) => {
+        AuthFields: async (_: any, {action,table}: AuthArgs, context: any, info: any) => {
             const allRoles = Auth.getRoles()
             const user = await Mandarina.config.getUser(context)
 
             const userRoles:string[] = (user && user.roles) || []
-            if (!actions.includes(args.action)) throw new Error(`Action only can be one of ['read', 'create', 'update', 'delete'] now is: ${args.action} `)
-            if (!authFields[args.table]) throw new Error(`Table ${args.table} not found getting AuthFields `)
-            const table = Table.getInstance(args.table)
-            const allTableFields=table.getFields()
-            const tablePermissions = table.getPermissions()
-            const everyone = tablePermissions[args.action].everyone
-            let fields: string[] = everyone ? everyone : []
+            const schema=Schema.getInstance(table)
+            const fields=getFields({userRoles,schema,action}) || []
             let extraRoles: string[] = []
 
             userRoles.forEach((role) => {
                 if (allRoles.includes(role)) {
-                    addToSet(fields, authFields[args.table][args.action][role] || [])
+                    addToSet(fields, authFields[table][action][role] || [])
                 } else {
                     extraRoles.push(role)
                 }
             })
+            const allTableFields=schema.getFields()
             if (!extraRoles.length) return allTableFields.filter(field=>fields.includes(field)) // for keep the order
             const alcFields = await context.prisma.query.authTables({
                 where: {
                     role_in: userRoles,
-                    table: args.table,
-                    action: args.action,
+                    table,
+                    action,
                 }
             })
             addToSet(fields, alcFields)

@@ -2,12 +2,12 @@ import 'jsdom-global/register'
 import Enzyme, {mount} from 'enzyme';
 import Adapter from 'enzyme-adapter-react-16';
 import React from "react";
-import {Category} from '../../tables/Category'
+import {Category} from '../../schemas/Category'
 import {count, deleteMany, findAll, findOne, userCreator} from "../../server/utils";
 import App from "../../server/client";
 import {Create, Update} from "../../../Operations/Mutate";
-import {User} from "../../tables/User";
-import {Post} from "../../tables/Post";
+import {User} from "../../schemas/User";
+import {Post} from "../../schemas/Post";
 
 Enzyme.configure({adapter: new Adapter()});
 

@@ -55,7 +55,11 @@
     "react-dom": "^16.8.4",
     "react-test-renderer": "^16.8.4",
     "ts-jest": "^24.0.0",
-    "typescript": "^3.3.4000"
+    "typescript": "^3.3.4000",
+    "apollo-cache-inmemory": "^1.5.1",
+    "apollo-link-http": "^1.5.14",
+    "apollo-link-error": "^1.1.10",
+    "unfetch": "^4.1.0"
   },
   "scripts": {
     "postinstall": "tsc"

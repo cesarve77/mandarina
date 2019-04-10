@@ -46,15 +46,10 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-var InvalidActionError_1 = require("mandarina/build/Errors/InvalidActionError");
 var UniqueTableError_1 = require("mandarina/build/Errors/UniqueTableError");
 var TableInstanceNotFound_1 = require("mandarina/build/Errors/TableInstanceNotFound");
-var Mandarina_1 = require("../Mandarina");
 var utils_1 = require("mandarina/build/Schema/utils");
-var FieldsPermissionsError_1 = require("mandarina/build/Errors/FieldsPermissionsError");
 var MissingIDTableError_1 = require("mandarina/build/Errors/MissingIDTableError");
-var getDefaultPermissions = function () { return ({ read: {}, create: {}, update: {}, delete: {} }); };
-var defaultActions = Object.keys(getDefaultPermissions());
 /**
  *
  * A Table instance is the representation of the one of several of the followings:
@@ -90,68 +85,25 @@ var Table = /** @class */ (function () {
     Table.prototype.getFields = function () {
         return this.schema.getFields();
     };
-    /**
-     * Returns the the authorization schema definition for the instance
-     *
-     * @return Permissions
-     */
-    Table.prototype.getPermissions = function () {
-        var _this = this;
-        var fields = this.getFields();
-        if (!this.permissions) {
-            this.permissions = getDefaultPermissions();
-            fields.forEach(function (field) {
-                var def = _this.schema.getPathDefinition(field);
-                var parentPath = field.split('.').shift();
-                var parentDef;
-                if (parentPath) {
-                    parentDef = _this.schema.getPathDefinition(parentPath);
-                }
-                defaultActions.forEach(function (action) {
-                    var parentRoles = parentDef && parentDef.permissions[action];
-                    var roles = def.permissions[action];
-                    if ((parentRoles && parentRoles.includes('nobody')) || (roles && roles.includes('nobody'))) { // if the first parent has nobody the there no permission for any children
-                        return;
-                    }
-                    if (!roles && !parentRoles) {
-                        _this.permissions[action].everyone = _this.permissions[action].everyone || [];
-                        _this.permissions[action].everyone.push(field);
-                        return;
-                    }
-                    else if (roles) {
-                        roles.forEach(function (role) {
-                            if (parentRoles && parentRoles.includes(role)) {
-                                _this.permissions[action][role] = _this.permissions[action][role] || [];
-                                _this.permissions[action][role].push(field);
-                            }
-                            else {
-                                _this.permissions[action][role] = _this.permissions[action][role] || [];
-                                _this.permissions[action][role].push(field);
-                            }
-                        });
-                    }
-                });
-            });
-        }
-        return this.permissions;
-    };
-    /**
+    /*
      * It apply the fields permissions policy by action and roles, throw an exception if is not a valid request
      *
      * @param action
      * @param role
      * @param model
-     */
-    Table.prototype.validatePermissions = function (action, role, model) {
-        var fields = this.getFields();
-        var allowedFields = Object.keys(this.getSchema(action, role));
-        var modelFields = (Array.isArray(model) ? model : Object.keys(model)).filter(function (f) { return fields.includes(f); });
-        var intersection = allowedFields.filter(function (af) { return modelFields.includes(af); });
+
+    validatePermissions(action: ActionType, role: string | string[] | null | undefined, model: string[] | any): void {
+        const fields = this.getFields();
+        const allowedFields = Object.keys(this.getSchema(action, role));
+        const modelFields = (Array.isArray(model) ? model : Object.keys(model)).filter(f => fields.includes(f));
+        const intersection = allowedFields.filter(af => modelFields.includes(af));
+
         if (modelFields.length > intersection.length) {
-            var invalidFields = modelFields.filter(function (mf) { return !intersection.includes(mf); });
-            throw new FieldsPermissionsError_1.FieldsPermissionsError(action, invalidFields);
+            const invalidFields = modelFields.filter(mf => !intersection.includes(mf));
+            throw new FieldsPermissionsError(action, invalidFields);
         }
-    };
+    }
+ */
     Table.prototype.getDefaultActions = function (type) {
         var _this = this;
         var result = {};
@@ -161,40 +113,31 @@ var Table = /** @class */ (function () {
             result[operationName] = function (_, args, context, info) {
                 if (args === void 0) { args = {}; }
                 return __awaiter(_this, void 0, void 0, function () {
-                    var time, bm, middlewares, user, subOperationName, action, prismaMethod, result;
+                    var time, bm, subOperationName, action, prismaMethod, result;
                     return __generator(this, function (_a) {
                         switch (_a.label) {
                             case 0:
+                                console.log('*****************************************************');
+                                console.log('operationName', operationName);
+                                console.log('args', args);
                                 time = new Date().getTime();
-                                bm = function () {
-                                    var description = [];
-                                    for (var _i = 0; _i < arguments.length; _i++) {
-                                        description[_i] = arguments[_i];
-                                    }
+                                bm = function (description) {
                                     if (description) {
                                         console.log(description, new Date().getTime() - time);
                                     }
                                     time = new Date().getTime();
                                 };
                                 bm();
-                                middlewares = this.options.middlewares || [];
-                                return [4 /*yield*/, Mandarina_1.default.config.getUser(context)];
-                            case 1:
-                                user = _a.sent();
                                 subOperationName = operationName.substr(0, 6);
                                 action = (['create', 'update', 'delete'].includes(subOperationName) ? subOperationName : 'read');
                                 prismaMethod = context.prisma[type][operationName];
-                                //const roles = user && user.roles
-                                bm(operationName + ' init');
-                                if (!(middlewares.length > 0)) return [3 /*break*/, 3];
-                                return [4 /*yield*/, Promise.all(middlewares.map(function (m) { return m(user, context, info); }))];
-                            case 2:
+                                console.log('type', type);
+                                console.log('action', action);
+                                console.log('before', "before" + utils_1.capitalize(action));
+                                if (!(type === 'mutation')) return [3 /*break*/, 5];
+                                return [4 /*yield*/, this.callHook('beforeValidate', _, args, context, info)];
+                            case 1:
                                 _a.sent();
-                                _a.label = 3;
-                            case 3:
-                                bm(operationName + ' middlewares');
-                                if (!(type === 'mutation')) return [3 /*break*/, 7];
-                                this.callHook('beforeValidate', action, _, args, context, info);
                                 //TODO: Flatting nested fields operation (context, update, create)
                                 // console.log('123123123',this.flatFields(args.data))
                                 // const errors = this.schema.validate(this.flatFields(args.data));
@@ -203,8 +146,8 @@ var Table = /** @class */ (function () {
                                 // } else {
                                 //     await this.callHook('afterValidate', action, _, args, context, info);
                                 // }
-                                return [4 /*yield*/, this.callHook("before" + utils_1.capitalize(action), action, _, args, context, info)];
-                            case 4:
+                                return [4 /*yield*/, this.callHook("before" + utils_1.capitalize(action), _, args, context, info)];
+                            case 2:
                                 //TODO: Flatting nested fields operation (context, update, create)
                                 // console.log('123123123',this.flatFields(args.data))
                                 // const errors = this.schema.validate(this.flatFields(args.data));
@@ -215,38 +158,33 @@ var Table = /** @class */ (function () {
                                 // }
                                 _a.sent();
                                 return [4 /*yield*/, prismaMethod(args, info)];
-                            case 5:
+                            case 3:
                                 //this.validatePermissions(action, roles, args.data);
                                 result = _a.sent();
                                 context.result = result;
-                                return [4 /*yield*/, this.callHook("after" + utils_1.capitalize(action), action, _, args, context, info)];
+                                return [4 /*yield*/, this.callHook("after" + utils_1.capitalize(action), _, args, context, info)];
+                            case 4:
+                                _a.sent();
+                                _a.label = 5;
+                            case 5:
+                                if (!(type === 'query')) return [3 /*break*/, 9];
+                                return [4 /*yield*/, this.callHook('beforeQuery', _, args, context, info)];
                             case 6:
                                 _a.sent();
-                                //this.validatePermissions('read', roles, fieldsList(info));
-                                bm('*********************');
-                                _a.label = 7;
-                            case 7:
-                                bm('mutation');
-                                if (!(type === 'query')) return [3 /*break*/, 11];
-                                bm(operationName + ' 1 beforeQuery');
-                                return [4 /*yield*/, this.callHook('beforeQuery', action, _, args, context, info)];
-                            case 8:
-                                _a.sent();
-                                bm(operationName + ' beforeQuery');
-                                //this.validatePermissions('read', roles, fieldsList(info));
-                                bm(operationName + ' validatePermissions');
                                 return [4 /*yield*/, prismaMethod(args, info)];
-                            case 9:
+                            case 7:
+                                //this.validatePermissions('read', roles, fieldsList(info));
                                 result = _a.sent();
                                 context.result = result;
-                                bm(operationName + ' prismaMethod');
-                                return [4 /*yield*/, this.callHook('afterQuery', action, _, args, context, info)];
-                            case 10:
+                                return [4 /*yield*/, this.callHook('afterQuery', _, args, context, info)];
+                            case 8:
                                 _a.sent();
-                                bm(operationName + ' afterQuery');
-                                bm(operationName + ' query');
-                                _a.label = 11;
-                            case 11: return [2 /*return*/, result];
+                                _a.label = 9;
+                            case 9:
+                                console.log('result', result);
+                                bm('done in ');
+                                console.log('*****************************************************');
+                                return [2 /*return*/, result];
                         }
                     });
                 });
@@ -267,15 +205,16 @@ var Table = /** @class */ (function () {
      * @param context
      * @param info
      */
-    Table.prototype.callHook = function (name, actionType, _, args, context, info) {
+    Table.prototype.callHook = function (name, _, args, context, info) {
         return __awaiter(this, void 0, void 0, function () {
             var hookHandler;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
+                        console.log('this.options.hooks', name, this.options.hooks);
                         hookHandler = this.options.hooks && this.options.hooks[name];
                         if (!hookHandler) return [3 /*break*/, 2];
-                        return [4 /*yield*/, hookHandler(actionType, _, args, context, info)];
+                        return [4 /*yield*/, hookHandler(_, args, context, info)];
                     case 1:
                         _a.sent();
                         _a.label = 2;
@@ -283,33 +222,6 @@ var Table = /** @class */ (function () {
                 }
             });
         });
-    };
-    /**
-     * Returns the resource schema appliying the authorization and data exposition policy
-     *
-     * @param action
-     * @param role
-     *
-     * @return Schema
-     */
-    Table.prototype.getSchema = function (action, role) {
-        var _this = this;
-        var roles = Array.isArray(role) ? role : [role];
-        if (!defaultActions.includes(action)) {
-            throw new InvalidActionError_1.InvalidActionError(action);
-        }
-        var fields = this.getFields();
-        var permissionsByRole = this.getPermissions()[action];
-        var allowedFieldsNames = Object.keys(permissionsByRole)
-            .filter(function (k) { return roles.includes(k); })
-            .map(function (k) { return permissionsByRole[k]; })
-            .reduce(function (p, c) { return p.concat(c); }, permissionsByRole.everyone);
-        return fields
-            .filter(function (fieldName) { return allowedFieldsNames.includes(fieldName); })
-            .reduce(function (res, fieldName) {
-            var _a;
-            return (__assign({}, res, (_a = {}, _a[fieldName] = _this.schema.shape[fieldName], _a)));
-        }, {});
     };
     return Table;
 }());

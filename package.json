@@ -13,6 +13,7 @@
   "scripts": {
     "publish-docs": "GIT_USER=cesarve77 cd website && docusaurus-publish",
     "start": "cd website && yarn start",
+    "tsc": "tsc -p ./packages/mandarina && tsc -p ./packages/mandarina-server && tsc -p ./packages/mandarina-antd",
     "bump-publish": "npm whoami && npm version patch && cd packages/mandarina && npm version patch && npm publish && cd ../mandarina-antd && npm version patch  && npm publish && cd ../mandarina-server && npm version patch  && npm publish && PACKAGE_VERSION=$( cat package.json | grep version | awk '{ print $2 }' | sed s/\\\"//g | sed s/,//g ) && git tag $PACKAGE_VERSION && git push --tags",
     "publish": "npm whoami && cd packages/mandarina  && npm publish && cd ../mandarina-antd && npm publish && cd ../mandarina-server && npm publish "
   },

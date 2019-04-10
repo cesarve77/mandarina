@@ -19,29 +19,46 @@ var Validators_1 = require("./Validators");
 var utils_1 = require("./utils");
 var UniqueSchemaError_1 = require("../Errors/UniqueSchemaError");
 var SchemaInstanceNotFound_1 = require("../Errors/SchemaInstanceNotFound");
-var utils_2 = require("../Schema/utils");
+var utils_2 = require("../utils");
+/**
+ * Schema is the base of all components in Mandarina
+ *
+ * Form schemas mandarina is able to create:
+ *
+ * - Tables
+ * - Form
+ * - Lists
+ *
+ * Schemas are rigid and dynamic, maybe it is the biggest limitation of mandarina, you are no able to build a schema on the fly or programmatically.
+ */
+var getDefaultPermissions = function () { return ({ read: {}, create: {}, update: {}, delete: {} }); };
+var defaultActions = Object.keys(getDefaultPermissions());
 var Schema = /** @class */ (function () {
     function Schema(shape, options) {
         var _this = this;
         this.arraysFields = [];
         this.pathDefinitions = {};
-        var name = options.name, _a = options.recursive, recursive = _a === void 0 ? [] : _a, _b = options.forceType, forceType = _b === void 0 ? true : _b, _c = options.virtual, virtual = _c === void 0 ? false : _c, errorFromServerMapper = options.errorFromServerMapper, permissions = options.permissions;
+        this._isConnectingTable = function (value) {
+            return (value && value.hasOwnProperty && value.hasOwnProperty('id') && typeof value.id === 'string');
+        };
+        var name = options.name, _a = options.recursive, recursive = _a === void 0 ? [] : _a, errorFromServerMapper = options.errorFromServerMapper, permissions = options.permissions;
         this.name = name;
-        Schema.instances = Schema.instances || [];
+        Schema.instances = Schema.instances || {};
         if (Schema.instances[this.name]) {
             throw new UniqueSchemaError_1.UniqueSchemaError(this.name);
         }
         Schema.instances[this.name] = this;
         this.errorFromServerMapper = errorFromServerMapper;
-        this.options = { recursive: recursive, forceType: forceType, virtual: virtual };
+        this.options = { recursive: recursive };
         this.permissions = permissions || {};
         this.shape = lodash_mapvalues_1.default(shape, function (field, key) { return _this.applyDefinitionsDefaults(field, key); });
         this.keys = Object.keys(this.shape);
+        //if (!this.keys.includes('id')) this.extend({id: {type:String}})
         this.filePath = this.getFilePath();
-        var single = utils_2.singularize(this.name);
-        var singleUpper = utils_2.capitalize(single);
-        var plural = utils_2.pluralize(this.name);
-        var pluralUpper = utils_2.capitalize(plural);
+        var single = utils_1.singularize(this.name);
+        var singleUpper = utils_1.capitalize(single);
+        var plural = utils_1.pluralize(this.name);
+        var pluralUpper = utils_1.capitalize(plural);
         var connection = plural + "Connection";
         this.names = {
             // Example user, users, usersConnection
@@ -69,6 +86,111 @@ var Schema = /** @class */ (function () {
             throw new SchemaInstanceNotFound_1.SchemaInstanceNotFound(name);
         }
         return Schema.instances[name];
+    };
+    Schema.prototype.extend = function (shape) {
+        var _this = this;
+        this.shape = __assign({}, this.shape, lodash_mapvalues_1.default(shape, function (def, key) { return _this.applyDefinitionsDefaults(def, key); }));
+        this.keys = Object.keys(this.shape);
+    };
+    Schema.prototype.getFieldDefinition = function (key) {
+        return __assign({}, this.shape[key]);
+    };
+    Schema.prototype.getPathDefinition = function (key) {
+        if (!this.pathDefinitions[key]) {
+            this.pathDefinitions[key] = this.generatePathDefinition(key);
+        }
+        return this.pathDefinitions[key];
+    };
+    Schema.prototype.getFields = function () {
+        if (!this.fields) {
+            this.fields = this._getFields();
+        }
+        return this.fields;
+    };
+    Schema.prototype.clean = function (model, fields) {
+        if (fields === void 0) { fields = this.getFields(); }
+        this.original = model;
+        this._clean(model, fields);
+    };
+    Schema.prototype.getFilePath = function () {
+        if (!this.filePath) {
+            var origPrepareStackTrace = Error.prepareStackTrace;
+            Error.prepareStackTrace = function (_, stack) {
+                return stack;
+            };
+            var err = new Error();
+            var stack = err.stack;
+            Error.prepareStackTrace = origPrepareStackTrace;
+            var path = require('path');
+            // @ts-ignore
+            if (!stack || !stack[2] || !stack[2].getFileName)
+                return '';
+            // @ts-ignore
+            this.filePath = path.dirname(stack[2].getFileName());
+        }
+        return this.filePath;
+    };
+    Schema.prototype.validate = function (model, fields) {
+        if (fields === void 0) { fields = this.getFields(); }
+        this.clean(model, fields);
+        return this._validate(model, '', [{ schema: this.name, path: '' }], model);
+    };
+    /**
+     * Mutate the model,with all keys  proper types and null for undefined
+     * TODO: Refactor to prevent mutation, fix it creating a new cloned model and returning it
+     * @param model
+     * @param transform
+     * @param removeExtraKeys
+     */
+    Schema.prototype._clean = function (model, fields, removeExtraKeys) {
+        var _this = this;
+        if (removeExtraKeys === void 0) { removeExtraKeys = true; }
+        if (removeExtraKeys && model && typeof model === 'object') {
+            Object.keys(model).forEach(function (key) {
+                if (!_this.keys.includes(key)) {
+                    delete model[key];
+                }
+            });
+        }
+        this.keys.forEach(function (key) {
+            if (key !== '___typename' && fields.every(function (field) { return field !== key && field.indexOf(key + '.') < 0; })) {
+                return model && delete model[key];
+            }
+            var definition = _this.getFieldDefinition(key);
+            var type = definition.type;
+            if (typeof type === "function" && typeof model === 'object' && model !== undefined && model !== null) {
+                model[key] = utils_1.forceType(model[key], definition.type);
+                model[key] = model[key] === 0 ? 0 : model[key] || definition.defaultValue;
+            }
+            else if (typeof type === "string" && typeof model === 'object' && model !== undefined && model !== null) {
+                if (model[key] !== 0 && !model[key]) {
+                    return model[key] = definition.defaultValue;
+                }
+                var schema = Schema.getInstance(type);
+                schema._clean(model[key], utils_2.getDecendents(fields, key));
+                return;
+            }
+            else if (Array.isArray(type) && typeof model === 'object' && model !== undefined && model !== null) {
+                model[key] = utils_1.forceType(model[key], Array);
+                if (typeof type[0] === 'string') {
+                    var schema_1 = Schema.getInstance(type[0]);
+                    model[key] = model[key].map(function (value) {
+                        schema_1._clean(value, utils_2.getDecendents(fields, key));
+                        return value;
+                    });
+                }
+                else {
+                    model[key] = model[key].map(function (value) { return utils_1.forceType(value, type[0]); });
+                }
+                return;
+            }
+            if (model) {
+                model[key] = definition.transformValue.call({
+                    model: _this.original,
+                    siblings: model
+                }, model[key]);
+            }
+        });
     };
     Schema.prototype.applyDefinitionsDefaults = function (definition, key) {
         var fieldDefinition = {};
@@ -132,7 +254,7 @@ var Schema = /** @class */ (function () {
         fieldDefinition.type = definition.type;
         fieldDefinition.form = definition.form || {};
         fieldDefinition.list = definition.list || {};
-        fieldDefinition.unique = !!definition.unique;
+        fieldDefinition.table = definition.table || {};
         fieldDefinition.transformValue = definition.transformValue || (function (value) { return value; });
         if (typeof definition.label === 'string') {
             fieldDefinition.label = definition.label;
@@ -145,127 +267,6 @@ var Schema = /** @class */ (function () {
         }
         return fieldDefinition;
     };
-    Schema.prototype.extend = function (shape) {
-        var _this = this;
-        this.shape = __assign({}, this.shape, lodash_mapvalues_1.default(shape, function (def, key) { return _this.applyDefinitionsDefaults(def, key); }));
-        this.keys = Object.keys(this.shape);
-    };
-    Schema.prototype.getFieldDefinition = function (key) {
-        return __assign({}, this.shape[key]);
-    };
-    /**
-     *
-     * @param permissions
-     */
-    Schema.prototype.inheritPermission = function (permissions) {
-        return this;
-        // TODO: this is has very bad performance for deep nested tables
-        // if (!permissions) {
-        //     return this
-        // }
-        // const clone: Schema = cloneDeep(this);
-        // clone.permissions = permissions;
-        // clone.shape = mapValues(clone.shape, (def, key) => clone.applyDefinitionsDefaults(def, key));
-        // clone.keys = Object.keys(clone.shape);
-        // return clone;
-    };
-    Schema.prototype.getPathDefinition = function (key) {
-        if (!this.pathDefinitions[key]) {
-            this.pathDefinitions[key] = this.generatePathDefinition(key);
-        }
-        return this.pathDefinitions[key];
-    };
-    Schema.prototype.getFields = function () {
-        if (!this.fields) {
-            this.fields = this._getFields();
-        }
-        return this.fields;
-    };
-    Schema.prototype.clean = function (model, transform) {
-        if (transform === void 0) { transform = false; }
-        this.original = model;
-        this._clean(model, transform);
-    };
-    Schema.prototype.getFilePath = function () {
-        if (!this.filePath) {
-            var origPrepareStackTrace = Error.prepareStackTrace;
-            Error.prepareStackTrace = function (_, stack) {
-                return stack;
-            };
-            var err = new Error();
-            var stack = err.stack;
-            Error.prepareStackTrace = origPrepareStackTrace;
-            var path = require('path');
-            // @ts-ignore
-            if (!stack || !stack[2] || !stack[2].getFileName)
-                return '';
-            // @ts-ignore
-            this.filePath = path.dirname(stack[2].getFileName());
-        }
-        return this.filePath;
-    };
-    Schema.prototype.validate = function (model) {
-        this.clean(model);
-        return this._validate(model, '', [{ schema: this.name, path: '' }], model);
-    };
-    /**
-     * Mutate the model,with all keys  proper types and null for undefined
-     * TODO: Refactor to prevent mutation, fix it creating a new cloned model and returning it
-     * @param model
-     * @param transform
-     * @param removeExtraKeys
-     */
-    Schema.prototype._clean = function (model, transform, removeExtraKeys) {
-        var _this = this;
-        if (transform === void 0) { transform = false; }
-        if (removeExtraKeys === void 0) { removeExtraKeys = true; }
-        if (removeExtraKeys && model && typeof model === 'object') {
-            Object.keys(model).forEach(function (key) {
-                if (!_this.keys.includes(key)) {
-                    delete model[key];
-                }
-            });
-        }
-        this.keys.forEach(function (key) {
-            var definition = _this.getFieldDefinition(key);
-            var type = definition.type;
-            if (typeof type === "function" && typeof model === 'object' && model !== undefined && model !== null) {
-                model[key] = utils_1.forceType(model[key], definition.type);
-                model[key] = model[key] === 0 ? 0 : model[key] || definition.defaultValue;
-            }
-            else if (typeof type === "string" && typeof model === 'object' && model !== undefined && model !== null) {
-                if (model[key] !== 0 && !model[key]) {
-                    return model[key] = definition.defaultValue;
-                }
-                var schema = Schema.getInstance(type);
-                schema._clean(model[key], transform);
-                return;
-            }
-            else if (Array.isArray(type) && typeof model === 'object' && model !== undefined && model !== null) {
-                model[key] = utils_1.forceType(model[key], Array);
-                if (typeof type[0] === 'string') {
-                    var schema_1 = Schema.getInstance(type[0]);
-                    model[key] = model[key].map(function (value) {
-                        schema_1._clean(value, transform);
-                        return value;
-                    });
-                }
-                else {
-                    model[key] = model[key].map(function (value) { return utils_1.forceType(value, type[0]); });
-                }
-                return;
-            }
-            else if (Array.isArray(type) && typeof model !== 'object' && model !== undefined && model !== null) {
-                console.log('NOOOOO DETERMINADO', key, model);
-            }
-            if (transform && model) {
-                model[key] = definition.transformValue.call({
-                    model: _this.original,
-                    siblings: model
-                }, model[key]);
-            }
-        });
-    };
     Schema.prototype.generatePathDefinition = function (key) {
         var paths = key.split('.');
         var schema = this;
@@ -274,19 +275,19 @@ var Schema = /** @class */ (function () {
             if (!path.match(/\$|^\d+$/)) { //example user.0
                 def = schema.getFieldDefinition(path);
                 if (typeof def.type === 'string') {
-                    schema = Schema.getInstance(def.type).inheritPermission(def.permissions);
+                    schema = Schema.getInstance(def.type);
                 }
                 if (Array.isArray(def.type)) {
                     var tableName = def.type[0];
                     if (typeof tableName === 'string') {
-                        schema = Schema.getInstance(tableName).inheritPermission(def.permissions);
+                        schema = Schema.getInstance(tableName);
                     }
                 }
             }
             else if (Array.isArray(def.type)) { //should be
                 def.type = def.type[0];
                 if (typeof def.type === 'string') {
-                    schema = Schema.getInstance(def.type).inheritPermission(def.permissions);
+                    schema = Schema.getInstance(def.type);
                 }
             }
         });
@@ -313,7 +314,7 @@ var Schema = /** @class */ (function () {
                 if (!pathHistory.some(function (_a) {
                     var schema = _a.schema, path = _a.path;
                     return schemaName_1 === schema;
-                })) {
+                }) && !_this._isConnectingTable(value)) {
                     internalErrors = schema._validate(value, path, pathHistory, originalModel);
                 }
                 pathHistory.push({ path: path, schema: schemaName_1 });
@@ -341,7 +342,7 @@ var Schema = /** @class */ (function () {
                         if (!pathHistory.some(function (_a) {
                             var schema = _a.schema, path = _a.path;
                             return schemaName_2 === schema;
-                        })) {
+                        }) && !_this._isConnectingTable(value)) {
                             internalErrors_1 = internalErrors_1.concat(schema_2._validate(value, path + "." + i, pathHistory, originalModel));
                         }
                         pathHistory.push({ path: path, schema: schemaName_2 });
@@ -434,6 +435,51 @@ var Schema = /** @class */ (function () {
             }
         });
         return fields;
+    };
+    /**
+     * Returns the the authorization schema definition for the instance
+     *
+     * @return Permissions
+     */
+    Schema.prototype.getPermissions = function () {
+        var _this = this;
+        var fields = this.getFields();
+        if (!this.rolePermissions) {
+            this.rolePermissions = getDefaultPermissions();
+            fields.forEach(function (field) {
+                var def = _this.getPathDefinition(field);
+                var parentPath = field.split('.').shift();
+                var parentDef;
+                if (parentPath) {
+                    parentDef = _this.getPathDefinition(parentPath);
+                }
+                defaultActions.forEach(function (action) {
+                    var parentRoles = parentDef && parentDef.permissions[action];
+                    var roles = def.permissions[action];
+                    if ((parentRoles && parentRoles.includes('nobody')) || (roles && roles.includes('nobody'))) { // if the first parent has nobody the there no permission for any children
+                        return;
+                    }
+                    if (!roles && !parentRoles) {
+                        _this.rolePermissions[action].everyone = _this.rolePermissions[action].everyone || [];
+                        _this.rolePermissions[action].everyone.push(field);
+                        return;
+                    }
+                    else if (roles) {
+                        roles.forEach(function (role) {
+                            if (parentRoles && parentRoles.includes(role)) {
+                                _this.rolePermissions[action][role] = _this.rolePermissions[action][role] || [];
+                                _this.rolePermissions[action][role].push(field);
+                            }
+                            else {
+                                _this.rolePermissions[action][role] = _this.rolePermissions[action][role] || [];
+                                _this.rolePermissions[action][role].push(field);
+                            }
+                        });
+                    }
+                });
+            });
+        }
+        return this.rolePermissions;
     };
     return Schema;
 }());

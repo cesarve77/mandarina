@@ -6,10 +6,10 @@ import {onError} from 'apollo-link-error';
 import {ApolloLink} from 'apollo-link';
 import {ApolloProvider} from "react-apollo";
 import fetch from 'unfetch'
-import '../tables/User'
-import '../tables/Address'
-import '../tables/Category'
-import '../tables/Post'
+import '../schemas/User'
+import '../schemas/Address'
+import '../schemas/Category'
+import '../schemas/Post'
 
 
 export const client = new ApolloClient({

@@ -41,16 +41,14 @@ var lodash_pull_1 = require("lodash.pull");
 var utils_2 = require("../utils");
 var FindBase = /** @class */ (function (_super) {
     __extends(FindBase, _super);
-    function FindBase() {
-        var _this = _super !== null && _super.apply(this, arguments) || this;
+    function FindBase(props) {
+        var _this = _super.call(this, props) || this;
         _this.queryHistory = [];
         _this.buildQueryFromFields = function (fields) { return utils_1.buildQueryFromFields(fields); };
-        return _this;
-    }
-    FindBase.prototype.componentWillMount = function () {
         FindBase.queries = FindBase.queries || [];
+        return _this;
         //todo: **1
-    };
+    }
     FindBase.prototype.componentWillUnmount = function () {
         if (!Array.isArray(FindBase.queries))
             return;
@@ -58,8 +56,8 @@ var FindBase = /** @class */ (function (_super) {
     };
     FindBase.prototype.render = function () {
         var _a;
-        var _b = this.props, _c = _b.fields, optionalFields = _c === void 0 ? [] : _c, schema = _b.schema, after = _b.after, first = _b.first, type = _b.type, where = _b.where, skip = _b.skip, omitFields = _b.omitFields, omitFieldsRegEx = _b.omitFieldsRegEx, children = _b.children, pollInterval = _b.pollInterval, notifyOnNetworkStatusChange = _b.notifyOnNetworkStatusChange, _d = _b.fetchPolicy, fetchPolicy = _d === void 0 ? 'cache-and-network' : _d, errorPolicy = _b.errorPolicy, ssr = _b.ssr, displayName = _b.displayName, onCompleted = _b.onCompleted, onError = _b.onError, context = _b.context, partialRefetch = _b.partialRefetch, props = __rest(_b, ["fields", "schema", "after", "first", "type", "where", "skip", "omitFields", "omitFieldsRegEx", "children", "pollInterval", "notifyOnNetworkStatusChange", "fetchPolicy", "errorPolicy", "ssr", "displayName", "onCompleted", "onError", "context", "partialRefetch"]);
-        var fields = utils_2.filterFields(optionalFields || schema.getFields(), omitFields, omitFieldsRegEx);
+        var _b = this.props, optionalFields = _b.fields, schema = _b.schema, after = _b.after, first = _b.first, type = _b.type, where = _b.where, skip = _b.skip, omitFields = _b.omitFields, omitFieldsRegEx = _b.omitFieldsRegEx, children = _b.children, pollInterval = _b.pollInterval, notifyOnNetworkStatusChange = _b.notifyOnNetworkStatusChange, _c = _b.fetchPolicy, fetchPolicy = _c === void 0 ? 'cache-and-network' : _c, errorPolicy = _b.errorPolicy, ssr = _b.ssr, displayName = _b.displayName, onCompleted = _b.onCompleted, onError = _b.onError, context = _b.context, partialRefetch = _b.partialRefetch, props = __rest(_b, ["fields", "schema", "after", "first", "type", "where", "skip", "omitFields", "omitFieldsRegEx", "children", "pollInterval", "notifyOnNetworkStatusChange", "fetchPolicy", "errorPolicy", "ssr", "displayName", "onCompleted", "onError", "context", "partialRefetch"]);
+        var fields = utils_2.filterFields(schema.getFields(), optionalFields, omitFields, omitFieldsRegEx);
         var names = schema.names;
         var defaultQuery = this.buildQueryFromFields(fields);
         var queryString;

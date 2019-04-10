@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var Schema_1 = require("./Schema/Schema");
 exports.Schema = Schema_1.Schema;
 var Auth_1 = require("./Auth/Auth");
-exports.AuthTable = Auth_1.AuthTable;
+exports.Auth = Auth_1.default;
 var Mutate_1 = require("./Operations/Mutate");
 exports.Create = Mutate_1.Create;
 var Mutate_2 = require("./Operations/Mutate");

@@ -22,6 +22,8 @@ import * as React from "react";
  * Schemas are rigid and dynamic, maybe it is the biggest limitation of mandarina, you are no able to build a schema on the fly or programmatically.
  */
 
+const getDefaultPermissions = () => ({read: {}, create: {}, update: {}, delete: {}});
+const defaultActions = Object.keys(getDefaultPermissions());
 
 export class Schema {
     static instances: { [actionName: string]: Schema };
@@ -37,7 +39,11 @@ export class Schema {
     private fields: string[]
     private original: Model;
     private filePath: string;
-
+    private rolePermissions: {
+        read: { [role: string]: string[] }
+        create: { [role: string]: string[] }
+        update: { [role: string]: string[] }
+    };
     constructor(shape: UserSchemaShape, options: SchemaOptions) {
         const {name, recursive = [], errorFromServerMapper, permissions} = options;
         this.name = name;
@@ -49,14 +55,14 @@ export class Schema {
         }
 
         Schema.instances[this.name] = this;
+
         this.errorFromServerMapper = errorFromServerMapper;
         this.options = {recursive};
         this.permissions = permissions || {};
         this.shape = mapValues(shape, (field, key) => this.applyDefinitionsDefaults(field, key));
         this.keys = Object.keys(this.shape);
+        //if (!this.keys.includes('id')) this.extend({id: {type:String}})
         this.filePath = this.getFilePath()
-
-
         const single = singularize(this.name);
         const singleUpper = capitalize(single);
         const plural = pluralize(this.name);
@@ -146,10 +152,7 @@ export class Schema {
     }
 
     validate(model: Model, fields: string[] = this.getFields()): ErrorValidator[] {
-        console.log('fields',fields)
-        console.log('model',model)
         this.clean(model, fields)
-        console.log('model clean',model)
         return this._validate(model, '', [{schema: this.name, path: ''}], model);
     }
 
@@ -202,9 +205,6 @@ export class Schema {
                     model[key] = model[key].map((value: any) => forceType(value, <Native>type[0]));
                 }
                 return;
-            } else if (Array.isArray(type) && typeof model !== 'object' && model !== undefined && model !== null) {
-                console.log('NOOOOO DETERMINADO', key, model)
-
             }
 
 
@@ -339,7 +339,6 @@ export class Schema {
     }
 
     private _isConnectingTable = (value: any) => {
-        console.log('value',value,(value && value.hasOwnProperty &&  value.hasOwnProperty('id') && typeof value.id === 'string'))
         return (value && value.hasOwnProperty &&  value.hasOwnProperty('id') && typeof value.id === 'string')
     }
 
@@ -361,11 +360,8 @@ export class Schema {
                 const schema = Schema.getInstance(type);
                 const schemaName = schema.name;
                 let internalErrors: ErrorValidator[] = [];
-                console.log('path',path)
-
                 // Check if we are entering in a recursive table, if actual table has been used before, reviewing the history
                 if (!pathHistory.some(({schema, path}) => schemaName === schema) && !this._isConnectingTable(value)) {
-                    console.log('entro')
                     internalErrors = schema._validate(value, path, pathHistory, originalModel);
                 }
                 pathHistory.push({path: path, schema: schemaName});
@@ -391,10 +387,7 @@ export class Schema {
                     const schemaName = schema.name;
                     let internalErrors: ErrorValidator[] = [];
                     value.forEach((value: any, i: number) => {
-                        console.log('path',path)
-
                         if (!pathHistory.some(({schema, path}) => schemaName === schema) && !this._isConnectingTable(value)) {
-                            console.log('entro')
                             internalErrors = [...internalErrors, ...schema._validate(value, `${path}.${i}`, pathHistory, originalModel)];
                         }
                         pathHistory.push({path, schema: schemaName});
@@ -496,6 +489,55 @@ export class Schema {
         return fields;
     }
 
+    /**
+     * Returns the the authorization schema definition for the instance
+     *
+     * @return Permissions
+     */
+    getPermissions() {
+        const fields = this.getFields();
+        if (!this.rolePermissions) {
+            this.rolePermissions = getDefaultPermissions();
+
+            fields.forEach((field) => {
+                const def = this.getPathDefinition(field)
+                const parentPath = field.split('.').shift() as string
+                let parentDef: FieldDefinition | undefined
+                if (parentPath) {
+                    parentDef = this.getPathDefinition(parentPath)
+                }
+
+                defaultActions.forEach((action) => {
+                    const parentRoles = parentDef && parentDef.permissions[action]
+                    const roles: string[] = def.permissions[action]
+                    if ((parentRoles && parentRoles.includes('nobody')) || (roles && roles.includes('nobody'))) { // if the first parent has nobody the there no permission for any children
+                        return
+                    }
+
+                    if (!roles && !parentRoles) {
+                        this.rolePermissions[action].everyone = this.rolePermissions[action].everyone || []
+                        this.rolePermissions[action].everyone.push(field)
+                        return
+                    } else if (roles) {
+                        roles.forEach((role) => {
+                            if (parentRoles && parentRoles.includes(role)) {
+                                this.rolePermissions[action][role] = this.rolePermissions[action][role] || []
+                                this.rolePermissions[action][role].push(field)
+                            } else {
+                                this.rolePermissions[action][role] = this.rolePermissions[action][role] || []
+                                this.rolePermissions[action][role].push(field)
+                            }
+
+                        })
+
+                    }
+                })
+            });
+        }
+        return this.rolePermissions;
+    }
+
+
 }
 
 export interface Model {
@@ -587,7 +629,7 @@ export interface UserFieldDefinition {
         rename?: string
         unique?: boolean,
         relation?: string | {
-            name?: string
+            name: string
             onDelete?: 'SET_NULL' | 'CASCADE'
         }
     },
@@ -629,7 +671,7 @@ export interface FieldDefinition extends UserFieldDefinition {
         rename?: string
         unique?: boolean,
         relation?: string | {
-            name?: string
+            name: string
             onDelete?: 'SET_NULL' | 'CASCADE'
         }
     },
@@ -650,7 +692,6 @@ export interface OverwriteDefinition {
         placeholder?: string
         col?: false | number | any
         props?: any
-
     }
     list?: {
         hidden?: true

@@ -70,8 +70,9 @@ export interface Initiator {
     (obj: any, schema: Schema): void
 }
 
+type MutationType = 'create' | 'update'
 
-class Mutate extends PureComponent<WithApolloClient<MutateProps & { type: 'create' | 'update' }>> {
+export class Mutate extends PureComponent<WithApolloClient<MutateProps & { type: MutationType }>> {
 
     query: string
 
@@ -119,41 +120,60 @@ class Mutate extends PureComponent<WithApolloClient<MutateProps & { type: 'creat
         }
     }
 
-    getSubSchemaMutations(model: Model, schema: Schema) {
-        console.log('original model', model)
-        const clone = deepClone(model)
 
-        delete clone.id
-        const wrapper: Wrapper = (result, type): object => {
-            if (type instanceof Schema) {
-                //todo check next statement id is always there?
-                if (Array.isArray(result)) {
-                    if (result.every(item => item && item.id !== undefined && Object.keys(result[0]).length === 1)) {
-                        return {connect: result}
-                    } else if (result.every(item => item && item.id)) {
-                        return {update: result}
+    getSubSchemaMutations(model: Model, schema: Schema) {
+        if (typeof model !== "object" || model === undefined || model === null) return model
+        Object.keys(model).forEach((key) => {
+            const value = model[key]
+            let definition = schema.getFieldDefinition(key)
+            if (typeof value === "object" && value !== null && value !== undefined && !(value instanceof Date)) {
+                if (Array.isArray(definition.type)) {
+                    if (typeof definition.type[0] === 'string') {
+                        const schema = Schema.getInstance(definition.type[0] as string)
+                        if (!Array.isArray(value)) {
+                            return {[key]: null}
+                        }
+                        if (schema.keys.includes('id')) {
+                            const result: { create?: any, update?: any } = {}
+                            value.forEach((item) => ({...result, ...this.getSubSchemaMutations(item, schema)}))
+                            return {[key]: result}
+                        } else {
+                            const result: { deleteMany?: [{}] } = {}
+                            if (this.props.type === 'update') {
+                                result.deleteMany = [{}]
+                            }
+                            value.forEach((item) => ({...result, ...this.getSubSchemaMutations(item, schema)}))
+                            return {[key]: result}
+                        }
                     } else {
-                        return {create: result}
+                        return {[key]: {[this.props.type]: value}}
                     }
                 } else {
-                    if (result && result.id !== undefined && Object.keys(result).length === 1) {
-                        return {connect: result}
-                    } else if (result && result.id) {
-                        return {update: result}
+                    if (typeof definition.type === 'string') {
+                        const schema = Schema.getInstance(definition.type)
+                        if (this.props.type === 'update' && value && value.id) {
+                            const {id, ...item} = value
+                            return {
+                                [key]: {
+                                    update: {
+                                        where: {id},
+                                        data: this.getSubSchemaMutations(item, schema)
+                                    }
+                                }
+                            }
+                        } else {
+                            return {[key]: {create: this.getSubSchemaMutations(value, schema)}}
+                        }
+
                     } else {
-                        return {create: result}
+                        return {[key]: {[this.props.type]: value}}
                     }
                 }
-
             } else {
-                return {set: result}
-
+                return {[key]: value}
             }
-            return result
-        }
-        const initiator = () => ({})
-        console.log('result model', this.spider(clone, schema, wrapper, initiator))
-        return this.spider(clone, schema, wrapper, initiator)
+        })
+        return model
     }
 
 
@@ -312,11 +332,9 @@ export const Update = ({id, schema, children, fields, optimisticResponse, ...pro
         }
     }
 
-    console.log('where', where)
     return (
         <FindOne schema={schema} where={where} fields={fields} {...props}>
             {({data, ...findOneProps}) => {
-                console.log('data',data)
                 return (
                     <MutateWithApollo where={where} type='update' schema={schema} doc={data}
                                       optimisticResponse={optimisticResponse} {...findOneProps} >
@@ -348,4 +366,65 @@ export const refetchQueries = (mutationResult: FetchResult, schema: Schema, clie
         }
     })
     return refetchQueries
+}
+
+export const getSubSchemaMutations = (model: Model, schema: Schema, mutationType: MutationType) => {
+    const obj: any = {}
+    if (typeof model !== "object" || model === undefined || model === null) return model
+    Object.keys(model).forEach((key) => {
+        const value = model[key]
+        let definition = schema.getFieldDefinition(key)
+        if (Array.isArray(definition.type)) {
+            if (typeof definition.type[0] === 'string') {
+                const schema = Schema.getInstance(definition.type[0] as string)
+                if (!Array.isArray(value)) {
+                    obj[key] = null
+                }
+                if (schema.keys.includes('id')) {
+                    let result: { create?: any[], update?: any[] } = {}
+                    value.forEach((item: any) => {
+                        let type: MutationType | 'connect'
+                        if (item && item.id && Object.keys(item).length===1){
+                            type='connect'
+                        }else{
+                            type = mutationType = 'update' && item && item.id ? 'update' : 'create'
+                        }
+                        result[type] = result[type] || []
+                        result[type].push(getSubSchemaMutations(item, schema, mutationType))
+
+                    })
+                    console.log('result', schema.name, result)
+                    obj[key] = result
+                } else {
+                    let result: { deleteMany?: [{}] ,create:any[]} = {create:[]}
+                    if (mutationType === 'update') {
+                        result.deleteMany = [{}]
+                    }
+                    result.create.push(getSubSchemaMutations(value, schema, mutationType))
+                    obj[key] = result
+                }
+            } else {
+                obj[key] = {set: value}
+            }
+        } else {
+            if (typeof definition.type === 'string') {
+                const schema = Schema.getInstance(definition.type)
+                if (mutationType === 'update' && value && value.id) {
+                    const {id, ...item} = value
+                    return obj[key] = {
+                        update: {
+                            where: {id},
+                            data: getSubSchemaMutations(item, schema, mutationType)
+                        }
+                    }
+                } else {
+                    return obj[key] = {create: getSubSchemaMutations(value, schema, mutationType)}
+                }
+            } else {
+                return obj[key] = value
+            }
+        }
+
+    })
+    return obj
 }

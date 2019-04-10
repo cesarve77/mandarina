@@ -1,6 +1,6 @@
 import {Schema} from "mandarina";
 import {capitalize, isRequired} from "mandarina/build/Schema/utils";
-import {CustomAction, Table} from "../../";
+import {CustomAction} from "../../";
 import path from "path";
 import fs from "fs";
 import {getParents} from "mandarina/build/utils";
@@ -91,9 +91,7 @@ const getMainSchema = (schema: Schema, type: 'input' | 'type') => {
     let mainSchema = []
     for (const key of schema.keys) {
         if (key === 'id' && type === 'type') {
-            if (!!Table.instances[schema.name]) {
-                mainSchema.push(`id: ID! @unique`);
-            }
+            mainSchema.push(`id: ID! @unique`);
             continue
         }
         const field = schema.getFieldDefinition(key)
@@ -204,12 +202,12 @@ export const saveDockerComposeYaml = (dir: string, port: string) => {
 
 const saveYaml = (file: string, data: any) => {
     const yaml: any = require("yaml")
-    const contentFile=fs.readFileSync(file,{encoding:'utf8'}).replace(/([\t ]*)PRISMA_CONFIG *: *(\||>)?\n/,'$1PRISMA_CONFIG:\n')
+    const contentFile = fs.readFileSync(file, {encoding: 'utf8'}).replace(/([\t ]*)PRISMA_CONFIG *: *(\||>)?\n/, '$1PRISMA_CONFIG:\n')
     let originalData = yaml.parse(contentFile) || {};
 
     const newData = merge(originalData, data)
-    const str=yaml.stringify(newData).replace(/([\t ]*)PRISMA_CONFIG *: *\n/,'$1PRISMA_CONFIG: |\n')
-    fs.writeFileSync(file , str);
+    const str = yaml.stringify(newData).replace(/([\t ]*)PRISMA_CONFIG *: *\n/, '$1PRISMA_CONFIG: |\n')
+    fs.writeFileSync(file, str);
 }
 
 export const getSubSchemas = (schema: Schema): string[] => {

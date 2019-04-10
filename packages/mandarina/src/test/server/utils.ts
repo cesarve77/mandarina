@@ -1,8 +1,5 @@
 import {client} from "./client";
 import gql from "graphql-tag";
-import {CategoryInterface} from "../tables/Category";
-import {PostInterface} from "../tables/Post";
-import {AddressInterface} from "../tables/Address";
 import {buildQueryFromFields} from "../../Operations/utils";
 import {Table} from "../../../../mandarina-server/src/Table/Table";
 import {ApolloQueryResult} from "apollo-client";
@@ -11,12 +8,12 @@ import {ApolloQueryResult} from "apollo-client";
 const random = (min = 1, max = 5) => Math.floor(Math.random() * max) + min
 
 
-const categories: CategoryInterface[] = new Array(20).fill('').map((n, i) => ({category: `cat_${i}`}))
+const categories= new Array(20).fill('').map((n, i) => ({category: `cat_${i}`}))
 const tags: string[] = new Array(20).fill('').map((n, i) => (`tag_${i}`))
 const categoriesCount = categories.length
 const tagsCount = tags.length
 
-export const categoriesCreator = (userId?: string): CategoryInterface[] => {
+export const categoriesCreator = (userId?: string)  => {
     const max = random()
     const result = [];
     for (let n = 1; n <= max; ++n) {
@@ -57,20 +54,21 @@ export const tagsCreator = (): string[] => {
 }
 
 
-export const addressCreator = (userId?: string): AddressInterface => {
+export const addressCreator = (userId?: string) => {
     const r= random(1000,9999)
-    const result: AddressInterface={
+    const result={
         city: `city_${r}`,
         country: `country_${r}`,
+        user:''
     }
     if (userId) result.user=userId
     return result
 }
 
 
-export const postCreator = (userId?: string): PostInterface => {
+export const postCreator = (userId?: string) => {
     const r= random(1000,9999)
-    const result: PostInterface={
+    const result={
         title: `post_${r}`,
         published: !!(r % 2),
         user: userId,
@@ -80,7 +78,7 @@ export const postCreator = (userId?: string): PostInterface => {
     return result
 }
 
-export const userCreator = (categoriesIds?:{id:string}[]): UserInterface => {
+export const userCreator = (categoriesIds?:{id:string}[]) => {
     const r= random(1000,9999)
     return ({
         age: random(18,60),

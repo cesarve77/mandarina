@@ -7,15 +7,11 @@ const NestField: any=require("./uniforms/NestField").default
 const TableField: any=require("./uniforms/TableField").default
 const HiddenTableField: any=require("./uniforms/HiddenTableField").default
 import ActionForm from './ActionForm'
-import {AuthCreateForm} from './AuthCreateForm'
-import {AuthUpdateForm} from './AuthUpdateForm'
-import {AuthList} from './AuthList'
-import {AuthListVirtualized} from './AuthList'
+import {AuthCreateForm, AuthUpdateForm, AuthList, AuthListVirtualized} from './Auth'
 import {CreateForm} from './Forms'
 import {UpdateForm} from './Forms'
 import {List} from './List'
 import {ListVirtualized} from './ListVirtualized'
-
 
 export {
     AuthCreateForm,

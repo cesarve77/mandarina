@@ -2,18 +2,13 @@ import {Prisma} from "prisma-binding";
 import {ContextParameters} from "graphql-yoga/dist/types";
 
 import {ActionType} from "mandarina/build/Auth/Auth";
-import {FieldDefinition, SchemaOptions} from "mandarina/build/Schema/Schema";
+import {SchemaOptions} from "mandarina/build/Schema/Schema";
 import {Schema} from "mandarina";
-import {InvalidActionError} from 'mandarina/build/Errors/InvalidActionError';
 import {UniqueTableError} from 'mandarina/build/Errors/UniqueTableError';
 import {TableInstanceNotFound} from "mandarina/build/Errors/TableInstanceNotFound";
 import {capitalize} from 'mandarina/build/Schema/utils';
-import {FieldsPermissionsError} from 'mandarina/build/Errors/FieldsPermissionsError';
 import {MissingIdTableError} from "mandarina/build/Errors/MissingIDTableError";
 
-
-const getDefaultPermissions = () => ({read: {}, create: {}, update: {}, delete: {}});
-const defaultActions = Object.keys(getDefaultPermissions());
 
 /**
  *
@@ -28,11 +23,7 @@ export class Table {
     public schema: Schema;
     public name: string;
     public options: TableSchemaOptions & TableShapeOptions;
-    private permissions: {
-        read: { [role: string]: string[] }
-        create: { [role: string]: string[] }
-        update: { [role: string]: string[] }
-    };
+
 
     /**
      *
@@ -69,62 +60,13 @@ export class Table {
         return this.schema.getFields();
     }
 
-    /**
-     * Returns the the authorization schema definition for the instance
-     *
-     * @return Permissions
-     */
-    getPermissions() {
-        const fields = this.getFields();
-        if (!this.permissions) {
-            this.permissions = getDefaultPermissions();
-
-            fields.forEach((field) => {
-                const def = this.schema.getPathDefinition(field)
-                const parentPath = field.split('.').shift() as string
-                let parentDef: FieldDefinition | undefined
-                if (parentPath) {
-                    parentDef = this.schema.getPathDefinition(parentPath)
-                }
-
-
-                defaultActions.forEach((action) => {
-                    const parentRoles = parentDef && parentDef.permissions[action]
-                    const roles: string[] = def.permissions[action]
-                    if ((parentRoles && parentRoles.includes('nobody')) || (roles && roles.includes('nobody'))) { // if the first parent has nobody the there no permission for any children
-                        return
-                    }
-
-                    if (!roles && !parentRoles) {
-                        this.permissions[action].everyone = this.permissions[action].everyone || []
-                        this.permissions[action].everyone.push(field)
-                        return
-                    } else if (roles) {
-                        roles.forEach((role) => {
-                            if (parentRoles && parentRoles.includes(role)) {
-                                this.permissions[action][role] = this.permissions[action][role] || []
-                                this.permissions[action][role].push(field)
-                            } else {
-                                this.permissions[action][role] = this.permissions[action][role] || []
-                                this.permissions[action][role].push(field)
-                            }
-
-                        })
-
-                    }
-                })
-            });
-        }
-        return this.permissions;
-    }
-
-    /**
+    /*
      * It apply the fields permissions policy by action and roles, throw an exception if is not a valid request
      *
      * @param action
      * @param role
      * @param model
-     */
+
     validatePermissions(action: ActionType, role: string | string[] | null | undefined, model: string[] | any): void {
         const fields = this.getFields();
         const allowedFields = Object.keys(this.getSchema(action, role));
@@ -136,7 +78,7 @@ export class Table {
             throw new FieldsPermissionsError(action, invalidFields);
         }
     }
-
+ */
     getDefaultActions(type: operationType) {
 
         const result = {};
@@ -233,33 +175,6 @@ export class Table {
         }
     }
 
-    /**
-     * Returns the resource schema appliying the authorization and data exposition policy
-     *
-     * @param action
-     * @param role
-     *
-     * @return Schema
-     */
-    private getSchema(action: string, role?: string | string[] | null | undefined) {
-
-        const roles = Array.isArray(role) ? role : [role];
-
-        if (!defaultActions.includes(action)) {
-            throw new InvalidActionError(action);
-        }
-
-        const fields = this.getFields();
-        const permissionsByRole = this.getPermissions()[action];
-        const allowedFieldsNames = Object.keys(permissionsByRole)
-            .filter(k => roles.includes(k))
-            .map(k => permissionsByRole[k])
-            .reduce((p, c) => p.concat(c), permissionsByRole.everyone);
-
-        return fields
-            .filter((fieldName) => allowedFieldsNames.includes(fieldName))
-            .reduce((res, fieldName) => ({...res, [fieldName]: this.schema.shape[fieldName]}), {});
-    }
 
     // private flatFields(model: any) {
     //     const fieldWrappers = ['connect', 'create', 'udpate', 'delete', 'set'];

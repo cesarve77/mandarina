@@ -40,24 +40,14 @@ var react_apollo_1 = require("react-apollo");
 var utils_1 = require("./utils");
 var Find_1 = require("./Find");
 var utils_2 = require("../utils");
-var deepClone = function (obj) { return JSON.parse(JSON.stringify(obj)); };
+exports.deepClone = function (obj) { return JSON.parse(JSON.stringify(obj)); };
 var Mutate = /** @class */ (function (_super) {
     __extends(Mutate, _super);
     function Mutate() {
         var _this = _super !== null && _super.apply(this, arguments) || this;
         _this.buildQueryFromFields = function () { return utils_1.buildQueryFromFields(_this.props.fields || _this.props.schema.getFields()); };
         _this.refetchQueries = function (mutationResult) {
-            var refetchQueries = [];
-            var _a = _this.props.schema.names.query, single = _a.single, plural = _a.plural, connection = _a.connection;
-            // @ts-ignore
-            _this.props.client.cache.watches.forEach(function (_a) {
-                var query = _a.query, variables = _a.variables;
-                var queryName = query.definitions[0].selectionSet.selections[0].name.value;
-                if (queryName === single || queryName === plural || queryName === connection) {
-                    refetchQueries.push({ query: query, variables: variables });
-                }
-            });
-            return refetchQueries;
+            return exports.refetchQueries(mutationResult, _this.props.schema, _this.props.client, _this.props.refetchSchemas);
             /*if (this.props.type === 'update') return //for updates the cache is automatic updated by apollo
     
             const {schema: {names}} = this.props;
@@ -139,40 +129,65 @@ var Mutate = /** @class */ (function (_super) {
     };
     Mutate.prototype.getSubSchemaMutations = function (model, schema) {
         var _this = this;
-        var clone = deepClone(model);
-        delete clone.id;
-        var wrapper = function (result, type) {
-            if (type instanceof __1.Schema) {
-                //todo check next statement id is always there?
-                if (Array.isArray(result) && result[0] && result[0].id !== undefined) {
-                    var clone_1 = result.slice();
-                    for (var i in clone_1) {
-                        clone_1[i] && delete clone_1[i].id;
+        if (typeof model !== "object" || model === undefined || model === null)
+            return model;
+        Object.keys(model).forEach(function (key) {
+            var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
+            var value = model[key];
+            var definition = schema.getFieldDefinition(key);
+            if (typeof value === "object" && value !== null && value !== undefined && !(value instanceof Date)) {
+                if (Array.isArray(definition.type)) {
+                    if (typeof definition.type[0] === 'string') {
+                        var schema_3 = __1.Schema.getInstance(definition.type[0]);
+                        if (!Array.isArray(value)) {
+                            return _a = {}, _a[key] = null, _a;
+                        }
+                        if (schema_3.keys.includes('id')) {
+                            var result_1 = {};
+                            value.forEach(function (item) { return (__assign({}, result_1, _this.getSubSchemaMutations(item, schema_3))); });
+                            return _b = {}, _b[key] = result_1, _b;
+                        }
+                        else {
+                            var result_2 = {};
+                            if (_this.props.type === 'update') {
+                                result_2.deleteMany = [{}];
+                            }
+                            value.forEach(function (item) { return (__assign({}, result_2, _this.getSubSchemaMutations(item, schema_3))); });
+                            return _c = {}, _c[key] = result_2, _c;
+                        }
                     }
-                    if (_this.props.type === 'create')
-                        return { create: clone_1 };
-                    if (_this.props.type === 'update')
-                        return { connect: clone_1 };
+                    else {
+                        return _d = {}, _d[key] = (_e = {}, _e[_this.props.type] = value, _e), _d;
+                    }
                 }
                 else {
-                    var clone_2 = result;
-                    if (clone_2.id !== undefined) {
-                        clone_2 = __assign({}, clone_2);
-                        delete clone_2.id;
+                    if (typeof definition.type === 'string') {
+                        var schema_4 = __1.Schema.getInstance(definition.type);
+                        if (_this.props.type === 'update' && value && value.id) {
+                            var id = value.id, item = __rest(value, ["id"]);
+                            return _f = {},
+                                _f[key] = {
+                                    update: {
+                                        where: { id: id },
+                                        data: _this.getSubSchemaMutations(item, schema_4)
+                                    }
+                                },
+                                _f;
+                        }
+                        else {
+                            return _g = {}, _g[key] = { create: _this.getSubSchemaMutations(value, schema_4) }, _g;
+                        }
                     }
-                    if (_this.props.type === 'create')
-                        return { create: clone_2 };
-                    if (_this.props.type === 'update')
-                        return { create: clone_2 };
+                    else {
+                        return _h = {}, _h[key] = (_j = {}, _j[_this.props.type] = value, _j), _h;
+                    }
                 }
             }
             else {
-                return { set: result };
+                return _k = {}, _k[key] = value, _k;
             }
-            return result;
-        };
-        var initiator = function () { return ({}); };
-        return this.spider(clone, schema, wrapper, initiator);
+        });
+        return model;
     };
     Mutate.prototype.getTypesDoc = function (obj, schema) {
         var _this = this;
@@ -192,8 +207,8 @@ var Mutate = /** @class */ (function (_super) {
     Mutate.prototype.mutate = function (model, mutationFn) {
         var _a;
         var _b = this.props, schema = _b.schema, where = _b.where, type = _b.type, optimisticResponse = _b.optimisticResponse;
-        var cleaned = deepClone(model);
-        schema.clean(cleaned); // fill null all missing keys
+        var cleaned = exports.deepClone(model);
+        schema.clean(cleaned, this.filteredFields); // fill null all missing keys
         var names = schema.names;
         var data = this.getSubSchemaMutations(cleaned, schema);
         var mutation = { variables: { data: data } };
@@ -213,8 +228,9 @@ var Mutate = /** @class */ (function (_super) {
     };
     Mutate.prototype.render = function () {
         var _this = this;
-        var _a = this.props, type = _a.type, children = _a.children, schema = _a.schema, optionalFields = _a.fields, omitFields = _a.omitFields, omitFieldsRegEx = _a.omitFieldsRegEx, findLoading = _a.loading, variables = _a.variables, update = _a.update, ignoreResults = _a.ignoreResults, optimisticResponse = _a.optimisticResponse, _b = _a.refetchQueries, refetchQueries = _b === void 0 ? this.refetchQueries : _b, awaitRefetchQueries = _a.awaitRefetchQueries, onCompleted = _a.onCompleted, onError = _a.onError, context = _a.context, props = __rest(_a, ["type", "children", "schema", "fields", "omitFields", "omitFieldsRegEx", "loading", "variables", "update", "ignoreResults", "optimisticResponse", "refetchQueries", "awaitRefetchQueries", "onCompleted", "onError", "context"]);
-        var fields = utils_2.filterFields(optionalFields || schema.getFields(), omitFields, omitFieldsRegEx);
+        var _a = this.props, type = _a.type, children = _a.children, schema = _a.schema, optionalFields = _a.fields, omitFields = _a.omitFields, omitFieldsRegEx = _a.omitFieldsRegEx, findLoading = _a.loading, variables = _a.variables, update = _a.update, ignoreResults = _a.ignoreResults, optimisticResponse = _a.optimisticResponse, _b = _a.refetchQueries, refetchQueries = _b === void 0 ? this.refetchQueries : _b, awaitRefetchQueries = _a.awaitRefetchQueries, onCompleted = _a.onCompleted, onError = _a.onError, context = _a.context, client = _a.client, doc = _a.doc, fetchPolicy = _a.fetchPolicy;
+        var fields = utils_2.filterFields(schema.getFields(), optionalFields, omitFields, omitFieldsRegEx);
+        this.filteredFields = fields;
         var names = schema.names;
         this.query = fields ? utils_1.buildQueryFromFields(fields) : this.buildQueryFromFields();
         var queryString;
@@ -225,18 +241,25 @@ var Mutate = /** @class */ (function (_super) {
             queryString = "mutation mutationFn($data: " + names.input[type] + " ) { " + names.mutation[type] + "(data: $data) " + this.query + " }";
         }
         var MUTATION = graphql_tag_1.default(queryString);
-        return (<react_apollo_1.Mutation mutation={MUTATION} refetchQueries={refetchQueries} variables={variables} update={update} ignoreResults={ignoreResults} optimisticResponse={optimisticResponse} awaitRefetchQueries={awaitRefetchQueries} onCompleted={onCompleted} onError={onError} context={context}>
+        return (<react_apollo_1.Mutation mutation={MUTATION} refetchQueries={refetchQueries} variables={variables} update={update} ignoreResults={ignoreResults} optimisticResponse={optimisticResponse} awaitRefetchQueries={awaitRefetchQueries} onCompleted={onCompleted} onError={onError} context={context} client={client} fetchPolicy={fetchPolicy}>
                 {function (mutationFn, _a) {
             var loading = _a.loading, data = _a.data, error = _a.error, called = _a.called, client = _a.client;
-            return children(__assign({ schema: schema, mutate: function (model) { return _this.mutate(model, mutationFn); }, loading: findLoading || loading, data: data,
+            return children({
+                schema: schema,
+                mutate: function (model) { return _this.mutate(model, mutationFn); },
+                loading: findLoading || loading,
+                data: data,
                 error: error,
                 called: called,
-                client: client }, props));
+                client: client,
+                doc: doc,
+            });
         }}
             </react_apollo_1.Mutation>);
     };
     return Mutate;
 }(react_1.PureComponent));
+exports.Mutate = Mutate;
 var MutateWithApollo = react_apollo_1.withApollo(Mutate);
 exports.Create = function (_a) {
     var schema = _a.schema, optimisticResponse = _a.optimisticResponse, props = __rest(_a, ["schema", "optimisticResponse"]);
@@ -244,12 +267,109 @@ exports.Create = function (_a) {
 };
 exports.Update = function (_a) {
     var id = _a.id, schema = _a.schema, children = _a.children, fields = _a.fields, optimisticResponse = _a.optimisticResponse, props = __rest(_a, ["id", "schema", "children", "fields", "optimisticResponse"]);
-    return (<Find_1.FindOne schema={schema} where={{ id: id }} fields={fields} {...props}>
+    var where = undefined;
+    if (id) {
+        if (typeof id === 'string') {
+            where = { id: id };
+        }
+        else {
+            where = id;
+        }
+    }
+    return (<Find_1.FindOne schema={schema} where={where} fields={fields} {...props}>
             {function (_a) {
         var data = _a.data, findOneProps = __rest(_a, ["data"]);
-        return (<MutateWithApollo where={{ id: id }} type='update' schema={schema} doc={data} optimisticResponse={optimisticResponse} {...findOneProps}>
-                    {children}
-                </MutateWithApollo>);
+        return (<MutateWithApollo where={where} type='update' schema={schema} doc={data} optimisticResponse={optimisticResponse} {...findOneProps}>
+                        {children}
+                    </MutateWithApollo>);
     }}
         </Find_1.FindOne>);
+};
+exports.refetchQueries = function (mutationResult, schema, client, refetchSchemas) {
+    if (refetchSchemas === void 0) { refetchSchemas = []; }
+    var refetchQueries = [];
+    var _a = schema.names.query, single = _a.single, plural = _a.plural, connection = _a.connection;
+    // @ts-ignore
+    client.cache.watches.forEach(function (_a) {
+        var query = _a.query, variables = _a.variables;
+        var queryName = query.definitions[0].selectionSet.selections[0].name.value;
+        var names = [];
+        if (refetchSchemas) {
+            refetchSchemas.forEach(function (schemaName) {
+                var schema = __1.Schema.getInstance(schemaName);
+                names.push(schema.names.query.single);
+                names.push(schema.names.query.plural);
+                names.push(schema.names.query.connection);
+            });
+        }
+        if (queryName === single || queryName === plural || queryName === connection || names.includes(queryName)) {
+            refetchQueries.push({ query: query, variables: variables });
+        }
+    });
+    return refetchQueries;
+};
+exports.getSubSchemaMutations = function (model, schema, mutationType) {
+    var obj = {};
+    if (typeof model !== "object" || model === undefined || model === null)
+        return model;
+    Object.keys(model).forEach(function (key) {
+        var value = model[key];
+        var definition = schema.getFieldDefinition(key);
+        if (Array.isArray(definition.type)) {
+            if (typeof definition.type[0] === 'string') {
+                var schema_5 = __1.Schema.getInstance(definition.type[0]);
+                if (!Array.isArray(value)) {
+                    obj[key] = null;
+                }
+                if (schema_5.keys.includes('id')) {
+                    var result_3 = {};
+                    value.forEach(function (item) {
+                        var type;
+                        if (item && item.id && Object.keys(item).length === 1) {
+                            type = 'connect';
+                        }
+                        else {
+                            type = mutationType = 'update' && item && item.id ? 'update' : 'create';
+                        }
+                        result_3[type] = result_3[type] || [];
+                        result_3[type].push(exports.getSubSchemaMutations(item, schema_5, mutationType));
+                    });
+                    console.log('result', schema_5.name, result_3);
+                    obj[key] = result_3;
+                }
+                else {
+                    var result = { create: [] };
+                    if (mutationType === 'update') {
+                        result.deleteMany = [{}];
+                    }
+                    result.create.push(exports.getSubSchemaMutations(value, schema_5, mutationType));
+                    obj[key] = result;
+                }
+            }
+            else {
+                obj[key] = { set: value };
+            }
+        }
+        else {
+            if (typeof definition.type === 'string') {
+                var schema_6 = __1.Schema.getInstance(definition.type);
+                if (mutationType === 'update' && value && value.id) {
+                    var id = value.id, item = __rest(value, ["id"]);
+                    return obj[key] = {
+                        update: {
+                            where: { id: id },
+                            data: exports.getSubSchemaMutations(item, schema_6, mutationType)
+                        }
+                    };
+                }
+                else {
+                    return obj[key] = { create: exports.getSubSchemaMutations(value, schema_6, mutationType) };
+                }
+            }
+            else {
+                return obj[key] = value;
+            }
+        }
+    });
+    return obj;
 };

@@ -58,7 +58,8 @@ export class FindBase extends PureComponent<FindProps & FindBaseProps, FindBaseS
 
     buildQueryFromFields = (fields: string[]) => buildQueryFromFields(fields)
 
-    componentWillMount(): void {
+    constructor(props: FindProps & FindBaseProps) {
+        super(props)
         FindBase.queries = FindBase.queries || []
         //todo: **1
     }
@@ -117,8 +118,6 @@ export class FindBase extends PureComponent<FindProps & FindBaseProps, FindBaseS
             queryString = `query ($where: ${names.input.where[type]} ) { ${names.query[type]}  (where: $where) ${defaultQuery} }`
         }
         const QUERY = gql(queryString)
-        console.log('queryString',queryString)
-        console.log('where',where)
         // save a rendered query history in the instance and in the class
         // for update cache queries on mutations
         const query = {[names.input[type]]: where}

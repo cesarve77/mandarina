@@ -1,48 +1,91 @@
-import {Address} from "../tables/Address";
+import {Address} from "../schemas/Address";
 
 //require('uniforms') //shuld be imported for  extends simple schema options
 import {Prisma} from "prisma-binding";
 import {GraphQLServer} from "graphql-yoga";
-import {Table} from "../../../../mandarina-server/src/Table/Table";
-import {User} from "../tables/User";
-import {Post} from "../tables/Post";
-import {Category} from "../tables/Category";
+import {Schema} from "../../../../mandarina/src/Schema/Schema";
+import {User} from "../schemas/User";
+import {Post} from "../schemas/Post";
+import {Category} from "../schemas/Category";
 
-import path from 'path'
-Table.configure({
-    prismaDir: '/Users/cesarramos/Documents/projects/mandarina/packages/mandarina/src/test/prisma',
-    getUserId: () => ''
+import Mandarina,{getConfig} from "../../../../mandarina-server/src";
+import path from "path";
+
+
+ const config = getConfig()
+
+
+Mandarina.configure({
+    getUser: () =>({id:'user1',roles:[]})
 })
 
 let resolvers = {
-    Query:{
-        ...User.saveFiles().getDefaultResolvers('query'),
-        ...Address.saveFiles().getDefaultResolvers('query'),
-        ...Category.saveFiles().getDefaultResolvers('query'),
-        ...Post.saveFiles().getDefaultResolvers('query'),
+    Query:{ ...Mandarina.getQuery()
     },
     Mutation: {
-        ...User.getDefaultActions('mutation'),
-        ...Address.getDefaultActions('mutation'),
-        ...Category.getDefaultActions('mutation'),
-        ...Post.getDefaultActions('mutation'),
+        ...Mandarina.getMutation()
     }
 
 
 }
 
-
-const server = new GraphQLServer({
-    typeDefs: 'src/test/server/generated/prisma.graphql',
-    resolvers,
-
-    context: req => ({
-        ...req,
-        prisma: new Prisma({
-            typeDefs: path.join(Table.config.prismaDir , '../server/generated/prisma.graphql'),
-            endpoint: 'http://192.168.99.100:4466',
-        }),
-    }),
+const inputs = fileLoader(path.join(__dirname, '../../prisma/datamodel/*.input.*'), {
+    recursive: true,
+    extensions: ['.graphql']
 })
-const port = 7000;
-server.start({port}, ({port}) => console.log(`GraphQL server is running on http://localhost:${port}`))
+const operations = fileLoader(path.join(__dirname, '../../prisma/datamodel/*.operation.*'), {
+    recursive: true,
+    extensions: ['.graphql']
+})
+const generated = fileLoader(path.join(__dirname, './generated'), {recursive: true, extensions: ['.graphql']})
+
+const typeDefs = mergeTypes([...generated, ...inputs, ...operations], {all: true})
+
+
+let resolvers = {
+    Query,
+    Mutation
+}
+
+
+
+// @ts-ignore
+export interface Context extends ContextTable {
+    prisma: Prisma
+    token?: string
+
+    [rest: string]: any
+}
+
+let i = 0
+const server = new GraphQLServer({
+
+    typeDefs,
+    resolvers,
+    context: (req: ContextParameters): Context => {
+        const cookies = new Cookies(req.request.headers.cookie);
+        console.log(i++, new Date())
+        let token = cookies.get('StudyTourSystem__AuthToken')
+        return ({
+            ...req,
+            token,
+            prisma,
+        });
+    },
+})
+
+
+const port = 8000;
+
+server.express.get(pathFile, routeFile)
+
+server.start({
+    tracing: true,
+    port,
+    cors: {
+        credentials: true,
+        origin: true
+    },
+}, ({port}) => console.log(`GraphQL server is running on http://localhost:${port}`))
+
+

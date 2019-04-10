@@ -1,5 +1,5 @@
 import {Schema} from './Schema/Schema'
-import {AuthTable} from './Auth/Auth'
+import Auth from './Auth/Auth'
 import {Create} from './Operations/Mutate'
 import {Update} from './Operations/Mutate'
 import {FindOne} from './Operations/Find'
@@ -8,7 +8,7 @@ import {Integer} from './Schema/Schema'
 
 export {
     Integer,
-    AuthTable,
+    Auth,
     Schema,
     Create,
     Update,
