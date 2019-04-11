@@ -29,7 +29,7 @@ export const genFile = () => {
     }
     const database=config.prisma.database || 'default'
     const stage=config.prisma.stage|| 'default'
-    savePrismaYaml(models, config.dir.prisma, config.secret, `${config.prisma.host}:${config.prisma.port}/${database}/${stage}`)
+    savePrismaYaml(models, config.dir.prisma,`${config.prisma.host}:${config.prisma.port}/${database}/${stage}`, config.secret)
     saveDockerComposeYaml(config.dir.prisma,config.prisma.port)
     for (const schemaName in CustomAction.instances) {
         const fileName = schemaName.toLowerCase()

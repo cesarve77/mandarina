@@ -9,9 +9,7 @@ export const getConfig = (): ConfigInterface => {
         throw Error('Error: Be sure you are running your server from the root (where mandarina.json file is located')
     }
     const config = JSON.parse(rawData)
-    if (!config.secret) {
-        throw Error('Error: please set "secret" in  madarina.json file')
-    }
+
     if (!config.dir) {
         throw Error('Error: please set "dir" in  madarina.json file')
     }
@@ -58,7 +56,7 @@ export interface ConfigInterface {
     options?: {
         auth?: boolean
     }
-    secret: string
+    secret?: string
     customSettings: {
         [props:string]: any
     }

@@ -173,19 +173,18 @@ export const resetDir = (dir: string) => {
     fs.readdirSync(datamodelDir).forEach((file: string) => fs.unlinkSync(path.join(datamodelDir, file)));
 }
 
-export const savePrismaYaml = (datamodel: string[], dir: string, secret: string, endpoint: string) => {
+export const savePrismaYaml = (datamodel: string[], dir: string, endpoint: string, secret?: string,) => {
     const prismaDir = path.join(process.cwd(), dir)
     const prismaYaml = path.join(prismaDir, `prisma.yml`)
-    saveYaml(prismaYaml, {
-        endpoint,
-        secret,
-        datamodel,
-    })
+    const data: { endpoint: string, datamodel: string[], secret?: string } = {endpoint, datamodel,}
+    if (secret) data.secret = secret
+    saveYaml(prismaYaml, data)
 }
 
 export const saveDockerComposeYaml = (dir: string, port: string) => {
     const prismaDir = path.join(process.cwd(), dir)
     const dcYaml = path.join(prismaDir, `docker-compose.yml`)
+    if (!fs.existsSync(dcYaml)) return console.warn(`"${dcYaml}" file does not exists`)
     saveYaml(dcYaml, {
         services: {
             prisma: {

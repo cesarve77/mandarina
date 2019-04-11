@@ -1,7 +1,8 @@
 endpoint: http://localhost:5577/mandarina/test
-#secret: 7Phk8i3M29wTutl7TFRrlPM7NrGFJaxEPEOMLFoDEIlWZwUGZBYafA5QSzlrzGTd9xPK03buzmhoGZUvqGut7n9NNi2cPLfM6UmWLlg8wlm2a5mpBEIwRG9uO1xrAA3w
 datamodel:
   - datamodel/address.model.graphql
+  - datamodel/bluecard.model.graphql
+  - datamodel/car.model.graphql
   - datamodel/category.model.graphql
   - datamodel/post.model.graphql
   - datamodel/user.model.graphql

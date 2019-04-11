@@ -8,6 +8,7 @@ if (!global.describe){
 
 
 export const BlueCard = new Schema({
+    id: {type: String!},
     number: {type: String},
     status: {type: String},
 }, {

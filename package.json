@@ -17,14 +17,20 @@
     "bump-publish": "npm whoami && npm version patch && cd packages/mandarina && npm version patch && npm publish && cd ../mandarina-antd && npm version patch  && npm publish && cd ../mandarina-server && npm version patch  && npm publish && PACKAGE_VERSION=$( cat package.json | grep version | awk '{ print $2 }' | sed s/\\\"//g | sed s/,//g ) && git tag $PACKAGE_VERSION && git push --tags",
     "publish": "npm whoami && cd packages/mandarina  && npm publish && cd ../mandarina-antd && npm publish && cd ../mandarina-server && npm publish ",
     "test-gen-files": "cd __TEST__ && node ../packages/mandarina-server/build/cli/index.js gen-files",
-    "test-server": "cd __TEST__ && node ./app/server/server.js"
+    "test-server": "cd __TEST__ && node ./app/server/server.js",
+    "test-prisma-deploy": "cd __TEST__/prisma && prisma deploy"
   },
   "devDependencies": {
     "coffee-script": "^1.12.7",
     "graphql-yoga": "latest",
     "merge-graphql-schemas": "latest",
     "prisma-binding": "latest",
-    "typescript": "^3.4.3"
+    "typescript": "^3.4.3",
+    "react-apollo": "latest",
+    "apollo-link-http": "latest",
+    "apollo-cache-inmemory": "latest",
+    "apollo-client": "latest",
+    "unfetch": "latest"
   },
   "repository": {
     "type": "git",

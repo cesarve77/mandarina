@@ -24,7 +24,7 @@ export const User = new Schema({
     categories: {type: ['Category']},
     posts: {type: ['Post']},
     blueCard: {type: 'BlueCard'},
-    Cars: {type: ['Car']},
+    cars: {type: ['Car']},
 }, {
     name: 'User',
 })

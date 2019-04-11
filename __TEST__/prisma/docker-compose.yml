@@ -9,7 +9,6 @@ services:
       SLOW_QUERIES_LOGGING: "true"
       SLOW_QUERIES_LOGGING_THRESHOLD: "50"
       PRISMA_CONFIG: |
-        # managementApiSecret: 7Phk8i3M29wTutl7TFRrlPM7NrGFJaxEPEOMLFoDEIlWZwUGZBYafA5QSzlrzGTd9xPK03buzmhoGZUvqGut7n9NNi2cPLfM6UmWLlg8wlm2a5mpBEIwRG9uO1xrAA3w
         port: 5577
         databases:
           default:
