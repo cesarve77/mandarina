@@ -1,20 +1,19 @@
-import {Address} from "../schemas/Address";
+import {Address} from "../lib/schemas/Address";
+import {ContextParameters} from "graphql-yoga/dist/types";
 
 //require('uniforms') //shuld be imported for  extends simple schema options
-import {Prisma} from "prisma-binding";
 import {GraphQLServer} from "graphql-yoga";
-import {Schema} from "../../../../mandarina/src/Schema/Schema";
-import {User} from "../schemas/User";
-import {Post} from "../schemas/Post";
-import {Category} from "../schemas/Category";
+import {fileLoader, mergeTypes} from "merge-graphql-schemas";
+import {Prisma} from "./generated/prisma";
 
-import Mandarina,{getConfig} from "../../../../mandarina-server/src";
-import path from "path";
+
+import Mandarina,{getConfig} from "../../../packages/mandarina-server";
+import * as path from 'path'
+import prisma from "./prisma";
 
 
  const config = getConfig()
-
-
+Mandarina.load()
 Mandarina.configure({
     getUser: () =>({id:'user1',roles:[]})
 })
@@ -42,10 +41,6 @@ const generated = fileLoader(path.join(__dirname, './generated'), {recursive: tr
 const typeDefs = mergeTypes([...generated, ...inputs, ...operations], {all: true})
 
 
-let resolvers = {
-    Query,
-    Mutation
-}
 
 
 
@@ -63,21 +58,16 @@ const server = new GraphQLServer({
     typeDefs,
     resolvers,
     context: (req: ContextParameters): Context => {
-        const cookies = new Cookies(req.request.headers.cookie);
-        console.log(i++, new Date())
-        let token = cookies.get('StudyTourSystem__AuthToken')
         return ({
             ...req,
-            token,
             prisma,
         });
     },
 })
 
 
-const port = 8000;
+const port = 8001;
 
-server.express.get(pathFile, routeFile)
 
 server.start({
     tracing: true,

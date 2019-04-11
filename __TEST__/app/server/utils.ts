@@ -1,7 +1,7 @@
-import {client} from "./client";
+import {client} from "../client/client";
 import gql from "graphql-tag";
-import {buildQueryFromFields} from "../../Operations/utils";
-import {Table} from "../../../../mandarina-server/src/Table/Table";
+import {buildQueryFromFields} from "../../../packages/mandarina/src/Operations/utils";
+import {Table} from "../../../packages/mandarina-server/src/Table/Table";
 import {ApolloQueryResult} from "apollo-client";
 
 

@@ -15,10 +15,16 @@
     "start": "cd website && yarn start",
     "tsc": "tsc -p ./packages/mandarina && tsc -p ./packages/mandarina-server && tsc -p ./packages/mandarina-antd",
     "bump-publish": "npm whoami && npm version patch && cd packages/mandarina && npm version patch && npm publish && cd ../mandarina-antd && npm version patch  && npm publish && cd ../mandarina-server && npm version patch  && npm publish && PACKAGE_VERSION=$( cat package.json | grep version | awk '{ print $2 }' | sed s/\\\"//g | sed s/,//g ) && git tag $PACKAGE_VERSION && git push --tags",
-    "publish": "npm whoami && cd packages/mandarina  && npm publish && cd ../mandarina-antd && npm publish && cd ../mandarina-server && npm publish "
+    "publish": "npm whoami && cd packages/mandarina  && npm publish && cd ../mandarina-antd && npm publish && cd ../mandarina-server && npm publish ",
+    "test-gen-files": "cd __TEST__ && node ../packages/mandarina-server/build/cli/index.js gen-files",
+    "test-server": "cd __TEST__ && node ./app/server/server.js"
   },
   "devDependencies": {
-    "coffee-script": "^1.12.7"
+    "coffee-script": "^1.12.7",
+    "graphql-yoga": "latest",
+    "merge-graphql-schemas": "latest",
+    "prisma-binding": "latest",
+    "typescript": "^3.4.3"
   },
   "repository": {
     "type": "git",

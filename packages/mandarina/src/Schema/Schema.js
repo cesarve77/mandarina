@@ -136,6 +136,51 @@ var Schema = /** @class */ (function () {
         return this._validate(model, '', [{ schema: this.name, path: '' }], model);
     };
     /**
+     * Returns the the authorization schema definition for the instance
+     *
+     * @return Permissions
+     */
+    Schema.prototype.getPermissions = function () {
+        var _this = this;
+        var fields = this.getFields();
+        if (!this.rolePermissions) {
+            this.rolePermissions = getDefaultPermissions();
+            fields.forEach(function (field) {
+                var def = _this.getPathDefinition(field);
+                var parentPath = field.split('.').shift();
+                var parentDef;
+                if (parentPath) {
+                    parentDef = _this.getPathDefinition(parentPath);
+                }
+                defaultActions.forEach(function (action) {
+                    var parentRoles = parentDef && parentDef.permissions[action];
+                    var roles = def.permissions[action];
+                    if ((parentRoles && parentRoles.includes('nobody')) || (roles && roles.includes('nobody'))) { // if the first parent has nobody the there no permission for any children
+                        return;
+                    }
+                    if (!roles && !parentRoles) {
+                        _this.rolePermissions[action].everyone = _this.rolePermissions[action].everyone || [];
+                        _this.rolePermissions[action].everyone.push(field);
+                        return;
+                    }
+                    else if (roles) {
+                        roles.forEach(function (role) {
+                            if (parentRoles && parentRoles.includes(role)) {
+                                _this.rolePermissions[action][role] = _this.rolePermissions[action][role] || [];
+                                _this.rolePermissions[action][role].push(field);
+                            }
+                            else {
+                                _this.rolePermissions[action][role] = _this.rolePermissions[action][role] || [];
+                                _this.rolePermissions[action][role].push(field);
+                            }
+                        });
+                    }
+                });
+            });
+        }
+        return this.rolePermissions;
+    };
+    /**
      * Mutate the model,with all keys  proper types and null for undefined
      * TODO: Refactor to prevent mutation, fix it creating a new cloned model and returning it
      * @param model
@@ -435,51 +480,6 @@ var Schema = /** @class */ (function () {
             }
         });
         return fields;
-    };
-    /**
-     * Returns the the authorization schema definition for the instance
-     *
-     * @return Permissions
-     */
-    Schema.prototype.getPermissions = function () {
-        var _this = this;
-        var fields = this.getFields();
-        if (!this.rolePermissions) {
-            this.rolePermissions = getDefaultPermissions();
-            fields.forEach(function (field) {
-                var def = _this.getPathDefinition(field);
-                var parentPath = field.split('.').shift();
-                var parentDef;
-                if (parentPath) {
-                    parentDef = _this.getPathDefinition(parentPath);
-                }
-                defaultActions.forEach(function (action) {
-                    var parentRoles = parentDef && parentDef.permissions[action];
-                    var roles = def.permissions[action];
-                    if ((parentRoles && parentRoles.includes('nobody')) || (roles && roles.includes('nobody'))) { // if the first parent has nobody the there no permission for any children
-                        return;
-                    }
-                    if (!roles && !parentRoles) {
-                        _this.rolePermissions[action].everyone = _this.rolePermissions[action].everyone || [];
-                        _this.rolePermissions[action].everyone.push(field);
-                        return;
-                    }
-                    else if (roles) {
-                        roles.forEach(function (role) {
-                            if (parentRoles && parentRoles.includes(role)) {
-                                _this.rolePermissions[action][role] = _this.rolePermissions[action][role] || [];
-                                _this.rolePermissions[action][role].push(field);
-                            }
-                            else {
-                                _this.rolePermissions[action][role] = _this.rolePermissions[action][role] || [];
-                                _this.rolePermissions[action][role].push(field);
-                            }
-                        });
-                    }
-                });
-            });
-        }
-        return this.rolePermissions;
     };
     return Schema;
 }());

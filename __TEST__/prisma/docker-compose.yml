@@ -1,0 +1,28 @@
+version: "3"
+services:
+  prisma:
+    image: prismagraphql/prisma:1.30
+    restart: always
+    ports:
+      - 5577:5577
+    environment:
+      SLOW_QUERIES_LOGGING: "true"
+      SLOW_QUERIES_LOGGING_THRESHOLD: "50"
+      PRISMA_CONFIG: |
+        # managementApiSecret: 7Phk8i3M29wTutl7TFRrlPM7NrGFJaxEPEOMLFoDEIlWZwUGZBYafA5QSzlrzGTd9xPK03buzmhoGZUvqGut7n9NNi2cPLfM6UmWLlg8wlm2a5mpBEIwRG9uO1xrAA3w
+        port: 5577
+        databases:
+          default:
+            connector: mysql
+            host: mysql-container
+            port: 3306
+            user: root
+            password: o49zcMdvmBKqqcMTIf91yfSayWe5RLT3FRrFtuZFVzTbzwT8BQZXVGXhq0b8BSZ4
+            migrations: true
+  mysql-container:
+    image: mysql:5.7
+    restart: always
+    ports:
+      - 3303:3306
+    environment:
+      MYSQL_ROOT_PASSWORD: o49zcMdvmBKqqcMTIf91yfSayWe5RLT3FRrFtuZFVzTbzwT8BQZXVGXhq0b8BSZ4

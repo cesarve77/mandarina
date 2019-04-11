@@ -44,6 +44,7 @@ export class Schema {
         create: { [role: string]: string[] }
         update: { [role: string]: string[] }
     };
+
     constructor(shape: UserSchemaShape, options: SchemaOptions) {
         const {name, recursive = [], errorFromServerMapper, permissions} = options;
         this.name = name;
@@ -92,7 +93,6 @@ export class Schema {
     }
 
     static getInstance(name: string): Schema {
-
         if (!Schema.instances[name]) {
             throw new SchemaInstanceNotFound(name);
         }
@@ -154,6 +154,54 @@ export class Schema {
     validate(model: Model, fields: string[] = this.getFields()): ErrorValidator[] {
         this.clean(model, fields)
         return this._validate(model, '', [{schema: this.name, path: ''}], model);
+    }
+
+    /**
+     * Returns the the authorization schema definition for the instance
+     *
+     * @return Permissions
+     */
+    getPermissions() {
+        const fields = this.getFields();
+        if (!this.rolePermissions) {
+            this.rolePermissions = getDefaultPermissions();
+
+            fields.forEach((field) => {
+                const def = this.getPathDefinition(field)
+                const parentPath = field.split('.').shift() as string
+                let parentDef: FieldDefinition | undefined
+                if (parentPath) {
+                    parentDef = this.getPathDefinition(parentPath)
+                }
+
+                defaultActions.forEach((action) => {
+                    const parentRoles = parentDef && parentDef.permissions[action]
+                    const roles: string[] = def.permissions[action]
+                    if ((parentRoles && parentRoles.includes('nobody')) || (roles && roles.includes('nobody'))) { // if the first parent has nobody the there no permission for any children
+                        return
+                    }
+
+                    if (!roles && !parentRoles) {
+                        this.rolePermissions[action].everyone = this.rolePermissions[action].everyone || []
+                        this.rolePermissions[action].everyone.push(field)
+                        return
+                    } else if (roles) {
+                        roles.forEach((role) => {
+                            if (parentRoles && parentRoles.includes(role)) {
+                                this.rolePermissions[action][role] = this.rolePermissions[action][role] || []
+                                this.rolePermissions[action][role].push(field)
+                            } else {
+                                this.rolePermissions[action][role] = this.rolePermissions[action][role] || []
+                                this.rolePermissions[action][role].push(field)
+                            }
+
+                        })
+
+                    }
+                })
+            });
+        }
+        return this.rolePermissions;
     }
 
     /**
@@ -339,7 +387,7 @@ export class Schema {
     }
 
     private _isConnectingTable = (value: any) => {
-        return (value && value.hasOwnProperty &&  value.hasOwnProperty('id') && typeof value.id === 'string')
+        return (value && value.hasOwnProperty && value.hasOwnProperty('id') && typeof value.id === 'string')
     }
 
     private _validate(model: Model, parent: string = '', pathHistory: { schema: string, path: string }[] = [], originalModel: Model): ErrorValidator[] {
@@ -487,54 +535,6 @@ export class Schema {
         });
 
         return fields;
-    }
-
-    /**
-     * Returns the the authorization schema definition for the instance
-     *
-     * @return Permissions
-     */
-    getPermissions() {
-        const fields = this.getFields();
-        if (!this.rolePermissions) {
-            this.rolePermissions = getDefaultPermissions();
-
-            fields.forEach((field) => {
-                const def = this.getPathDefinition(field)
-                const parentPath = field.split('.').shift() as string
-                let parentDef: FieldDefinition | undefined
-                if (parentPath) {
-                    parentDef = this.getPathDefinition(parentPath)
-                }
-
-                defaultActions.forEach((action) => {
-                    const parentRoles = parentDef && parentDef.permissions[action]
-                    const roles: string[] = def.permissions[action]
-                    if ((parentRoles && parentRoles.includes('nobody')) || (roles && roles.includes('nobody'))) { // if the first parent has nobody the there no permission for any children
-                        return
-                    }
-
-                    if (!roles && !parentRoles) {
-                        this.rolePermissions[action].everyone = this.rolePermissions[action].everyone || []
-                        this.rolePermissions[action].everyone.push(field)
-                        return
-                    } else if (roles) {
-                        roles.forEach((role) => {
-                            if (parentRoles && parentRoles.includes(role)) {
-                                this.rolePermissions[action][role] = this.rolePermissions[action][role] || []
-                                this.rolePermissions[action][role].push(field)
-                            } else {
-                                this.rolePermissions[action][role] = this.rolePermissions[action][role] || []
-                                this.rolePermissions[action][role].push(field)
-                            }
-
-                        })
-
-                    }
-                })
-            });
-        }
-        return this.rolePermissions;
     }
 
 

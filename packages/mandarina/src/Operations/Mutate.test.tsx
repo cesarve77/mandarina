@@ -1,9 +1,10 @@
 import {getSubSchemaMutations} from './Mutate'
-import {User} from "../test/schemas/User";
+import {User} from "../../../../__TEST__/app/lib/schemas/User";
 
 
-describe('Mutate', () => {
-    test("getSubSchemaMutations ", () => {
+describe('getSubSchemaMutations', () => {
+
+    test("1 to n table -> create ", () => {
         const subMutations = getSubSchemaMutations({
             age: 18,
             address: {
@@ -12,9 +13,8 @@ describe('Mutate', () => {
             },
             categories: [{category: 'New Cat'}, {category: 'Sec Cat'}],
             posts: [{title: 'Post 1', published: true, tags: ['tag1', 'tag2']}]
+            // @ts-ignore
         }, User, 'create')
-        console.log(JSON.stringify(subMutations))
-        console.dir(subMutations, {depth: null, colors: true})
         expect(subMutations).toMatchObject({
                 "age": 18,
                 "address": {"create": {"country": "Australia", "city": "Gold Coast"}},
@@ -23,53 +23,96 @@ describe('Mutate', () => {
             }
         )
     })
-    test("getSubSchemaMutations ", () => {
+
+
+    test("1 to n table -> connect ", () => {
         const subMutations = getSubSchemaMutations({
             age: 18,
             address: {
-                country: 'Australia',
-                city: 'Gold Coast'
+                country: 'Venezuela',
+                city: 'Caracas'
             },
             categories: [{id: "cat1"}, {id: "cat2"}],
             posts: [{title: 'Post 1', published: true, tags: ['tag1', 'tag2']}]
+            // @ts-ignore
         }, User, 'update')
-        console.log(JSON.stringify(subMutations))
-        console.dir(subMutations, {depth: null, colors: true})
         expect(subMutations).toMatchObject({
                 "age": 18,
-                "address": {"create": {"country": "Australia", "city": "Gold Coast"}},
+                "address": {"upsert": {"create": {"city": "Caracas", "country": "Venezuela"}, "update": {"city": "Caracas", "country": "Venezuela"}}},
                 "categories": {"connect": [{"id": "cat1"}, {"id": "cat2"}]},
                 "posts": {"create": [{"title": "Post 1", "published": true, "tags": {"set": ["tag1", "tag2"]}}]}
             }
         )
     })
-    test("getSubSchemaMutations ", () => {
+    test("1 - to n table -> update ", () => {
         const subMutations = getSubSchemaMutations({
             age: 18,
-            address: {
-                country: 'Australia',
-                city: 'Gold Coast'
-            },
             categories: [{id: "cat1"}, {category: 'Sec Cat'}],
             posts: [{id: "post1", title: 'Post 1', published: true, tags: ['tag1', 'tag2']}]
+            // @ts-ignore
         }, User, 'update')
-        console.log(JSON.stringify(subMutations))
-        console.dir(subMutations, {depth: null, colors: true})
         expect(subMutations).toMatchObject({
-                "address": {"create": {"city": "Gold Coast", "country": "Australia"}},
                 "age": 18,
                 "categories": {"connect": [{"id": "cat1"}], "create": [{"category": "Sec Cat"}]},
                 "posts": {
                     "update": [{
-                        "id": "post1",
-                        "published": true,
-                        "tags": {"set": ["tag1", "tag2"]},
-                        "title": "Post 1"
+                        "where": {"id": "post1"},
+                        "data": {
+                            "published": true,
+                            "tags": {"set": ["tag1", "tag2"]},
+                            "title": "Post 1"
+                        }
                     }]
                 }
             }
         )
     })
+
+    test("1 - to n embebed -> create ", () => {
+        const subMutations = getSubSchemaMutations({
+            cars: [{plate: "xxx000", brand: 'Ford'}, {number: 'yyy111', status: 'Ford'}]
+            // @ts-ignore
+        }, User, 'create')
+        expect(subMutations).toMatchObject({
+                "cars": {
+                    "create": [{"data": {"plate": "xxx000", "brand": 'Ford'}}, {"data": {"number": 'yyy111', "status": 'Ford'}}]
+                }
+            }
+        )
+    })
+
+
+    test("1 - to n embebed -> update ", () => {
+        const subMutations = getSubSchemaMutations({
+            cars: [{plate: 'xxx000', brand: 'Ford'}, {plate: 'BC 2', brand: 'Ford'}]
+            // @ts-ignore
+        }, User, 'update')
+        expect(subMutations).toMatchObject({
+                "blueCards": {
+                    "deleteMany": [{}],
+                    "create": [{"data": {"plate": 'xxx000', "brand": 'Ford'}}, {"data": {"plate": 'yyy111', "brand": 'Ford'}}]
+                }
+            }
+        )
+    })
+    test("1 to 1 embebed -> update ", () => {
+        const subMutations = getSubSchemaMutations({
+            address: {
+                country: 'Australia',
+                city: 'Gold Coast'
+            },
+        }, User, 'update')
+        expect(subMutations).toMatchObject({
+                "address": {
+                    "upsert": {
+                        "create": {"country": "Australia", "city": "Gold Coast"},
+                        "update": {"country": "Australia", "city": "Gold Coast"}
+                    }
+                },
+            }
+        )
+    })
+
 
 })
 

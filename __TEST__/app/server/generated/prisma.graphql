@@ -1,11 +1,10 @@
-# source: http://192.168.99.100:4466
-# timestamp: Thu Aug 23 2018 15:03:17 GMT+1000 (AEST)
+# source: http://localhost:5577/mandarina/test
+# timestamp: Wed Apr 10 2019 13:58:06 GMT+1000 (Australian Eastern Standard Time)
 
-type Address implements Node {
+type Address {
   country: String
   city: String
-  user(where: UserWhereInput): User
-  id: ID!
+  user: User
 }
 
 """A connection to a list of items."""
@@ -26,7 +25,6 @@ input AddressCreateInput {
 
 input AddressCreateOneWithoutUserInput {
   create: AddressCreateWithoutUserInput
-  connect: AddressWhereUniqueInput
 }
 
 input AddressCreateWithoutUserInput {
@@ -36,7 +34,7 @@ input AddressCreateWithoutUserInput {
 
 """An edge in a connection."""
 type AddressEdge {
-  """The item at the overscanRowStopIndex of the edge."""
+  """The item at the end of the edge."""
   node: Address!
 
   """A cursor for use in pagination."""
@@ -59,7 +57,6 @@ enum AddressOrderByInput {
 type AddressPreviousValues {
   country: String
   city: String
-  id: ID!
 }
 
 type AddressSubscriptionPayload {
@@ -79,9 +76,7 @@ input AddressSubscriptionWhereInput {
   """Logical NOT on all given filters combined by AND."""
   NOT: [AddressSubscriptionWhereInput!]
 
-  """
-  The subscription event gets dispatched when it's listed in mutation_in
-  """
+  """The subscription event gets dispatched when it's listed in mutation_in"""
   mutation_in: [MutationType!]
 
   """
@@ -101,15 +96,13 @@ input AddressSubscriptionWhereInput {
   node: AddressWhereInput
 }
 
-input AddressUpdateInput {
+input AddressUpdateManyMutationInput {
   country: String
   city: String
-  user: UserUpdateOneWithoutAddressInput
 }
 
 input AddressUpdateOneWithoutUserInput {
   create: AddressCreateWithoutUserInput
-  connect: AddressWhereUniqueInput
   disconnect: Boolean
   delete: Boolean
   update: AddressUpdateWithoutUserDataInput
@@ -215,6 +208,94 @@ input AddressWhereInput {
 
   """All values not ending with the given string."""
   city_not_ends_with: String
+  user: UserWhereInput
+}
+
+type AggregateAddress {
+  count: Int!
+}
+
+type AggregateCategory {
+  count: Int!
+}
+
+type AggregatePost {
+  count: Int!
+}
+
+type AggregateUser {
+  count: Int!
+}
+
+type BatchPayload {
+  """The number of nodes that have been affected by the Batch operation."""
+  count: Long!
+}
+
+type Category implements Node {
+  id: ID!
+  category: String
+  users(where: UserWhereInput, orderBy: UserOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [User!]
+}
+
+"""A connection to a list of items."""
+type CategoryConnection {
+  """Information to aid in pagination."""
+  pageInfo: PageInfo!
+
+  """A list of edges."""
+  edges: [CategoryEdge]!
+  aggregate: AggregateCategory!
+}
+
+input CategoryCreateInput {
+  category: String
+  users: UserCreateManyWithoutCategoriesInput
+}
+
+input CategoryCreateManyWithoutUsersInput {
+  create: [CategoryCreateWithoutUsersInput!]
+  connect: [CategoryWhereUniqueInput!]
+}
+
+input CategoryCreateWithoutUsersInput {
+  category: String
+}
+
+"""An edge in a connection."""
+type CategoryEdge {
+  """The item at the end of the edge."""
+  node: Category!
+
+  """A cursor for use in pagination."""
+  cursor: String!
+}
+
+enum CategoryOrderByInput {
+  id_ASC
+  id_DESC
+  category_ASC
+  category_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+  createdAt_ASC
+  createdAt_DESC
+}
+
+type CategoryPreviousValues {
+  id: ID!
+  category: String
+}
+
+input CategoryScalarWhereInput {
+  """Logical AND on all given filters."""
+  AND: [CategoryScalarWhereInput!]
+
+  """Logical OR on all given filters."""
+  OR: [CategoryScalarWhereInput!]
+
+  """Logical NOT on all given filters combined by AND."""
+  NOT: [CategoryScalarWhereInput!]
   id: ID
 
   """All values that are not equal to given value."""
@@ -255,170 +336,6 @@ input AddressWhereInput {
 
   """All values not ending with the given string."""
   id_not_ends_with: ID
-  user: UserWhereInput
-}
-
-input AddressWhereUniqueInput {
-  id: ID
-}
-
-type AggregateAddress {
-  count: Int!
-}
-
-type AggregateCategory {
-  count: Int!
-}
-
-type AggregatePost {
-  count: Int!
-}
-
-type AggregateTable2 {
-  count: Int!
-}
-
-type AggregateUser {
-  count: Int!
-}
-
-type BatchPayload {
-  """The number of nodes that have been affected by the Batch operation."""
-  count: Long!
-}
-
-type Category implements Node {
-  category: String
-  users(where: UserWhereInput, orderBy: UserOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [User!]
-  id: ID!
-}
-
-"""A connection to a list of items."""
-type CategoryConnection {
-  """Information to aid in pagination."""
-  pageInfo: PageInfo!
-
-  """A list of edges."""
-  edges: [CategoryEdge]!
-  aggregate: AggregateCategory!
-}
-
-input CategoryCreateInput {
-  category: String
-  users: UserCreateManyWithoutCategoriesInput
-}
-
-input CategoryCreateManyWithoutUsersInput {
-  create: [CategoryCreateWithoutUsersInput!]
-  connect: [CategoryWhereUniqueInput!]
-}
-
-input CategoryCreateWithoutUsersInput {
-  category: String
-}
-
-"""An edge in a connection."""
-type CategoryEdge {
-  """The item at the overscanRowStopIndex of the edge."""
-  node: Category!
-
-  """A cursor for use in pagination."""
-  cursor: String!
-}
-
-enum CategoryOrderByInput {
-  category_ASC
-  category_DESC
-  id_ASC
-  id_DESC
-  updatedAt_ASC
-  updatedAt_DESC
-  createdAt_ASC
-  createdAt_DESC
-}
-
-type CategoryPreviousValues {
-  category: String
-  id: ID!
-}
-
-type CategorySubscriptionPayload {
-  mutation: MutationType!
-  node: Category
-  updatedFields: [String!]
-  previousValues: CategoryPreviousValues
-}
-
-input CategorySubscriptionWhereInput {
-  """Logical AND on all given filters."""
-  AND: [CategorySubscriptionWhereInput!]
-
-  """Logical OR on all given filters."""
-  OR: [CategorySubscriptionWhereInput!]
-
-  """Logical NOT on all given filters combined by AND."""
-  NOT: [CategorySubscriptionWhereInput!]
-
-  """
-  The subscription event gets dispatched when it's listed in mutation_in
-  """
-  mutation_in: [MutationType!]
-
-  """
-  The subscription event gets only dispatched when one of the updated fields names is included in this list
-  """
-  updatedFields_contains: String
-
-  """
-  The subscription event gets only dispatched when all of the field names included in this list have been updated
-  """
-  updatedFields_contains_every: [String!]
-
-  """
-  The subscription event gets only dispatched when some of the field names included in this list have been updated
-  """
-  updatedFields_contains_some: [String!]
-  node: CategoryWhereInput
-}
-
-input CategoryUpdateInput {
-  category: String
-  users: UserUpdateManyWithoutCategoriesInput
-}
-
-input CategoryUpdateManyWithoutUsersInput {
-  create: [CategoryCreateWithoutUsersInput!]
-  connect: [CategoryWhereUniqueInput!]
-  disconnect: [CategoryWhereUniqueInput!]
-  delete: [CategoryWhereUniqueInput!]
-  update: [CategoryUpdateWithWhereUniqueWithoutUsersInput!]
-  upsert: [CategoryUpsertWithWhereUniqueWithoutUsersInput!]
-}
-
-input CategoryUpdateWithoutUsersDataInput {
-  category: String
-}
-
-input CategoryUpdateWithWhereUniqueWithoutUsersInput {
-  where: CategoryWhereUniqueInput!
-  data: CategoryUpdateWithoutUsersDataInput!
-}
-
-input CategoryUpsertWithWhereUniqueWithoutUsersInput {
-  where: CategoryWhereUniqueInput!
-  update: CategoryUpdateWithoutUsersDataInput!
-  create: CategoryCreateWithoutUsersInput!
-}
-
-input CategoryWhereInput {
-  """Logical AND on all given filters."""
-  AND: [CategoryWhereInput!]
-
-  """Logical OR on all given filters."""
-  OR: [CategoryWhereInput!]
-
-  """Logical NOT on all given filters combined by AND."""
-  NOT: [CategoryWhereInput!]
   category: String
 
   """All values that are not equal to given value."""
@@ -459,6 +376,99 @@ input CategoryWhereInput {
 
   """All values not ending with the given string."""
   category_not_ends_with: String
+}
+
+type CategorySubscriptionPayload {
+  mutation: MutationType!
+  node: Category
+  updatedFields: [String!]
+  previousValues: CategoryPreviousValues
+}
+
+input CategorySubscriptionWhereInput {
+  """Logical AND on all given filters."""
+  AND: [CategorySubscriptionWhereInput!]
+
+  """Logical OR on all given filters."""
+  OR: [CategorySubscriptionWhereInput!]
+
+  """Logical NOT on all given filters combined by AND."""
+  NOT: [CategorySubscriptionWhereInput!]
+
+  """The subscription event gets dispatched when it's listed in mutation_in"""
+  mutation_in: [MutationType!]
+
+  """
+  The subscription event gets only dispatched when one of the updated fields names is included in this list
+  """
+  updatedFields_contains: String
+
+  """
+  The subscription event gets only dispatched when all of the field names included in this list have been updated
+  """
+  updatedFields_contains_every: [String!]
+
+  """
+  The subscription event gets only dispatched when some of the field names included in this list have been updated
+  """
+  updatedFields_contains_some: [String!]
+  node: CategoryWhereInput
+}
+
+input CategoryUpdateInput {
+  category: String
+  users: UserUpdateManyWithoutCategoriesInput
+}
+
+input CategoryUpdateManyDataInput {
+  category: String
+}
+
+input CategoryUpdateManyMutationInput {
+  category: String
+}
+
+input CategoryUpdateManyWithoutUsersInput {
+  create: [CategoryCreateWithoutUsersInput!]
+  connect: [CategoryWhereUniqueInput!]
+  set: [CategoryWhereUniqueInput!]
+  disconnect: [CategoryWhereUniqueInput!]
+  delete: [CategoryWhereUniqueInput!]
+  update: [CategoryUpdateWithWhereUniqueWithoutUsersInput!]
+  updateMany: [CategoryUpdateManyWithWhereNestedInput!]
+  deleteMany: [CategoryScalarWhereInput!]
+  upsert: [CategoryUpsertWithWhereUniqueWithoutUsersInput!]
+}
+
+input CategoryUpdateManyWithWhereNestedInput {
+  where: CategoryScalarWhereInput!
+  data: CategoryUpdateManyDataInput!
+}
+
+input CategoryUpdateWithoutUsersDataInput {
+  category: String
+}
+
+input CategoryUpdateWithWhereUniqueWithoutUsersInput {
+  where: CategoryWhereUniqueInput!
+  data: CategoryUpdateWithoutUsersDataInput!
+}
+
+input CategoryUpsertWithWhereUniqueWithoutUsersInput {
+  where: CategoryWhereUniqueInput!
+  update: CategoryUpdateWithoutUsersDataInput!
+  create: CategoryCreateWithoutUsersInput!
+}
+
+input CategoryWhereInput {
+  """Logical AND on all given filters."""
+  AND: [CategoryWhereInput!]
+
+  """Logical OR on all given filters."""
+  OR: [CategoryWhereInput!]
+
+  """Logical NOT on all given filters combined by AND."""
+  NOT: [CategoryWhereInput!]
   id: ID
 
   """All values that are not equal to given value."""
@@ -499,6 +509,46 @@ input CategoryWhereInput {
 
   """All values not ending with the given string."""
   id_not_ends_with: ID
+  category: String
+
+  """All values that are not equal to given value."""
+  category_not: String
+
+  """All values that are contained in given list."""
+  category_in: [String!]
+
+  """All values that are not contained in given list."""
+  category_not_in: [String!]
+
+  """All values less than the given value."""
+  category_lt: String
+
+  """All values less than or equal the given value."""
+  category_lte: String
+
+  """All values greater than the given value."""
+  category_gt: String
+
+  """All values greater than or equal the given value."""
+  category_gte: String
+
+  """All values containing the given string."""
+  category_contains: String
+
+  """All values not containing the given string."""
+  category_not_contains: String
+
+  """All values starting with the given string."""
+  category_starts_with: String
+
+  """All values not starting with the given string."""
+  category_not_starts_with: String
+
+  """All values ending with the given string."""
+  category_ends_with: String
+
+  """All values not ending with the given string."""
+  category_not_ends_with: String
   users_every: UserWhereInput
   users_some: UserWhereInput
   users_none: UserWhereInput
@@ -515,36 +565,27 @@ Long can represent values between -(2^63) and 2^63 - 1.
 scalar Long
 
 type Mutation {
-  createPost(data: PostCreateInput!): Post!
-  createUser(data: UserCreateInput!): User!
   createAddress(data: AddressCreateInput!): Address!
   createCategory(data: CategoryCreateInput!): Category!
-  createTable2(data: Table2CreateInput!): Table2!
+  createPost(data: PostCreateInput!): Post!
+  createUser(data: UserCreateInput!): User!
+  updateCategory(data: CategoryUpdateInput!, where: CategoryWhereUniqueInput!): Category
   updatePost(data: PostUpdateInput!, where: PostWhereUniqueInput!): Post
   updateUser(data: UserUpdateInput!, where: UserWhereUniqueInput!): User
-  updateAddress(data: AddressUpdateInput!, where: AddressWhereUniqueInput!): Address
-  updateCategory(data: CategoryUpdateInput!, where: CategoryWhereUniqueInput!): Category
-  updateTable2(data: Table2UpdateInput!, where: Table2WhereUniqueInput!): Table2
+  deleteCategory(where: CategoryWhereUniqueInput!): Category
   deletePost(where: PostWhereUniqueInput!): Post
   deleteUser(where: UserWhereUniqueInput!): User
-  deleteAddress(where: AddressWhereUniqueInput!): Address
-  deleteCategory(where: CategoryWhereUniqueInput!): Category
-  deleteTable2(where: Table2WhereUniqueInput!): Table2
+  upsertCategory(where: CategoryWhereUniqueInput!, create: CategoryCreateInput!, update: CategoryUpdateInput!): Category!
   upsertPost(where: PostWhereUniqueInput!, create: PostCreateInput!, update: PostUpdateInput!): Post!
   upsertUser(where: UserWhereUniqueInput!, create: UserCreateInput!, update: UserUpdateInput!): User!
-  upsertAddress(where: AddressWhereUniqueInput!, create: AddressCreateInput!, update: AddressUpdateInput!): Address!
-  upsertCategory(where: CategoryWhereUniqueInput!, create: CategoryCreateInput!, update: CategoryUpdateInput!): Category!
-  upsertTable2(where: Table2WhereUniqueInput!, create: Table2CreateInput!, update: Table2UpdateInput!): Table2!
-  updateManyPosts(data: PostUpdateInput!, where: PostWhereInput): BatchPayload!
-  updateManyUsers(data: UserUpdateInput!, where: UserWhereInput): BatchPayload!
-  updateManyAddresses(data: AddressUpdateInput!, where: AddressWhereInput): BatchPayload!
-  updateManyCategories(data: CategoryUpdateInput!, where: CategoryWhereInput): BatchPayload!
-  updateManyTable2s(data: Table2UpdateInput!, where: Table2WhereInput): BatchPayload!
-  deleteManyPosts(where: PostWhereInput): BatchPayload!
-  deleteManyUsers(where: UserWhereInput): BatchPayload!
+  updateManyAddresses(data: AddressUpdateManyMutationInput!, where: AddressWhereInput): BatchPayload!
+  updateManyCategories(data: CategoryUpdateManyMutationInput!, where: CategoryWhereInput): BatchPayload!
+  updateManyPosts(data: PostUpdateManyMutationInput!, where: PostWhereInput): BatchPayload!
+  updateManyUsers(data: UserUpdateManyMutationInput!, where: UserWhereInput): BatchPayload!
   deleteManyAddresses(where: AddressWhereInput): BatchPayload!
   deleteManyCategories(where: CategoryWhereInput): BatchPayload!
-  deleteManyTable2s(where: Table2WhereInput): BatchPayload!
+  deleteManyPosts(where: PostWhereInput): BatchPayload!
+  deleteManyUsers(where: UserWhereInput): BatchPayload!
 }
 
 enum MutationType {
@@ -554,7 +595,7 @@ enum MutationType {
 }
 
 """An object with an ID"""
-export interface Node {
+interface Node {
   """The id of the object."""
   id: ID!
 }
@@ -575,11 +616,11 @@ type PageInfo {
 }
 
 type Post implements Node {
+  id: ID!
   title: String
   published: Boolean
   tags: [String!]!
-  user(where: UserWhereInput): User
-  id: ID!
+  user: User
 }
 
 """A connection to a list of items."""
@@ -616,7 +657,7 @@ input PostCreateWithoutUserInput {
 
 """An edge in a connection."""
 type PostEdge {
-  """The item at the overscanRowStopIndex of the edge."""
+  """The item at the end of the edge."""
   node: Post!
 
   """A cursor for use in pagination."""
@@ -624,12 +665,12 @@ type PostEdge {
 }
 
 enum PostOrderByInput {
+  id_ASC
+  id_DESC
   title_ASC
   title_DESC
   published_ASC
   published_DESC
-  id_ASC
-  id_DESC
   updatedAt_ASC
   updatedAt_DESC
   createdAt_ASC
@@ -637,97 +678,61 @@ enum PostOrderByInput {
 }
 
 type PostPreviousValues {
+  id: ID!
   title: String
   published: Boolean
   tags: [String!]!
-  id: ID!
 }
 
-type PostSubscriptionPayload {
-  mutation: MutationType!
-  node: Post
-  updatedFields: [String!]
-  previousValues: PostPreviousValues
-}
-
-input PostSubscriptionWhereInput {
+input PostScalarWhereInput {
   """Logical AND on all given filters."""
-  AND: [PostSubscriptionWhereInput!]
+  AND: [PostScalarWhereInput!]
 
   """Logical OR on all given filters."""
-  OR: [PostSubscriptionWhereInput!]
+  OR: [PostScalarWhereInput!]
 
   """Logical NOT on all given filters combined by AND."""
-  NOT: [PostSubscriptionWhereInput!]
+  NOT: [PostScalarWhereInput!]
+  id: ID
 
-  """
-  The subscription event gets dispatched when it's listed in mutation_in
-  """
-  mutation_in: [MutationType!]
+  """All values that are not equal to given value."""
+  id_not: ID
 
-  """
-  The subscription event gets only dispatched when one of the updated fields names is included in this list
-  """
-  updatedFields_contains: String
+  """All values that are contained in given list."""
+  id_in: [ID!]
 
-  """
-  The subscription event gets only dispatched when all of the field names included in this list have been updated
-  """
-  updatedFields_contains_every: [String!]
+  """All values that are not contained in given list."""
+  id_not_in: [ID!]
 
-  """
-  The subscription event gets only dispatched when some of the field names included in this list have been updated
-  """
-  updatedFields_contains_some: [String!]
-  node: PostWhereInput
-}
+  """All values less than the given value."""
+  id_lt: ID
 
-input PostUpdateInput {
-  title: String
-  published: Boolean
-  tags: PostUpdatetagsInput
-  user: UserUpdateOneWithoutPostsInput
-}
+  """All values less than or equal the given value."""
+  id_lte: ID
 
-input PostUpdateManyWithoutUserInput {
-  create: [PostCreateWithoutUserInput!]
-  connect: [PostWhereUniqueInput!]
-  disconnect: [PostWhereUniqueInput!]
-  delete: [PostWhereUniqueInput!]
-  update: [PostUpdateWithWhereUniqueWithoutUserInput!]
-  upsert: [PostUpsertWithWhereUniqueWithoutUserInput!]
-}
+  """All values greater than the given value."""
+  id_gt: ID
 
-input PostUpdatetagsInput {
-  set: [String!]
-}
+  """All values greater than or equal the given value."""
+  id_gte: ID
 
-input PostUpdateWithoutUserDataInput {
-  title: String
-  published: Boolean
-  tags: PostUpdatetagsInput
-}
+  """All values containing the given string."""
+  id_contains: ID
 
-input PostUpdateWithWhereUniqueWithoutUserInput {
-  where: PostWhereUniqueInput!
-  data: PostUpdateWithoutUserDataInput!
-}
+  """All values not containing the given string."""
+  id_not_contains: ID
 
-input PostUpsertWithWhereUniqueWithoutUserInput {
-  where: PostWhereUniqueInput!
-  update: PostUpdateWithoutUserDataInput!
-  create: PostCreateWithoutUserInput!
-}
+  """All values starting with the given string."""
+  id_starts_with: ID
 
-input PostWhereInput {
-  """Logical AND on all given filters."""
-  AND: [PostWhereInput!]
+  """All values not starting with the given string."""
+  id_not_starts_with: ID
 
-  """Logical OR on all given filters."""
-  OR: [PostWhereInput!]
+  """All values ending with the given string."""
+  id_ends_with: ID
 
-  """Logical NOT on all given filters combined by AND."""
-  NOT: [PostWhereInput!]
+  """All values not ending with the given string."""
+  id_not_ends_with: ID
   title: String
 
   """All values that are not equal to given value."""
@@ -772,149 +777,26 @@ input PostWhereInput {
 
   """All values that are not equal to given value."""
   published_not: Boolean
-  id: ID
-
-  """All values that are not equal to given value."""
-  id_not: ID
-
-  """All values that are contained in given list."""
-  id_in: [ID!]
-
-  """All values that are not contained in given list."""
-  id_not_in: [ID!]
-
-  """All values less than the given value."""
-  id_lt: ID
-
-  """All values less than or equal the given value."""
-  id_lte: ID
-
-  """All values greater than the given value."""
-  id_gt: ID
-
-  """All values greater than or equal the given value."""
-  id_gte: ID
-
-  """All values containing the given string."""
-  id_contains: ID
-
-  """All values not containing the given string."""
-  id_not_contains: ID
-
-  """All values starting with the given string."""
-  id_starts_with: ID
-
-  """All values not starting with the given string."""
-  id_not_starts_with: ID
-
-  """All values ending with the given string."""
-  id_ends_with: ID
-
-  """All values not ending with the given string."""
-  id_not_ends_with: ID
-  user: UserWhereInput
 }
 
-input PostWhereUniqueInput {
-  id: ID
-}
-
-type Query {
-  posts(where: PostWhereInput, orderBy: PostOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Post]!
-  users(where: UserWhereInput, orderBy: UserOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [User]!
-  addresses(where: AddressWhereInput, orderBy: AddressOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Address]!
-  categories(where: CategoryWhereInput, orderBy: CategoryOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Category]!
-  table2s(where: Table2WhereInput, orderBy: Table2OrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Table2]!
-  post(where: PostWhereUniqueInput!): Post
-  user(where: UserWhereUniqueInput!): User
-  address(where: AddressWhereUniqueInput!): Address
-  category(where: CategoryWhereUniqueInput!): Category
-  table2(where: Table2WhereUniqueInput!): Table2
-  postsConnection(where: PostWhereInput, orderBy: PostOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): PostConnection!
-  usersConnection(where: UserWhereInput, orderBy: UserOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): UserConnection!
-  addressesConnection(where: AddressWhereInput, orderBy: AddressOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): AddressConnection!
-  categoriesConnection(where: CategoryWhereInput, orderBy: CategoryOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): CategoryConnection!
-  table2sConnection(where: Table2WhereInput, orderBy: Table2OrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): Table2Connection!
-
-  """Fetches an object given its ID"""
-  node(
-    """The ID of an object"""
-    id: ID!
-  ): Node
-}
-
-type Subscription {
-  post(where: PostSubscriptionWhereInput): PostSubscriptionPayload
-  user(where: UserSubscriptionWhereInput): UserSubscriptionPayload
-  address(where: AddressSubscriptionWhereInput): AddressSubscriptionPayload
-  category(where: CategorySubscriptionWhereInput): CategorySubscriptionPayload
-  table2(where: Table2SubscriptionWhereInput): Table2SubscriptionPayload
-}
-
-type Table2 implements Node {
-  name: String!
-  id: ID!
-}
-
-"""A connection to a list of items."""
-type Table2Connection {
-  """Information to aid in pagination."""
-  pageInfo: PageInfo!
-
-  """A list of edges."""
-  edges: [Table2Edge]!
-  aggregate: AggregateTable2!
-}
-
-input Table2CreateInput {
-  name: String!
-}
-
-"""An edge in a connection."""
-type Table2Edge {
-  """The item at the overscanRowStopIndex of the edge."""
-  node: Table2!
-
-  """A cursor for use in pagination."""
-  cursor: String!
-}
-
-enum Table2OrderByInput {
-  name_ASC
-  name_DESC
-  id_ASC
-  id_DESC
-  updatedAt_ASC
-  updatedAt_DESC
-  createdAt_ASC
-  createdAt_DESC
-}
-
-type Table2PreviousValues {
-  name: String!
-  id: ID!
-}
-
-type Table2SubscriptionPayload {
+type PostSubscriptionPayload {
   mutation: MutationType!
-  node: Table2
+  node: Post
   updatedFields: [String!]
-  previousValues: Table2PreviousValues
+  previousValues: PostPreviousValues
 }
 
-input Table2SubscriptionWhereInput {
+input PostSubscriptionWhereInput {
   """Logical AND on all given filters."""
-  AND: [Table2SubscriptionWhereInput!]
+  AND: [PostSubscriptionWhereInput!]
 
   """Logical OR on all given filters."""
-  OR: [Table2SubscriptionWhereInput!]
+  OR: [PostSubscriptionWhereInput!]
 
   """Logical NOT on all given filters combined by AND."""
-  NOT: [Table2SubscriptionWhereInput!]
+  NOT: [PostSubscriptionWhereInput!]
 
-  """
-  The subscription event gets dispatched when it's listed in mutation_in
-  """
+  """The subscription event gets dispatched when it's listed in mutation_in"""
   mutation_in: [MutationType!]
 
   """
@@ -931,62 +813,75 @@ input Table2SubscriptionWhereInput {
   The subscription event gets only dispatched when some of the field names included in this list have been updated
   """
   updatedFields_contains_some: [String!]
-  node: Table2WhereInput
+  node: PostWhereInput
 }
 
-input Table2UpdateInput {
-  name: String
+input PostUpdateInput {
+  title: String
+  published: Boolean
+  tags: PostUpdatetagsInput
+  user: UserUpdateOneWithoutPostsInput
 }
 
-input Table2WhereInput {
+input PostUpdateManyDataInput {
+  title: String
+  published: Boolean
+  tags: PostUpdatetagsInput
+}
+
+input PostUpdateManyMutationInput {
+  title: String
+  published: Boolean
+  tags: PostUpdatetagsInput
+}
+
+input PostUpdateManyWithoutUserInput {
+  create: [PostCreateWithoutUserInput!]
+  connect: [PostWhereUniqueInput!]
+  set: [PostWhereUniqueInput!]
+  disconnect: [PostWhereUniqueInput!]
+  delete: [PostWhereUniqueInput!]
+  update: [PostUpdateWithWhereUniqueWithoutUserInput!]
+  updateMany: [PostUpdateManyWithWhereNestedInput!]
+  deleteMany: [PostScalarWhereInput!]
+  upsert: [PostUpsertWithWhereUniqueWithoutUserInput!]
+}
+
+input PostUpdateManyWithWhereNestedInput {
+  where: PostScalarWhereInput!
+  data: PostUpdateManyDataInput!
+}
+
+input PostUpdatetagsInput {
+  set: [String!]
+}
+
+input PostUpdateWithoutUserDataInput {
+  title: String
+  published: Boolean
+  tags: PostUpdatetagsInput
+}
+
+input PostUpdateWithWhereUniqueWithoutUserInput {
+  where: PostWhereUniqueInput!
+  data: PostUpdateWithoutUserDataInput!
+}
+
+input PostUpsertWithWhereUniqueWithoutUserInput {
+  where: PostWhereUniqueInput!
+  update: PostUpdateWithoutUserDataInput!
+  create: PostCreateWithoutUserInput!
+}
+
+input PostWhereInput {
   """Logical AND on all given filters."""
-  AND: [Table2WhereInput!]
+  AND: [PostWhereInput!]
 
   """Logical OR on all given filters."""
-  OR: [Table2WhereInput!]
+  OR: [PostWhereInput!]
 
   """Logical NOT on all given filters combined by AND."""
-  NOT: [Table2WhereInput!]
-  name: String
-
-  """All values that are not equal to given value."""
-  name_not: String
-
-  """All values that are contained in given list."""
-  name_in: [String!]
-
-  """All values that are not contained in given list."""
-  name_not_in: [String!]
-
-  """All values less than the given value."""
-  name_lt: String
-
-  """All values less than or equal the given value."""
-  name_lte: String
-
-  """All values greater than the given value."""
-  name_gt: String
-
-  """All values greater than or equal the given value."""
-  name_gte: String
-
-  """All values containing the given string."""
-  name_contains: String
-
-  """All values not containing the given string."""
-  name_not_contains: String
-
-  """All values starting with the given string."""
-  name_starts_with: String
-
-  """All values not starting with the given string."""
-  name_not_starts_with: String
-
-  """All values ending with the given string."""
-  name_ends_with: String
-
-  """All values not ending with the given string."""
-  name_not_ends_with: String
+  NOT: [PostWhereInput!]
   id: ID
 
   """All values that are not equal to given value."""
@@ -1027,20 +922,92 @@ input Table2WhereInput {
 
   """All values not ending with the given string."""
   id_not_ends_with: ID
+  title: String
+
+  """All values that are not equal to given value."""
+  title_not: String
+
+  """All values that are contained in given list."""
+  title_in: [String!]
+
+  """All values that are not contained in given list."""
+  title_not_in: [String!]
+
+  """All values less than the given value."""
+  title_lt: String
+
+  """All values less than or equal the given value."""
+  title_lte: String
+
+  """All values greater than the given value."""
+  title_gt: String
+
+  """All values greater than or equal the given value."""
+  title_gte: String
+
+  """All values containing the given string."""
+  title_contains: String
+
+  """All values not containing the given string."""
+  title_not_contains: String
+
+  """All values starting with the given string."""
+  title_starts_with: String
+
+  """All values not starting with the given string."""
+  title_not_starts_with: String
+
+  """All values ending with the given string."""
+  title_ends_with: String
+
+  """All values not ending with the given string."""
+  title_not_ends_with: String
+  published: Boolean
+
+  """All values that are not equal to given value."""
+  published_not: Boolean
+  user: UserWhereInput
 }
 
-input Table2WhereUniqueInput {
+input PostWhereUniqueInput {
   id: ID
 }
 
+type Query {
+  addresses(where: AddressWhereInput, orderBy: AddressOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Address]!
+  categories(where: CategoryWhereInput, orderBy: CategoryOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Category]!
+  posts(where: PostWhereInput, orderBy: PostOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Post]!
+  users(where: UserWhereInput, orderBy: UserOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [User]!
+  category(where: CategoryWhereUniqueInput!): Category
+  post(where: PostWhereUniqueInput!): Post
+  user(where: UserWhereUniqueInput!): User
+  addressesConnection(where: AddressWhereInput, orderBy: AddressOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): AddressConnection!
+  categoriesConnection(where: CategoryWhereInput, orderBy: CategoryOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): CategoryConnection!
+  postsConnection(where: PostWhereInput, orderBy: PostOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): PostConnection!
+  usersConnection(where: UserWhereInput, orderBy: UserOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): UserConnection!
+
+  """Fetches an object given its ID"""
+  node(
+    """The ID of an object"""
+    id: ID!
+  ): Node
+}
+
+type Subscription {
+  address(where: AddressSubscriptionWhereInput): AddressSubscriptionPayload
+  category(where: CategorySubscriptionWhereInput): CategorySubscriptionPayload
+  post(where: PostSubscriptionWhereInput): PostSubscriptionPayload
+  user(where: UserSubscriptionWhereInput): UserSubscriptionPayload
+}
+
 type User implements Node {
+  id: ID!
   age: Int
   email: String
   name: String
-  address(where: AddressWhereInput): Address
+  address: Address
   categories(where: CategoryWhereInput, orderBy: CategoryOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Category!]
   posts(where: PostWhereInput, orderBy: PostOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Post!]
-  id: ID!
 }
 
 """A connection to a list of items."""
@@ -1103,7 +1070,7 @@ input UserCreateWithoutPostsInput {
 
 """An edge in a connection."""
 type UserEdge {
-  """The item at the overscanRowStopIndex of the edge."""
+  """The item at the end of the edge."""
   node: User!
 
   """A cursor for use in pagination."""
@@ -1111,14 +1078,14 @@ type UserEdge {
 }
 
 enum UserOrderByInput {
+  id_ASC
+  id_DESC
   age_ASC
   age_DESC
   email_ASC
   email_DESC
   name_ASC
   name_DESC
-  id_ASC
-  id_DESC
   updatedAt_ASC
   updatedAt_DESC
   createdAt_ASC
@@ -1126,141 +1093,61 @@ enum UserOrderByInput {
 }
 
 type UserPreviousValues {
-  age: Int
-  email: String
-  name: String
   id: ID!
+  age: Int
+  email: String
+  name: String
 }
 
-type UserSubscriptionPayload {
-  mutation: MutationType!
-  node: User
-  updatedFields: [String!]
-  previousValues: UserPreviousValues
-}
-
-input UserSubscriptionWhereInput {
+input UserScalarWhereInput {
   """Logical AND on all given filters."""
-  AND: [UserSubscriptionWhereInput!]
+  AND: [UserScalarWhereInput!]
 
   """Logical OR on all given filters."""
-  OR: [UserSubscriptionWhereInput!]
+  OR: [UserScalarWhereInput!]
 
   """Logical NOT on all given filters combined by AND."""
-  NOT: [UserSubscriptionWhereInput!]
+  NOT: [UserScalarWhereInput!]
+  id: ID
 
-  """
-  The subscription event gets dispatched when it's listed in mutation_in
-  """
-  mutation_in: [MutationType!]
+  """All values that are not equal to given value."""
+  id_not: ID
 
-  """
-  The subscription event gets only dispatched when one of the updated fields names is included in this list
-  """
-  updatedFields_contains: String
+  """All values that are contained in given list."""
+  id_in: [ID!]
 
-  """
-  The subscription event gets only dispatched when all of the field names included in this list have been updated
-  """
-  updatedFields_contains_every: [String!]
+  """All values that are not contained in given list."""
+  id_not_in: [ID!]
 
-  """
-  The subscription event gets only dispatched when some of the field names included in this list have been updated
-  """
-  updatedFields_contains_some: [String!]
-  node: UserWhereInput
-}
+  """All values less than the given value."""
+  id_lt: ID
 
-input UserUpdateInput {
-  age: Int
-  email: String
-  name: String
-  address: AddressUpdateOneWithoutUserInput
-  categories: CategoryUpdateManyWithoutUsersInput
-  posts: PostUpdateManyWithoutUserInput
-}
+  """All values less than or equal the given value."""
+  id_lte: ID
 
-input UserUpdateManyWithoutCategoriesInput {
-  create: [UserCreateWithoutCategoriesInput!]
-  connect: [UserWhereUniqueInput!]
-  disconnect: [UserWhereUniqueInput!]
-  delete: [UserWhereUniqueInput!]
-  update: [UserUpdateWithWhereUniqueWithoutCategoriesInput!]
-  upsert: [UserUpsertWithWhereUniqueWithoutCategoriesInput!]
-}
+  """All values greater than the given value."""
+  id_gt: ID
 
-input UserUpdateOneWithoutAddressInput {
-  create: UserCreateWithoutAddressInput
-  connect: UserWhereUniqueInput
-  disconnect: Boolean
-  delete: Boolean
-  update: UserUpdateWithoutAddressDataInput
-  upsert: UserUpsertWithoutAddressInput
-}
+  """All values greater than or equal the given value."""
+  id_gte: ID
 
-input UserUpdateOneWithoutPostsInput {
-  create: UserCreateWithoutPostsInput
-  connect: UserWhereUniqueInput
-  disconnect: Boolean
-  delete: Boolean
-  update: UserUpdateWithoutPostsDataInput
-  upsert: UserUpsertWithoutPostsInput
-}
+  """All values containing the given string."""
+  id_contains: ID
 
-input UserUpdateWithoutAddressDataInput {
-  age: Int
-  email: String
-  name: String
-  categories: CategoryUpdateManyWithoutUsersInput
-  posts: PostUpdateManyWithoutUserInput
-}
+  """All values not containing the given string."""
+  id_not_contains: ID
 
-input UserUpdateWithoutCategoriesDataInput {
-  age: Int
-  email: String
-  name: String
-  address: AddressUpdateOneWithoutUserInput
-  posts: PostUpdateManyWithoutUserInput
-}
+  """All values starting with the given string."""
+  id_starts_with: ID
 
-input UserUpdateWithoutPostsDataInput {
-  age: Int
-  email: String
-  name: String
-  address: AddressUpdateOneWithoutUserInput
-  categories: CategoryUpdateManyWithoutUsersInput
-}
+  """All values not starting with the given string."""
+  id_not_starts_with: ID
 
-input UserUpdateWithWhereUniqueWithoutCategoriesInput {
-  where: UserWhereUniqueInput!
-  data: UserUpdateWithoutCategoriesDataInput!
-}
+  """All values ending with the given string."""
+  id_ends_with: ID
 
-input UserUpsertWithoutAddressInput {
-  update: UserUpdateWithoutAddressDataInput!
-  create: UserCreateWithoutAddressInput!
-}
-
-input UserUpsertWithoutPostsInput {
-  update: UserUpdateWithoutPostsDataInput!
-  create: UserCreateWithoutPostsInput!
-}
-
-input UserUpsertWithWhereUniqueWithoutCategoriesInput {
-  where: UserWhereUniqueInput!
-  update: UserUpdateWithoutCategoriesDataInput!
-  create: UserCreateWithoutCategoriesInput!
-}
-
-input UserWhereInput {
-  """Logical AND on all given filters."""
-  AND: [UserWhereInput!]
-
-  """Logical OR on all given filters."""
-  OR: [UserWhereInput!]
-
-  """Logical NOT on all given filters combined by AND."""
-  NOT: [UserWhereInput!]
+  """All values not ending with the given string."""
+  id_not_ends_with: ID
   age: Int
 
   """All values that are not equal to given value."""
@@ -1363,6 +1250,133 @@ input UserWhereInput {
 
   """All values not ending with the given string."""
   name_not_ends_with: String
+}
+
+type UserSubscriptionPayload {
+  mutation: MutationType!
+  node: User
+  updatedFields: [String!]
+  previousValues: UserPreviousValues
+}
+
+input UserSubscriptionWhereInput {
+  """Logical AND on all given filters."""
+  AND: [UserSubscriptionWhereInput!]
+
+  """Logical OR on all given filters."""
+  OR: [UserSubscriptionWhereInput!]
+
+  """Logical NOT on all given filters combined by AND."""
+  NOT: [UserSubscriptionWhereInput!]
+
+  """The subscription event gets dispatched when it's listed in mutation_in"""
+  mutation_in: [MutationType!]
+
+  """
+  The subscription event gets only dispatched when one of the updated fields names is included in this list
+  """
+  updatedFields_contains: String
+
+  """
+  The subscription event gets only dispatched when all of the field names included in this list have been updated
+  """
+  updatedFields_contains_every: [String!]
+
+  """
+  The subscription event gets only dispatched when some of the field names included in this list have been updated
+  """
+  updatedFields_contains_some: [String!]
+  node: UserWhereInput
+}
+
+input UserUpdateInput {
+  age: Int
+  email: String
+  name: String
+  address: AddressUpdateOneWithoutUserInput
+  categories: CategoryUpdateManyWithoutUsersInput
+  posts: PostUpdateManyWithoutUserInput
+}
+
+input UserUpdateManyDataInput {
+  age: Int
+  email: String
+  name: String
+}
+
+input UserUpdateManyMutationInput {
+  age: Int
+  email: String
+  name: String
+}
+
+input UserUpdateManyWithoutCategoriesInput {
+  create: [UserCreateWithoutCategoriesInput!]
+  connect: [UserWhereUniqueInput!]
+  set: [UserWhereUniqueInput!]
+  disconnect: [UserWhereUniqueInput!]
+  delete: [UserWhereUniqueInput!]
+  update: [UserUpdateWithWhereUniqueWithoutCategoriesInput!]
+  updateMany: [UserUpdateManyWithWhereNestedInput!]
+  deleteMany: [UserScalarWhereInput!]
+  upsert: [UserUpsertWithWhereUniqueWithoutCategoriesInput!]
+}
+
+input UserUpdateManyWithWhereNestedInput {
+  where: UserScalarWhereInput!
+  data: UserUpdateManyDataInput!
+}
+
+input UserUpdateOneWithoutPostsInput {
+  create: UserCreateWithoutPostsInput
+  connect: UserWhereUniqueInput
+  disconnect: Boolean
+  delete: Boolean
+  update: UserUpdateWithoutPostsDataInput
+  upsert: UserUpsertWithoutPostsInput
+}
+
+input UserUpdateWithoutCategoriesDataInput {
+  age: Int
+  email: String
+  name: String
+  address: AddressUpdateOneWithoutUserInput
+  posts: PostUpdateManyWithoutUserInput
+}
+
+input UserUpdateWithoutPostsDataInput {
+  age: Int
+  email: String
+  name: String
+  address: AddressUpdateOneWithoutUserInput
+  categories: CategoryUpdateManyWithoutUsersInput
+}
+
+input UserUpdateWithWhereUniqueWithoutCategoriesInput {
+  where: UserWhereUniqueInput!
+  data: UserUpdateWithoutCategoriesDataInput!
+}
+
+input UserUpsertWithoutPostsInput {
+  update: UserUpdateWithoutPostsDataInput!
+  create: UserCreateWithoutPostsInput!
+}
+
+input UserUpsertWithWhereUniqueWithoutCategoriesInput {
+  where: UserWhereUniqueInput!
+  update: UserUpdateWithoutCategoriesDataInput!
+  create: UserCreateWithoutCategoriesInput!
+}
+
+input UserWhereInput {
+  """Logical AND on all given filters."""
+  AND: [UserWhereInput!]
+
+  """Logical OR on all given filters."""
+  OR: [UserWhereInput!]
+
+  """Logical NOT on all given filters combined by AND."""
+  NOT: [UserWhereInput!]
   id: ID
 
   """All values that are not equal to given value."""
@@ -1403,6 +1417,108 @@ input UserWhereInput {
 
   """All values not ending with the given string."""
   id_not_ends_with: ID
+  age: Int
+
+  """All values that are not equal to given value."""
+  age_not: Int
+
+  """All values that are contained in given list."""
+  age_in: [Int!]
+
+  """All values that are not contained in given list."""
+  age_not_in: [Int!]
+
+  """All values less than the given value."""
+  age_lt: Int
+
+  """All values less than or equal the given value."""
+  age_lte: Int
+
+  """All values greater than the given value."""
+  age_gt: Int
+
+  """All values greater than or equal the given value."""
+  age_gte: Int
+  email: String
+
+  """All values that are not equal to given value."""
+  email_not: String
+
+  """All values that are contained in given list."""
+  email_in: [String!]
+
+  """All values that are not contained in given list."""
+  email_not_in: [String!]
+
+  """All values less than the given value."""
+  email_lt: String
+
+  """All values less than or equal the given value."""
+  email_lte: String
+
+  """All values greater than the given value."""
+  email_gt: String
+
+  """All values greater than or equal the given value."""
+  email_gte: String
+
+  """All values containing the given string."""
+  email_contains: String
+
+  """All values not containing the given string."""
+  email_not_contains: String
+
+  """All values starting with the given string."""
+  email_starts_with: String
+
+  """All values not starting with the given string."""
+  email_not_starts_with: String
+
+  """All values ending with the given string."""
+  email_ends_with: String
+
+  """All values not ending with the given string."""
+  email_not_ends_with: String
+  name: String
+
+  """All values that are not equal to given value."""
+  name_not: String
+
+  """All values that are contained in given list."""
+  name_in: [String!]
+
+  """All values that are not contained in given list."""
+  name_not_in: [String!]
+
+  """All values less than the given value."""
+  name_lt: String
+
+  """All values less than or equal the given value."""
+  name_lte: String
+
+  """All values greater than the given value."""
+  name_gt: String
+
+  """All values greater than or equal the given value."""
+  name_gte: String
+
+  """All values containing the given string."""
+  name_contains: String
+
+  """All values not containing the given string."""
+  name_not_contains: String
+
+  """All values starting with the given string."""
+  name_starts_with: String
+
+  """All values not starting with the given string."""
+  name_not_starts_with: String
+
+  """All values ending with the given string."""
+  name_ends_with: String
+
+  """All values not ending with the given string."""
+  name_not_ends_with: String
   address: AddressWhereInput
   categories_every: CategoryWhereInput
   categories_some: CategoryWhereInput

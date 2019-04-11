@@ -6,7 +6,7 @@ export const getConfig = (): ConfigInterface => {
     try {
         rawData = fs.readFileSync(path.join(process.cwd(), 'mandarina.json'), 'utf8')
     } catch (e) {
-        throw Error('Error: Be sure you are in a mandarina project and has a madarina.json file')
+        throw Error('Error: Be sure you are running your server from the root (where mandarina.json file is located')
     }
     const config = JSON.parse(rawData)
     if (!config.secret) {

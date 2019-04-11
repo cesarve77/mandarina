@@ -374,49 +374,63 @@ export const getSubSchemaMutations = (model: Model, schema: Schema, mutationType
     Object.keys(model).forEach((key) => {
         const value = model[key]
         let definition = schema.getFieldDefinition(key)
+        //1 to n relations
         if (Array.isArray(definition.type)) {
             if (typeof definition.type[0] === 'string') {
+
                 const schema = Schema.getInstance(definition.type[0] as string)
                 if (!Array.isArray(value)) {
                     obj[key] = null
                 }
+                //1 to n relations - table
                 if (schema.keys.includes('id')) {
                     let result: { create?: any[], update?: any[] } = {}
                     value.forEach((item: any) => {
                         let type: MutationType | 'connect'
-                        if (item && item.id && Object.keys(item).length===1){
-                            type='connect'
-                        }else{
+                        if (item && item.id && Object.keys(item).length === 1) {
+                            type = 'connect'
+                        } else {
                             type = mutationType = 'update' && item && item.id ? 'update' : 'create'
                         }
                         result[type] = result[type] || []
-                        result[type].push(getSubSchemaMutations(item, schema, mutationType))
+                        if (type === 'update') {
+                            const {id, ...clone} = item
+                            // @ts-ignore
+                            result.update.push({
+                                where: {id},
+                                data: getSubSchemaMutations(clone, schema, mutationType)
+                            })
+                        } else {
+                            result[type].push(getSubSchemaMutations(item, schema, mutationType))
+                        }
 
                     })
-                    console.log('result', schema.name, result)
+
                     obj[key] = result
+                    //1 to n relations - embebed
                 } else {
-                    let result: { deleteMany?: [{}] ,create:any[]} = {create:[]}
+                    let result: { deleteMany?: [{}], create: any[] } = {create: []}
                     if (mutationType === 'update') {
                         result.deleteMany = [{}]
                     }
-                    result.create.push(getSubSchemaMutations(value, schema, mutationType))
+                    value.forEach((item: any) => {
+                        result.create.push({data: getSubSchemaMutations(item, schema, mutationType)})
+                    })
                     obj[key] = result
                 }
+
+                //1 to n relations - scalars
             } else {
                 obj[key] = {set: value}
             }
+
+            //1 to 1 relations
         } else {
             if (typeof definition.type === 'string') {
                 const schema = Schema.getInstance(definition.type)
-                if (mutationType === 'update' && value && value.id) {
-                    const {id, ...item} = value
-                    return obj[key] = {
-                        update: {
-                            where: {id},
-                            data: getSubSchemaMutations(item, schema, mutationType)
-                        }
-                    }
+                if (mutationType === 'update' ) {
+                    const subMutations=getSubSchemaMutations(value, schema, mutationType)
+                    return obj[key] = {upsert: {create: subMutations, update: subMutations}}
                 } else {
                     return obj[key] = {create: getSubSchemaMutations(value, schema, mutationType)}
                 }

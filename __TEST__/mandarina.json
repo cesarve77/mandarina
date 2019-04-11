@@ -1,0 +1,27 @@
+{
+  "dir": {
+    "schemas": [
+      "app/lib/actions",
+      "app/lib/forms",
+      "app/lib/schemas"
+    ],
+    "tables": [
+      "app/server/tables"
+    ],
+    "actions": [
+      "app/server/actions"
+    ],
+    "generated": "app/server/generated",
+    "prisma": "prisma"
+  },
+  "options": {
+    "auth": true
+  },
+  "prisma": {
+    "host": "http://localhost",
+    "port": 5577,
+    "database":"mandarina",
+    "stage": "test"
+  },
+  "secret": "7Phk8i3M29wTutl7TFRrlPM7NrGFJaxEPEOMLFoDEIlWZwUGZBYafA5QSzlrzGTd9xPK03buzmhoGZUvqGut7n9NNi2cPLfM6UmWLlg8wlm2a5mpBEIwRG9uO1xrAA3w"
+}
