@@ -107,11 +107,17 @@
       "includes/onSubmitSuccess": {
         "title": "includes/onSubmitSuccess"
       },
+      "includes/overwrite": {
+        "title": "includes/overwrite"
+      },
       "includes/placeholder": {
         "title": "includes/placeholder"
       },
       "includes/ref": {
         "title": "includes/ref"
+      },
+      "includes/refetchSchemas": {
+        "title": "includes/refetchSchemas"
       },
       "includes/schema": {
         "title": "includes/schema"

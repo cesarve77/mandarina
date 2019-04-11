@@ -119,8 +119,6 @@ const getMainSchema = (schema: Schema, type: 'input' | 'type') => {
                 if (name || onDelete) {
                     relation = `@relation(${name} ${onDelete})`
                 }
-
-
             }
         }
 

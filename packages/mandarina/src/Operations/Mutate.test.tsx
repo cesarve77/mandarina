@@ -168,6 +168,19 @@ describe('Mutate', () => {
             )
         })
 
+        test("1 to n embebed  -> create empty", () => {
+            const subMutations = getSubSchemaMutations({
+                cars: [],
+            }, User, 'create')
+            expect(subMutations).toEqual({
+                    "cars": {
+                        "create": []
+                    }
+                }
+            )
+        })
+
+
         test("1 to n embebed  -> update ", () => {
             const subMutations = getSubSchemaMutations({
                 cars: [{brand: 'Ford', plate: 'xxx000'}, {brand: 'Ford', plate: 'yyy111'}],

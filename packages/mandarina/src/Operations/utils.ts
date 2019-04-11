@@ -6,8 +6,12 @@ import {unflatten} from "flat";
  * @return  grqphql string
  */
 export const buildQueryFromFields = (keys:string[]) => {
-    keys = keys.map((field) => field.replace(/\.\$(\.?)/g, '$1'))
-    const fields = keys.reduce((obj, key) => Object.assign(obj, {[key]: {}}), {})
-    const obj = unflatten(fields)
+    let fields=[...keys]
+    if (!fields.includes('id')){
+        fields.push('id')
+    }
+    fields = fields.map((field) => field.replace(/\.\$(\.?)/g, '$1'))
+    const fieldsFlat = fields.reduce((obj, key) => Object.assign(obj, {[key]: {}}), {})
+    const obj = unflatten(fieldsFlat)
     return JSON.stringify(obj).replace(/\{\}|\"|\:|null/g, '')
 }

@@ -128,6 +128,8 @@ export class Table {
                     //this.validatePermissions(action, roles, args.data);
 
                     result = await prismaMethod(args, info);
+
+                    console.log('resultresultresultresult',result)
                     context.result = result
 
                     await this.callHook(<HookName>`after${capitalize(action)}`, _, args, context, info);
