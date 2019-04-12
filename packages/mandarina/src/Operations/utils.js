@@ -7,11 +7,15 @@ var flat_1 = require("flat");
  * @return  grqphql string
  */
 exports.buildQueryFromFields = function (keys) {
-    keys = keys.map(function (field) { return field.replace(/\.\$(\.?)/g, '$1'); });
-    var fields = keys.reduce(function (obj, key) {
+    var fields = keys.slice();
+    if (!fields.includes('id')) {
+        fields.push('id');
+    }
+    fields = fields.map(function (field) { return field.replace(/\.\$(\.?)/g, '$1'); });
+    var fieldsFlat = fields.reduce(function (obj, key) {
         var _a;
         return Object.assign(obj, (_a = {}, _a[key] = {}, _a));
     }, {});
-    var obj = flat_1.unflatten(fields);
+    var obj = flat_1.unflatten(fieldsFlat);
     return JSON.stringify(obj).replace(/\{\}|\"|\:|null/g, '');
 };
