@@ -215,6 +215,7 @@ export class Bridge {
 // Function with one argument - model - which throws errors when model is
 // invalid.
     getValidator({fields}: { fields?: string[] } = {}): (model: any) => void {
+
         return (model: any) => {
             let enter = false
             const errors = this.schema.validate(model, fields)
@@ -222,7 +223,7 @@ export class Bridge {
                 const error = {}
                 errors.forEach((e) => {
                     if (fields) {
-                        if (fields.includes(e.path)) {
+                        if (fields.includes(e.path.replace(/\.\d+/,''))) {
                             enter = true
                             error[e.path] = e.message
                         }

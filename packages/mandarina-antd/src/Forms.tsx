@@ -39,8 +39,8 @@ export interface AutoFormProps {
     model?: object
     modelTransform?: (mode: 'form' | 'submit' | 'validate', model: object) => boolean
     onChange?: (key: string, value: any) => void
-    onSubmitFailure?: () => void
-    onSubmitSuccess?: () => void
+    onSubmitFailure?: (e?: any) => void
+    onSubmitSuccess?: (res?: any) => void
     onSubmit?: (model: object) => Promise<void> | void
     placeholder?: boolean
     innerRef?: React.Ref<HTMLFormElement>
@@ -62,6 +62,7 @@ interface FormProps<TData = any, TVariables = OperationVariables> extends Mutate
 export interface ChildFunc {
     (props: any): JSX.Element
 }
+
 
 const Form = ({
                   Component,
@@ -92,8 +93,10 @@ const Form = ({
     return (
         <Component id={id} schema={schema} fields={fields} {...mutationProps}>
             {({mutate, doc = model, loading, ...rest}) => {
-                console.log('doc',doc)
-                console.log('model',model   )
+                console.log('loading', loading)
+                console.log('doc', doc)
+                console.log('model', model)
+                console.log('rest', rest)
                 return (
                     <AutoForm
                         schema={bridge}

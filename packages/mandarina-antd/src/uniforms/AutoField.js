@@ -29,7 +29,6 @@ class CustomAuto extends BaseField {
     render() {
 
         const props = this.getFieldProps(undefined, {ensureValue: false});
-        let {field: {form: {col = 24} = {}}} = props
         if (props.component === undefined) {
             if (props.allowedValues) {//todo
                 if (props.checkboxes && props.fieldType !== Array) {
@@ -47,11 +46,9 @@ class CustomAuto extends BaseField {
                         props.component = TableField;
                         break;
                     case (Array.isArray(props.fieldType) || props.fieldType === Array):
-                        console.log('ListField', props)
                         props.component = ListField;
                         break;
                     case (typeof props.fieldType === 'string' || props.fieldType === Object):
-                        console.log('NestField')
                         props.component = NestField;
                         break;
                     case props.fieldType === Date:
@@ -77,6 +74,8 @@ class CustomAuto extends BaseField {
         }
         let label = this.props.label
         if (label === "") label = this.props.field.label
+        let {field: {form: {col = 24} = {}}} = props
+        if (this.props.col) col=this.props.col
         if (col === false) return createElement(props.component, {...this.props, label})
         if (typeof col !== 'object') col = {span: col}
         return (
