@@ -128,10 +128,15 @@ export class Mutate extends PureComponent<WithApolloClient<MutateProps & { type:
 
     getTypesDoc(obj: Model, schema: Schema) {
         const wrapper: Wrapper = (result) => result
-        const initiator: Initiator = (obj, schema) => ({
-            id: this.props.type === 'update' ? obj.id : '',
-            __typename: schema.name
-        })
+        const initiator: Initiator = (obj, schema) => {
+            const res:{id?:string,__typename:string}={
+                __typename: schema.name
+            }
+            if (schema.keys.includes('id')){
+                res.id= this.props.type === 'update' ? obj.id : ''
+            }
+            return res
+        }
         return this.spider(obj, schema, wrapper, initiator)
     }
 
@@ -144,20 +149,20 @@ export class Mutate extends PureComponent<WithApolloClient<MutateProps & { type:
     mutate(model: Model, mutationFn: MutationFn): Promise<void | FetchResult<Model>> {
         const {schema, where, type, optimisticResponse} = this.props
         const cleaned = deepClone(model)
+        console.log('model',model)
         schema.clean(cleaned, this.filteredFields)// fill null all missing keys
-        const {names} = schema
+
         const data = this.getSubSchemaMutations(cleaned, schema)
-        console.log('datadatadatadatadata', data)
         const mutation: MutationBaseOptions = {variables: {data}}
         if (type === 'update') {
             mutation.variables!.where = where
-            console.log('datadatadatadata', data)
-
+            Object.assign(cleaned,where)
         }
         if (optimisticResponse !== false) {
             if (!optimisticResponse) {
                 const docWithTypes = this.getTypesDoc(cleaned, schema)
-
+                console.log('docWithTypes',docWithTypes)
+                const {names} = schema
                 mutation.optimisticResponse = {[names.mutation[type]]: docWithTypes}
             } else {
                 mutation.optimisticResponse = optimisticResponse
@@ -227,6 +232,7 @@ export class Mutate extends PureComponent<WithApolloClient<MutateProps & { type:
         } else {
             queryString = `mutation mutationFn($data: ${names.input[type]} ) { ${names.mutation[type]}(data: $data) ${this.query} }`
         }
+        console.log('queryString', queryString)
 
         const MUTATION = gql(queryString)
         return (
@@ -360,7 +366,7 @@ export const getSubSchemaMutations = (model: Model, schema: Schema, mutationType
                 } else {
                     let result: { deleteMany?: [{}], create: any[] } = {create: []}
                     if (mutationType === 'update') {
-                       // result.deleteMany = [{}] https://github.com/prisma/prisma/issues/4327
+                        // result.deleteMany = [{}] https://github.com/prisma/prisma/issues/4327
                     }
                     value.forEach((item: any) => {
                         result.create.push(getSubSchemaMutations(item, schema, mutationType))
@@ -382,7 +388,7 @@ export const getSubSchemaMutations = (model: Model, schema: Schema, mutationType
                         obj[key] = {connect: {id: value.id}}
                     } else if (mutationType === 'update') {
                         if (value && value.id) {
-                            const {id,...clone}=value
+                            const {id, ...clone} = value
                             obj[key] = {
                                 update: getSubSchemaMutations(clone, schema, 'update')
                             }
