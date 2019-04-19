@@ -105,7 +105,7 @@ describe('Mutate', () => {
             console.dir('blueCard', subMutations.blueCard.upsert)
             expect(subMutations).toEqual({
                     "blueCard": {
-                        "update": {"number": "BC 1", "status": "A"}
+                        "update": {id: "bc1", "number": "BC 1", "status": "A"}
                     }
                 }
             )

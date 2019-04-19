@@ -122,10 +122,15 @@ var Mutate = /** @class */ (function (_super) {
     Mutate.prototype.getTypesDoc = function (obj, schema) {
         var _this = this;
         var wrapper = function (result) { return result; };
-        var initiator = function (obj, schema) { return ({
-            id: _this.props.type === 'update' ? obj.id : '',
-            __typename: schema.name
-        }); };
+        var initiator = function (obj, schema) {
+            var res = {
+                __typename: schema.name
+            };
+            if (schema.keys.includes('id')) {
+                res.id = _this.props.type === 'update' ? obj.id : '';
+            }
+            return res;
+        };
         return this.spider(obj, schema, wrapper, initiator);
     };
     /**
@@ -138,18 +143,19 @@ var Mutate = /** @class */ (function (_super) {
         var _a;
         var _b = this.props, schema = _b.schema, where = _b.where, type = _b.type, optimisticResponse = _b.optimisticResponse;
         var cleaned = exports.deepClone(model);
+        console.log('model', model);
         schema.clean(cleaned, this.filteredFields); // fill null all missing keys
-        var names = schema.names;
         var data = this.getSubSchemaMutations(cleaned, schema);
-        console.log('datadatadatadatadata', data);
         var mutation = { variables: { data: data } };
         if (type === 'update') {
             mutation.variables.where = where;
-            console.log('datadatadatadata', data);
+            Object.assign(cleaned, where);
         }
         if (optimisticResponse !== false) {
             if (!optimisticResponse) {
                 var docWithTypes = this.getTypesDoc(cleaned, schema);
+                console.log('docWithTypes', docWithTypes);
+                var names = schema.names;
                 mutation.optimisticResponse = (_a = {}, _a[names.mutation[type]] = docWithTypes, _a);
             }
             else {
@@ -172,6 +178,7 @@ var Mutate = /** @class */ (function (_super) {
         else {
             queryString = "mutation mutationFn($data: " + names.input[type] + " ) { " + names.mutation[type] + "(data: $data) " + this.query + " }";
         }
+        console.log('queryString', queryString);
         var MUTATION = graphql_tag_1.default(queryString);
         return (<react_apollo_1.Mutation mutation={MUTATION} refetchQueries={refetchQueries} variables={variables} update={update} ignoreResults={ignoreResults} optimisticResponse={optimisticResponse} awaitRefetchQueries={awaitRefetchQueries} onCompleted={onCompleted} onError={onError} context={context} client={client} fetchPolicy={fetchPolicy}>
                 {function (mutationFn, _a) {
@@ -310,7 +317,8 @@ exports.getSubSchemaMutations = function (model, schema, mutationType) {
                     }
                     else if (mutationType === 'update') {
                         if (value && value.id) {
-                            var id = value.id, clone = __rest(value, ["id"]);
+                            var clone = __rest(value, []);
+                            console.log('schema', schema_4.name, key);
                             obj[key] = {
                                 update: exports.getSubSchemaMutations(clone, schema_4, 'update')
                             };

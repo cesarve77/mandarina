@@ -355,7 +355,7 @@ export const getSubSchemaMutations = (model: Model, schema: Schema, mutationType
                             // @ts-ignore
                             result.update.push({
                                 where: {id},
-                                data: getSubSchemaMutations(clone, schema, mutationType)
+                                data: getSubSchemaMutations(clone, schema, 'update')
                             })
                         } else {
                             result[type].push(getSubSchemaMutations(item, schema, mutationType))
@@ -369,7 +369,7 @@ export const getSubSchemaMutations = (model: Model, schema: Schema, mutationType
                         // result.deleteMany = [{}] https://github.com/prisma/prisma/issues/4327
                     }
                     value.forEach((item: any) => {
-                        result.create.push(getSubSchemaMutations(item, schema, mutationType))
+                        result.create.push(getSubSchemaMutations(item, schema, 'create'))
                     })
                     obj[key] = result
                 }
@@ -388,7 +388,8 @@ export const getSubSchemaMutations = (model: Model, schema: Schema, mutationType
                         obj[key] = {connect: {id: value.id}}
                     } else if (mutationType === 'update') {
                         if (value && value.id) {
-                            const {id, ...clone} = value
+                            const { ...clone} = value
+                            console.log('schema',schema.name,key)
                             obj[key] = {
                                 update: getSubSchemaMutations(clone, schema, 'update')
                             }
@@ -402,15 +403,15 @@ export const getSubSchemaMutations = (model: Model, schema: Schema, mutationType
                         }
 
                     } else {
-                        obj[key] = {create: getSubSchemaMutations(value, schema, mutationType)}
+                        obj[key] = {create: getSubSchemaMutations(value, schema, 'create')}
                     }
 
 
                 } else {
                     if (mutationType === 'update') {
-                        obj[key] = {update: getSubSchemaMutations(value, schema, mutationType)}
+                        obj[key] = {update: getSubSchemaMutations(value, schema, 'update')}
                     } else {
-                        obj[key] = {create: getSubSchemaMutations(value, schema, mutationType)}
+                        obj[key] = {create: getSubSchemaMutations(value, schema, 'create')}
                     }
                 }
 

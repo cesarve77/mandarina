@@ -107,7 +107,6 @@ export class Table {
                 let result: any
                 console.log('type', type)
                 console.log('action', action)
-                console.log('before', `before${capitalize(action)}`)
                 // TODO: Review the hooks architecture for adding a way to execute hooks of nested operations
                 if (type === 'mutation') {
 
@@ -126,10 +125,10 @@ export class Table {
                     await this.callHook(<HookName>`before${capitalize(action)}`, _, args, context, info);
 
                     //this.validatePermissions(action, roles, args.data);
-
+                    console.log('args')
+                    console.dir(args,{depth: 6})
                     result = await prismaMethod(args, info);
 
-                    console.log('resultresultresultresult',result)
                     context.result = result
 
                     await this.callHook(<HookName>`after${capitalize(action)}`, _, args, context, info);
@@ -145,7 +144,6 @@ export class Table {
 
                 }
 
-                console.log('result', result)
                 bm('done in ')
                 console.log('*****************************************************')
                 return result;
@@ -170,7 +168,7 @@ export class Table {
      * @param info
      */
     private async callHook(name: HookName, _: any, args: any, context: any, info: any) {
-        console.log('this.options.hooks', name, this.options.hooks)
+        console.log('this.options.hooks', name)
         const hookHandler = this.options.hooks && this.options.hooks[name];
         if (hookHandler) {
             await hookHandler(_, args, context, info);
