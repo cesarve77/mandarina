@@ -388,8 +388,7 @@ export const getSubSchemaMutations = (model: Model, schema: Schema, mutationType
                         obj[key] = {connect: {id: value.id}}
                     } else if (mutationType === 'update') {
                         if (value && value.id) {
-                            const { ...clone} = value
-                            console.log('schema',schema.name,key)
+                            const {id, ...clone} = value
                             obj[key] = {
                                 update: getSubSchemaMutations(clone, schema, 'update')
                             }
