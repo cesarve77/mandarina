@@ -17,7 +17,9 @@ export const getParents = (keys: string[]) => {
 
 
 export const filterFields = (allFields: string[], optionalFields?: string[], omitFields?: string[], omitRegEx?: RegExp) => {
-
+console.log('allFields',allFields)
+console.log('optionalFields',optionalFields)
+console.log('omitFields',omitFields)
     let result = !optionalFields ? allFields : allFields.filter((field) => optionalFields.some((optional) => field === optional || field.indexOf(optional + '.') === 0))
 
     if (omitFields) {
@@ -27,6 +29,8 @@ export const filterFields = (allFields: string[], optionalFields?: string[], omi
     if (omitRegEx) {
         result = result.filter(field => !field.match(omitRegEx))
     }
+    console.log('result',result)
+
     return result
 }
 

@@ -42,10 +42,29 @@ describe('Mutate', () => {
             }, User, 'update')
             expect(subMutations).toEqual({
                     "age": 18,
-                    "categories": {"connect": [{"id": "cat1"}, {"id": "cat2"}]},
+                    "categories": {
+                        "set": [{"id": "cat1",}, {"id": "cat2",}],
+                        "connect": [{"id": "cat1"}, {"id": "cat2"}]
+                    },
+
                 }
             )
         })
+        test("1 to n table update -> empty array ", () => {
+            const subMutations = getSubSchemaMutations({
+                age: 18,
+                posts: []
+                // @ts-ignore
+            }, User, 'update')
+            expect(subMutations).toEqual({
+                    "age": 18,
+                    "posts": {
+                        "set": [],
+                    }
+                }
+            )
+        })
+
 
         test("1 to n table update -> update ", () => {
             const subMutations = getSubSchemaMutations({
@@ -56,6 +75,7 @@ describe('Mutate', () => {
             expect(subMutations).toEqual({
                     "age": 18,
                     "posts": {
+                        "set": [{"id": "post1",}],
                         "update": [{
                             "where": {"id": "post1"},
                             "data": {
@@ -105,7 +125,7 @@ describe('Mutate', () => {
             console.dir('blueCard', subMutations.blueCard.upsert)
             expect(subMutations).toEqual({
                     "blueCard": {
-                        "update": {id: "bc1", "number": "BC 1", "status": "A"}
+                        "update": {"number": "BC 1", "status": "A"}
                     }
                 }
             )
@@ -155,6 +175,7 @@ describe('Mutate', () => {
                 }
             )
         })
+
 
         test("1 to n embebed  -> create ", () => {
             const subMutations = getSubSchemaMutations({

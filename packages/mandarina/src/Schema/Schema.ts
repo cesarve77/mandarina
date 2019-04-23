@@ -62,7 +62,7 @@ export class Schema {
         this.permissions = permissions || {};
         this.shape = mapValues(shape, (field, key) => this.applyDefinitionsDefaults(field, key));
         this.keys = Object.keys(this.shape);
-        //if (!this.keys.includes('id')) this.extend({id: {type:String}})
+        if (!this.keys.includes('id')) this.extend({id: {type: String}})
         this.filePath = this.getFilePath()
         const single = singularize(this.name);
         const singleUpper = capitalize(single);
@@ -501,6 +501,7 @@ export class Schema {
         let schema = this;
 
         schema.keys.forEach(key => {
+
             const dot = parent ? '.' : '';
             const path = `${parent}${dot}${key}`;
             const def = schema.getFieldDefinition(key);
@@ -629,9 +630,11 @@ export interface UserFieldDefinition {
         rename?: string
         unique?: boolean,
         relation?: string | {
-            name: string
+            link?: 'INLINE' | 'TABLE'
+            name?: string
             onDelete?: 'SET_NULL' | 'CASCADE'
         }
+        scalarList?: { strategy: "RELATION" | "EMBEDDED" }
     },
     permissions?: Permissions
 }
@@ -671,9 +674,11 @@ export interface FieldDefinition extends UserFieldDefinition {
         rename?: string
         unique?: boolean,
         relation?: string | {
-            name: string
+            link?: 'INLINE' | 'TABLE'
+            name?: string
             onDelete?: 'SET_NULL' | 'CASCADE'
         }
+        scalarList?: { strategy: "RELATION" | "EMBEDDED" }
     },
     permissions: Permissions
 }

@@ -122,18 +122,22 @@ export class Mutate extends PureComponent<WithApolloClient<MutateProps & { type:
 
 
     getSubSchemaMutations(model: Model, schema: Schema) {
-        return getSubSchemaMutations(model, schema, this.props.type)
+        console.log('getSubSchemaMutations', model)
+        const result = getSubSchemaMutations(model, schema, this.props.type)
+        console.log(result)
+
+        return result
     }
 
 
     getTypesDoc(obj: Model, schema: Schema) {
         const wrapper: Wrapper = (result) => result
         const initiator: Initiator = (obj, schema) => {
-            const res:{id?:string,__typename:string}={
+            const res: { id?: string, __typename: string } = {
                 __typename: schema.name
             }
-            if (schema.keys.includes('id')){
-                res.id= this.props.type === 'update' ? obj.id : ''
+            if (schema.keys.includes('id')) {
+                res.id = this.props.type === 'update' ? obj.id : ''
             }
             return res
         }
@@ -149,19 +153,19 @@ export class Mutate extends PureComponent<WithApolloClient<MutateProps & { type:
     mutate(model: Model, mutationFn: MutationFn): Promise<void | FetchResult<Model>> {
         const {schema, where, type, optimisticResponse} = this.props
         const cleaned = deepClone(model)
-        console.log('model',model)
+        console.log('model', model)
         schema.clean(cleaned, this.filteredFields)// fill null all missing keys
 
         const data = this.getSubSchemaMutations(cleaned, schema)
         const mutation: MutationBaseOptions = {variables: {data}}
         if (type === 'update') {
             mutation.variables!.where = where
-            Object.assign(cleaned,where)
+            Object.assign(cleaned, where)
         }
         if (optimisticResponse !== false) {
             if (!optimisticResponse) {
                 const docWithTypes = this.getTypesDoc(cleaned, schema)
-                console.log('docWithTypes',docWithTypes)
+                console.log('docWithTypes', docWithTypes)
                 const {names} = schema
                 mutation.optimisticResponse = {[names.mutation[type]]: docWithTypes}
             } else {
@@ -340,39 +344,38 @@ export const getSubSchemaMutations = (model: Model, schema: Schema, mutationType
                     obj[key] = null
                 }
                 //1 to n relations - table
-                if (schema.keys.includes('id')) {
-                    let result: { create?: any[], update?: any[] } = {}
-                    value.forEach((item: any) => {
-                        let type: MutationType | 'connect'
-                        if (item && item.id && Object.keys(item).length === 1) {
-                            type = 'connect'
-                        } else {
-                            type = mutationType = 'update' && item && item.id ? 'update' : 'create'
+                let result: { create?: any[], update?: any[], set?: any[] } = {}
+                if (value.length === 0 && mutationType === 'update') result.set = []
+                value.forEach((item: any) => {
+                    if (item && item.id && Object.keys(item).length === 1) {
+                        result['connect'] = result['connect'] || []
+                        result['connect'].push(getSubSchemaMutations(item, schema, mutationType))
+                        if (mutationType === 'update') {
+                            result['set'] = result['set'] || []
+                            result['set'].push({id: item.id})
                         }
-                        result[type] = result[type] || []
-                        if (type === 'update') {
+                    } else if (item && item.id) {
+                        if (mutationType === 'update') {
                             const {id, ...clone} = item
-                            // @ts-ignore
-                            result.update.push({
+                            result['update'] = result['update'] || []
+                            result['update'].push({
                                 where: {id},
                                 data: getSubSchemaMutations(clone, schema, 'update')
                             })
+                            result['set'] = result['set'] || []
+                            result['set'].push({id: item.id})
                         } else {
-                            result[type].push(getSubSchemaMutations(item, schema, mutationType))
+                            result['create'] = result['create'] || []
+                            result['create'].push(getSubSchemaMutations(item, schema, 'create'))
                         }
-                    })
-                    obj[key] = result
-                    //1 to n relations - embebed
-                } else {
-                    let result: { deleteMany?: [{}], create: any[] } = {create: []}
-                    if (mutationType === 'update') {
-                        // result.deleteMany = [{}] https://github.com/prisma/prisma/issues/4327
+                    } else {
+                        result['create'] = result['create'] || []
+                        result['create'].push(getSubSchemaMutations(item, schema, 'create'))
                     }
-                    value.forEach((item: any) => {
-                        result.create.push(getSubSchemaMutations(item, schema, 'create'))
-                    })
-                    obj[key] = result
-                }
+
+                })
+                obj[key] = result
+                //1 to n relations - embebed
                 //1 to n relations - scalars
             } else {
                 obj[key] = {set: value}
@@ -382,36 +385,26 @@ export const getSubSchemaMutations = (model: Model, schema: Schema, mutationType
             if (typeof definition.type === 'string') {
                 const schema = Schema.getInstance(definition.type)
 
-                if (schema.keys.includes('id')) {
-                    //table
-                    if (value && value.id && Object.keys(value).length === 1) {
-                        obj[key] = {connect: {id: value.id}}
-                    } else if (mutationType === 'update') {
-                        if (value && value.id) {
-                            const {id, ...clone} = value
-                            obj[key] = {
-                                update: getSubSchemaMutations(clone, schema, 'update')
-                            }
-                        } else {
-                            obj[key] = {
-                                upsert: {
-                                    create: getSubSchemaMutations(value, schema, 'create'),
-                                    update: getSubSchemaMutations(value, schema, 'update')
-                                }
+                //table
+                if (value && value.id && Object.keys(value).length === 1) {
+                    obj[key] = {connect: {id: value.id}}
+                } else if (mutationType === 'update') {
+                    if (value && value.id) {
+                        const {id, ...clone} = value
+                        obj[key] = {
+                            update: getSubSchemaMutations(clone, schema, 'update')
+                        }
+                    } else {
+                        obj[key] = {
+                            upsert: {
+                                create: getSubSchemaMutations(value, schema, 'create'),
+                                update: getSubSchemaMutations(value, schema, 'update')
                             }
                         }
-
-                    } else {
-                        obj[key] = {create: getSubSchemaMutations(value, schema, 'create')}
                     }
-
 
                 } else {
-                    if (mutationType === 'update') {
-                        obj[key] = {update: getSubSchemaMutations(value, schema, 'update')}
-                    } else {
-                        obj[key] = {create: getSubSchemaMutations(value, schema, 'create')}
-                    }
+                    obj[key] = {create: getSubSchemaMutations(value, schema, 'create')}
                 }
 
 

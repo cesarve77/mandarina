@@ -91,7 +91,7 @@ const getMainSchema = (schema: Schema, type: 'input' | 'type') => {
     let mainSchema = []
     for (const key of schema.keys) {
         if (key === 'id' && type === 'type') {
-            mainSchema.push(`id: ID! @unique`);
+            mainSchema.push(`id: ID! @id`);
             continue
         }
         const field = schema.getFieldDefinition(key)
@@ -104,28 +104,38 @@ const getMainSchema = (schema: Schema, type: 'input' | 'type') => {
             defaultValue = `@default(value: ${wrapper}${field.table.default}${wrapper})`
         }
         const rename = (type === 'type' && field.table.rename !== undefined) ? `@rename(oldName: "${field.table.default}")` : ''
-        let relation = ''
+        const relations:string[] = []
+        let relation:string = ''
         if (type === 'type' && field.table.relation !== undefined) {
             if (typeof field.table.relation === "string") {
-                relation = `@relation(name: "${field.table.relation}")`
+                relations.push(`name: "${field.table.relation}"`)
             } else {
-                let name = '', onDelete = ''
+                if (field.table.relation.link) {
+                    relations.push(`link: ${field.table.relation.link}`)
+                }
                 if (field.table.relation.name) {
-                    name = `name: "${field.table.relation.name}"`
+                    relations.push(`name: "${field.table.relation.name}"`)
                 }
                 if (field.table.relation.onDelete) {
-                    onDelete = `onDelete: ${field.table.relation.onDelete}`
+                    relations.push(`onDelete: ${field.table.relation.onDelete}`)
                 }
-                if (name || onDelete) {
-                    relation = `@relation(${name} ${onDelete})`
-                }
+
+            }
+            if (relations.length>0){
+                relation=`@relation(${relations.join(', ')})`
             }
         }
-
+        let scalarList=''
+        if (type === 'type' && field.table.scalarList) {
+            scalarList=`@scalarList(strategy: ${field.table.scalarList.strategy})`
+        }
+        if (!scalarList && type === 'type' && Array.isArray(field.type) && typeof field.type[0] !=='string' ){
+            scalarList=`@scalarList(strategy: RELATION)`
+        }
         const fieldType = getGraphQLType(field.type, key, required, type === 'input');
 
         field.description && mainSchema.push(`# ${field.description}`);
-        mainSchema.push(`${key}: ${fieldType} ${unique} ${defaultValue} ${relation} ${rename}`);
+        mainSchema.push(`${key}: ${fieldType} ${unique} ${defaultValue} ${relation} ${scalarList} ${rename}`);
     }
     return mainSchema
 }

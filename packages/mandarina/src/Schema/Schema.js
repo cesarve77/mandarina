@@ -53,7 +53,8 @@ var Schema = /** @class */ (function () {
         this.permissions = permissions || {};
         this.shape = lodash_mapvalues_1.default(shape, function (field, key) { return _this.applyDefinitionsDefaults(field, key); });
         this.keys = Object.keys(this.shape);
-        //if (!this.keys.includes('id')) this.extend({id: {type:String}})
+        if (!this.keys.includes('id'))
+            this.extend({ id: { type: String } });
         this.filePath = this.getFilePath();
         var single = utils_1.singularize(this.name);
         var singleUpper = utils_1.capitalize(single);
