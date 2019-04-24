@@ -232,7 +232,7 @@ export class Schema {
                 model[key] = forceType(model[key], definition.type);
                 model[key] = model[key] === 0 ? 0 : model[key] || definition.defaultValue;
 
-            } else if (definition.isTable && typeof model === 'object' && model !== undefined && model !== null) {
+            } else if (definition.isTable && !definition.isArray && typeof model === 'object' && model !== undefined && model !== null) {
                 if (model[key] !== 0 && !model[key]) {
                     return model[key] = definition.defaultValue;
                 }
@@ -242,7 +242,6 @@ export class Schema {
 
             } else if (definition.isArray && typeof model === 'object' && model !== undefined && model !== null) {
                 model[key] = forceType(model[key], Array)
-
                 if (definition.isTable) {
                     const schema = Schema.getInstance(definition.type)
                     model[key] = model[key].map((value: any) => {
@@ -362,12 +361,6 @@ export class Schema {
     }
 
     private generatePathDefinition(key: string): FieldDefinition {
-        if (key==='parents.0'){
-            console.log('')
-        }
-        if (key==='parents.0.0'){
-            throw new Error('parents.0.0')
-        }
         const paths = key.split('.')
         let schema: Schema = this;
 
@@ -384,20 +377,22 @@ export class Schema {
     }
 
 //TODO VER QUE CONO ES ESTO, por que ahora todas tienen id ***** **** TODO WARNING
-    private _isConnectingTable = (value: any) => {
+    private _isConnectingValue = (value: any) => {
         return (value && value.hasOwnProperty && value.hasOwnProperty('id') && typeof value.id === 'string')
     }
 
     private _validate(model: Model, parent: string = '', pathHistory: { schema: string, path: string }[] = [], originalModel: Model): ErrorValidator[] {
-        console.log('_validate')
+
         let errors: ErrorValidator[] = [];
         const shape = {...model};
-
+        const recursive=this.options.recursive || []
         this.keys.forEach((key): any => {
 
             delete shape[key];
             const dot = parent ? '.' : '';
             const path: string = `${parent}${dot}${key}`;
+            const cleanPath=path.replace(/\.d+/,'')
+
             const definition = this.getFieldDefinition(key);
             const value: any = model && model[key];
 
@@ -418,8 +413,9 @@ export class Schema {
                     const schema = Schema.getInstance(definition.type)
                     const schemaName = schema.name;
                     let internalErrors: ErrorValidator[] = [];
+
                     value.forEach((value: any, i: number) => {
-                        if (!pathHistory.some(({schema, path}) => schemaName === schema) && !this._isConnectingTable(value)) {
+                        if (!this._isConnectingValue(value) && (recursive.includes(cleanPath) || !pathHistory.some(({schema}) => schemaName === schema))) {
                             internalErrors = [...internalErrors, ...schema._validate(value, `${path}.${i}`, pathHistory, originalModel)];
                         }
                         pathHistory.push({path, schema: schemaName});
@@ -434,7 +430,6 @@ export class Schema {
                             const error = instance.validate(originalModel);
 
                             if (error) {
-                                ;
                                 return errors.push(error);
                             }
                         }
@@ -447,7 +442,8 @@ export class Schema {
                 const schemaName = schema.name;
                 let internalErrors: ErrorValidator[] = [];
                 // Check if we are entering in a recursive table, if actual table has been used before, reviewing the history
-                if (!pathHistory.some(({schema, path}) => schemaName === schema) && !this._isConnectingTable(value)) {
+
+                if (!this._isConnectingValue(value) && (recursive.includes(cleanPath) || !pathHistory.some(({schema}) => schemaName === schema))) {
                     internalErrors = schema._validate(value, path, pathHistory, originalModel);
                 }
                 pathHistory.push({path: path, schema: schemaName});
@@ -498,6 +494,7 @@ export class Schema {
 
             const dot = parent ? '.' : '';
             const path = `${parent}${dot}${key}`;
+            const cleanPath=path.replace(/\.d+/,'')
             const def = schema.getFieldDefinition(key);
             let table: Schema | undefined;
 
@@ -510,9 +507,9 @@ export class Schema {
                 pathHistory.push({path: path, table: this.name});
                 let fieldsInternal: string[] = [];
                 const tableName = table.name;
-
+                const recursive=this.options.recursive || []
                 // Check if we are entering in a recursive table, if actual table has been used before, reviewing the history
-                if (!pathHistory.some(({table}) => tableName === table)) {
+                if (recursive.includes(cleanPath) || !pathHistory.some(({table}) => tableName === table)) {
                     fieldsInternal = table._getFields(path, pathHistory);
                 }
 

@@ -81,9 +81,8 @@ export class Bridge {
     }
 
     getType(name: string): Native {
-        console.log('getType', name)
         const def = this.getField(name);
-        if (name.match(/\.\d+$/)) {
+        if (name.match(/\.(\d|\$)+$/)) {
             if (def.isTable) return Object
         } else {
             if (def.isArray) return Array
@@ -94,6 +93,7 @@ export class Bridge {
 
     // Field's initial value.
     getInitialValue(name: string, props: object = {}) {
+
         const field = this.getField(name);
         const type = this.getType(name);
         if (type === Array) {
@@ -104,7 +104,9 @@ export class Bridge {
                 if (validator.validatorName === 'minCount') minCount = validator.param
             })
             const item = field.defaultValue
+
             const items = Math.max(minCount, initialCount)
+
             return new Array(items).fill(item)
         } else if (type === Object) {
             let item = {}
@@ -112,8 +114,10 @@ export class Bridge {
                 const schema = Schema.getInstance(field.type)
                 schema.clean(item)
             }
+
             return item
         }
+
         return field.defaultValue;
     }
 
@@ -122,7 +126,8 @@ export class Bridge {
             return this.schema.keys
         }
         const field = this.getField(name)
-        if (field.isTable && name.match(/\.\d+$/)) {
+       // if (field.isTable && name.match(/\.\d+$/)) {
+        if (field.isTable) {
             const schema = Schema.getInstance(field.type)
             return schema.keys
         } else {
@@ -145,6 +150,7 @@ export class Bridge {
 
     // Field's props.
     getProps(name: string, props: { placeholder?: boolean | null } = {}): FieldProps {
+
         if (!this.fieldProps[name]) {
             const field = this.getField(name)
             const transform = field.form.transform

@@ -100,7 +100,7 @@ export class Mutate extends PureComponent<WithApolloClient<MutateProps & { type:
                         const schema = Schema.getInstance(definition.type)
                         data[key] = wrapper(this.spider(value, schema, wrapper, initiator), schema)
                     } else {
-                        const native =  definition.type
+                        const native = definition.type
                         data[key] = wrapper(this.spider(value, schema, wrapper, initiator), native)
                     }
                 } else {
@@ -140,7 +140,7 @@ export class Mutate extends PureComponent<WithApolloClient<MutateProps & { type:
     mutate(model: Model, mutationFn: MutationFn): Promise<void | FetchResult<Model>> {
         const {schema, where, type, optimisticResponse} = this.props
         const cleaned = deepClone(model)
-        console.log('model', model)
+
         schema.clean(cleaned, this.filteredFields)// fill null all missing keys
 
         const data = this.getSubSchemaMutations(cleaned, schema)
@@ -152,7 +152,7 @@ export class Mutate extends PureComponent<WithApolloClient<MutateProps & { type:
         if (optimisticResponse !== false) {
             if (!optimisticResponse) {
                 const docWithTypes = this.getTypesDoc(cleaned, schema)
-                console.log('docWithTypes', docWithTypes)
+
                 const {names} = schema
                 mutation.optimisticResponse = {[names.mutation[type]]: docWithTypes}
             } else {
@@ -174,7 +174,7 @@ export class Mutate extends PureComponent<WithApolloClient<MutateProps & { type:
             const cachedQueryName = Object.keys(cachedQuery)[0]
             const where = cachedQuery[cachedQueryName]
             const docIsInQuery = evalWhere(doc, where)
-            console.log('docIsInQuery',docIsInQuery)
+
             if (cachedQueryName === names.query.plural && docIsInQuery) {
                 const QUERY = gql(`query ($where: ${names.input.where.plural} ) { ${names.query.plural}  (where: $where) ${this.query} }`)
                 let docs
@@ -223,7 +223,7 @@ export class Mutate extends PureComponent<WithApolloClient<MutateProps & { type:
         } else {
             queryString = `mutation mutationFn($data: ${names.input[type]} ) { ${names.mutation[type]}(data: $data) ${this.query} }`
         }
-        console.log('queryString', queryString)
+
 
         const MUTATION = gql(queryString)
         return (
@@ -324,13 +324,13 @@ export const getSubSchemaMutations = (model: Model, schema: Schema, mutationType
         const value = model[key]
         let definition = schema.getFieldDefinition(key)
         //1 to n relations
-        if (Array.isArray(definition.type)) {
-            if (typeof definition.type[0] === 'string') {
-                const schema = Schema.getInstance(definition.type[0] as string)
+
+        if (definition.isTable) {
+            if (definition.isArray) {
+                const schema = Schema.getInstance(definition.type)
                 if (!Array.isArray(value)) {
                     obj[key] = null
                 }
-                //1 to n relations - table
                 let result: { create?: any[], update?: any[], set?: any[] } = {}
                 if (value.length === 0 && mutationType === 'update') result.set = []
                 value.forEach((item: any) => {
@@ -362,16 +362,8 @@ export const getSubSchemaMutations = (model: Model, schema: Schema, mutationType
 
                 })
                 obj[key] = result
-                //1 to n relations - embebed
-                //1 to n relations - scalars
             } else {
-                obj[key] = {set: value}
-            }
-            //1 to 1 relations
-        } else {
-            if (typeof definition.type === 'string') {
                 const schema = Schema.getInstance(definition.type)
-
                 //table
                 if (value && value.id && Object.keys(value).length === 1) {
                     obj[key] = {connect: {id: value.id}}
@@ -389,15 +381,19 @@ export const getSubSchemaMutations = (model: Model, schema: Schema, mutationType
                             }
                         }
                     }
-
                 } else {
                     obj[key] = {create: getSubSchemaMutations(value, schema, 'create')}
                 }
 
+            }
 
+        } else {
+            if (definition.isArray) {
+                obj[key] = {set: value}
             } else {
                 return obj[key] = value
             }
+
         }
     })
     return obj

@@ -39,7 +39,7 @@ var Schema = /** @class */ (function () {
         this.arraysFields = [];
         this.pathDefinitions = {};
         //TODO VER QUE CONO ES ESTO, por que ahora todas tienen id ***** **** TODO WARNING
-        this._isConnectingTable = function (value) {
+        this._isConnectingValue = function (value) {
             return (value && value.hasOwnProperty && value.hasOwnProperty('id') && typeof value.id === 'string');
         };
         var name = options.name, _a = options.recursive, recursive = _a === void 0 ? [] : _a, errorFromServerMapper = options.errorFromServerMapper, permissions = options.permissions;
@@ -209,7 +209,7 @@ var Schema = /** @class */ (function () {
                 model[key] = utils_1.forceType(model[key], definition.type);
                 model[key] = model[key] === 0 ? 0 : model[key] || definition.defaultValue;
             }
-            else if (definition.isTable && typeof model === 'object' && model !== undefined && model !== null) {
+            else if (definition.isTable && !definition.isArray && typeof model === 'object' && model !== undefined && model !== null) {
                 if (model[key] !== 0 && !model[key]) {
                     return model[key] = definition.defaultValue;
                 }
@@ -322,12 +322,6 @@ var Schema = /** @class */ (function () {
         return fieldDefinition;
     };
     Schema.prototype.generatePathDefinition = function (key) {
-        if (key === 'parents.0') {
-            console.log('');
-        }
-        if (key === 'parents.0.0') {
-            throw new Error('parents.0.0');
-        }
         var paths = key.split('.');
         var schema = this;
         var def = schema.getFieldDefinition(paths[0]);
@@ -345,13 +339,14 @@ var Schema = /** @class */ (function () {
         var _this = this;
         if (parent === void 0) { parent = ''; }
         if (pathHistory === void 0) { pathHistory = []; }
-        console.log('_validate');
         var errors = [];
         var shape = __assign({}, model);
+        var recursive = this.options.recursive || [];
         this.keys.forEach(function (key) {
             delete shape[key];
             var dot = parent ? '.' : '';
             var path = "" + parent + dot + key;
+            var cleanPath = path.replace(/\.d+/, '');
             var definition = _this.getFieldDefinition(key);
             var value = model && model[key];
             if (definition.isArray) {
@@ -373,10 +368,10 @@ var Schema = /** @class */ (function () {
                     var schemaName_1 = schema_2.name;
                     var internalErrors_1 = [];
                     value.forEach(function (value, i) {
-                        if (!pathHistory.some(function (_a) {
-                            var schema = _a.schema, path = _a.path;
+                        if (!_this._isConnectingValue(value) && (recursive.includes(cleanPath) || !pathHistory.some(function (_a) {
+                            var schema = _a.schema;
                             return schemaName_1 === schema;
-                        }) && !_this._isConnectingTable(value)) {
+                        }))) {
                             internalErrors_1 = internalErrors_1.concat(schema_2._validate(value, path + "." + i, pathHistory, originalModel));
                         }
                         pathHistory.push({ path: path, schema: schemaName_1 });
@@ -393,7 +388,6 @@ var Schema = /** @class */ (function () {
                             var instance = new validator({ key: key, path: path, definition: definition, value: value });
                             var error = instance.validate(originalModel);
                             if (error) {
-                                ;
                                 return errors.push(error);
                             }
                         }
@@ -406,10 +400,10 @@ var Schema = /** @class */ (function () {
                 var schemaName_2 = schema.name;
                 var internalErrors = [];
                 // Check if we are entering in a recursive table, if actual table has been used before, reviewing the history
-                if (!pathHistory.some(function (_a) {
-                    var schema = _a.schema, path = _a.path;
+                if (!_this._isConnectingValue(value) && (recursive.includes(cleanPath) || !pathHistory.some(function (_a) {
+                    var schema = _a.schema;
                     return schemaName_2 === schema;
-                }) && !_this._isConnectingTable(value)) {
+                }))) {
                     internalErrors = schema._validate(value, path, pathHistory, originalModel);
                 }
                 pathHistory.push({ path: path, schema: schemaName_2 });
@@ -453,6 +447,7 @@ var Schema = /** @class */ (function () {
         schema.keys.forEach(function (key) {
             var dot = parent ? '.' : '';
             var path = "" + parent + dot + key;
+            var cleanPath = path.replace(/\.d+/, '');
             var def = schema.getFieldDefinition(key);
             var table;
             if (def.isArray) {
@@ -463,8 +458,9 @@ var Schema = /** @class */ (function () {
                 pathHistory.push({ path: path, table: _this.name });
                 var fieldsInternal = [];
                 var tableName_1 = table.name;
+                var recursive = _this.options.recursive || [];
                 // Check if we are entering in a recursive table, if actual table has been used before, reviewing the history
-                if (!pathHistory.some(function (_a) {
+                if (recursive.includes(cleanPath) || !pathHistory.some(function (_a) {
                     var table = _a.table;
                     return tableName_1 === table;
                 })) {

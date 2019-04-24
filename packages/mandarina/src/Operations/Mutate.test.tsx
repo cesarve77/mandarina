@@ -3,9 +3,7 @@ import {User} from "../../../../__TEST__/app/lib/schemas/User";
 
 
 describe('Mutate', () => {
-
     describe('getSubSchemaMutations', () => {
-
         test("1 to n table create -> create ", () => {
             const subMutations = getSubSchemaMutations({
                 age: 18,
@@ -19,7 +17,6 @@ describe('Mutate', () => {
             )
         })
 
-
         test("1 to n table connect -> create ", () => {
             const subMutations = getSubSchemaMutations({
                 age: 18,
@@ -32,7 +29,6 @@ describe('Mutate', () => {
                 }
             )
         })
-
 
         test("1 to n table connect -> update ", () => {
             const subMutations = getSubSchemaMutations({
@@ -50,6 +46,7 @@ describe('Mutate', () => {
                 }
             )
         })
+
         test("1 to n table update -> empty array ", () => {
             const subMutations = getSubSchemaMutations({
                 age: 18,
@@ -145,76 +142,76 @@ describe('Mutate', () => {
             )
         })
 
-        test("1 to 1 embebed  -> create ", () => {
-            const subMutations = getSubSchemaMutations({
-                address: {
-                    country: 'Australia',
-                    city: 'Gold Coast'
-                },
-            }, User, 'create')
-            expect(subMutations).toEqual({
-                    "address": {
-                        "create": {"country": "Australia", "city": "Gold Coast"}
-                    }
-                }
-            )
-        })
-
-
-        test("1 to 1 embebed  -> update ", () => {
-            const subMutations = getSubSchemaMutations({
-                address: {
-                    country: 'Australia',
-                    city: 'Gold Coast'
-                },
-            }, User, 'update')
-            expect(subMutations).toEqual({
-                    "address": {
-                        "update": {"country": "Australia", "city": "Gold Coast"}
-                    },
-                }
-            )
-        })
-
-
-        test("1 to n embebed  -> create ", () => {
-            const subMutations = getSubSchemaMutations({
-                cars: [{brand: 'Ford', plate: 'xxx000'}, {brand: 'Ford', plate: 'yyy111'}],
-            }, User, 'create')
-            expect(subMutations).toEqual({
-                    "cars": {
-                        "create": [{"brand": 'Ford', "plate": 'xxx000'}, {"brand": 'Ford', "plate": 'yyy111'}]
-                    }
-                }
-            )
-        })
-
-        test("1 to n embebed  -> create empty", () => {
-            const subMutations = getSubSchemaMutations({
-                cars: [],
-            }, User, 'create')
-            expect(subMutations).toEqual({
-                    "cars": {
-                        "create": []
-                    }
-                }
-            )
-        })
-
-
-        test("1 to n embebed  -> update ", () => {
-            const subMutations = getSubSchemaMutations({
-                cars: [{brand: 'Ford', plate: 'xxx000'}, {brand: 'Ford', plate: 'yyy111'}],
-            }, User, 'update')
-            console.log('subMutations', subMutations)
-            expect(subMutations).toEqual({
-                    "cars": {
-                        "deleteMany": [{}],
-                        "create": [{"brand": 'Ford', "plate": 'xxx000'}, {"brand": 'Ford', "plate": 'yyy111'}]
-                    }
-                }
-            )
-        })
+        // test("1 to 1 embebed  -> create ", () => {
+        //     const subMutations = getSubSchemaMutations({
+        //         address: {
+        //             country: 'Australia',
+        //             city: 'Gold Coast'
+        //         },
+        //     }, User, 'create')
+        //     expect(subMutations).toEqual({
+        //             "address": {
+        //                 "create": {"country": "Australia", "city": "Gold Coast"}
+        //             }
+        //         }
+        //     )
+        // })
+        //
+        //
+        // test("1 to 1 embebed  -> update ", () => {
+        //     const subMutations = getSubSchemaMutations({
+        //         address: {
+        //             country: 'Australia',
+        //             city: 'Gold Coast'
+        //         },
+        //     }, User, 'update')
+        //     expect(subMutations).toEqual({
+        //             "address": {
+        //                 "update": {"country": "Australia", "city": "Gold Coast"}
+        //             },
+        //         }
+        //     )
+        // })
+        //
+        //
+        // test("1 to n embebed  -> create ", () => {
+        //     const subMutations = getSubSchemaMutations({
+        //         cars: [{brand: 'Ford', plate: 'xxx000'}, {brand: 'Ford', plate: 'yyy111'}],
+        //     }, User, 'create')
+        //     expect(subMutations).toEqual({
+        //             "cars": {
+        //                 "create": [{"brand": 'Ford', "plate": 'xxx000'}, {"brand": 'Ford', "plate": 'yyy111'}]
+        //             }
+        //         }
+        //     )
+        // })
+        //
+        // test("1 to n embebed  -> create empty", () => {
+        //     const subMutations = getSubSchemaMutations({
+        //         cars: [],
+        //     }, User, 'create')
+        //     expect(subMutations).toEqual({
+        //             "cars": {
+        //                 "create": []
+        //             }
+        //         }
+        //     )
+        // })
+        //
+        //
+        // test("1 to n embebed  -> update ", () => {
+        //     const subMutations = getSubSchemaMutations({
+        //         cars: [{brand: 'Ford', plate: 'xxx000'}, {brand: 'Ford', plate: 'yyy111'}],
+        //     }, User, 'update')
+        //     console.log('subMutations', subMutations)
+        //     expect(subMutations).toEqual({
+        //             "cars": {
+        //                 "deleteMany": [{}],
+        //                 "create": [{"brand": 'Ford', "plate": 'xxx000'}, {"brand": 'Ford', "plate": 'yyy111'}]
+        //             }
+        //         }
+        //     )
+        // })
 
 
     })

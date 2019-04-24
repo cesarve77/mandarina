@@ -46,7 +46,7 @@ var Mutate = /** @class */ (function (_super) {
                 const cachedQueryName = Object.keys(cachedQuery)[0]
                 const where = cachedQuery[cachedQueryName]
                 const docIsInQuery = evalWhere(doc, where)
-                console.log('docIsInQuery',docIsInQuery)
+    
                 if (cachedQueryName === names.query.plural && docIsInQuery) {
                     const QUERY = gql(`query ($where: ${names.input.where.plural} ) { ${names.query.plural}  (where: $where) ${this.query} }`)
                     let docs
@@ -89,24 +89,13 @@ var Mutate = /** @class */ (function (_super) {
                 var value = obj[key];
                 var definition = schema.getFieldDefinition(key);
                 if (typeof value === "object" && value !== null && value !== undefined && !(value instanceof Date)) {
-                    if (Array.isArray(definition.type)) {
-                        if (typeof definition.type[0] === 'string') {
-                            var schema_1 = __1.Schema.getInstance(definition.type[0]);
-                            data_1[key] = wrapper(_this.spider(value, schema_1, wrapper, initiator), schema_1);
-                        }
-                        else {
-                            var native = definition.type[0];
-                            data_1[key] = wrapper(_this.spider(value, schema, wrapper, initiator), native);
-                        }
+                    if (definition.isTable) {
+                        var schema_1 = __1.Schema.getInstance(definition.type);
+                        data_1[key] = wrapper(_this.spider(value, schema_1, wrapper, initiator), schema_1);
                     }
                     else {
-                        if (typeof definition.type === 'string') {
-                            var schema_2 = __1.Schema.getInstance(definition.type);
-                            data_1[key] = wrapper(_this.spider(value, schema_2, wrapper, initiator), schema_2);
-                        }
-                        else {
-                            data_1[key] = wrapper(_this.spider(value, schema, wrapper, initiator), definition.type);
-                        }
+                        var native = definition.type;
+                        data_1[key] = wrapper(_this.spider(value, schema, wrapper, initiator), native);
                     }
                 }
                 else {
@@ -117,10 +106,7 @@ var Mutate = /** @class */ (function (_super) {
         }
     };
     Mutate.prototype.getSubSchemaMutations = function (model, schema) {
-        console.log('getSubSchemaMutations', model);
-        var result = exports.getSubSchemaMutations(model, schema, this.props.type);
-        console.log(result);
-        return result;
+        return exports.getSubSchemaMutations(model, schema, this.props.type);
     };
     Mutate.prototype.getTypesDoc = function (obj, schema) {
         var _this = this;
@@ -146,7 +132,6 @@ var Mutate = /** @class */ (function (_super) {
         var _a;
         var _b = this.props, schema = _b.schema, where = _b.where, type = _b.type, optimisticResponse = _b.optimisticResponse;
         var cleaned = exports.deepClone(model);
-        console.log('model', model);
         schema.clean(cleaned, this.filteredFields); // fill null all missing keys
         var data = this.getSubSchemaMutations(cleaned, schema);
         var mutation = { variables: { data: data } };
@@ -157,7 +142,6 @@ var Mutate = /** @class */ (function (_super) {
         if (optimisticResponse !== false) {
             if (!optimisticResponse) {
                 var docWithTypes = this.getTypesDoc(cleaned, schema);
-                console.log('docWithTypes', docWithTypes);
                 var names = schema.names;
                 mutation.optimisticResponse = (_a = {}, _a[names.mutation[type]] = docWithTypes, _a);
             }
@@ -181,7 +165,6 @@ var Mutate = /** @class */ (function (_super) {
         else {
             queryString = "mutation mutationFn($data: " + names.input[type] + " ) { " + names.mutation[type] + "(data: $data) " + this.query + " }";
         }
-        console.log('queryString', queryString);
         var MUTATION = graphql_tag_1.default(queryString);
         return (<react_apollo_1.Mutation mutation={MUTATION} refetchQueries={refetchQueries} variables={variables} update={update} ignoreResults={ignoreResults} optimisticResponse={optimisticResponse} awaitRefetchQueries={awaitRefetchQueries} onCompleted={onCompleted} onError={onError} context={context} client={client} fetchPolicy={fetchPolicy}>
                 {function (mutationFn, _a) {
@@ -258,103 +241,77 @@ exports.getSubSchemaMutations = function (model, schema, mutationType) {
         var value = model[key];
         var definition = schema.getFieldDefinition(key);
         //1 to n relations
-        if (Array.isArray(definition.type)) {
-            if (typeof definition.type[0] === 'string') {
-                var schema_3 = __1.Schema.getInstance(definition.type[0]);
+        if (definition.isTable) {
+            if (definition.isArray) {
+                var schema_2 = __1.Schema.getInstance(definition.type);
                 if (!Array.isArray(value)) {
                     obj[key] = null;
                 }
-                //1 to n relations - table
-                if (schema_3.keys.includes('id')) {
-                    var result_1 = {};
-                    if (value.length === 0 && mutationType === 'update')
-                        result_1.set = [];
-                    value.forEach(function (item) {
-                        if (item && item.id && Object.keys(item).length === 1) {
-                            result_1['connect'] = result_1['connect'] || [];
-                            result_1['connect'].push(exports.getSubSchemaMutations(item, schema_3, mutationType));
-                            if (mutationType === 'update') {
-                                result_1['set'] = result_1['set'] || [];
-                                result_1['set'].push({ id: item.id });
-                            }
+                var result_1 = {};
+                if (value.length === 0 && mutationType === 'update')
+                    result_1.set = [];
+                value.forEach(function (item) {
+                    if (item && item.id && Object.keys(item).length === 1) {
+                        result_1['connect'] = result_1['connect'] || [];
+                        result_1['connect'].push(exports.getSubSchemaMutations(item, schema_2, mutationType));
+                        if (mutationType === 'update') {
+                            result_1['set'] = result_1['set'] || [];
+                            result_1['set'].push({ id: item.id });
                         }
-                        else if (item && item.id) {
-                            if (mutationType === 'update') {
-                                var id = item.id, clone = __rest(item, ["id"]);
-                                result_1['update'] = result_1['update'] || [];
-                                result_1['update'].push({
-                                    where: { id: id },
-                                    data: exports.getSubSchemaMutations(clone, schema_3, 'update')
-                                });
-                                result_1['set'] = result_1['set'] || [];
-                                result_1['set'].push({ id: item.id });
-                            }
-                            else {
-                                result_1['create'] = result_1['create'] || [];
-                                result_1['create'].push(exports.getSubSchemaMutations(item, schema_3, 'create'));
-                            }
+                    }
+                    else if (item && item.id) {
+                        if (mutationType === 'update') {
+                            var id = item.id, clone = __rest(item, ["id"]);
+                            result_1['update'] = result_1['update'] || [];
+                            result_1['update'].push({
+                                where: { id: id },
+                                data: exports.getSubSchemaMutations(clone, schema_2, 'update')
+                            });
+                            result_1['set'] = result_1['set'] || [];
+                            result_1['set'].push({ id: item.id });
                         }
                         else {
                             result_1['create'] = result_1['create'] || [];
-                            result_1['create'].push(exports.getSubSchemaMutations(item, schema_3, 'create'));
+                            result_1['create'].push(exports.getSubSchemaMutations(item, schema_2, 'create'));
                         }
-                    });
-                    obj[key] = result_1;
-                    //1 to n relations - embebed
-                }
-                else {
-                    var result_2 = { create: [] };
-                    if (mutationType === 'update') {
-                        // result.deleteMany = [{}] https://github.com/prisma/prisma/issues/4327
                     }
-                    value.forEach(function (item) {
-                        result_2.create.push(exports.getSubSchemaMutations(item, schema_3, 'create'));
-                    });
-                    obj[key] = result_2;
-                }
-                //1 to n relations - scalars
+                    else {
+                        result_1['create'] = result_1['create'] || [];
+                        result_1['create'].push(exports.getSubSchemaMutations(item, schema_2, 'create'));
+                    }
+                });
+                obj[key] = result_1;
             }
             else {
-                obj[key] = { set: value };
-            }
-            //1 to 1 relations
-        }
-        else {
-            if (typeof definition.type === 'string') {
-                var schema_4 = __1.Schema.getInstance(definition.type);
-                if (schema_4.keys.includes('id')) {
-                    //table
-                    if (value && value.id && Object.keys(value).length === 1) {
-                        obj[key] = { connect: { id: value.id } };
-                    }
-                    else if (mutationType === 'update') {
-                        if (value && value.id) {
-                            var id = value.id, clone = __rest(value, ["id"]);
-                            obj[key] = {
-                                update: exports.getSubSchemaMutations(clone, schema_4, 'update')
-                            };
-                        }
-                        else {
-                            obj[key] = {
-                                upsert: {
-                                    create: exports.getSubSchemaMutations(value, schema_4, 'create'),
-                                    update: exports.getSubSchemaMutations(value, schema_4, 'update')
-                                }
-                            };
-                        }
+                var schema_3 = __1.Schema.getInstance(definition.type);
+                //table
+                if (value && value.id && Object.keys(value).length === 1) {
+                    obj[key] = { connect: { id: value.id } };
+                }
+                else if (mutationType === 'update') {
+                    if (value && value.id) {
+                        var id = value.id, clone = __rest(value, ["id"]);
+                        obj[key] = {
+                            update: exports.getSubSchemaMutations(clone, schema_3, 'update')
+                        };
                     }
                     else {
-                        obj[key] = { create: exports.getSubSchemaMutations(value, schema_4, 'create') };
+                        obj[key] = {
+                            upsert: {
+                                create: exports.getSubSchemaMutations(value, schema_3, 'create'),
+                                update: exports.getSubSchemaMutations(value, schema_3, 'update')
+                            }
+                        };
                     }
                 }
                 else {
-                    if (mutationType === 'update') {
-                        obj[key] = { update: exports.getSubSchemaMutations(value, schema_4, 'update') };
-                    }
-                    else {
-                        obj[key] = { create: exports.getSubSchemaMutations(value, schema_4, 'create') };
-                    }
+                    obj[key] = { create: exports.getSubSchemaMutations(value, schema_3, 'create') };
                 }
+            }
+        }
+        else {
+            if (definition.isArray) {
+                obj[key] = { set: value };
             }
             else {
                 return obj[key] = value;

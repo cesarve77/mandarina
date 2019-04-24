@@ -24,12 +24,9 @@ const ListFilter = React.memo(({onFilterChange, field, schema}: ListFilterProps)
     const fieldDefinition = schema.getPathDefinition(field)
     if (fieldDefinition.isTable) throw new Error(`ListFilter "${field}" cannot be a table`)
     const name = uuid() //todo remove this dependeincy making schema get optional name
-    fieldDefinition.form.col = false
     const filterMethod: FilterMethod = fieldDefinition.list.filterMethod || getDefaultFilterMethod(field, schema)
     let FieldComponent: FilterComponent = fieldDefinition.list.filterComponent === undefined ? getDefaultComponent(field, fieldDefinition) : fieldDefinition.list.filterComponent
     fieldDefinition.validators = fieldDefinition.validators.filter(({validatorName}) => validatorName !== 'required')
-    fieldDefinition.label = ""
-    fieldDefinition.defaultValue = ""
     const filterSchema = new Schema({
         filter: fieldDefinition,
     }, {
@@ -47,7 +44,7 @@ const ListFilter = React.memo(({onFilterChange, field, schema}: ListFilterProps)
                       return callback(null);
                   }}
         >
-            <FieldComponent name='filter' label={false}/>
+            <FieldComponent name='filter' label={false} col={false} defaultValue={''}/>
         </AutoForm>
     )
 })

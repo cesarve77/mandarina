@@ -260,26 +260,80 @@ describe('Nested Array Schema', function () {
         var model = {};
         User_1.User.clean(model);
         expect(model).toMatchObject({
+            id: null,
+            age: null,
+            email: null,
             name: null,
-            cards: []
+            address: {},
+            categories: [],
+            posts: [],
+            blueCard: {},
+            cars: []
         });
         model = { name: 'xxxx' };
         User_1.User.clean(model);
         expect(model).toMatchObject({
+            id: null,
+            age: null,
+            email: null,
             name: 'xxxx',
-            cards: []
+            address: {},
+            categories: [],
+            posts: [],
+            blueCard: {},
+            cars: []
         });
-        model = { cards: [{}, {}] };
+        model = { posts: [{}, {}] };
         User_1.User.clean(model);
         expect(model).toMatchObject({
-            cards: [{ number: null, user: null }, { number: null, user: null }],
-            name: null
+            posts: [
+                {
+                    id: null,
+                    title: null,
+                    published: null,
+                    tags: null,
+                },
+                {
+                    id: null,
+                    title: null,
+                    published: null,
+                    tags: null,
+                }
+            ],
+            name: null,
+            id: null,
+            age: null,
+            email: null,
+            address: {},
+            categories: [],
+            blueCard: {},
+            cars: [],
         });
-        model = { name: 0.00001, cards: [{ number: '1234' }, { number: '123456.78' }] };
+        model = { name: 0.00001, posts: [{ title: '1234' }, { title: '123456.78' }] };
         User_1.User.clean(model);
         expect(model).toMatchObject({
-            cards: [{ number: 1234, user: null }, { number: 123456.78, user: null }],
-            name: '0.00001'
+            posts: [
+                {
+                    id: null,
+                    title: '1234',
+                    published: null,
+                    tags: null,
+                },
+                {
+                    id: null,
+                    title: '123456.78',
+                    published: null,
+                    tags: null,
+                }
+            ],
+            name: '0.00001',
+            id: null,
+            age: null,
+            email: null,
+            address: {},
+            categories: [],
+            blueCard: {},
+            cars: [],
         });
     });
     test("transform", function () {
