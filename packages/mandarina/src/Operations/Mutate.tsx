@@ -96,21 +96,12 @@ export class Mutate extends PureComponent<WithApolloClient<MutateProps & { type:
                 const value = obj[key]
                 let definition = schema.getFieldDefinition(key)
                 if (typeof value === "object" && value !== null && value !== undefined && !(value instanceof Date)) {
-                    if (Array.isArray(definition.type)) {
-                        if (typeof definition.type[0] === 'string') {
-                            const schema = Schema.getInstance(definition.type[0] as string)
-                            data[key] = wrapper(this.spider(value, schema, wrapper, initiator), schema)
-                        } else {
-                            const native = definition.type[0] as Native
-                            data[key] = wrapper(this.spider(value, schema, wrapper, initiator), native)
-                        }
+                    if (definition.isTable) {
+                        const schema = Schema.getInstance(definition.type)
+                        data[key] = wrapper(this.spider(value, schema, wrapper, initiator), schema)
                     } else {
-                        if (typeof definition.type === 'string') {
-                            const schema = Schema.getInstance(definition.type as string)
-                            data[key] = wrapper(this.spider(value, schema, wrapper, initiator), schema)
-                        } else {
-                            data[key] = wrapper(this.spider(value, schema, wrapper, initiator), definition.type)
-                        }
+                        const native =  definition.type
+                        data[key] = wrapper(this.spider(value, schema, wrapper, initiator), native)
                     }
                 } else {
                     data[key] = (value)
@@ -122,11 +113,7 @@ export class Mutate extends PureComponent<WithApolloClient<MutateProps & { type:
 
 
     getSubSchemaMutations(model: Model, schema: Schema) {
-        console.log('getSubSchemaMutations', model)
-        const result = getSubSchemaMutations(model, schema, this.props.type)
-        console.log(result)
-
-        return result
+        return getSubSchemaMutations(model, schema, this.props.type)
     }
 
 

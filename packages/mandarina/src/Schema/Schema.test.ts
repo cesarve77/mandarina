@@ -1,80 +1,70 @@
 import {Integer, Schema} from "./Schema";
-import {maxNumber} from "./Validators";
-import {isRequired} from "./utils";
+// import {maxNumber} from "./Validators";
+// import {isRequired} from "./utils";
 import './Validators'
-import {capitalize} from "../../../mandarina-server/src/Table/utils";
+import {User} from "../../../../__TEST__/app/lib/schemas/User";
 
 
 describe('Schema', () => {
-    const userShape = {
-        name: {
-            type: String,
-            description: 'name',
-            label: 'name',
-            validators: ['required']
-        }
-    }
-    const schema = new Schema(userShape, {name: 'Schema'})
 
     test("constructor ", () => {
-        expect(schema).toBeInstanceOf(Schema);
+        expect(User).toBeInstanceOf(Schema);
     });
 
     test("extend ", () => {
-        schema.extend({newField: {type: String}})
-        expect(schema.shape).toHaveProperty('newField');
+        User.extend({newField: {type: String}})
+        expect(User.shape).toHaveProperty('newField');
     });
-
 
     test("getInstance ", () => {
-        expect(Schema.getInstance('Schema')).toBe(schema);
+        expect(Schema.getInstance('User')).toBe(User);
     });
 
-    test("applyDefinitionsDefaults ", () => {
-        const def = schema.applyDefinitionsDefaults({
-            type: String,
-            description: 'name',
-            validators: [{required: true}]
-        }, 'name')
-        expect(def).toHaveProperty('label', 'Name');
-        expect(isRequired(def)).toBe(true)
-    });
-
-    test("applyDefinitionsDefaults validator finder ", () => {
-        const def = schema.applyDefinitionsDefaults({
-            type: String,
-            description: 'name',
-            validators: [{minNumber: 5}, maxNumber.with(10), 'required']
-        }, 'name')
-        expect(def).toHaveProperty('label', 'Name');
-        expect(isRequired(def)).toBe(true)
-        expect(def.validators[0]).toHaveProperty('name', 'Validator')
-        expect(def.validators[0]).toHaveProperty('name', 'Validator')
-        expect(def.validators[1]).toHaveProperty('name', 'Validator')
-        expect(def.validators[2]).toHaveProperty('name', 'Validator')
-    });
-
-    test("applyDefinitionsDefaults label function", () => {
-        const def = schema.applyDefinitionsDefaults({
-            type: String,
-            label: () => 'Label func',
-            validators: ['required']
-        }, 'name')
-
-        expect(def).toHaveProperty('label', 'Label func',);
-        expect(isRequired(def)).toBe(true)
-    });
+    // test("applyDefinitionsDefaults ", () => {
+    //     const def = schema.applyDefinitionsDefaults({
+    //         type: String,
+    //         description: 'name',
+    //         validators: [{required: true}]
+    //     }, 'name')
+    //     expect(def).toHaveProperty('label', 'Name');
+    //     expect(isRequired(def)).toBe(true)
+    // });
+    //
+    // test("applyDefinitionsDefaults validator finder ", () => {
+    //     const def = schema.applyDefinitionsDefaults({
+    //         type: String,
+    //         description: 'name',
+    //         validators: [{minNumber: 5}, maxNumber.with(10), 'required']
+    //     }, 'name')
+    //     expect(def).toHaveProperty('label', 'Name');
+    //     expect(isRequired(def)).toBe(true)
+    //     expect(def.validators[0]).toHaveProperty('name', 'Validator')
+    //     expect(def.validators[0]).toHaveProperty('name', 'Validator')
+    //     expect(def.validators[1]).toHaveProperty('name', 'Validator')
+    //     expect(def.validators[2]).toHaveProperty('name', 'Validator')
+    // });
+    //
+    // test("applyDefinitionsDefaults label function", () => {
+    //     const def = schema.applyDefinitionsDefaults({
+    //         type: String,
+    //         label: () => 'Label func',
+    //         validators: ['required']
+    //     }, 'name')
+    //
+    //     expect(def).toHaveProperty('label', 'Label func',);
+    //     expect(isRequired(def)).toBe(true)
+    // });
 
 
     test("validate valid", () => {
-        const errors = schema.validate({
+        const errors = User.validate({
             name: 'test 1'
         })
         expect(errors).toHaveLength(0)
     });
 
     test("validate invalid extra key", () => {
-        const errors = schema.validate({
+        const errors = User.validate({
             name: 'name',
             extraKey: 'test 1'
         })
@@ -83,7 +73,7 @@ describe('Schema', () => {
     });
 
     test("validate invalid ", () => {
-        const errors = schema.validate({
+        const errors = User.validate({
             name: ''
         })
         expect(errors).toHaveLength(1)
@@ -173,9 +163,9 @@ describe('Nested Schema', () => {
     }, {
         name: 'NestedUser',
         permissions: {
-            create: 'admin',
-            update: 'admin',
-            delete: 'admin'
+            create: ['admin'],
+            update: ['admin'],
+            delete: ['admin']
 
         }
     })
@@ -240,74 +230,50 @@ describe('Nested Schema', () => {
 
 
 describe('Nested Array Schema', () => {
-    const userSchema = new Schema({
-        name: {
-            type: String,
-            description: 'name',
-            label: 'name',
-            transformValue: (value) => capitalize(value),
-            validators: ['required'],
-        },
-        cards: {
-            type: ['CardArray'],
-            description: 'card on user',
-            label: 'card on user',
-            validators: ['required']
-        },
-        description: {
-            type: String,
-        }
-    }, {name: 'UserArray',})
-
-    // @ts-ignore
-    const cardSchema = new Schema({
-        number: {
-            type: Number,
-            description: 'number',
-            label: 'number',
-            validators: ['required']
-        },
-        user: {
-            type: 'UserArray',
-            description: 'user on card',
-            label: 'user on card',
-            validators: ['required']
-        },
-        description: {
-            type: String,
-
-            defaultValue: 'description'
-        }
-    }, {name: 'CardArray',})
-
-    test('getPathDefinition', () => {
-        let def = userSchema.getPathDefinition('name')
+    test(   'getPathDefinition', () => {
+        let def = User.getPathDefinition('name')
         expect(def.type).toBe(String)
-        def = userSchema.getPathDefinition('cards')
-        expect(def.type).toMatchObject(['CardArray'])
+        def = User.getPathDefinition('age')
+        expect(def.type).toBe(Integer)
 
-        def = userSchema.getPathDefinition('cards.number')
-        expect(def.type).toBe(Number)
+        def = User.getPathDefinition('address')
+        expect(def.type).toBe('Address')
 
-        def = userSchema.getPathDefinition('cards.$.number')
-        expect(def.type).toBe(Number)
+        def = User.getPathDefinition('posts')
+        expect(def.type).toBe('Post')
 
-        def = userSchema.getPathDefinition('cards.$.description')
+        def = User.getPathDefinition('posts.title')
         expect(def.type).toBe(String)
 
-        def = userSchema.getPathDefinition('cards.$')
-        expect(def.type).toBe('CardArray')
+        def = User.getPathDefinition('posts.user')
+        expect(def.type).toBe('User')
 
-        def = userSchema.getPathDefinition('cards.0')
-        expect(def.type).toBe('CardArray')
+        def = User.getPathDefinition('posts.$.user')
+        expect(def.type).toBe('User')
 
-        def = userSchema.getPathDefinition('cards')
-        expect(def.type).toMatchObject(['CardArray'])
+        def = User.getPathDefinition('posts.$.user.name')
+        expect(def.type).toBe(String)
+
+
+        def = User.getPathDefinition('posts.0.user')
+        expect(def.type).toBe('User')
+
+        def = User.getPathDefinition('posts.0.user.name')
+        expect(def.type).toBe(String)
+
+        def = User.getPathDefinition('posts.$')
+        expect(def.type).toBe('Post')
+
+        def = User.getPathDefinition('posts.0')
+        expect(def.type).toBe('Post')
+
+        def = User.getPathDefinition('blueCard')
+        expect(def.type).toBe('BlueCard')
 
 
     })
     test("validate valid omit", () => {
-        const errors = userSchema.validate({
+        const errors = User.validate({
             name: 'name 1',
             cards: [{number: 1}, {number: 2}, {number: 3}, {number: 4}]
 
@@ -316,7 +282,7 @@ describe('Nested Array Schema', () => {
     });
 
     test("validate invalid omit", () => {
-        const errors = userSchema.validate({
+        const errors = User.validate({
             name: 'name 1',
             cards: [{number: 1}, {number: 2}, {}, {extraKey: 4}]
 
@@ -325,7 +291,7 @@ describe('Nested Array Schema', () => {
     });
 
     test("validate invalid is not array", () => {
-        const errors = userSchema.validate({
+        const errors = User.validate({
             name: 'name 1',
             cards: {}
 
@@ -336,7 +302,7 @@ describe('Nested Array Schema', () => {
     });
 
     test("validate invalid null omit", () => {
-        const errors = userSchema.validate({
+        const errors = User.validate({
             name: 'name 1',
             cards: [{number: 1}, {number: 2}, null, {extraKey: 4}]
 
@@ -347,21 +313,21 @@ describe('Nested Array Schema', () => {
 
     test("clean", () => {
         let model = {}
-        userSchema.clean(model)
+        User.clean(model)
         expect(model).toMatchObject({
             name: null,
             cards: []
         })
 
         model = {name: 'xxxx'}
-        userSchema.clean(model)
+        User.clean(model)
         expect(model).toMatchObject({
             name: 'xxxx',
             cards: []
         })
 
         model = {cards: [{}, {}]}
-        userSchema.clean(model)
+        User.clean(model)
         expect(model).toMatchObject({
             cards: [{number: null, user: null}, {number: null, user: null}],
             name: null
@@ -369,7 +335,7 @@ describe('Nested Array Schema', () => {
 
 
         model = {name: 0.00001, cards: [{number: '1234'}, {number: '123456.78'}]}
-        userSchema.clean(model)
+        User.clean(model)
         expect(model).toMatchObject({
             cards: [{number: 1234, user: null}, {number: 123456.78, user: null}],
             name: '0.00001'
@@ -377,7 +343,7 @@ describe('Nested Array Schema', () => {
     })
     test("transform", () => {
         let model = {name: 'cesar', cards: []}
-        userSchema.clean(model, true)
+        User.clean(model)
         expect(model).toMatchObject({
             cards: [],
             name: 'Cesar'

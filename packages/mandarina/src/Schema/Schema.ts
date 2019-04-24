@@ -25,6 +25,7 @@ import * as React from "react";
 const getDefaultPermissions = () => ({read: {}, create: {}, update: {}, delete: {}});
 const defaultActions = Object.keys(getDefaultPermissions());
 
+
 export class Schema {
     static instances: { [actionName: string]: Schema };
     public name: string
@@ -50,7 +51,6 @@ export class Schema {
         this.name = name;
 
         Schema.instances = Schema.instances || {};
-
         if (Schema.instances[this.name]) {
             throw new UniqueSchemaError(this.name);
         }
@@ -109,10 +109,12 @@ export class Schema {
     }
 
     getFieldDefinition(key: string): FieldDefinition {
+
         return {...this.shape[key]};
     }
 
     getPathDefinition(key: string): FieldDefinition {
+        //key=key.replace(/\.\d+/,'')
         if (!this.pathDefinitions[key]) {
             this.pathDefinitions[key] = this.generatePathDefinition(key);
         }
@@ -225,32 +227,30 @@ export class Schema {
                 return model && delete model[key]
             }
             const definition = this.getFieldDefinition(key);
-            const type = definition.type;
 
-            if (typeof type === "function" && typeof model === 'object' && model !== undefined && model !== null) {
-                model[key] = forceType(model[key], <Native>definition.type);
+            if (!definition.isTable && typeof model === 'object' && model !== undefined && model !== null) {
+                model[key] = forceType(model[key], definition.type);
                 model[key] = model[key] === 0 ? 0 : model[key] || definition.defaultValue;
 
-            } else if (typeof type === "string" && typeof model === 'object' && model !== undefined && model !== null) {
+            } else if (definition.isTable && typeof model === 'object' && model !== undefined && model !== null) {
                 if (model[key] !== 0 && !model[key]) {
                     return model[key] = definition.defaultValue;
                 }
-
-                const schema = Schema.getInstance(type);
+                const schema = Schema.getInstance(definition.type)
                 schema._clean(model[key], getDecendents(fields, key));
                 return;
 
-            } else if (Array.isArray(type) && typeof model === 'object' && model !== undefined && model !== null) {
+            } else if (definition.isArray && typeof model === 'object' && model !== undefined && model !== null) {
                 model[key] = forceType(model[key], Array)
 
-                if (typeof type[0] === 'string') {
-                    const schema = Schema.getInstance(<string>type[0]);
+                if (definition.isTable) {
+                    const schema = Schema.getInstance(definition.type)
                     model[key] = model[key].map((value: any) => {
                         schema._clean(value, getDecendents(fields, key))
                         return value
                     });
                 } else {
-                    model[key] = model[key].map((value: any) => forceType(value, <Native>type[0]));
+                    model[key] = model[key].map((value: any) => forceType(value, definition.type));
                 }
                 return;
             }
@@ -313,27 +313,35 @@ export class Schema {
         }
 
         // set default -> default values
+        fieldDefinition.isArray = false
+        fieldDefinition.isTable = false
         if (Array.isArray(definition.type)) {
+            fieldDefinition.isArray = true
             if (typeof definition.type[0] === 'string') {
+                fieldDefinition.isTable = true
+                fieldDefinition.type = definition.type[0]
                 fieldDefinition.defaultValue = definition.defaultValue || {};
             } else {
+                fieldDefinition.type = definition.type[0] as Native
                 fieldDefinition.defaultValue = definition.defaultValue || null;
             }
 
-        } else if (typeof definition.type === 'string') {
+        } else if ((typeof definition.type === 'string')) {
+            fieldDefinition.isTable = true
+            fieldDefinition.type = definition.type as string
             fieldDefinition.defaultValue = definition.defaultValue || {};
         } else {
+            fieldDefinition.type = definition.type
             fieldDefinition.defaultValue = definition.defaultValue === 0 ? 0 : definition.defaultValue || null;
         }
 
-        fieldDefinition.type = definition.type;
+
         definition.permissions = definition.permissions || this.permissions;
         fieldDefinition.permissions = definition.permissions;
         fieldDefinition.permissions.read = fieldDefinition.permissions.read || this.permissions.read;
         fieldDefinition.permissions.create = fieldDefinition.permissions.create || this.permissions.create;
         fieldDefinition.permissions.update = fieldDefinition.permissions.update || this.permissions.update;
         fieldDefinition.permissions.delete = fieldDefinition.permissions.delete || this.permissions.delete;
-        fieldDefinition.type = definition.type;
         fieldDefinition.form = definition.form || {};
         fieldDefinition.list = definition.list || {};
         fieldDefinition.table = definition.table || {};
@@ -350,48 +358,38 @@ export class Schema {
         if (typeof fieldDefinition.label !== 'string') {
             fieldDefinition.label = inflection.transform(key, ['underscore', 'humanize']);
         }
-
         return fieldDefinition;
     }
 
     private generatePathDefinition(key: string): FieldDefinition {
+        if (key==='parents.0'){
+            console.log('')
+        }
+        if (key==='parents.0.0'){
+            throw new Error('parents.0.0')
+        }
         const paths = key.split('.')
         let schema: Schema = this;
-        let def = schema.getFieldDefinition(paths[0]);
 
+        let def: FieldDefinition = schema.getFieldDefinition(paths[0])
         paths.forEach((path) => {
             if (!path.match(/\$|^\d+$/)) { //example user.0
                 def = schema.getFieldDefinition(path)
-
-                if (typeof def.type === 'string') {
-                    schema = Schema.getInstance(def.type)
-                }
-
-                if (Array.isArray(def.type)) {
-                    const tableName = def.type[0];
-
-                    if (typeof tableName === 'string') {
-                        schema = Schema.getInstance(tableName)
-                    }
-
-                }
-            } else if (Array.isArray(def.type)) { //should be
-                def.type = def.type[0];
-                if (typeof def.type === 'string') {
+                if (def.isTable) {
                     schema = Schema.getInstance(def.type)
                 }
             }
         });
-
         return def
     }
 
+//TODO VER QUE CONO ES ESTO, por que ahora todas tienen id ***** **** TODO WARNING
     private _isConnectingTable = (value: any) => {
         return (value && value.hasOwnProperty && value.hasOwnProperty('id') && typeof value.id === 'string')
     }
 
     private _validate(model: Model, parent: string = '', pathHistory: { schema: string, path: string }[] = [], originalModel: Model): ErrorValidator[] {
-
+        console.log('_validate')
         let errors: ErrorValidator[] = [];
         const shape = {...model};
 
@@ -402,23 +400,9 @@ export class Schema {
             const path: string = `${parent}${dot}${key}`;
             const definition = this.getFieldDefinition(key);
             const value: any = model && model[key];
-            const type = definition.type;
-
-            if (typeof type === "string") {
-                const schema = Schema.getInstance(type);
-                const schemaName = schema.name;
-                let internalErrors: ErrorValidator[] = [];
-                // Check if we are entering in a recursive table, if actual table has been used before, reviewing the history
-                if (!pathHistory.some(({schema, path}) => schemaName === schema) && !this._isConnectingTable(value)) {
-                    internalErrors = schema._validate(value, path, pathHistory, originalModel);
-                }
-                pathHistory.push({path: path, schema: schemaName});
-
-                return errors = [...errors, ...internalErrors];
-            }
 
 
-            if (Array.isArray(type)) {
+            if (definition.isArray) {
                 //check arrayValidators (min array count for example)
                 for (const validator of definition.validators) {
                     if (!validator.arrayValidator) continue
@@ -430,8 +414,8 @@ export class Schema {
                 }
                 //Check no array validators
                 // TODO: Tal vez es mejor chequear en default value que siempre tenga un valor
-                if (typeof type[0] === 'string' && value) {
-                    const schema = Schema.getInstance(<string>type[0]);
+                if (definition.isTable && value) {
+                    const schema = Schema.getInstance(definition.type)
                     const schemaName = schema.name;
                     let internalErrors: ErrorValidator[] = [];
                     value.forEach((value: any, i: number) => {
@@ -458,6 +442,17 @@ export class Schema {
                 }
 
                 return errors;
+            } else if (definition.isTable) {
+                const schema = Schema.getInstance(definition.type)
+                const schemaName = schema.name;
+                let internalErrors: ErrorValidator[] = [];
+                // Check if we are entering in a recursive table, if actual table has been used before, reviewing the history
+                if (!pathHistory.some(({schema, path}) => schemaName === schema) && !this._isConnectingTable(value)) {
+                    internalErrors = schema._validate(value, path, pathHistory, originalModel);
+                }
+                pathHistory.push({path: path, schema: schemaName});
+
+                return errors = [...errors, ...internalErrors];
             }
 
             for (const validator of definition.validators) {
@@ -499,7 +494,6 @@ export class Schema {
     private _getFields(parent: string = '', pathHistory: { table: string, path: string }[] = []): string[] {
         let fields: string[] = [];
         let schema = this;
-
         schema.keys.forEach(key => {
 
             const dot = parent ? '.' : '';
@@ -507,18 +501,12 @@ export class Schema {
             const def = schema.getFieldDefinition(key);
             let table: Schema | undefined;
 
-            if (typeof def.type === 'string') {
-                table = Schema.getInstance(def.type);
-            }
-
-            if (Array.isArray(def.type)) {
+            if (def.isArray) {
                 this.arraysFields.push(path);
-                if (typeof def.type[0] === 'string') {
-                    table = Schema.getInstance(<string>def.type[0]);
-                }
-            }
 
-            if (table) {
+            }
+            if (def.isTable) {
+                table = Schema.getInstance(def.type)
                 pathHistory.push({path: path, table: this.name});
                 let fieldsInternal: string[] = [];
                 const tableName = table.name;
@@ -598,9 +586,7 @@ export interface CellComponentProps {
 
 export type CellComponent = React.ComponentType<CellComponentProps> //React.ComponentClass<CellComponentProps> | React.ComponentType<CellComponentProps> | React.FunctionComponent<CellComponentProps> | ReactNode
 
-
-export interface UserFieldDefinition {
-    type: Types
+export interface UserFieldDefinitionCommon {
     label?: LabelOrResolver
     description?: string
     validators?: Array<Validator | string | ValidatorFinder>
@@ -639,17 +625,37 @@ export interface UserFieldDefinition {
     permissions?: Permissions
 }
 
+export interface UserFieldDefinition extends UserFieldDefinitionCommon {
+    type: Types
+
+}
+
 export interface ValidatorFinder {
     [validator: string]: any
 }
 
-export interface FieldDefinition extends UserFieldDefinition {
-    type: Native | string | Array<string> | Array<Native>,
+export interface FieldDefinitionTable extends FieldDefinitionCommon {
+    isTable: true
+    type: string
+}
+
+
+export interface FieldDefinitionNative extends FieldDefinitionCommon {
+    isTable: false
+    type: Native
+}
+
+export type FieldDefinition = FieldDefinitionNative | FieldDefinitionTable
+
+
+export interface FieldDefinitionCommon extends UserFieldDefinitionCommon {
     label: Label
     description?: string
     validators: Array<Validator>
     defaultValue: any
     transformValue: (value: any) => any
+    isArray: boolean
+
     form: {
         initialCount?: number
         transform?: (allowedValues: string[]) => string[]

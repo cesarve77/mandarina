@@ -1,4 +1,4 @@
-import {FieldDefinition, FilterComponent, Native, Types} from "mandarina/build/Schema/Schema";
+import {FieldDefinitionNative, FilterComponent, Native} from "mandarina/build/Schema/Schema";
 import {Where} from "./ListFilter";
 import set from "lodash.set";
 import get from "lodash.get";
@@ -28,6 +28,7 @@ const AllOperators: { [subfix: string]: { description: string, symbol: string } 
 }
 
 export const getDefaultFilterMethod = (field: string, schema: Schema): Where => {
+    console.log('getDefaultFilterMethod')
     const fieldDefinition = schema.getPathDefinition(field)
     const path = field.split('.')
     const originalPath = field.split('.')
@@ -37,8 +38,8 @@ export const getDefaultFilterMethod = (field: string, schema: Schema): Where => 
     for (let i = 0; i < len; i++) {
         const field = originalPath.slice(0, i + 1).join('.')
         const fieldDefinition = schema.getPathDefinition(field)
-        if (Array.isArray(fieldDefinition.type)) {
-            if (typeof fieldDefinition.type[0] === 'string') {
+        if (fieldDefinition.isArray) {
+            if (fieldDefinition.isTable) {
                 path[i] += '_some'
             } else {
                 // if the past parent es array, must be a array of scalars
@@ -79,22 +80,18 @@ export const getDefaultFilterMethod = (field: string, schema: Schema): Where => 
         }
     }
 }
-const getAvailableOperator = (type: Types): string[] => {
+const getAvailableOperator = (type: Native): string[] => {
     switch (true) {
         case (type === String):
             return ["_contains", "", "_not", "_not_contains", "_starts_with", "_not_starts_with", "_ends_with", "_not_ends_with"]
         case  (type === Integer || type === Date || type === Number):
             return ["", "_not", "_lt", "_lte", "_gt", "_gte"]
-
-        case  (type === Array):
-            const subType = type[0]
-            return getAvailableOperator(subType)
         default:
             return [""]
     }
 }
-export const getDefaultComponent = (field: string, fieldDefinition: FieldDefinition): FilterComponent => {
-    const availableOperators = getAvailableOperator(fieldDefinition.type)
+export const getDefaultComponent = (field: string, fieldDefinition: FieldDefinitionNative): FilterComponent => {
+    const availableOperators = getAvailableOperator(fieldDefinition.type as Native)
     const Filter = ({
                         value = {
                             operator: availableOperators[0],
@@ -130,13 +127,11 @@ export const getDefaultComponent = (field: string, fieldDefinition: FieldDefinit
             </Dropdown>
         ) : undefined
         let type = fieldDefinition.type
-        if (Array.isArray(type)) {
-            type = type[0]
-        }
+
 
         switch (true) {
 
-            case  (type === Integer ):
+            case  (type === Integer):
                 return (
                     <span className="ant-input-wrapper ant-input-group">
                 <span className="ant-input-group-addon">

@@ -70,7 +70,7 @@ export class ValidatorCreator {
             static validatorName: string | undefined = name
             key: string
             label: string
-            type: string | Native | string[] | Native[]
+            type: Native | string
             value: any
             definition: FieldDefinition
             path: string
@@ -79,7 +79,12 @@ export class ValidatorCreator {
                 this.key = key
                 this.definition = definition
                 this.label = definition.label ? definition.label : ""
-                this.type = definition.type
+                if (Array.isArray(definition.type)) {
+                    this.type = definition.type[0]
+                } else {
+                    this.type = definition.type
+                }
+
                 this.value = value
 
                 this.path = path

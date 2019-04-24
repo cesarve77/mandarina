@@ -5,87 +5,83 @@ import path from "path";
 import fs from "fs";
 import {getParents} from "mandarina/build/utils";
 import merge from 'lodash.merge'
+import {FieldDefinition} from "mandarina/build/Schema/Schema";
+//
+// export const getDeclarationType = (type: any, key: string): string => {
+//
+//     let typeName = type
+//     if (type.name) typeName = type.name
+//     if (Array.isArray(type)) typeName = 'Array'
+//     switch (typeName) {
+//         case 'String':
+//             return `string`;
+//
+//         case 'Boolean':
+//             return `boolean`;
+//
+//         case 'Number':
+//             return `number`;
+//
+//         case 'Integer':
+//             return `number`;
+//
+//         case 'Array':
+//             if (typeof type[0] === 'string') {
+//                 const schema = Schema.getInstance(type[0])
+//                 const interfaceName = buildInterfaceName(schema)
+//
+//                 return `${interfaceName}[]`
+//             }
+//             const scalarName = getDeclarationType(type[0], key)
+//             return `${scalarName}[]`
+//         case 'Object':
+//             throw new Error(`Error in field definition ${key}. Fields Table definitions do not accept objects, please use composite tables`)
+//
+//         case 'Date':
+//             return `Date`;
+//         default:
+//             if (typeof type === 'string') {
+//                 const schema = Schema.getInstance(type)
+//                 const interfaceName = buildInterfaceName(schema)
+//                 return `${interfaceName}`
+//             }
+//             throw new Error(`Error in field definition ${key}. Fields Table definitions do not accept objects, please use composite tables`)
+//     }
+// }
 
-export const getDeclarationType = (type: any, key: string): string => {
-
-    let typeName = type
-    if (type.name) typeName = type.name
-    if (Array.isArray(type)) typeName = 'Array'
-    switch (typeName) {
-        case 'String':
-            return `string`;
-
-        case 'Boolean':
-            return `boolean`;
-
-        case 'Number':
-            return `number`;
-
-        case 'Integer':
-            return `number`;
-
-        case 'Array':
-            if (typeof type[0] === 'string') {
-                const schema = Schema.getInstance(type[0])
-                const interfaceName = buildInterfaceName(schema)
-
-                return `${interfaceName}[]`
-            }
-            const scalarName = getDeclarationType(type[0], key)
-            return `${scalarName}[]`
-        case 'Object':
-            throw new Error(`Error in field definition ${key}. Fields Table definitions do not accept objects, please use composite tables`)
-
-        case 'Date':
-            return `Date`;
-        default:
-            if (typeof type === 'string') {
-                const schema = Schema.getInstance(type)
-                const interfaceName = buildInterfaceName(schema)
-                return `${interfaceName}`
-            }
-            throw new Error(`Error in field definition ${key}. Fields Table definitions do not accept objects, please use composite tables`)
-    }
-}
-
-export const getGraphQLType = (type: any, key: string, required: '' | '!' = '', isInput: boolean = false): string => {
+export const getGraphQLType = (def: FieldDefinition, key: string, required: '' | '!' = '', isInput: boolean = false): string => {
     //if (isBrowser) throw new Error('_functionCreator is not avaiblabe on browser')
     const input = isInput ? 'Input' : ''
-    let typeName = type
-    if (type.name) typeName = type.name
-    if (Array.isArray(type)) typeName = 'Array'
-    switch (typeName) {
-        case 'String':
+    switch (true) {
+        case (!def.isTable && def.type.name === 'String'):
             return `String${required}`;
 
-        case 'Boolean':
+        case (!def.isTable && def.type.name === 'Boolean'):
             return `Boolean${required}`;
 
-        case 'Number':
+        case (!def.isTable && def.type.name === 'Number'):
             return `Float${required}`;
 
-        case 'Integer':
+        case (!def.isTable && def.type.name === 'Integer'):
             return `Int${required}`;
 
-        case 'Array':
+        case (def.isArray):
 
-            if (typeof type[0] === 'string') {
-                const schemaName = Schema.getInstance(type[0]).name
+            if (def.isTable) {
+                const schemaName = def.type
                 return `[${schemaName}${input}!]${required}`
             }
-            const scalarName = getGraphQLType(type[0], key)
+            const scalarName = getGraphQLType({...def, isArray: false}, key)
             return `[${scalarName}!]${required}`
-        case 'Object':
-            throw new Error(`Error in field definition ${key}. Fields Table definitions do not accept objects, please use composite tables`)
 
-        case 'Date':
-            return `DateTime`;
+        case (!def.isTable && def.type.name === 'Date'):
+            return `DateTime${required}`;
         default:
-            return typeName + input + required;
+            return def.type + input + required;
     }
 }
 
-export const buildInterfaceName = (schema: Schema | string): string => schema instanceof Schema ? `${schema.name}Interface` : `${schema}Interface`
+// export const buildInterfaceName = (schema: Schema | string): string => schema instanceof Schema ? `${schema.name}Interface` : `${schema}Interface`
 
 const getMainSchema = (schema: Schema, type: 'input' | 'type') => {
     let mainSchema = []
@@ -94,47 +90,47 @@ const getMainSchema = (schema: Schema, type: 'input' | 'type') => {
             mainSchema.push(`id: ID! @id`);
             continue
         }
-        const field = schema.getFieldDefinition(key)
+        const fieldDefinition = schema.getFieldDefinition(key)
 
-        const required = isRequired(field) ? '!' : ''
-        const unique = type === 'type' && field.table.unique ? '@unique' : ''
+        const required = isRequired(fieldDefinition) ? '!' : ''
+        const unique = type === 'type' && fieldDefinition.table.unique ? '@unique' : ''
         let defaultValue = ''
-        if (type === 'type' && field.table.default !== undefined) {
-            const wrapper = (field.type === String) ? '"' : ''
-            defaultValue = `@default(value: ${wrapper}${field.table.default}${wrapper})`
+        if (type === 'type' && fieldDefinition.table.default !== undefined) {
+            const wrapper = (fieldDefinition.type === String) ? '"' : ''
+            defaultValue = `@default(value: ${wrapper}${fieldDefinition.table.default}${wrapper})`
         }
-        const rename = (type === 'type' && field.table.rename !== undefined) ? `@rename(oldName: "${field.table.default}")` : ''
-        const relations:string[] = []
-        let relation:string = ''
-        if (type === 'type' && field.table.relation !== undefined) {
-            if (typeof field.table.relation === "string") {
-                relations.push(`name: "${field.table.relation}"`)
+        const rename = (type === 'type' && fieldDefinition.table.rename !== undefined) ? `@rename(oldName: "${fieldDefinition.table.default}")` : ''
+        const relations: string[] = []
+        let relation: string = ''
+        if (type === 'type' && fieldDefinition.table.relation !== undefined) {
+            if (typeof fieldDefinition.table.relation === "string") {
+                relations.push(`name: "${fieldDefinition.table.relation}"`)
             } else {
-                if (field.table.relation.link) {
-                    relations.push(`link: ${field.table.relation.link}`)
+                if (fieldDefinition.table.relation.link) {
+                    relations.push(`link: ${fieldDefinition.table.relation.link}`)
                 }
-                if (field.table.relation.name) {
-                    relations.push(`name: "${field.table.relation.name}"`)
+                if (fieldDefinition.table.relation.name) {
+                    relations.push(`name: "${fieldDefinition.table.relation.name}"`)
                 }
-                if (field.table.relation.onDelete) {
-                    relations.push(`onDelete: ${field.table.relation.onDelete}`)
+                if (fieldDefinition.table.relation.onDelete) {
+                    relations.push(`onDelete: ${fieldDefinition.table.relation.onDelete}`)
                 }
 
             }
-            if (relations.length>0){
-                relation=`@relation(${relations.join(', ')})`
+            if (relations.length > 0) {
+                relation = `@relation(${relations.join(', ')})`
             }
         }
-        let scalarList=''
-        if (type === 'type' && field.table.scalarList) {
-            scalarList=`@scalarList(strategy: ${field.table.scalarList.strategy})`
+        let scalarList = ''
+        if (type === 'type' && fieldDefinition.table.scalarList) {
+            scalarList = `@scalarList(strategy: ${fieldDefinition.table.scalarList.strategy})`
         }
-        if (!scalarList && type === 'type' && Array.isArray(field.type) && typeof field.type[0] !=='string' ){
-            scalarList=`@scalarList(strategy: RELATION)`
+        if (!scalarList && type === 'type' && fieldDefinition.isArray && !fieldDefinition.isTable) {
+            scalarList = `@scalarList(strategy: RELATION)`
         }
-        const fieldType = getGraphQLType(field.type, key, required, type === 'input');
+        const fieldType = getGraphQLType(fieldDefinition, key, required, type === 'input');
 
-        field.description && mainSchema.push(`# ${field.description}`);
+        fieldDefinition.description && mainSchema.push(`# ${fieldDefinition.description}`);
         mainSchema.push(`${key}: ${fieldType} ${unique} ${defaultValue} ${relation} ${scalarList} ${rename}`);
     }
     return mainSchema
@@ -222,13 +218,8 @@ export const getSubSchemas = (schema: Schema): string[] => {
     const parents = getParents(schema.getFields())
     parents.forEach((field) => {
         const fieldDefinition = schema.getPathDefinition(field)
-        if (typeof fieldDefinition.type === 'string') {
+        if (fieldDefinition.isTable) {
             const schemaName = fieldDefinition.type
-            subSchemas.push(schemaName)
-            subSchemas.push(...getSubSchemas(Schema.getInstance(schemaName)))
-        }
-        if (Array.isArray(fieldDefinition.type) && typeof fieldDefinition.type[0] === 'string') {
-            const schemaName = <string>(fieldDefinition.type[0])
             subSchemas.push(schemaName)
             subSchemas.push(...getSubSchemas(Schema.getInstance(schemaName)))
         }

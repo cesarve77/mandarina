@@ -80,11 +80,16 @@ export class Bridge {
         return this.fields[name]
     }
 
-    getType(name: string): string | string[] | Native | Native[] {
-        const type = this.getField(name).type;
-        if (Array.isArray(type)) return Array
-        if (typeof type === 'string') return Object
-        return type
+    getType(name: string): Native {
+        console.log('getType', name)
+        const def = this.getField(name);
+        if (name.match(/\.\d+$/)) {
+            if (def.isTable) return Object
+        } else {
+            if (def.isArray) return Array
+            if (def.isTable) return Object
+        }
+        return def.type
     }
 
     // Field's initial value.
@@ -92,31 +97,19 @@ export class Bridge {
         const field = this.getField(name);
         const type = this.getType(name);
         if (type === Array) {
-
-
             const validators: Validator[] = field.validators
             let minCount = 0
             const initialCount = field.form.initialCount || 0
             validators.forEach((validator) => {
                 if (validator.validatorName === 'minCount') minCount = validator.param
             })
-            let item = {}
-            if (type === Object) {
-                const table = field.type[0]
-                if (typeof field.type[0] === 'string') {
-                    const schema = Schema.getInstance(table)
-                    schema.clean(item)
-                }
-            } else {
-                item = field.defaultValue
-            }
+            const item = field.defaultValue
             const items = Math.max(minCount, initialCount)
             return new Array(items).fill(item)
         } else if (type === Object) {
             let item = {}
-            const table = field.type
-            if (typeof table === 'string') {
-                const schema = Schema.getInstance(table)
+            if (field.isTable) {
+                const schema = Schema.getInstance(field.type)
                 schema.clean(item)
             }
             return item
@@ -129,15 +122,12 @@ export class Bridge {
             return this.schema.keys
         }
         const field = this.getField(name)
-        const type = Array.isArray(field.type) ? field.type[0] : field.type
-        if (typeof type === 'string') {
-            const schema = Schema.getInstance(type)
+        if (field.isTable && name.match(/\.\d+$/)) {
+            const schema = Schema.getInstance(field.type)
             return schema.keys
         } else {
             return []
         }
-
-
     }
 
     findValidator(validatorName: string, field: string | FieldDefinition): undefined | Validator {
@@ -215,7 +205,6 @@ export class Bridge {
 // Function with one argument - model - which throws errors when model is
 // invalid.
     getValidator({fields}: { fields?: string[] } = {}): (model: any) => void {
-
         return (model: any) => {
             let enter = false
             const errors = this.schema.validate(model, fields)
@@ -223,7 +212,7 @@ export class Bridge {
                 const error = {}
                 errors.forEach((e) => {
                     if (fields) {
-                        if (fields.includes(e.path.replace(/\.\d+/,''))) {
+                        if (fields.includes(e.path.replace(/\.\d+/, ''))) {
                             enter = true
                             error[e.path] = e.message
                         }

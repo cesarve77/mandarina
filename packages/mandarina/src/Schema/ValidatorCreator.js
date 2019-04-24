@@ -62,7 +62,12 @@ var ValidatorCreator = /** @class */ (function () {
                     this.key = key;
                     this.definition = definition;
                     this.label = definition.label ? definition.label : "";
-                    this.type = definition.type;
+                    if (Array.isArray(definition.type)) {
+                        this.type = definition.type[0];
+                    }
+                    else {
+                        this.type = definition.type;
+                    }
                     this.value = value;
                     this.path = path;
                 }
