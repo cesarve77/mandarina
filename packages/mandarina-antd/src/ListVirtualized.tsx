@@ -232,7 +232,6 @@ export class ListVirtualized extends React.Component<ListProps, { columns: Colum
 
         return (
             <Find schema={schema} where={where} skip={0} first={this.firstLoad + overLoad} fields={this.fields}
-                  onCompleted={(xx) => console.log('xx onCompleted', xx)}
                   notifyOnNetworkStatusChange>
                 {({data = [], query, variables, refetch, loading, count}) => {
                     let dataCollection = data

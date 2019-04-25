@@ -1,5 +1,5 @@
 import React, {PureComponent} from 'react'
-import {FetchResult, Mutation, withApollo, WithApolloClient} from 'react-apollo'
+import {FetchResult, Mutation, MutationFn, MutationResult, withApollo, WithApolloClient} from 'react-apollo'
 import gql from "graphql-tag";
 import {Schema} from 'mandarina'
 import {AutoField, AutoFields, ErrorsField} from './index'
@@ -86,7 +86,7 @@ class ActionForm extends PureComponent<WithApolloClient<ActionFormProps>>{
                       onError={onError}
                       context={context}
             >
-                {(mutation, {loading, error, ...restMutation}) => {
+                {(mutation: MutationFn, {loading, error, ...restMutation}: MutationResult) => {
                     return (
                         <AutoForm disabled={loading}
                                   onSubmit={(data: object) => {

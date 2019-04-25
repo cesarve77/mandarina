@@ -13,7 +13,7 @@ export interface AuthChildrenProps {
     loading: boolean
 }
 
-interface AuthProps {
+export interface AuthProps {
     action: ActionType
     schema: Schema
     userRoles: string[]

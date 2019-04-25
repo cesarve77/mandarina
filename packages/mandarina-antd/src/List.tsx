@@ -89,7 +89,6 @@ export class List extends React.Component<ListProps, { columns: ColumnProps<any>
     }
 
     getColumns(fields: string[], path = "") {
-        console.log('getColumns',fields,path)
         const columns: ColumnProps<any>[] = []
         const parents = getParents(fields)
         parents.forEach((parent, index) => {
@@ -200,7 +199,6 @@ export class List extends React.Component<ListProps, { columns: ColumnProps<any>
 
 
     onFilterChange: onFilterChange = (field, where) => {
-        console.log('this. onFilterChange')
         if (where && !isEmpty(where)) {
             this.filters[field] = where
         } else {

@@ -152,7 +152,7 @@ export class FindBase extends PureComponent<FindProps & FindBaseProps, FindBaseS
                       subscribeToMore,
                       updateQuery,
                       client,
-                  }) => {
+                  }: QueryResult) => {
                     let count, pageInfo
                     if (!error) {
                         if (type === 'connection' && data && data[names.query[type]]) {

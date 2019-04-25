@@ -248,7 +248,7 @@ export class Mutate extends PureComponent<WithApolloClient<MutateProps & { type:
                     called,
                     client,
 
-                }) => children({
+                }: MutationResult) => children({
                     schema,
                     mutate: (model: Model) => this.mutate(model, mutationFn),
                     loading: findLoading || loading,
@@ -324,7 +324,6 @@ export const getSubSchemaMutations = (model: Model, schema: Schema, mutationType
         const value = model[key]
         let definition = schema.getFieldDefinition(key)
         //1 to n relations
-
         if (definition.isTable) {
             if (definition.isArray) {
                 const schema = Schema.getInstance(definition.type)

@@ -1,4 +1,4 @@
-import React, {ElementType, ReactNode} from "react"
+import React, {ComponentType, ElementType, ReactNode} from "react"
 import {Auth} from 'mandarina'
 import {CreateForm, CreateFormProps, UpdateForm, UpdateFormProps} from "./Forms";
 import {Spin} from "antd";
@@ -18,7 +18,7 @@ export interface AuthElementsProps {
 
 
 const AuthAntD = ({Component, schema, denied = null, userRoles = [], action, fields: optionalFields, omitFields, omitFieldsRegEx, Error, ...props}:
-                      { Component: ElementType<ElemProps>, action: ActionType } & ElemProps & AuthElementsProps) => {
+                      { Component: ComponentType<ElemProps>, action: ActionType } & ElemProps & AuthElementsProps) => {
     return (
         <Auth schema={schema} action={action} userRoles={userRoles} fields={optionalFields} omitFields={omitFields}
               omitFieldsRegEx={omitFieldsRegEx}>
