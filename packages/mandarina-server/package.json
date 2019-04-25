@@ -1,16 +1,11 @@
 {
   "name": "mandarina-server",
-  "version": "0.5.8",
+  "version": "0.5.9",
   "description": "Mandarina for server side",
   "main": "build/index.js",
   "types": "build/index.d.ts",
   "author": "Cesar Ramos",
   "license": "ISC",
-  "resolutions": {
-    "**/graphql": "14.1.1",
-    "**/@types/react": "16.8.14"
-
-  },
   "bin": {
     "manda-cli": "build/cli/index.js"
   },
@@ -18,7 +13,7 @@
     "@types/lodash.merge": "^4.6.6",
     "lodash.merge": "^4.6.1",
     "yaml": "^1.5.0",
-    "@types/aws-lambda": "^8.10.24"
+    "@types/aws-lambda": "^8.10.23"
   },
   "peerDependencies": {
     "@types/node": "^11.13.7",

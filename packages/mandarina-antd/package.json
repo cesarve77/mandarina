@@ -1,14 +1,11 @@
 {
   "name": "mandarina-antd",
-  "version": "0.5.8",
+  "version": "0.5.9",
   "description": "Antd styling for mandarina",
   "main": "build/index.js",
   "types": "build/index.d.ts",
   "author": "César Ramos",
   "license": "ISC",
-  "resolutions": {
-    "**/@types/react": "16.8.14"
-  },
   "dependencies": {
     "@types/lodash.get": "^4.4.6",
     "@types/lodash.isempty": "^4.4.6",
@@ -46,14 +43,14 @@
     "jest": "^24.7.1",
     "jsdom-global": "^3.0.2",
     "react": "^16.8.6",
-    "react-apollo": "2.5.2",
+    "react-apollo": "^2.5.5",
     "react-dom": "^16.8.6",
     "react-test-renderer": "^16.8.6",
     "typescript": "3.2.4"
   },
   "peerDependencies": {
-    "react-apollo": "2.5.1",
-    "apollo-client": "2.4.13",
+    "react-apollo": "^2.5.5",
+    "apollo-client": "^2.5.1",
     "mandarina": "latest",
     "react": "^16.8.6",
     "react-dom": "^16.8.6"
