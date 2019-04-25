@@ -1,6 +1,6 @@
 {
   "name": "mandarina-server",
-  "version": "0.5.9",
+  "version": "0.5.10",
   "description": "Mandarina for server side",
   "main": "build/index.js",
   "types": "build/index.d.ts",

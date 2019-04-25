@@ -4,8 +4,8 @@ import {ContextParameters} from "graphql-yoga/dist/types";
 import {ActionType} from "mandarina/build/Auth/Auth";
 import {SchemaOptions} from "mandarina/build/Schema/Schema";
 import {Schema} from "mandarina";
-import {UniqueTableError} from 'mandarina/build/Errors/UniqueTableError';
-import {TableInstanceNotFound} from "mandarina/build/Errors/TableInstanceNotFound";
+import {UniqueSchemaError} from 'mandarina/build/Errors/UniqueSchemaError';
+import {SchemaInstanceNotFound} from "mandarina/build/Errors/SchemaInstanceNotFound";
 import {capitalize} from 'mandarina/build/Schema/utils';
 import {MissingIdTableError} from "mandarina/build/Errors/MissingIDTableError";
 
@@ -40,7 +40,7 @@ export class Table {
         }
 
         if (Table.instances[this.name]) {
-            throw new UniqueTableError(this.name);
+            throw new UniqueSchemaError(this.name);
         }
 
         this.options = {...schema.options, ...tableOptions};
@@ -50,7 +50,7 @@ export class Table {
 
     static getInstance(name: string): Table {
         if (!Table.instances[name]) {
-            throw new TableInstanceNotFound(name);
+            throw new SchemaInstanceNotFound(name);
         }
 
         return Table.instances[name];

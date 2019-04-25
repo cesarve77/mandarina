@@ -39,7 +39,6 @@ const AuthAntD = ({Component, schema, denied = null, userRoles = [], action, fie
 export const AuthUpdateForm = (props: UpdateFormProps & AuthElementsProps) =>
     <AuthAntD action={'update'} Component={UpdateForm} {...props}/>
 
-
 export const AuthCreateForm = (props: CreateFormProps & AuthElementsProps) =>
     <AuthAntD action={'create'} Component={CreateForm} {...props}/>
 

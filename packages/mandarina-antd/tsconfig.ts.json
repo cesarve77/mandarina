@@ -11,6 +11,7 @@
     "src/uniforms/ListField.js",
     "src/uniforms/TableField.js",
     "src/uniforms/ListItemField.js",
+    "src/uniforms/HiddenTableField.js",
     "src/uniforms/NestField.js"
   ]
 }
