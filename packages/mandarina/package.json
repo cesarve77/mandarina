@@ -1,12 +1,11 @@
 {
   "name": "mandarina",
-  "version": "0.5.10",
+  "version": "0.5.11",
   "description": "",
   "main": "build/index.js",
   "types": "build/index.d.ts",
   "author": "",
   "license": "ISC",
-
   "dependencies": {
     "@types/inflection": "^1.5.28",
     "@types/lodash.get": "^4.4.6",

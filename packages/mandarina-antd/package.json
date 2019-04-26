@@ -1,6 +1,6 @@
 {
   "name": "mandarina-antd",
-  "version": "0.5.10",
+  "version": "0.5.11",
   "description": "Antd styling for mandarina",
   "main": "build/index.js",
   "types": "build/index.d.ts",
@@ -46,14 +46,16 @@
     "react-apollo": "^2.5.5",
     "react-dom": "^16.8.6",
     "react-test-renderer": "^16.8.6",
-    "typescript": "3.2.4"
+    "typescript": "3.2.4",
+    "mandarina": "latest"
   },
   "peerDependencies": {
     "react-apollo": "^2.5.5",
     "apollo-client": "^2.5.1",
     "mandarina": "latest",
     "react": "^16.8.6",
-    "react-dom": "^16.8.6"
+    "react-dom": "^16.8.6",
+    "graphql-tag": "^2.10.1"
   },
   "scripts": {
     "postinstall": "tsc --project tsconfig.js.json && tsc --project tsconfig.ts.json"
