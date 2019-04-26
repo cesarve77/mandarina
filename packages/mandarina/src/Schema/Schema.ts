@@ -403,7 +403,6 @@ export class Schema {
                     if (!validator.arrayValidator) continue
                     const instance = new validator({key, path, definition, value});
                     const error = instance.validate(originalModel);
-                    console.log(path,validator.validatorName,originalModel,error)
 
                     if (error) {
                          errors.push(error);
@@ -421,7 +420,6 @@ export class Schema {
                         if (!this._isConnectingValue(value) && (recursive.includes(cleanPath) || !pathHistory.some(({schema}) => schemaName === schema))) {
                             pathHistory.push({path, schema: schemaName});
                             internalErrors = [...internalErrors, ...schema._validate(value, `${path}.${i}`, pathHistory, originalModel)];
-                            console.log('internalErrors111',schemaName,`${path}.${i}`,internalErrors)
 
                         }else{
                             pathHistory.push({path: path, schema: schemaName});
@@ -435,7 +433,6 @@ export class Schema {
                             if (validator.arrayValidator) continue
                             const instance = new validator({key, path, definition, value});
                             const error = instance.validate(originalModel);
-                            console.log(path,validator.validatorName,originalModel,error)
                             if (error) {
                                 return errors.push(error);
                             }
@@ -465,7 +462,6 @@ export class Schema {
                 const instance = new validator({key, path, definition, value});
 
                 const error = instance.validate(originalModel);
-                console.log(path,validator.validatorName,originalModel,error)
                 if (error) {
                      errors.push(error);
                 }
