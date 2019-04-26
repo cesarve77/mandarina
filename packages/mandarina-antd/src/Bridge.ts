@@ -213,12 +213,14 @@ export class Bridge {
     getValidator({fields}: { fields?: string[] } = {}): (model: any) => void {
         return (model: any) => {
             let enter = false
+            console.log('fields',fields)
             const errors = this.schema.validate(model, fields)
+            console.log('errors',errors)
             if (errors.length) {
                 const error = {}
                 errors.forEach((e) => {
                     if (fields) {
-                        if (fields.includes(e.path.replace(/\.\d+/, ''))) {
+                        if (fields.includes(e.path.replace(/\.\d+/g , ''))) {
                             enter = true
                             error[e.path] = e.message
                         }

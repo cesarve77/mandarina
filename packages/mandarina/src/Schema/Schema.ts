@@ -378,7 +378,7 @@ export class Schema {
 
 //TODO VER QUE CONO ES ESTO, por que ahora todas tienen id ***** **** TODO WARNING
     private _isConnectingValue = (value: any) => {
-        return (value && value.hasOwnProperty && value.hasOwnProperty('id') && typeof value.id === 'string')
+        return (value && value.hasOwnProperty && value.hasOwnProperty('id') && typeof value.id === 'string' && Object.keys(value).length===1)
     }
 
     private _validate(model: Model, parent: string = '', pathHistory: { schema: string, path: string }[] = [], originalModel: Model): ErrorValidator[] {
@@ -403,8 +403,10 @@ export class Schema {
                     if (!validator.arrayValidator) continue
                     const instance = new validator({key, path, definition, value});
                     const error = instance.validate(originalModel);
+                    console.log(path,validator.validatorName,originalModel,error)
+
                     if (error) {
-                        return errors.push(error);
+                         errors.push(error);
                     }
                 }
                 //Check no array validators
@@ -412,13 +414,18 @@ export class Schema {
                 if (definition.isTable && value) {
                     const schema = Schema.getInstance(definition.type)
                     const schemaName = schema.name;
+
                     let internalErrors: ErrorValidator[] = [];
 
                     value.forEach((value: any, i: number) => {
                         if (!this._isConnectingValue(value) && (recursive.includes(cleanPath) || !pathHistory.some(({schema}) => schemaName === schema))) {
+                            pathHistory.push({path, schema: schemaName});
                             internalErrors = [...internalErrors, ...schema._validate(value, `${path}.${i}`, pathHistory, originalModel)];
+                            console.log('internalErrors111',schemaName,`${path}.${i}`,internalErrors)
+
+                        }else{
+                            pathHistory.push({path: path, schema: schemaName});
                         }
-                        pathHistory.push({path, schema: schemaName});
                     });
                     errors = [...errors, ...internalErrors];
                 } else if (value) {
@@ -428,7 +435,7 @@ export class Schema {
                             if (validator.arrayValidator) continue
                             const instance = new validator({key, path, definition, value});
                             const error = instance.validate(originalModel);
-
+                            console.log(path,validator.validatorName,originalModel,error)
                             if (error) {
                                 return errors.push(error);
                             }
@@ -442,11 +449,13 @@ export class Schema {
                 const schemaName = schema.name;
                 let internalErrors: ErrorValidator[] = [];
                 // Check if we are entering in a recursive table, if actual table has been used before, reviewing the history
-
                 if (!this._isConnectingValue(value) && (recursive.includes(cleanPath) || !pathHistory.some(({schema}) => schemaName === schema))) {
+                    pathHistory.push({path: path, schema: schemaName});
                     internalErrors = schema._validate(value, path, pathHistory, originalModel);
+                }else{
+                    pathHistory.push({path: path, schema: schemaName});
                 }
-                pathHistory.push({path: path, schema: schemaName});
+
 
                 return errors = [...errors, ...internalErrors];
             }
@@ -454,10 +463,11 @@ export class Schema {
             for (const validator of definition.validators) {
                 if (validator.arrayValidator) continue
                 const instance = new validator({key, path, definition, value});
-                const error = instance.validate(originalModel);
 
+                const error = instance.validate(originalModel);
+                console.log(path,validator.validatorName,originalModel,error)
                 if (error) {
-                    return errors.push(error);
+                     errors.push(error);
                 }
             }
 
@@ -487,30 +497,30 @@ export class Schema {
         return errors;
     }
 
-    private _getFields(parent: string = '', pathHistory: { table: string, path: string }[] = []): string[] {
+    private _getFields(parent: string = '', pathHistory: { schema: string, path: string }[] = []): string[] {
         let fields: string[] = [];
-        let schema = this;
-        schema.keys.forEach(key => {
+        let thisSchema = this;
+        thisSchema.keys.forEach(key => {
 
             const dot = parent ? '.' : '';
             const path = `${parent}${dot}${key}`;
             const cleanPath=path.replace(/\.d+/,'')
-            const def = schema.getFieldDefinition(key);
-            let table: Schema | undefined;
+            const def = thisSchema.getFieldDefinition(key);
+            let schema: Schema | undefined;
 
             if (def.isArray) {
                 this.arraysFields.push(path);
 
             }
             if (def.isTable) {
-                table = Schema.getInstance(def.type)
-                pathHistory.push({path: path, table: this.name});
+                schema = Schema.getInstance(def.type)
+                pathHistory.push({path: path, schema: this.name});
                 let fieldsInternal: string[] = [];
-                const tableName = table.name;
+                const schemaName = schema.name;
                 const recursive=this.options.recursive || []
                 // Check if we are entering in a recursive table, if actual table has been used before, reviewing the history
-                if (recursive.includes(cleanPath) || !pathHistory.some(({table}) => tableName === table)) {
-                    fieldsInternal = table._getFields(path, pathHistory);
+                if (recursive.includes(cleanPath) || !pathHistory.some(({schema}) => schemaName === schema)) {
+                    fieldsInternal = schema._getFields(path, pathHistory);
                 }
 
                 // To intro a path in table options to continue deep in get fields
