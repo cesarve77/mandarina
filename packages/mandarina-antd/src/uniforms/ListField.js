@@ -25,7 +25,6 @@ const List = ({
     fields,
     ...props,
 }) => {
-    console.log('value',name,value)
     return <div {...filterDOMProps(props)}>
             {!!label && (
                 <div>

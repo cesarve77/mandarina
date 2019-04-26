@@ -61,8 +61,6 @@ export interface Edge {
 // };
 
 export class List extends React.Component<ListProps, { columns: ColumnProps<any>[] }> {
-
-
     fields: string[]
     me: React.RefObject<HTMLDivElement>
     fetchMore: () => void
