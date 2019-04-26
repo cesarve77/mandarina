@@ -2,23 +2,24 @@ import {Table as TableAntD} from 'antd';
 import {Find, Schema} from 'mandarina';
 import * as React from "react";
 import {FieldDefinition, OverwriteDefinition} from 'mandarina/build/Schema/Schema'
-//import ListHeader from "./ListHeader";
-
 import {onFilterChange, Where} from "./ListFilter";
-import {getDecendents, getParents} from 'mandarina/build/utils'
+import {filterFields, getDecendents, getParents} from 'mandarina/build/utils'
 import {ColumnProps} from 'antd/lib/table';
 import isEmpty from "lodash.isempty";
 import {DefaultCellComponent} from "./ListVirtualized";
 import merge from 'lodash.merge'
 import {FindQueryProps} from "mandarina/build/Operations/Find";
 import {deepClone} from "mandarina/build/Operations/Mutate";
+//import ListHeader from "./ListHeader";
 export type onResize = (e: any, {size}: { size: { width: number } }) => void
 
 
-export interface ListProps extends FindQueryProps{
+export interface ListProps extends FindQueryProps {
     schema: Schema
     fields?: string[]
-    overwrite?: {[field: string]: OverwriteDefinition}
+    omitFields?: string[]
+    omitFieldsRegEx?: RegExp
+    overwrite?: { [field: string]: OverwriteDefinition }
     pageSize?: number
     first?: number
     where?: any
@@ -51,6 +52,7 @@ export interface Edge {
 
     }
 }
+
 //
 // const components = {
 //     header: {
@@ -72,9 +74,8 @@ export class List extends React.Component<ListProps, { columns: ColumnProps<any>
     constructor(props: ListProps) {
         super(props);
         //const definitions: Partial<FieldDefinitions> = {}
-        const {schema, fields} = this.props
-        this.fields = fields || schema.getFields()
-        console.log('component constructor',this.props)
+        const {schema, fields, omitFields, omitFieldsRegEx} = this.props
+        this.fields = filterFields(schema.getFields(), fields, omitFields, omitFieldsRegEx)
         const columns = this.getColumns(this.fields)
         this.state = {columns}
         this.me = React.createRef();
@@ -117,8 +118,12 @@ export class List extends React.Component<ListProps, { columns: ColumnProps<any>
         //         width: fieldDefinition.list.width || estimatedColumnWidthDefault
         //     }
         // }
-        const overwrite=this.props.overwrite && this.props.overwrite[parent]
-        const fieldDefinition =overwrite ? merge(deepClone(this.props.schema.getPathDefinition(parent)),overwrite) : this.props.schema.getPathDefinition(parent)
+        const overwrite = this.props.overwrite && this.props.overwrite[parent]
+        const fieldDefinition = overwrite ? merge(deepClone(this.props.schema.getPathDefinition(parent)), overwrite) : this.props.schema.getPathDefinition(parent)
+        if (!fieldDefinition || isEmpty(fieldDefinition)) {
+            throw new Error(`Field "${parent}" not found`)
+        }
+        console.log('fieldDefinition', fieldDefinition);
         if (fieldDefinition.list.hidden) return
         const defaultWidth = window.innerWidth / this.fields.length
         let width: number | undefined
@@ -137,9 +142,10 @@ export class List extends React.Component<ListProps, { columns: ColumnProps<any>
             title: fieldDefinition.label ? fieldDefinition.label : "",
             render: (value: any, row: any, index: any) => {
 
-                const CellComponent=fieldDefinition.list.CellComponent || DefaultCellComponent
+                const CellComponent = fieldDefinition.list.CellComponent || DefaultCellComponent
                 if (!dataIndex) return null
-                return   <CellComponent columnIndex={0} rowIndex={0} data={[row]} field={dataIndex} {...fieldDefinition.list.props} />
+                return <CellComponent columnIndex={0} rowIndex={0} data={[row]}
+                                      field={dataIndex} {...fieldDefinition.list.props} />
             },
             onHeaderCell: (column: ColumnProps<any>) => ({
                 field: parent,
@@ -150,7 +156,6 @@ export class List extends React.Component<ListProps, { columns: ColumnProps<any>
             })
         }
     }
-
 
 
     onScroll = () => {
@@ -195,7 +200,7 @@ export class List extends React.Component<ListProps, { columns: ColumnProps<any>
         }
     }
 
-    filters: { [field: string]: Where }={}
+    filters: { [field: string]: Where } = {}
 
 
     onFilterChange: onFilterChange = (field, where) => {
