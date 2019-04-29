@@ -7,5 +7,9 @@ packages/mandarina/.idea/
 packages/mandarina-antd/build/
 packages/mandarina-antd/node_modules/
 packages/mandarina-antd/.idea/
+***/*.js
+***/*.jsx
+***/*.map
 website/node_modules
 node_modules
+codealike.json

@@ -53,29 +53,27 @@ export const getGraphQLType = (def: FieldDefinition, key: string, required: '' |
     //if (isBrowser) throw new Error('_functionCreator is not avaiblabe on browser')
     const input = isInput ? 'Input' : ''
     switch (true) {
-        case (!def.isTable && def.type.name === 'String'):
+        case (!def.isArray && !def.isTable && def.type.name === 'String'):
             return `String${required}`;
 
-        case (!def.isTable && def.type.name === 'Boolean'):
+        case (!def.isArray && !def.isTable && def.type.name === 'Boolean'):
             return `Boolean${required}`;
 
-        case (!def.isTable && def.type.name === 'Number'):
+        case (!def.isArray && !def.isTable && def.type.name === 'Number'):
             return `Float${required}`;
 
-        case (!def.isTable && def.type.name === 'Integer'):
+        case (!def.isArray && !def.isTable && def.type.name === 'Integer'):
             return `Int${required}`;
-
-        case (def.isArray):
-
-            if (def.isTable) {
-                const schemaName = def.type
-                return `[${schemaName}${input}!]${required}`
-            }
+        case (!def.isArray && !def.isTable && def.type.name === 'Date'):
+            return `DateTime${required}`;
+        case (def.isArray && def.isTable):
+            const schemaName = def.type
+            return `[${schemaName}${input}!]${required}`
+        case (def.isArray && !def.isTable):
             const scalarName = getGraphQLType({...def, isArray: false}, key)
             return `[${scalarName}!]${required}`
 
-        case (!def.isTable && def.type.name === 'Date'):
-            return `DateTime${required}`;
+
         default:
             return def.type + input + required;
     }
