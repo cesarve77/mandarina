@@ -1,6 +1,6 @@
 import {Resizable} from "react-resizable";
 import * as React from "react";
-import ListFilter, {onFilterChange} from "./ListFilter";
+import ListFilter, {OnFilterChange} from "./ListFilter";
 import {onResize} from "./List";
 import {FieldDefinition} from "mandarina/build/Schema/Schema";
 import {Schema} from "mandarina";
@@ -11,7 +11,7 @@ interface ListHeaderProps {
     width: number,
     children: React.ReactChildren
     fieldDefinition: FieldDefinition
-    onFilterChange: onFilterChange
+    onFilterChange: OnFilterChange
     field: string,
     schema: Schema,
 }

@@ -9,13 +9,14 @@ import {
     ListChildComponentProps,
     VariableSizeGrid as Grid
 } from 'react-window';
-import ListFilter, {onFilterChange, Where} from "./ListFilter";
-import {CellComponent, OverwriteDefinition} from "mandarina/build/Schema/Schema";
+import ListFilter, {OnFilterChange, Where} from "./ListFilter";
+import {CellComponent, FilterMethod, OverwriteDefinition} from "mandarina/build/Schema/Schema";
 import {filterFields} from "mandarina/build/utils";
 import {Empty} from "antd";
 import {RefetchQueriesProviderFn} from "react-apollo";
 import {DocumentNode} from "graphql";
 import merge from 'lodash.merge'
+import {getDefaultFilterMethod} from "./ListFilters";
 
 
 export interface ListProps {
@@ -208,15 +209,29 @@ export class ListVirtualized extends React.Component<ListProps, { columns: Colum
     }
     filters: Filters = {}
 
-    onFilterChange: onFilterChange = (field, where) => {
-        if (where && !isEmpty(where)) {
-            this.filters[field] = where
+    onFilterChange: OnFilterChange = (field, filter) => {
+        console.log(';field, filter',field, filter)
+        if (filter && !isEmpty(filter)) {
+            this.filters[field] = filter
         } else {
             delete this.filters[field]
         }
-        this.props.onFilterChange && this.props.onFilterChange(this.filters)
+        console.log(' this.filters', this.filters)
+        const allFilters:Where[]=[]
+        for (const field in this.filters){
+            console.log('field,',field)
+            const fieldDefinition=this.props.schema.getPathDefinition(field)
+            console.log('fieldDefinition',fieldDefinition)
+            const filterMethod: FilterMethod = fieldDefinition.list.filterMethod || getDefaultFilterMethod(field, this.props.schema)
+            const filter=this.filters[field]
+            allFilters.push(filterMethod(filter))
+        }
+        if (this.props.onFilterChange){
+            this.props.onFilterChange(this.filters)
+        }
 
-        const allFilters = Object.values(this.filters)
+        console.log('allFilters',allFilters)
+
         this.variables.where = this.variables.where || {}
         if (this.props.where) {
             this.variables.where = {AND: [this.props.where, ...allFilters]}

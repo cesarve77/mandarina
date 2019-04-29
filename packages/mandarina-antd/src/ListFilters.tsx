@@ -139,7 +139,10 @@ export const getDefaultComponent = (field: string, fieldDefinition: FieldDefinit
                 </span>
                <InputNumber value={value.filter}
                             style={{width: '100%'}}
-                            onChange={(value) => onChange({operator: selected, filter: value})}/>
+                            onChange={(value) => value !== 0 && value ? onChange({
+                                operator: selected,
+                                filter: value
+                            }) : onChange(null)}/>
             </span>
                 )
             case  (type === Number):
@@ -150,7 +153,10 @@ export const getDefaultComponent = (field: string, fieldDefinition: FieldDefinit
                 </span>
                <InputNumber value={value.filter}
                             style={{width: '100%'}}
-                            onChange={(value) => onChange({operator: selected, filter: value})}/>
+                            onChange={(value) => value !== 0 && value ? onChange({
+                                operator: selected,
+                                filter: value
+                            }) : onChange(null)}/>
             </span>
                 )
             case  (type === Date):
@@ -160,17 +166,26 @@ export const getDefaultComponent = (field: string, fieldDefinition: FieldDefinit
                   {operator}
                 </span>
                       <DatePicker value={value.filter}
-                                  onChange={(date) => onChange({operator: selected, filter: date})}/>
+                                  onChange={(date) => date ? onChange({
+                                      operator: selected,
+                                      filter: date
+                                  }) : onChange(null)}/>
             </span>
                 )
             case  (type === Boolean):
                 return (
                     <Switch checked={!!value.filter}
-                            onChange={(value) => onChange({operator: selected, filter: !!value})}/>
+                            onChange={(value) => value ? onChange({
+                                operator: selected,
+                                filter: !!value
+                            }) : onChange(null)}/>
                 )
             default:
                 return <Input addonBefore={operator} value={value.filter} style={{width: '100%'}}
-                              onChange={(e) => onChange({operator: selected, filter: e.target.value})}/>
+                              onChange={({target: {value}}) => value ? onChange({
+                                  operator: selected,
+                                  filter: value
+                              }) : onChange(null)}/>
         }
     }
     return connectField(Filter, {

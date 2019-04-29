@@ -2,7 +2,7 @@ import {Table as TableAntD} from 'antd';
 import {Find, Schema} from 'mandarina';
 import * as React from "react";
 import {FieldDefinition, OverwriteDefinition} from 'mandarina/build/Schema/Schema'
-import {onFilterChange, Where} from "./ListFilter";
+import {OnFilterChange, Where} from "./ListFilter";
 import {filterFields, getDecendents, getParents} from 'mandarina/build/utils'
 import {ColumnProps} from 'antd/lib/table';
 import isEmpty from "lodash.isempty";
@@ -201,7 +201,7 @@ export class List extends React.Component<ListProps, { columns: ColumnProps<any>
     filters: { [field: string]: Where } = {}
 
 
-    onFilterChange: onFilterChange = (field, where) => {
+    onFilterChange: OnFilterChange = (field, where) => {
         if (where && !isEmpty(where)) {
             this.filters[field] = where
         } else {
