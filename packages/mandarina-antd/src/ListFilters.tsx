@@ -28,7 +28,6 @@ const AllOperators: { [subfix: string]: { description: string, symbol: string } 
 }
 
 export const getDefaultFilterMethod = (field: string, schema: Schema): Where => {
-    console.log('getDefaultFilterMethod')
     const fieldDefinition = schema.getPathDefinition(field)
     const path = field.split('.')
     const originalPath = field.split('.')

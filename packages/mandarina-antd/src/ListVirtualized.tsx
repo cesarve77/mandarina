@@ -1,5 +1,6 @@
 import {Find, Schema} from 'mandarina';
 import React from "react";
+import memoize from "memoize-one"
 import {get} from "mandarina/build/Schema/utils";
 import isEmpty from 'lodash.isempty'
 import {
@@ -88,7 +89,14 @@ const estimatedColumnWidthDefault = 200
 const estimatedRowHeightDefault = 60
 type Filters = { [field: string]: Where }
 
-export class ListVirtualized extends React.Component<ListProps, { columns: ColumnProps[], height: number, width: number }> {
+interface ListState {
+    filters: any,
+    columns: ColumnProps[],
+    height: number,
+    width: number
+}
+
+export class ListVirtualized extends React.Component<ListProps, ListState> {
 
     data: any[] = []
     fields: string[]
@@ -112,7 +120,7 @@ export class ListVirtualized extends React.Component<ListProps, { columns: Colum
             fields,
             omitFields,
             omitFieldsRegEx,
-            filters
+            filters = {},
         } = props
         //const definitions: Partial<FieldDefinitions> = {}
         this.fields = filterFields(schema.getFields(), fields, omitFields, omitFieldsRegEx)
@@ -123,14 +131,23 @@ export class ListVirtualized extends React.Component<ListProps, { columns: Colum
         }, [] as ColumnProps[]);
 
         this.estimatedColumnWidth = columns.reduce((mem, {width}) => width + mem, 0) / columns.length
-        this.state = {columns, height: 0, width: 0}
+        this.state = {columns, height: 0, width: 0, filters}
         this.tHead = React.createRef()
         this.container = React.createRef()
         this.firstLoad = Math.ceil((this.props.height || window.innerHeight) / estimatedRowHeight)
         this.overscanRowStopIndex = this.firstLoad
         //this.definitions=definitions
-        this.filters=filters || {}
     }
+
+    // static getDerivedStateFromProps(props: ListProps, state: ListState): ListState | null {
+    //     if (!isEqual(props.filters, state.filters)) {
+    //         return {
+    //             ...state,
+    //             filters: props.filters
+    //         }
+    //     }
+    //     return null
+    // }
 
     static defaultProps = {
         estimatedRowHeight: estimatedRowHeightDefault
@@ -211,49 +228,52 @@ export class ListVirtualized extends React.Component<ListProps, { columns: Colum
             ).catch(console.error) //todo
         }, 100)
     }
-    filters: Filters = {}
+
 
     onFilterChange: OnFilterChange = (field, filter) => {
-        console.log(';field, filter', field, filter)
+        let filters = this.state.filters
         if (filter && !isEmpty(filter)) {
-            this.filters[field] = filter
+            filters[field] = filter
         } else {
-            delete this.filters[field]
+            delete filters[field]
         }
-        console.log(' this.filters', this.filters)
-        const allFilters: Where[] = []
-        for (const field in this.filters) {
-            console.log('field,', field)
-            const fieldDefinition = this.props.schema.getPathDefinition(field)
-            console.log('fieldDefinition', fieldDefinition)
-            const filterMethod: FilterMethod = fieldDefinition.list.filterMethod || getDefaultFilterMethod(field, this.props.schema)
-            const filter = this.filters[field]
-            allFilters.push(filterMethod(filter))
-        }
+
+        this.setState({filters: {...filters}})
         if (this.props.onFilterChange) {
-            this.props.onFilterChange(this.filters)
+            this.props.onFilterChange(filters)
         }
 
-        console.log('allFilters', allFilters)
 
-        this.variables.where = this.variables.where || {}
-        if (this.props.where) {
-            this.variables.where = {AND: [this.props.where, ...allFilters]}
-        } else {
-            this.variables.where = {AND: allFilters}
-        }
-        this.data = []
-        this.refetch(this.variables)
+
     }
 
+    getAllFilters = memoize(
+        (filters: Filters) => {
+            const allFilters: Where[] = []
+            for (const field in filters) {
+                const fieldDefinition = this.props.schema.getPathDefinition(field)
+                const filterMethod: FilterMethod = fieldDefinition.list.filterMethod || getDefaultFilterMethod(field, this.props.schema)
+                const filter = filters[field]
+                allFilters.push(filterMethod(filter))
+            }
+            return allFilters
+        }
+    );
 
     render() {
         const {schema, where, estimatedRowHeight, overscanRowsCount = 2, overLoad = 0} = this.props //todo rest props
-        const {columns, width, height} = this.state
-
-
+        const {columns, width, height, filters} = this.state
+        const allFilters = this.getAllFilters(filters)
+        let whereAndFilter: { AND?: Where[] } | undefined
+        if (where && !isEmpty(where) && allFilters.length > 0) {
+            whereAndFilter = {AND: [where, ...allFilters]}
+        } else if (where && !isEmpty(where)) {
+            whereAndFilter = where
+        } else if (allFilters.length > 0) {
+            whereAndFilter = {AND: allFilters}
+        }
         return (
-            <Find schema={schema} where={where} skip={0} first={this.firstLoad + overLoad} fields={this.fields}
+            <Find schema={schema} where={whereAndFilter} skip={0} first={this.firstLoad + overLoad} fields={this.fields}
                   notifyOnNetworkStatusChange>
                 {({data = [], query, variables, refetch, loading, count}) => {
                     let dataCollection = data
@@ -288,6 +308,7 @@ export class ListVirtualized extends React.Component<ListProps, { columns: Colum
                                         {title}
                                         <ListFilter onFilterChange={this.onFilterChange}
                                                     field={field}
+                                                    filter={filters && filters[field]}
                                                     schema={schema}/>
                                     </div>)}
                                 </div>

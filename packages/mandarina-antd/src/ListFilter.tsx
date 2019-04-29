@@ -18,9 +18,10 @@ interface ListFilterProps {
     onFilterChange: OnFilterChange
     field: string,
     schema: Schema
+    filter: any
 }
 
-const ListFilter = React.memo(({onFilterChange, field, schema}: ListFilterProps) => {
+const ListFilter = React.memo(({onFilterChange, field,filter, schema}: ListFilterProps) => {
     const fieldDefinition = schema.getPathDefinition(field)
     if (fieldDefinition.isTable) throw new Error(`ListFilter "${field}" cannot be a table`)
     const name = uuid() //todo remove this dependeincy making schema get optional name
@@ -42,6 +43,7 @@ const ListFilter = React.memo(({onFilterChange, field, schema}: ListFilterProps)
 
                       return callback(null);
                   }}
+                  model={{filter}}
         >
             <FieldComponent name='filter' label={false} col={false} defaultValue={''}/>
         </AutoForm>
