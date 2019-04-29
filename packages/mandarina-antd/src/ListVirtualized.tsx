@@ -32,6 +32,7 @@ export interface ListProps {
     overscanRowsCount?: number
     overLoad?: number
     overwrite?: OverwriteDefinition
+    onFilterChange?: (filters: Filters)=>void
 
 }
 
@@ -83,7 +84,7 @@ export interface ColumnProps {
 
 const estimatedColumnWidthDefault = 200
 const estimatedRowHeightDefault = 60
-
+type Filters={ [field: string]: Where }
 export class ListVirtualized extends React.Component<ListProps, { columns: ColumnProps[], height: number, width: number }> {
 
     data: any[] = []
@@ -205,7 +206,7 @@ export class ListVirtualized extends React.Component<ListProps, { columns: Colum
             ).catch(console.error) //todo
         }, 100)
     }
-    filters: { [field: string]: Where } = {}
+    filters: Filters = {}
 
     onFilterChange: onFilterChange = (field, where) => {
         if (where && !isEmpty(where)) {
@@ -213,6 +214,8 @@ export class ListVirtualized extends React.Component<ListProps, { columns: Colum
         } else {
             delete this.filters[field]
         }
+        this.props.onFilterChange && this.props.onFilterChange(this.filters)
+
         const allFilters = Object.values(this.filters)
         this.variables.where = this.variables.where || {}
         if (this.props.where) {
