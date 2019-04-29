@@ -33,7 +33,8 @@ export interface ListProps {
     overscanRowsCount?: number
     overLoad?: number
     overwrite?: OverwriteDefinition
-    onFilterChange?: (filters: Filters)=>void
+    filters: Filters
+    onFilterChange?: (filters: Filters) => void
 
 }
 
@@ -85,7 +86,8 @@ export interface ColumnProps {
 
 const estimatedColumnWidthDefault = 200
 const estimatedRowHeightDefault = 60
-type Filters={ [field: string]: Where }
+type Filters = { [field: string]: Where }
+
 export class ListVirtualized extends React.Component<ListProps, { columns: ColumnProps[], height: number, width: number }> {
 
     data: any[] = []
@@ -109,7 +111,8 @@ export class ListVirtualized extends React.Component<ListProps, { columns: Colum
             schema,
             fields,
             omitFields,
-            omitFieldsRegEx
+            omitFieldsRegEx,
+            filters
         } = props
         //const definitions: Partial<FieldDefinitions> = {}
         this.fields = filterFields(schema.getFields(), fields, omitFields, omitFieldsRegEx)
@@ -126,6 +129,7 @@ export class ListVirtualized extends React.Component<ListProps, { columns: Colum
         this.firstLoad = Math.ceil((this.props.height || window.innerHeight) / estimatedRowHeight)
         this.overscanRowStopIndex = this.firstLoad
         //this.definitions=definitions
+        this.filters=filters || {}
     }
 
     static defaultProps = {
@@ -168,8 +172,8 @@ export class ListVirtualized extends React.Component<ListProps, { columns: Colum
         this.onResizeTimeoutId = window.setTimeout(this.resize, 200)
     }
     getColumnDefinition = (field: string): ColumnProps | undefined => {
-        const overwrite=this.props.overwrite && this.props.overwrite[field]
-        const fieldDefinition =overwrite ? merge(this.props.schema.getPathDefinition(field),overwrite) : this.props.schema.getPathDefinition(field)
+        const overwrite = this.props.overwrite && this.props.overwrite[field]
+        const fieldDefinition = overwrite ? merge(this.props.schema.getPathDefinition(field), overwrite) : this.props.schema.getPathDefinition(field)
         if (fieldDefinition.list.hidden) return
         return {
             field,
@@ -210,27 +214,27 @@ export class ListVirtualized extends React.Component<ListProps, { columns: Colum
     filters: Filters = {}
 
     onFilterChange: OnFilterChange = (field, filter) => {
-        console.log(';field, filter',field, filter)
+        console.log(';field, filter', field, filter)
         if (filter && !isEmpty(filter)) {
             this.filters[field] = filter
         } else {
             delete this.filters[field]
         }
         console.log(' this.filters', this.filters)
-        const allFilters:Where[]=[]
-        for (const field in this.filters){
-            console.log('field,',field)
-            const fieldDefinition=this.props.schema.getPathDefinition(field)
-            console.log('fieldDefinition',fieldDefinition)
+        const allFilters: Where[] = []
+        for (const field in this.filters) {
+            console.log('field,', field)
+            const fieldDefinition = this.props.schema.getPathDefinition(field)
+            console.log('fieldDefinition', fieldDefinition)
             const filterMethod: FilterMethod = fieldDefinition.list.filterMethod || getDefaultFilterMethod(field, this.props.schema)
-            const filter=this.filters[field]
+            const filter = this.filters[field]
             allFilters.push(filterMethod(filter))
         }
-        if (this.props.onFilterChange){
+        if (this.props.onFilterChange) {
             this.props.onFilterChange(this.filters)
         }
 
-        console.log('allFilters',allFilters)
+        console.log('allFilters', allFilters)
 
         this.variables.where = this.variables.where || {}
         if (this.props.where) {
@@ -244,7 +248,7 @@ export class ListVirtualized extends React.Component<ListProps, { columns: Colum
 
 
     render() {
-        const {schema, where, estimatedRowHeight, overscanRowsCount = 2,  overLoad = 0} = this.props //todo rest props
+        const {schema, where, estimatedRowHeight, overscanRowsCount = 2, overLoad = 0} = this.props //todo rest props
         const {columns, width, height} = this.state
 
 
