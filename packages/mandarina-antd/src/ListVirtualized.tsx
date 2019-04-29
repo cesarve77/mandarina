@@ -34,7 +34,7 @@ export interface ListProps {
     overscanRowsCount?: number
     overLoad?: number
     overwrite?: OverwriteDefinition
-    filters: Filters
+    filters?: Filters
     onFilterChange?: (filters: Filters) => void
 
 }
