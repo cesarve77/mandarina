@@ -11,7 +11,7 @@ import {
     VariableSizeGrid as Grid
 } from 'react-window';
 import ListFilter, {OnFilterChange, Where} from "./ListFilter";
-import {CellComponent, FilterMethod, OverwriteDefinition} from "mandarina/build/Schema/Schema";
+import {CellComponent, FieldDefinition, FilterMethod, Overwrite} from "mandarina/build/Schema/Schema";
 import {filterFields} from "mandarina/build/utils";
 import {Empty} from "antd";
 import {RefetchQueriesProviderFn} from "react-apollo";
@@ -33,7 +33,7 @@ export interface ListProps {
     estimatedRowHeight?: number
     overscanRowsCount?: number
     overLoad?: number
-    overwrite?: OverwriteDefinition
+    overwrite?: Overwrite
     filters?: Filters
     onFilterChange?: (filters: Filters) => void
 
@@ -83,6 +83,7 @@ export interface ColumnProps {
     width: number
     CellComponent?: CellComponent
     loadingElement?: JSX.Element
+    filter: boolean
 }
 
 const estimatedColumnWidthDefault = 200
@@ -124,14 +125,18 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
         } = props
         //const definitions: Partial<FieldDefinitions> = {}
         this.fields = filterFields(schema.getFields(), fields, omitFields, omitFieldsRegEx)
-        const columns = this.fields.reduce((result, field) => {
+        const columns: ColumnProps[] = []
+        this.state = {columns, height: this.props.height || 0, width: this.props.width || 0, filters}
+
+        this.fields.forEach((field) => {
             const column = this.getColumnDefinition(field)
-            if (column) result.push(column)
-            return result
-        }, [] as ColumnProps[]);
+            if (column) columns.push(column)
+        })
+        // const columns = this.fields.reduce((result, field) => {
+        //
+        // }, [] as ColumnProps[]);
 
         this.estimatedColumnWidth = columns.reduce((mem, {width}) => width + mem, 0) / columns.length
-        this.state = {columns, height: 0, width: 0, filters}
         this.tHead = React.createRef()
         this.container = React.createRef()
         this.firstLoad = Math.ceil((this.props.height || window.innerHeight) / estimatedRowHeight)
@@ -189,15 +194,30 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
         this.onResizeTimeoutId = window.setTimeout(this.resize, 200)
     }
     getColumnDefinition = (field: string): ColumnProps | undefined => {
+        //detect if parent has a CellComponent
+        const path = field.split('.')
+        path.pop()
+        const parentPath = path.join('.')
+        const parentDef = this.props.schema.getPathDefinition(parentPath)
+        const hasParentCellComponent = parentDef && parentDef.list && parentDef.list.CellComponent
+        let definition: FieldDefinition
         const overwrite = this.props.overwrite && this.props.overwrite[field]
-        const fieldDefinition = overwrite ? merge(this.props.schema.getPathDefinition(field), overwrite) : this.props.schema.getPathDefinition(field)
-        if (fieldDefinition.list.hidden) return
+        if (hasParentCellComponent) {
+            definition = overwrite ? merge(parentDef, overwrite) : parentDef
+            field = parentPath
+        } else {
+            const fieldDefinition = this.props.schema.getPathDefinition(field)
+            definition = overwrite ? merge(fieldDefinition, overwrite) : fieldDefinition
+        }
+        if (definition.list.hidden) return
+        if (this.state.columns.some((column: ColumnProps) => column.field === field)) return
         return {
             field,
-            loadingElement: fieldDefinition.list.loadingElement,
-            CellComponent: fieldDefinition.list.CellComponent,
-            title: fieldDefinition.label ? fieldDefinition.label : "",
-            width: fieldDefinition.list.width || estimatedColumnWidthDefault
+            loadingElement: definition.list.loadingElement,
+            CellComponent: definition.list.CellComponent,
+            title: definition.label ? definition.label : "",
+            width: definition.list.width || estimatedColumnWidthDefault,
+            filter: !!definition.list.filter
         }
     }
 
@@ -242,7 +262,6 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
         if (this.props.onFilterChange) {
             this.props.onFilterChange(filters)
         }
-
 
 
     }
@@ -302,14 +321,14 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
                                 Total:{count}
                                 <div className={'mandarina-list-thead-row'}
                                      style={{width: this.estimatedColumnWidth * columns.length}}>
-                                    {columns.map(({title, field}, columnIndex) => <div key={field}
-                                                                                       className={'mandarina-list-thead-col ' + field.replace(/\./g, '-')}
-                                                                                       style={{width: this.getColumnWidth(columnIndex)}}>
+                                    {columns.map(({title, field, filter}, columnIndex) => <div key={field}
+                                                                                               className={'mandarina-list-thead-col ' + field.replace(/\./g, '-')}
+                                                                                               style={{width: this.getColumnWidth(columnIndex)}}>
                                         {title}
-                                        <ListFilter onFilterChange={this.onFilterChange}
-                                                    field={field}
-                                                    filter={filters && filters[field]}
-                                                    schema={schema}/>
+                                        {filter && <ListFilter onFilterChange={this.onFilterChange}
+                                                               field={field}
+                                                               filter={filters && filters[field]}
+                                                               schema={schema}/>}
                                     </div>)}
                                 </div>
                             </div>

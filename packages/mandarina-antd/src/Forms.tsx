@@ -6,7 +6,7 @@ import {CreateProps, MutateResultProps, UpdateProps} from "mandarina/build/Opera
 import {OperationVariables} from "react-apollo";
 import {Bridge} from "./Bridge";
 import {filterFields} from "mandarina/build/utils";
-import {OverwriteDefinition} from "mandarina/build/Schema/Schema";
+import {Overwrite} from "mandarina/build/Schema/Schema";
 //
 const ErrorsField: any = require("./uniforms/ErrorsField").default
 const AutoFields: any = require("./uniforms/AutoFields").default
@@ -51,8 +51,7 @@ interface FormProps<TData = any, TVariables = OperationVariables> extends Mutate
     schema: Schema
     id?: string | any
     fields?: string[]
-    overwrite?: OverwriteDefinition
-
+    overwrite?:  Overwrite
     omitFields?: string[]
     omitFieldsRegEx?: RegExp
     children?: ((props: any) => React.ReactNode | React.ReactNode[]) | React.ReactNode | React.ReactNode[]

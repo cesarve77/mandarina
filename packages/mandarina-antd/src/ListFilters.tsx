@@ -10,20 +10,20 @@ import React, {useState} from "react";
 import {Integer, Schema} from "mandarina";
 import {forceType} from "mandarina/build/Schema/utils";
 
-const AllOperators: { [subfix: string]: { description: string, symbol: string } } = {
+export const AllOperators: { [subfix: string]: { description: string, symbol: string } } = {
     "": {description: "equals", symbol: "="},
     "_not": {description: "not equals", symbol: "!="},
     "_contains": {description: "contains substring", symbol: "~"},
     "_not_contains": {description: "does not contain substring", symbol: "!~"},
     "_starts_with": {description: "starts with", symbol: "^"},
-    "_not_starts_with": {description: "not starts with", symbol: "!^"},
+    "_not_starts_with": {description: "does not starts with", symbol: "!^"},
     "_ends_with": {description: "ends with", symbol: "$"},
-    "_not_ends_with": {description: "not ends with", symbol: "!$"},
+    "_not_ends_with": {description: "does not ends with", symbol: "!$"},
     "_lt": {description: "less than", symbol: "<"},
     "_lte": {description: "less then or equals", symbol: "<="},
     "_gt": {description: "greater than", symbol: ">"},
     "_gte": {description: "greater than or equals", symbol: ">="},
-    "_contains_every": {description: "contains all ", symbol: "[~]"},
+    "_contains_every": {description: "all contains", symbol: "[~]"},
     "_contains_some": {description: "contains at least 1", symbol: "~"},
 }
 

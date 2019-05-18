@@ -1,7 +1,7 @@
 import {Table as TableAntD} from 'antd';
 import {Find, Schema} from 'mandarina';
 import * as React from "react";
-import {FieldDefinition, OverwriteDefinition} from 'mandarina/build/Schema/Schema'
+import {FieldDefinition, Overwrite} from 'mandarina/build/Schema/Schema'
 import {OnFilterChange, Where} from "./ListFilter";
 import {filterFields, getDecendents, getParents} from 'mandarina/build/utils'
 import {ColumnProps} from 'antd/lib/table';
@@ -19,7 +19,7 @@ export interface ListProps extends FindQueryProps {
     fields?: string[]
     omitFields?: string[]
     omitFieldsRegEx?: RegExp
-    overwrite?: { [field: string]: OverwriteDefinition }
+    overwrite?: Overwrite
     pageSize?: number
     first?: number
     where?: any

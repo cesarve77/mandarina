@@ -10,8 +10,16 @@ import {FetchResult} from "react-apollo/Mutation";
 import {ApolloClient, OperationVariables} from "apollo-client";
 import {DocumentNode} from "graphql";
 import {filterFields} from "../utils";
+import {cloneDeep as deepCloneLodash} from 'lodash'
 
-export const deepClone = (obj: any): any => JSON.parse(JSON.stringify(obj))
+export const deepClone = (obj: any): any => {
+    return deepCloneLodash(obj)
+    // const result=JSON.parse(JSON.stringify(obj))
+    // if (typeof obj.type==='function'){
+    //     result.type=obj.type
+    // }
+    // return result
+}
 export type MutateResultProps =
     { refetchSchemas?: string[] }
     & Pick<MutationProps, 'client' | 'ignoreResults' | 'variables' | 'optimisticResponse' | 'refetchQueries' | 'awaitRefetchQueries' | 'update' | 'onCompleted' | 'onError' | 'context' | 'fetchPolicy'>
@@ -140,10 +148,11 @@ export class Mutate extends PureComponent<WithApolloClient<MutateProps & { type:
     mutate(model: Model, mutationFn: MutationFn): Promise<void | FetchResult<Model>> {
         const {schema, where, type, optimisticResponse} = this.props
         const cleaned = deepClone(model)
-
+        console.log('dirty model',model)
         schema.clean(cleaned, this.filteredFields)// fill null all missing keys
-
+        console.log('cleaned model',cleaned, this.filteredFields)
         const data = this.getSubSchemaMutations(cleaned, schema)
+        console.log('data',data)
         const mutation: MutationBaseOptions = {variables: {data}}
         if (type === 'update') {
             mutation.variables!.where = where
@@ -318,6 +327,7 @@ export const refetchQueries = (mutationResult: FetchResult, schema: Schema, clie
 }
 
 export const getSubSchemaMutations = (model: Model, schema: Schema, mutationType: MutationType) => {
+    console.log('model',model)
     const obj: any = {}
     if (typeof model !== "object" || model === undefined || model === null) return model
     Object.keys(model).forEach((key) => {

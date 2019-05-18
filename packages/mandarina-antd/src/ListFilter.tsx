@@ -18,36 +18,38 @@ interface ListFilterProps {
     onFilterChange: OnFilterChange
     field: string,
     schema: Schema
-    filter: any
+    filter?: any
 }
 
-const ListFilter = React.memo(({onFilterChange, field,filter, schema}: ListFilterProps) => {
-    const fieldDefinition = schema.getPathDefinition(field)
-    if (fieldDefinition.isTable) throw new Error(`ListFilter "${field}" cannot be a table`)
-    const name = uuid() //todo remove this dependeincy making schema get optional name
-    let FieldComponent: FilterComponent = fieldDefinition.list.filterComponent === undefined ? getDefaultComponent(field, fieldDefinition) : fieldDefinition.list.filterComponent
-    fieldDefinition.validators = fieldDefinition.validators.filter(({validatorName}) => validatorName !== 'required')
-    const filterSchema = new Schema({
-        filter: fieldDefinition,
-    }, {
-        name
-    })
-    const bridge = new Bridge(filterSchema)
-    return FieldComponent && (
-        <AutoForm schema={bridge} autosave autosaveDelay={400}
-            // onChangeModel={(model: any) => console.log(model)}
-                  onSubmit={({filter}: { filter: any }) => {
-                      onFilterChange(field, filter)
-                  }}
-                  onValidate={(model: any, error: any, callback: (error: any) => void) => {
+const ListFilter = React.memo(({onFilterChange, field, filter, schema}: ListFilterProps) => {
+        const fieldDefinition = schema.getPathDefinition(field)
+        if (fieldDefinition.isTable) throw new Error(`ListFilter "${field}" cannot be a table`)
+        const name = uuid() //todo remove this dependeincy making schema get optional name
+        let FieldComponent: FilterComponent = fieldDefinition.list.filterComponent === undefined ? getDefaultComponent(field, fieldDefinition) : fieldDefinition.list.filterComponent
+        fieldDefinition.validators = fieldDefinition.validators.filter(({validatorName}) => validatorName !== 'required')
+        const filterSchema = new Schema({
+            filter: fieldDefinition,
+        }, {
+            name
+        })
+        const bridge = new Bridge(filterSchema)
+        return FieldComponent && (
+            <AutoForm schema={bridge} autosave autosaveDelay={400}
+                // onChangeModel={(model: any) => console.log(model)}
+                      onSubmit={({filter}: { filter: any }) => {
+                          onFilterChange(field, filter)
+                      }}
+                      onValidate={(model: any, error: any, callback: (error: any) => void) => {
 
-                      return callback(null);
-                  }}
-                  model={{filter}}
-        >
-            <FieldComponent name='filter' label={false} col={false} defaultValue={''}/>
-        </AutoForm>
-    )
-})
+                          return callback(null);
+                      }}
+                      model={{filter}}
+            >
+                <FieldComponent name='filter' label={false} col={false} defaultValue={''}/>
+            </AutoForm>
+        )
+    }, (prevProps, nextProps) =>
+    prevProps.field === nextProps.field && prevProps.onFilterChange === nextProps.onFilterChange && prevProps.schema === nextProps.schema
+)
 
 export default ListFilter

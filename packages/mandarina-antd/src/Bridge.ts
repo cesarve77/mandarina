@@ -1,5 +1,5 @@
 import {Schema} from "mandarina";
-import {FieldDefinition, Native, OverwriteDefinition} from "mandarina/build/Schema/Schema";
+import {FieldDefinition, Native, Overwrite} from "mandarina/build/Schema/Schema";
 import {Validator} from "mandarina/build/Schema/ValidatorCreator";
 import * as React from "react";
 import merge from "lodash.merge";
@@ -22,11 +22,11 @@ export interface FieldProps {
 
 export class Bridge {
     protected schema: Schema
-    protected overwrite?: OverwriteDefinition
+    protected overwrite?: Overwrite
     protected fields: { [field: string]: FieldDefinition } = {}
     protected fieldProps: { [field: string]: FieldProps } = {}
 
-    constructor(schema: Schema, overwrite?: OverwriteDefinition) {
+    constructor(schema: Schema, overwrite?: Overwrite) {
         this.schema = schema
         this.overwrite = overwrite
     }
@@ -75,7 +75,14 @@ export class Bridge {
 
     // Field's definition (`field` prop).
     getField(name: string): FieldDefinition {
-        if (!this.fields[name]) this.fields[name] = this.overwrite ? merge(deepClone(this.schema.getPathDefinition(name)), this.overwrite) : this.schema.getPathDefinition(name)
+        const overwrite = this.overwrite && this.overwrite[name]
+        if (name === 'user.email') {
+            console.log('overwrite', overwrite)
+            console.log('this.schema.getPathDefinition(name)', this.schema.getPathDefinition(name))
+            console.log('deepClone)', deepClone(this.schema.getPathDefinition(name)))
+            console.log('merge', merge(deepClone(this.schema.getPathDefinition(name)), overwrite))
+        }
+        if (!this.fields[name]) this.fields[name] = overwrite ? merge(deepClone(this.schema.getPathDefinition(name)), overwrite) : this.schema.getPathDefinition(name)
         if (!this.fields[name] || !this.fields[name].type) throw new Error(`No field named "${name}" in schema ${this.schema.name}`)
         return this.fields[name]
     }
@@ -99,7 +106,7 @@ export class Bridge {
         if (type === Array) {
             const validators: Validator[] = field.validators
             let minCount = 0
-            const initialCount = field.form.initialCount || 0
+            const initialCount = field.form && field.form.props && field.form.props.initialCount || 0
             validators.forEach((validator) => {
                 if (validator.validatorName === 'minCount') minCount = validator.param
             })
@@ -126,7 +133,7 @@ export class Bridge {
             return this.schema.keys
         }
         const field = this.getField(name)
-       // if (field.isTable && name.match(/\.\d+$/)) {
+        // if (field.isTable && name.match(/\.\d+$/)) {
         if (field.isTable) {
             const schema = Schema.getInstance(field.type)
             return schema.keys
@@ -153,7 +160,7 @@ export class Bridge {
 
         if (!this.fieldProps[name]) {
             const field = this.getField(name)
-            const transform = field.form.transform
+            const transform = field.form && field.form.props && field.form.props.transform
             const validatorIsAllowed = this.findValidator('isAllowed', field)
             let allowedValues: any[] | undefined = undefined
             if (validatorIsAllowed) allowedValues = validatorIsAllowed.param
@@ -161,11 +168,9 @@ export class Bridge {
 
             let uniforms = field.form, component = field.form.component
 
-            let placeholder = uniforms.placeholder
+            let placeholder = field.form && field.form.props && field.form.props.placeholder
 
-            if (props.placeholder === true && uniforms.placeholder) {
-                placeholder = uniforms.placeholder;
-            } else if (props.placeholder === false || props.placeholder === null) {
+            if (props.placeholder === false || props.placeholder === null) {
                 placeholder = '';
             }
             let minCount = 0
@@ -213,14 +218,14 @@ export class Bridge {
     getValidator({fields}: { fields?: string[] } = {}): (model: any) => void {
         return (model: any) => {
             let enter = false
-            console.log('fields',fields)
+            console.log('fields', fields)
             const errors = this.schema.validate(model, fields)
-            console.log('errors',errors)
+            console.log('errors', errors)
             if (errors.length) {
                 const error = {}
                 errors.forEach((e) => {
                     if (fields) {
-                        if (fields.includes(e.path.replace(/\.\d+/g , ''))) {
+                        if (fields.includes(e.path.replace(/\.\d+/g, ''))) {
                             enter = true
                             error[e.path] = e.message
                         }

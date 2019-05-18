@@ -210,7 +210,7 @@ export class Schema {
      * Mutate the model,with all keys  proper types and null for undefined
      * TODO: Refactor to prevent mutation, fix it creating a new cloned model and returning it
      * @param model
-     * @param transform
+     * @param fields
      * @param removeExtraKeys
      */
     protected _clean(model: Model | undefined | null, fields: string[], removeExtraKeys = true) {
@@ -223,6 +223,7 @@ export class Schema {
         }
 
         this.keys.forEach((key): any => {
+
             if (key !== '___typename' && fields.every((field) => field !== key && field.indexOf(key + '.') < 0)) {
                 return model && delete model[key]
             }
@@ -378,20 +379,20 @@ export class Schema {
 
 //TODO VER QUE CONO ES ESTO, por que ahora todas tienen id ***** **** TODO WARNING
     private _isConnectingValue = (value: any) => {
-        return (value && value.hasOwnProperty && value.hasOwnProperty('id') && typeof value.id === 'string' && Object.keys(value).length===1)
+        return (value && value.hasOwnProperty && value.hasOwnProperty('id') && typeof value.id === 'string' && Object.keys(value).length === 1)
     }
 
     private _validate(model: Model, parent: string = '', pathHistory: { schema: string, path: string }[] = [], originalModel: Model): ErrorValidator[] {
 
         let errors: ErrorValidator[] = [];
         const shape = {...model};
-        const recursive=this.options.recursive || []
+        const recursive = this.options.recursive || []
         this.keys.forEach((key): any => {
 
             delete shape[key];
             const dot = parent ? '.' : '';
             const path: string = `${parent}${dot}${key}`;
-            const cleanPath=path.replace(/\.d+/,'')
+            const cleanPath = path.replace(/\.d+/, '')
 
             const definition = this.getFieldDefinition(key);
             const value: any = model && model[key];
@@ -405,7 +406,7 @@ export class Schema {
                     const error = instance.validate(originalModel);
 
                     if (error) {
-                         errors.push(error);
+                        errors.push(error);
                     }
                 }
                 //Check no array validators
@@ -421,7 +422,7 @@ export class Schema {
                             pathHistory.push({path, schema: schemaName});
                             internalErrors = [...internalErrors, ...schema._validate(value, `${path}.${i}`, pathHistory, originalModel)];
 
-                        }else{
+                        } else {
                             pathHistory.push({path: path, schema: schemaName});
                         }
                     });
@@ -449,7 +450,7 @@ export class Schema {
                 if (!this._isConnectingValue(value) && (recursive.includes(cleanPath) || !pathHistory.some(({schema}) => schemaName === schema))) {
                     pathHistory.push({path: path, schema: schemaName});
                     internalErrors = schema._validate(value, path, pathHistory, originalModel);
-                }else{
+                } else {
                     pathHistory.push({path: path, schema: schemaName});
                 }
 
@@ -463,7 +464,7 @@ export class Schema {
 
                 const error = instance.validate(originalModel);
                 if (error) {
-                     errors.push(error);
+                    errors.push(error);
                 }
             }
 
@@ -493,14 +494,15 @@ export class Schema {
         return errors;
     }
 
-    private _getFields(parent: string = '', pathHistory: { schema: string, path: string }[] = []): string[] {
+    private _getFields(parent: string = '', pathHistory: { schema: string, path: string }[] = [], recursive: string[] = this.options.recursive || []): string[] {
         let fields: string[] = [];
         let thisSchema = this;
+
         thisSchema.keys.forEach(key => {
 
             const dot = parent ? '.' : '';
             const path = `${parent}${dot}${key}`;
-            const cleanPath=path.replace(/\.d+/,'')
+            const cleanPath = path.replace(/\.d+/, '')
             const def = thisSchema.getFieldDefinition(key);
             let schema: Schema | undefined;
 
@@ -513,10 +515,10 @@ export class Schema {
                 pathHistory.push({path: path, schema: this.name});
                 let fieldsInternal: string[] = [];
                 const schemaName = schema.name;
-                const recursive=this.options.recursive || []
+
                 // Check if we are entering in a recursive table, if actual table has been used before, reviewing the history
                 if (recursive.includes(cleanPath) || !pathHistory.some(({schema}) => schemaName === schema)) {
-                    fieldsInternal = schema._getFields(path, pathHistory);
+                    fieldsInternal = schema._getFields(path, pathHistory, recursive);
                 }
 
                 // To intro a path in table options to continue deep in get fields
@@ -660,13 +662,13 @@ export interface FieldDefinitionCommon extends UserFieldDefinitionCommon {
     isArray: boolean
 
     form: {
-        initialCount?: number
-        transform?: (allowedValues: string[]) => string[]
         component?: React.Component
-        placeholder?: string
-        col?: false | number | any
-        props?: any
-
+        props?: {
+            placeholder?: string
+            col?: false | number | any
+            initialCount?: number
+            transform?: (allowedValues: string[]) => string[]
+        }
     }
     list: {
         hidden?: true
@@ -692,6 +694,9 @@ export interface FieldDefinitionCommon extends UserFieldDefinitionCommon {
     permissions: Permissions
 }
 
+export interface Overwrite {
+    [fields: string]: OverwriteDefinition
+}
 
 export interface OverwriteDefinition {
     type?: Native | string | Array<string> | Array<Native>,

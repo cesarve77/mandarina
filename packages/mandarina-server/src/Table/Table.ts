@@ -167,8 +167,10 @@ export class Table {
      * @param info
      */
     private async callHook(name: HookName, _: any, args: any, context: any, info: any) {
+        console.log('hookHandler',name)
         const hookHandler = this.options.hooks && this.options.hooks[name];
         if (hookHandler) {
+            console.log('SIII')
             await hookHandler(_, args, context, info);
         }
     }
