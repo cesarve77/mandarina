@@ -598,12 +598,14 @@ export interface UserFieldDefinitionCommon {
     defaultValue?: any
     transformValue?: (value: any) => any
     form?: {
-        initialCount?: number
-        transform?: (allowedValues: string[]) => string[]
         component?: React.Component
-        placeholder?: string
-        col?: false | number | any
-        props?: any
+        props?: {
+            placeholder?: string
+            col?: false | number | any
+            initialCount?: number
+            transform?: (allowedValues: string[]) => string[]
+            [rest: string]: any
+        }
     }
     list?: {
         hidden?: true
@@ -668,6 +670,7 @@ export interface FieldDefinitionCommon extends UserFieldDefinitionCommon {
             col?: false | number | any
             initialCount?: number
             transform?: (allowedValues: string[]) => string[]
+            [rest: string]: any
         }
     }
     list: {

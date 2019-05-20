@@ -80,11 +80,11 @@ const Table = ({query, where, mode, labeler = defaultLabeler, ...props}) => {
     }
 }
 
-export default React.memo(connectField(Table, {
+export default connectField(Table, {
     ensureValue: false,
     includeInChain: false,
     initialValue: false
-}), () => true)
+})
 
 
 

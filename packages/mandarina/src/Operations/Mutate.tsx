@@ -232,7 +232,7 @@ export class Mutate extends PureComponent<WithApolloClient<MutateProps & { type:
         } else {
             queryString = `mutation mutationFn($data: ${names.input[type]} ) { ${names.mutation[type]}(data: $data) ${this.query} }`
         }
-
+        console.log('queryString,',queryString)
 
         const MUTATION = gql(queryString)
         return (
@@ -327,7 +327,6 @@ export const refetchQueries = (mutationResult: FetchResult, schema: Schema, clie
 }
 
 export const getSubSchemaMutations = (model: Model, schema: Schema, mutationType: MutationType) => {
-    console.log('model',model)
     const obj: any = {}
     if (typeof model !== "object" || model === undefined || model === null) return model
     Object.keys(model).forEach((key) => {
