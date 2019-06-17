@@ -67,14 +67,18 @@ export const getGraphQLType = (def: FieldDefinition, key: string, required: '' |
         case (!def.isArray && !def.isTable && def.type.name === 'Date'):
             return `DateTime${required}`;
         case (def.isArray && def.isTable):
-            const schemaName = def.type
-            return `[${schemaName}${input}!]${required}`
+            return `[${def.type}${input}!]${required}`
         case (def.isArray && !def.isTable):
             const scalarName = getGraphQLType({...def, isArray: false}, key)
             return `[${scalarName}!]${required}`
 
 
         default:
+            const schemaName = def.type
+            if (isInput && def.isTable && def.form && def.form.props && def.form.props.query) {
+                console.log('`${schemaName}WhereUnique${input}${required}`', `${schemaName}WhereUnique${input}${required}`)
+                return `${schemaName}WhereUnique${input}${required}`
+            }
             return def.type + input + required;
     }
 }
@@ -210,16 +214,17 @@ const saveYaml = (file: string, data: any) => {
     const str = yaml.stringify(newData).replace(/([\t ]*)PRISMA_CONFIG *: *\n/, '$1PRISMA_CONFIG: |\n')
     fs.writeFileSync(file, str);
 }
-
-export const getSubSchemas = (schema: Schema): string[] => {
+export const getSubSchemas = (schema: Schema, processedSchemas:string[]=[]): string[] => {
     const subSchemas: string[] = []
+    if (processedSchemas.includes(schema.name)) return subSchemas
+    processedSchemas.push(schema.name)
     const parents = getParents(schema.getFields())
     parents.forEach((field) => {
         const fieldDefinition = schema.getPathDefinition(field)
-        if (fieldDefinition.isTable) {
+        if (fieldDefinition.isTable && !(fieldDefinition.form && fieldDefinition.form.props && fieldDefinition.form.props.query)) {
             const schemaName = fieldDefinition.type
             subSchemas.push(schemaName)
-            subSchemas.push(...getSubSchemas(Schema.getInstance(schemaName)))
+            subSchemas.push(...getSubSchemas(Schema.getInstance(schemaName),processedSchemas))
         }
     })
     return subSchemas

@@ -131,8 +131,8 @@ export class Mutate extends PureComponent<WithApolloClient<MutateProps & { type:
             const res: { id?: string, __typename: string } = {
                 __typename: schema.name
             }
-            if (schema.keys.includes('id')) {
-                res.id = this.props.type === 'update' ? obj.id : ''
+            if (obj.id ){
+                res.id = obj.id
             }
             return res
         }
@@ -148,9 +148,7 @@ export class Mutate extends PureComponent<WithApolloClient<MutateProps & { type:
     mutate(model: Model, mutationFn: MutationFn): Promise<void | FetchResult<Model>> {
         const {schema, where, type, optimisticResponse} = this.props
         const cleaned = deepClone(model)
-        console.log('dirty model',model)
         schema.clean(cleaned, this.filteredFields)// fill null all missing keys
-        console.log('cleaned model',cleaned, this.filteredFields)
         const data = this.getSubSchemaMutations(cleaned, schema)
         console.log('data',data)
         const mutation: MutationBaseOptions = {variables: {data}}
@@ -232,7 +230,7 @@ export class Mutate extends PureComponent<WithApolloClient<MutateProps & { type:
         } else {
             queryString = `mutation mutationFn($data: ${names.input[type]} ) { ${names.mutation[type]}(data: $data) ${this.query} }`
         }
-        console.log('queryString,',queryString)
+        console.log('*************queryString,',queryString)
 
         const MUTATION = gql(queryString)
         return (
@@ -382,10 +380,11 @@ export const getSubSchemaMutations = (model: Model, schema: Schema, mutationType
                             update: getSubSchemaMutations(clone, schema, 'update')
                         }
                     } else {
+                        const {id, ...clone} = value
                         obj[key] = {
                             upsert: {
-                                create: getSubSchemaMutations(value, schema, 'create'),
-                                update: getSubSchemaMutations(value, schema, 'update')
+                                create: getSubSchemaMutations(clone, schema, 'create'),
+                                update: getSubSchemaMutations(clone , schema, 'update')
                             }
                         }
                     }

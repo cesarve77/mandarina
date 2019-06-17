@@ -62,7 +62,6 @@ export class Schema {
         this.permissions = permissions || {};
         this.shape = mapValues(shape, (field, key) => this.applyDefinitionsDefaults(field, key));
         this.keys = Object.keys(this.shape);
-        if (!this.keys.includes('id')) this.extend({id: {type: String}})
         this.filePath = this.getFilePath()
         const single = singularize(this.name);
         const singleUpper = capitalize(single);
@@ -679,7 +678,7 @@ export interface FieldDefinitionCommon extends UserFieldDefinitionCommon {
         filterComponent?: FilterComponent
         CellComponent?: CellComponent
         loadingElement?: JSX.Element
-        filter?: boolean
+        noFilter?: boolean
         width?: number
         props?: any
     }

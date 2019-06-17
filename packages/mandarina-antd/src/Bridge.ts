@@ -76,12 +76,6 @@ export class Bridge {
     // Field's definition (`field` prop).
     getField(name: string): FieldDefinition {
         const overwrite = this.overwrite && this.overwrite[name]
-        if (name === 'user.email') {
-            console.log('overwrite', overwrite)
-            console.log('this.schema.getPathDefinition(name)', this.schema.getPathDefinition(name))
-            console.log('deepClone)', deepClone(this.schema.getPathDefinition(name)))
-            console.log('merge', merge(deepClone(this.schema.getPathDefinition(name)), overwrite))
-        }
         if (!this.fields[name]) this.fields[name] = overwrite ? merge(deepClone(this.schema.getPathDefinition(name)), overwrite) : this.schema.getPathDefinition(name)
         if (!this.fields[name] || !this.fields[name].type) throw new Error(`No field named "${name}" in schema ${this.schema.name}`)
         return this.fields[name]
@@ -165,7 +159,6 @@ export class Bridge {
             let allowedValues: any[] | undefined = undefined
             if (validatorIsAllowed) allowedValues = validatorIsAllowed.param
             const required = !!this.findValidator('required', field)
-
             let uniforms = field.form, component = field.form.component
 
             let placeholder = field.form && field.form.props && field.form.props.placeholder
@@ -218,9 +211,7 @@ export class Bridge {
     getValidator({fields}: { fields?: string[] } = {}): (model: any) => void {
         return (model: any) => {
             let enter = false
-            console.log('fields', fields)
             const errors = this.schema.validate(model, fields)
-            console.log('errors', errors)
             if (errors.length) {
                 const error = {}
                 errors.forEach((e) => {

@@ -43,8 +43,9 @@ export const joinValues = (obj, defaultValue, divider = ' ') => {
 
 
 const Table = ({query, where, mode, labeler = defaultLabeler, ...props}) => {
+    const table = (props.field.form && props.field.form.props && props.field.form.props.type) || props.field.type
     if (typeof query === 'string') {
-        const schema = Schema.getInstance(props.field.type)
+        const schema = Schema.getInstance(table)
         const queryName = schema.names.query.plural
         const inputName = schema.names.input.where.plural
         const QUERY = gql(`query ${queryName}($where: ${inputName}) {${queryName} (where: $where) { id ${query} }}`)
@@ -55,12 +56,32 @@ const Table = ({query, where, mode, labeler = defaultLabeler, ...props}) => {
                     const docs = loading ? [] : data[queryName]
                     const allowedValues = docs.map(({id}) => id)
                     const transform = getTransform(docs, labeler)
-                    let mode = props.mode, value = props.value && props.value.id || ''
-                    let onChange = value => props.onChange({id: value})
+                    let mode = props.mode,
+                        value = props.field.type === String ?  props.value :props.value && props.value.id || ''
+                    let onChange = value => {
+
+                        if (props.field.type === String) {
+                            return props.onChange(value);
+
+                        } else {
+                            return props.onChange({id: value});
+
+                        }
+
+                    }
                     if (props.fieldType === Array) {
                         mode = mode || "multiple"
                         value = props.value || []
-                        onChange = (values) => props.onChange(values.map(id => ({id})))
+                        onChange = (values) => {
+                            if (props.field.type === String) {
+                                return props.onChange(values)
+
+                            } else {
+                                return props.onChange(values.map(id => ({id})))
+
+                            }
+
+                        }
                     }
                     return wrapField(props, <SelectField {...props}
                                                          transform={transform}
@@ -83,7 +104,7 @@ const Table = ({query, where, mode, labeler = defaultLabeler, ...props}) => {
 export default connectField(Table, {
     ensureValue: false,
     includeInChain: false,
-    initialValue: false
+    initialValue: true
 })
 
 

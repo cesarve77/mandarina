@@ -18,6 +18,7 @@ import {RefetchQueriesProviderFn} from "react-apollo";
 import {DocumentNode} from "graphql";
 import merge from 'lodash.merge'
 import {getDefaultFilterMethod} from "./ListFilters";
+import {ensureId} from "./Forms";
 
 
 export interface ListProps {
@@ -88,7 +89,7 @@ export interface ColumnProps {
 
 const estimatedColumnWidthDefault = 200
 const estimatedRowHeightDefault = 60
-type Filters = { [field: string]: Where }
+export type Filters = { [field: string]: Where }
 
 interface ListState {
     filters: any,
@@ -132,6 +133,7 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
             const column = this.getColumnDefinition(field)
             if (column) columns.push(column)
         })
+
         // const columns = this.fields.reduce((result, field) => {
         //
         // }, [] as ColumnProps[]);
@@ -292,7 +294,7 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
             whereAndFilter = {AND: allFilters}
         }
         return (
-            <Find schema={schema} where={whereAndFilter} skip={0} first={this.firstLoad + overLoad} fields={this.fields}
+            <Find schema={schema} where={whereAndFilter} skip={0} first={this.firstLoad + overLoad} fields={ensureId(this.fields)}
                   notifyOnNetworkStatusChange>
                 {({data = [], query, variables, refetch, loading, count}) => {
                     let dataCollection = data

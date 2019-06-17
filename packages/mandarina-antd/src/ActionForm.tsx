@@ -9,9 +9,10 @@ import {Bridge} from "./Bridge";
 import {capitalize} from "mandarina/build/Schema/utils";
 import {buildQueryFromFields} from "mandarina/build/Operations/utils";
 import SubmitField from "uniforms-antd/SubmitField";
-import {AutoFormProps} from "./Forms";
+import {AutoFormProps, ensureId, normalizeFields} from "./Forms";
 import {filterFields} from "mandarina/build/utils";
 import {refetchQueries} from "mandarina/build/Operations/Mutate";
+import {Overwrite} from "mandarina/build/Schema/Schema";
 
 
 export interface ActionFormProps extends AutoFormProps {
@@ -19,18 +20,20 @@ export interface ActionFormProps extends AutoFormProps {
     actionName: string,
     result: string,
     fields?: string[]
+    resultFields?: string[]
     omitFields?: string[]
     children?: React.ReactNode | ((props: any) => React.ReactNode | React.ReactNode[])
     omitFieldsRegEx?: RegExp
     refetchSchemas?: string[]
+    overwrite?: Overwrite
 
     [key: string]: any //replace for uniforms autoform props
 }
 
-class ActionForm extends PureComponent<WithApolloClient<ActionFormProps>>{
+class ActionForm extends PureComponent<WithApolloClient<ActionFormProps>> {
     state: { changed: boolean } = {changed: false}
     refetchQueries = (mutationResult: FetchResult) => {
-        return refetchQueries(mutationResult, this.props.schema,this.props.client, this.props.refetchSchemas)
+        return refetchQueries(mutationResult, this.props.schema, this.props.client, this.props.refetchSchemas)
     }
 
     render() {
@@ -54,26 +57,29 @@ class ActionForm extends PureComponent<WithApolloClient<ActionFormProps>>{
             onSubmitFailure,
             onError,
             context,
+            overwrite,
+            resultFields,
             innerRef,
             ...rest
         } = this.props
         const {changed} = this.state
-        const resultSchema = Schema.instances[result.replace(/[\[\]\!]/g, '')]
-        let fields: string[] | undefined, queryFromFields
-        if (resultSchema) fields = filterFields(resultSchema.getFields(), optionalFields, omitFields, omitFieldsRegEx)
-        if (fields) {
-            queryFromFields = buildQueryFromFields(fields)
-        } else {
-            queryFromFields = ''
+        const schemaName = result.replace(/[\[\]\!]/g, '')
+        const AllFields = ensureId(filterFields(schema.getFields(), optionalFields, omitFields, omitFieldsRegEx))
+        const fields = normalizeFields(AllFields, schema, overwrite)
+        let queryFromFields = ''
+        try {
+            let resultSchema = Schema.getInstance(schemaName)
+            queryFromFields = buildQueryFromFields(filterFields(resultSchema.getFields(), resultFields))
+        } catch (e) {
         }
+
         const gqlString = `
             mutation ${actionName}($data: ${capitalize(schema.name)}Input!) {
                 ${actionName}(data: $data)
                     ${queryFromFields}
             }
         `;
-
-        const bridge = new Bridge(schema)
+        const bridge = new Bridge(schema, overwrite)
         const MUTATION = gql(gqlString)
         return (
             <Mutation mutation={MUTATION}
@@ -94,12 +100,13 @@ class ActionForm extends PureComponent<WithApolloClient<ActionFormProps>>{
                                       this.setState({changed: false})
                                       return mutation({variables: {data}});
                                   }}
+                                  fields={fields}
                                   onSubmitSuccess={onSubmitSuccess}
                                   onSubmitFailure={onSubmitFailure}
                                   schema={bridge}
                                   onValidate={(model: Object, error: any, callback: any) => {
                                       try {
-                                          bridge.getValidator({})(model)
+                                          bridge.getValidator({fields})(model)
 
                                       } catch (e) {
                                           console.error(e)
@@ -121,7 +128,7 @@ class ActionForm extends PureComponent<WithApolloClient<ActionFormProps>>{
                             {children && !Array.isArray(children) && (typeof children === "function") && children({loading})}
                             {!children && (
                                 <>
-                                    <AutoFields autoField={AutoField} omitFields={omitFields}/>
+                                    <AutoFields autoField={AutoField} fields={fields} omitFields={omitFields}/>
                                     <ErrorsField style={{marginBottom: '15px'}}/>
                                     <SubmitField size='large' loading={loading}/>
                                 </>)
@@ -134,7 +141,7 @@ class ActionForm extends PureComponent<WithApolloClient<ActionFormProps>>{
     }
 }
 
-const ActionFormWithApollo=withApollo(ActionForm)
+const ActionFormWithApollo = withApollo(ActionForm)
 
 export default React.forwardRef<HTMLFormElement, ActionFormProps>((props, ref) =>
     <ActionFormWithApollo {...props} innerRef={ref}/>)

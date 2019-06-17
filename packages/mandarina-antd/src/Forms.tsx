@@ -51,7 +51,7 @@ interface FormProps<TData = any, TVariables = OperationVariables> extends Mutate
     schema: Schema
     id?: string | any
     fields?: string[]
-    overwrite?:  Overwrite
+    overwrite?: Overwrite
     omitFields?: string[]
     omitFieldsRegEx?: RegExp
     children?: ((props: any) => React.ReactNode | React.ReactNode[]) | React.ReactNode | React.ReactNode[]
@@ -60,6 +60,45 @@ interface FormProps<TData = any, TVariables = OperationVariables> extends Mutate
 
 export interface ChildFunc {
     (props: any): JSX.Element
+}
+
+export const ensureId = (fields: string[]) => {
+    const result: string[] = []
+    fields.forEach((field) => {
+        const dot = field.lastIndexOf('.')
+        if (dot > 0) {
+            const fieldId = field.substr(0, dot ) + '.id'
+            if (!fields.includes(fieldId) && !result.includes(fieldId)) {
+                result.push(fieldId)
+            }
+        }
+        result.push(field)
+    })
+    return result
+}
+
+/**
+ * If a fields is Table and the form is query, it'll remove all subfields diferents to id
+ * @param fields
+ * @param schema
+ * @param overwrite
+ */
+export const normalizeFields = (fields: string[], schema: Schema, overwrite?: Overwrite) => {
+    const tables: string[] = []
+    const result: string[] = []
+    fields.forEach((field) => {
+        if (field.match(/\.id$/)) {
+            const parent = field.substr(0, field.length - 3)
+            const def = schema.getPathDefinition(parent)
+            // @ts-ignore
+            const query = (overwrite && overwrite[field] && overwrite[field].form && overwrite[field].form.props && overwrite[field].form.props.query) || (def && def.form && def.form.props && def.form.props.query)
+            if (query) tables.push(parent.replace(/\./, '\\.'))
+        }
+        result.push(field)
+    })
+    if (tables.length===0) return result
+    const rg = new RegExp(`^(${tables.join('|')})\\.(?!id$).*`)
+    return result.filter((field) => !rg.test(field))
 }
 
 
@@ -88,10 +127,14 @@ const Form = ({
                   ...mutationProps
               }: FormProps) => {
     const bridge = new Bridge(schema, overwrite)
-    const fields = filterFields(schema.getFields(), optionalFields, omitFields, omitFieldsRegEx)
+    const AllFields = ensureId(filterFields(schema.getFields(), optionalFields, omitFields, omitFieldsRegEx))
+
+    const fields = normalizeFields(AllFields, schema, overwrite)
+    console.log('render1')
     return (
         <Component id={id} schema={schema} fields={fields} {...mutationProps}>
             {({mutate, doc = model, loading, ...rest}) => {
+                doc && schema.clean(doc,fields)
                 return (
                     <AutoForm
                         schema={bridge}
