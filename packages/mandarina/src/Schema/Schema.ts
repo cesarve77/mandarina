@@ -720,7 +720,7 @@ export interface OverwriteDefinition {
         filterComponent?: FilterComponent
         CellComponent?: CellComponent
         loadingElement?: JSX.Element
-        filter?: boolean
+        noFilter?: boolean
         width?: number
         props?: any
     }

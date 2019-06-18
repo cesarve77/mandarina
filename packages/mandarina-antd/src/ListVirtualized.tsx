@@ -1,7 +1,6 @@
 import {Find, Schema} from 'mandarina';
 import React from "react";
 import memoize from "memoize-one"
-import {get} from "mandarina/build/Schema/utils";
 import isEmpty from 'lodash.isempty'
 import {
     areEqual,
@@ -14,11 +13,29 @@ import ListFilter, {OnFilterChange, Where} from "./ListFilter";
 import {CellComponent, FieldDefinition, FilterMethod, Overwrite} from "mandarina/build/Schema/Schema";
 import {filterFields} from "mandarina/build/utils";
 import {Empty} from "antd";
-import {RefetchQueriesProviderFn} from "react-apollo";
-import {DocumentNode} from "graphql";
 import merge from 'lodash.merge'
 import {getDefaultFilterMethod} from "./ListFilters";
 import {ensureId} from "./Forms";
+import {ReactComponentLike} from "prop-types";
+import Query from "react-apollo/Query";
+import {ApolloClient} from "apollo-client";
+import {get} from "mandarina/build/Schema/utils";
+import {DocumentNode} from "graphql";
+import {RefetchQueriesProviderFn} from "react-apollo";
+
+export interface TopBottomProps {
+    count?: number
+    data?: any
+    columns?: ColumnProps[]
+    refetch?: Refetch
+    query?: Query
+    variables?: any
+    fields?: string[]
+    loading?: boolean
+    schema?: Schema
+    where?: any
+    client?: ApolloClient<any>
+}
 
 
 export interface ListProps {
@@ -37,6 +54,9 @@ export interface ListProps {
     overwrite?: Overwrite
     filters?: Filters
     onFilterChange?: (filters: Filters) => void
+    BottomList?: ReactComponentLike
+    TopList?: ReactComponentLike
+    onState?: (props: TopBottomProps) => void
 
 }
 
@@ -98,6 +118,8 @@ interface ListState {
     width: number
 }
 
+export type Refetch = (refetchOptions: any) => Promise<any>
+
 export class ListVirtualized extends React.Component<ListProps, ListState> {
 
     data: any[] = []
@@ -106,7 +128,7 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
     container: React.RefObject<HTMLDivElement>
     hasNextPage: boolean = false
     variables: { where?: any, first?: number, after?: string }
-    refetch: (refetchOptions: any) => Promise<any>
+    refetch: Refetch
     estimatedColumnWidth: number
     firstLoad: number
     overscanRowStartIndex: number = 0
@@ -157,6 +179,7 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
     // }
 
     static defaultProps = {
+        TopList: ({count = 0, loading}: TopBottomProps) => `Total: ${loading ? '...' : count}`,
         estimatedRowHeight: estimatedRowHeightDefault
 
     }
@@ -219,7 +242,7 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
             CellComponent: definition.list.CellComponent,
             title: definition.label ? definition.label : "",
             width: definition.list.width || estimatedColumnWidthDefault,
-            filter: !!definition.list.filter
+            filter: !definition.list.noFilter
         }
     }
 
@@ -253,6 +276,7 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
 
 
     onFilterChange: OnFilterChange = (field, filter) => {
+        console.log('onFilterChange')
         let filters = this.state.filters
         if (filter && !isEmpty(filter)) {
             filters[field] = filter
@@ -282,7 +306,8 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
     );
 
     render() {
-        const {schema, where, estimatedRowHeight, overscanRowsCount = 2, overLoad = 0} = this.props //todo rest props
+        console.log('render')
+        const {schema, where, estimatedRowHeight, overscanRowsCount = 2, overLoad = 0, BottomList, TopList} = this.props //todo rest props
         const {columns, width, height, filters} = this.state
         const allFilters = this.getAllFilters(filters)
         let whereAndFilter: { AND?: Where[] } | undefined
@@ -293,10 +318,12 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
         } else if (allFilters.length > 0) {
             whereAndFilter = {AND: allFilters}
         }
+        const fields = ensureId(this.fields)
         return (
-            <Find schema={schema} where={whereAndFilter} skip={0} first={this.firstLoad + overLoad} fields={ensureId(this.fields)}
+            <Find schema={schema} where={whereAndFilter} skip={0} first={this.firstLoad + overLoad}
+                  fields={fields}
                   notifyOnNetworkStatusChange>
-                {({data = [], query, variables, refetch, loading, count}) => {
+                {({data = [], query, variables, refetch, loading, count, client}) => {
                     let dataCollection = data
                     if (this.data.length === 0 && data && !loading) {
                         this.data = Array(count).fill(undefined)
@@ -312,62 +339,71 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
 
                     const tHeadHeight = this.tHead.current && this.tHead.current.offsetHeight || 0
                     const itemData = {data: this.data, columns, refetch, query, variables,}
+
                     return (
-                        <div className={'mandarina-list'} ref={this.container}
-                             style={{
-                                 width,
-                                 height: height + tHeadHeight
-                             }}>
+                        <>
+                            {TopList &&
+                            <TopList count={count} client={client} {...itemData} fields={fields} loading={loading}
+                                     schema={schema}
+                                     where={whereAndFilter}/>}
+                            <div className={'mandarina-list'} ref={this.container}
+                                 style={{
+                                     width,
+                                     height: height + tHeadHeight
+                                 }}>
 
-                            <div ref={this.tHead} className='mandarina-list-thead' style={{width}}>
-                                Total:{count}
-                                <div className={'mandarina-list-thead-row'}
-                                     style={{width: this.estimatedColumnWidth * columns.length}}>
-                                    {columns.map(({title, field, filter}, columnIndex) => <div key={field}
-                                                                                               className={'mandarina-list-thead-col ' + field.replace(/\./g, '-')}
-                                                                                               style={{width: this.getColumnWidth(columnIndex)}}>
-                                        {title}
-                                        {filter && <ListFilter onFilterChange={this.onFilterChange}
-                                                               field={field}
-                                                               filter={filters && filters[field]}
-                                                               schema={schema}/>}
-                                    </div>)}
+                                <div ref={this.tHead} className='mandarina-list-thead' style={{width}}>
+                                    <div className={'mandarina-list-thead-row'}
+                                         style={{width: this.estimatedColumnWidth * columns.length}}>
+                                        {columns.map(({title, field, filter}, columnIndex) => <div key={field}
+                                                                                                   className={'mandarina-list-thead-col ' + field.replace(/\./g, '-')}
+                                                                                                   style={{width: this.getColumnWidth(columnIndex)}}>
+                                            {title}
+                                            {filter && <ListFilter onFilterChange={this.onFilterChange}
+                                                                   field={field}
+                                                                   filter={filters && filters[field]}
+                                                                   schema={schema}/>}
+                                        </div>)}
+                                    </div>
                                 </div>
+                                {!loading && !count && <Empty style={{margin: '40px'}}/>}
+                                {height !== 0 && <Grid
+                                    onScroll={this.onScroll}
+                                    height={height}
+                                    rowCount={count}
+                                    estimatedColumnWidth={this.estimatedColumnWidth}
+                                    estimatedRowHeight={estimatedRowHeight}
+                                    columnCount={columns.length}
+                                    columnWidth={this.getColumnWidth}
+                                    rowHeight={(index: number) => estimatedRowHeight || estimatedRowHeightDefault}
+                                    width={width}
+                                    itemData={itemData}
+                                    overscanColumnsCount={0}
+                                    overscanRowsCount={overscanRowsCount}
+                                    onItemsRendered={({
+                                                          overscanRowStartIndex,
+                                                          overscanRowStopIndex,
+                                                          visibleRowStartIndex,
+                                                          visibleRowStopIndex,
+
+                                                      }: any) => {
+
+
+                                        this.overscanRowStartIndex = overscanRowStartIndex
+                                        this.overscanRowStopIndex = overscanRowStopIndex
+                                        this.visibleRowStartIndex = visibleRowStartIndex
+                                        this.visibleRowStopIndex = visibleRowStopIndex
+
+                                    }}
+                                >
+                                    {Cell}
+
+                                </Grid>}
                             </div>
-                            {!loading && !count && <Empty style={{margin: '40px'}}/>}
-                            {height !== 0 && <Grid
-                                onScroll={this.onScroll}
-                                height={height}
-                                rowCount={count}
-                                estimatedColumnWidth={this.estimatedColumnWidth}
-                                estimatedRowHeight={estimatedRowHeight}
-                                columnCount={columns.length}
-                                columnWidth={this.getColumnWidth}
-                                rowHeight={(index: number) => estimatedRowHeight || estimatedRowHeightDefault}
-                                width={width}
-                                itemData={itemData}
-                                overscanColumnsCount={0}
-                                overscanRowsCount={overscanRowsCount}
-                                onItemsRendered={({
-                                                      overscanRowStartIndex,
-                                                      overscanRowStopIndex,
-                                                      visibleRowStartIndex,
-                                                      visibleRowStopIndex,
-
-                                                  }: any) => {
-
-
-                                    this.overscanRowStartIndex = overscanRowStartIndex
-                                    this.overscanRowStopIndex = overscanRowStopIndex
-                                    this.visibleRowStartIndex = visibleRowStartIndex
-                                    this.visibleRowStopIndex = visibleRowStopIndex
-
-                                }}
-                            >
-                                {Cell}
-
-                            </Grid>}
-                        </div>
+                            {BottomList &&
+                            <BottomList count={count} itemData={itemData} fields={fields} loading={loading}
+                                        schema={schema} where={whereAndFilter}/>}
+                        </>
                     )
                 }}
 
