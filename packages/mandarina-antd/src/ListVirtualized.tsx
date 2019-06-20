@@ -56,7 +56,6 @@ export interface ListProps {
     onFilterChange?: (filters: Filters) => void
     BottomList?: ReactComponentLike
     TopList?: ReactComponentLike
-    onState?: (props: TopBottomProps) => void
 
 }
 
@@ -276,7 +275,6 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
 
 
     onFilterChange: OnFilterChange = (field, filter) => {
-        console.log('onFilterChange')
         let filters = this.state.filters
         if (filter && !isEmpty(filter)) {
             filters[field] = filter
@@ -306,7 +304,6 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
     );
 
     render() {
-        console.log('render')
         const {schema, where, estimatedRowHeight, overscanRowsCount = 2, overLoad = 0, BottomList, TopList} = this.props //todo rest props
         const {columns, width, height, filters} = this.state
         const allFilters = this.getAllFilters(filters)
@@ -335,11 +332,8 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
 
                     this.refetch = refetch
                     this.variables = variables
-
-
                     const tHeadHeight = this.tHead.current && this.tHead.current.offsetHeight || 0
                     const itemData = {data: this.data, columns, refetch, query, variables,}
-
                     return (
                         <>
                             {TopList &&

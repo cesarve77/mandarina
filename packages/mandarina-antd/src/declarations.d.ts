@@ -26,6 +26,10 @@ declare module "uniforms-antd/TextField" {
     const TextField: any
     export default TextField
 }
+declare module "uniforms-antd/LongTextField" {
+    const LongTextField: any
+    export default LongTextField
+}
 declare module "uniforms-antd/RadioField" {
     const RadioField: any
     export default RadioField

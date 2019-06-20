@@ -6,7 +6,7 @@ import {CreateProps, MutateResultProps, UpdateProps} from "mandarina/build/Opera
 import {OperationVariables} from "react-apollo";
 import {Bridge} from "./Bridge";
 import {filterFields} from "mandarina/build/utils";
-import {Overwrite} from "mandarina/build/Schema/Schema";
+import {Model, Overwrite} from "mandarina/build/Schema/Schema";
 //
 const ErrorsField: any = require("./uniforms/ErrorsField").default
 const AutoFields: any = require("./uniforms/AutoFields").default
@@ -41,10 +41,12 @@ export interface AutoFormProps {
     onChange?: (key: string, value: any) => void
     onSubmitFailure?: (e?: any) => void
     onSubmitSuccess?: (res?: any) => void
+    onChangeModel?: (model: Model) => void
     onSubmit?: (model: object) => Promise<void> | void
     placeholder?: boolean
     innerRef?: React.Ref<HTMLFormElement>
 }
+
 
 interface FormProps<TData = any, TVariables = OperationVariables> extends MutateResultProps, AutoFormProps {
     Component: Component
@@ -123,6 +125,7 @@ const Form = ({
                   onSubmitSuccess,
                   onSubmitFailure,
                   omitFieldsRegEx,
+                  onChangeModel,
                   overwrite,
                   ...mutationProps
               }: FormProps) => {
@@ -143,6 +146,7 @@ const Form = ({
                             onSubmit && onSubmit(model)
                             return mutate(model)
                         }}
+                        onChangeModel={onChangeModel}
                         ref={innerRef}
                         onChange={onChange}
                         modelTransform={modelTransform}
