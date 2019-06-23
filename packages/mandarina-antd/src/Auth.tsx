@@ -3,8 +3,8 @@ import {Auth} from 'mandarina'
 import {CreateForm, CreateFormProps, UpdateForm, UpdateFormProps} from "./Forms";
 import {Spin} from "antd";
 import {ActionType, AuthChildrenProps} from "mandarina/build/Auth/Auth";
-import {ListProps, ListVirtualized} from "./ListVirtualized";
-import {List} from "./List";
+import {ListProps, ListVirtualized} from "./List/ListVirtualized";
+import {List} from "./List/List";
 import {FindProps} from "mandarina/build/Operations/Find";
 
 type ElemProps = CreateFormProps | UpdateFormProps | ListProps

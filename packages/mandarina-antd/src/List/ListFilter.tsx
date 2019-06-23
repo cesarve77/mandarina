@@ -1,7 +1,7 @@
 import * as React from "react";
 import AutoForm from "uniforms-antd/AutoForm";
 import {Schema} from "mandarina";
-import {Bridge} from "./Bridge";
+import {Bridge} from "../Bridge";
 import {getDefaultComponent} from "./ListFilters";
 import {FilterComponent} from "mandarina/build/Schema/Schema";
 

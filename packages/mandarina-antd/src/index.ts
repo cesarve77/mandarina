@@ -10,8 +10,8 @@ import ActionForm from './ActionForm'
 import {AuthCreateForm, AuthUpdateForm, AuthList, AuthListVirtualized} from './Auth'
 import {CreateForm} from './Forms'
 import {UpdateForm} from './Forms'
-import {List} from './List'
-import {ListVirtualized} from './ListVirtualized'
+import {List} from './List/List'
+import {ListVirtualized} from './List/ListVirtualized'
 
 
 export {

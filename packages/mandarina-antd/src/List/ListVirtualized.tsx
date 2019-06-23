@@ -1,5 +1,5 @@
 import {Find, Schema} from 'mandarina';
-import React from "react";
+import React, {ReactNode} from "react";
 import memoize from "memoize-one"
 import isEmpty from 'lodash.isempty'
 import {
@@ -15,27 +15,14 @@ import {filterFields} from "mandarina/build/utils";
 import {Empty} from "antd";
 import merge from 'lodash.merge'
 import {getDefaultFilterMethod} from "./ListFilters";
-import {ensureId} from "./Forms";
+import {ensureId} from "../Forms";
 import {ReactComponentLike} from "prop-types";
-import Query from "react-apollo/Query";
-import {ApolloClient} from "apollo-client";
 import {get} from "mandarina/build/Schema/utils";
 import {DocumentNode} from "graphql";
 import {RefetchQueriesProviderFn} from "react-apollo";
+import HeaderDefault, {HeaderDefaultProps} from "./HeaderDefault";
 
-export interface TopBottomProps {
-    count?: number
-    data?: any
-    columns?: ColumnProps[]
-    refetch?: Refetch
-    query?: Query
-    variables?: any
-    fields?: string[]
-    loading?: boolean
-    schema?: Schema
-    where?: any
-    client?: ApolloClient<any>
-}
+
 
 
 export interface ListProps {
@@ -55,7 +42,7 @@ export interface ListProps {
     filters?: Filters
     onFilterChange?: (filters: Filters) => void
     BottomList?: ReactComponentLike
-    TopList?: ReactComponentLike
+    header?: ReactComponentLike | HeaderDefaultProps
 
 }
 
@@ -178,7 +165,7 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
     // }
 
     static defaultProps = {
-        TopList: ({count = 0, loading}: TopBottomProps) => `Total: ${loading ? '...' : count}`,
+        Header: HeaderDefault,
         estimatedRowHeight: estimatedRowHeightDefault
 
     }
@@ -304,7 +291,7 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
     );
 
     render() {
-        const {schema, where, estimatedRowHeight, overscanRowsCount = 2, overLoad = 0, BottomList, TopList} = this.props //todo rest props
+        const {schema, where, estimatedRowHeight, overscanRowsCount = 2, overLoad = 0, header} = this.props //todo rest props
         const {columns, width, height, filters} = this.state
         const allFilters = this.getAllFilters(filters)
         let whereAndFilter: { AND?: Where[] } | undefined
@@ -334,12 +321,23 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
                     this.variables = variables
                     const tHeadHeight = this.tHead.current && this.tHead.current.offsetHeight || 0
                     const itemData = {data: this.data, columns, refetch, query, variables,}
+                    let headerNode: ReactNode = null
+                    if (typeof header === 'function') {
+                        const Header=header
+                        headerNode = <Header count={count} client={client} {...itemData} fields={fields} loading={loading}
+                                         schema={schema}
+                                         where={whereAndFilter}/>
+                    }
+                    if (typeof header === 'object') {
+                        headerNode =
+                            <HeaderDefault count={count} client={client} {...itemData} fields={fields} loading={loading}
+                                           schema={schema}
+                                           where={whereAndFilter}
+                                           {...header}/>
+                    }
                     return (
                         <>
-                            {TopList &&
-                            <TopList count={count} client={client} {...itemData} fields={fields} loading={loading}
-                                     schema={schema}
-                                     where={whereAndFilter}/>}
+                            {headerNode}
                             <div className={'mandarina-list'} ref={this.container}
                                  style={{
                                      width,
@@ -394,9 +392,6 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
 
                                 </Grid>}
                             </div>
-                            {BottomList &&
-                            <BottomList count={count} itemData={itemData} fields={fields} loading={loading}
-                                        schema={schema} where={whereAndFilter}/>}
                         </>
                     )
                 }}
