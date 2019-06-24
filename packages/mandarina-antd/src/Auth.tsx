@@ -17,6 +17,7 @@ export interface AuthElementsProps {
 }
 
 
+
 const AuthAntD = ({Component, schema, denied = null, userRoles = [], action, fields: optionalFields, omitFields, omitFieldsRegEx, Error, ...props}:
                       { Component: ComponentType<ElemProps>, action: ActionType } & ElemProps & AuthElementsProps) => {
     return (
@@ -44,7 +45,9 @@ export const AuthCreateForm = (props: CreateFormProps & AuthElementsProps) =>
 
 
 export const AuthList = (props: FindProps & AuthElementsProps) =>
+    // @ts-ignore
     <AuthAntD action={'read'} Component={List} {...props}/>
 
 export const AuthListVirtualized = (props: FindProps & AuthElementsProps) =>
+    // @ts-ignore
     <AuthAntD action={'read'} Component={ListVirtualized} {...props}/>
