@@ -79,7 +79,7 @@ export class FindBase extends PureComponent<FindProps & FindBaseProps, FindBaseS
             children,
             pollInterval,
             notifyOnNetworkStatusChange,
-            fetchPolicy = 'cache-and-network',
+            fetchPolicy = "cache-first" ,
             errorPolicy,
             ssr,
             displayName,
