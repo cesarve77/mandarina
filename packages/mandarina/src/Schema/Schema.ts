@@ -568,7 +568,7 @@ export interface UserSchemaShape {
     [fieldName: string]: UserFieldDefinition
 }
 
-export type Native = (props: any) => any
+export type Native = (props: any) => any // String | Number | Date
 
 export type Types = Native | string | Array<string> | Array<Native>
 
@@ -612,7 +612,7 @@ export interface UserFieldDefinitionCommon {
         filterComponent?: FilterComponent
         CellComponent?: CellComponent
         loadingElement?: JSX.Element
-        filter?: boolean
+        noFilter?: boolean
         width?: number
         props?: any
 

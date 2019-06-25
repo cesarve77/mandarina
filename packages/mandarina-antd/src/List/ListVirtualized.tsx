@@ -228,7 +228,7 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
             CellComponent: definition.list.CellComponent,
             title: definition.label ? definition.label : "",
             width: definition.list.width || estimatedColumnWidthDefault,
-            filter: !definition.list.noFilter
+            filter: !definition.list.noFilter,
         }
     }
 
@@ -424,4 +424,38 @@ const Cell = React.memo(
         )
     }
     , areEqual);
-
+{/*<span className={`${prefixCls}-column-sorter`}>{sortButton}</span>*/}
+// if (column.sorter) {
+//     const sortDirections = column.sortDirections || (this.props.sortDirections as SortOrder[]);
+//     const isAscend = isSortColumn && sortOrder === 'ascend';
+//     const isDescend = isSortColumn && sortOrder === 'descend';
+//
+//     const ascend = sortDirections.indexOf('ascend') !== -1 && (
+//         <Icon
+//             className={`${prefixCls}-column-sorter-up ${isAscend ? 'on' : 'off'}`}
+//             type="caret-up"
+//             theme="filled"
+//         />
+//     );
+//
+//     const descend = sortDirections.indexOf('descend') !== -1 && (
+//         <Icon
+//             className={`${prefixCls}-column-sorter-down ${isDescend ? 'on' : 'off'}`}
+//             type="caret-down"
+//             theme="filled"
+//         />
+//     );
+//
+//     sortButton = (
+//         <div
+//             title={locale.sortTitle}
+//             className={classNames(
+//                 `${prefixCls}-column-sorter-inner`,
+//                 ascend && descend && `${prefixCls}-column-sorter-inner-full`,
+//             )}
+//             key="sorter"
+//         >
+//             {ascend}
+//             {descend}
+//         </div>
+//     );
