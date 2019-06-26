@@ -6,9 +6,9 @@ import {buildQueryFromFields} from "./utils";
 import pull from 'lodash.pull'
 import {filterFields} from "../utils";
 
-export type FindQueryResult = Pick<QueryResult ,'data' | 'loading' | 'error' | 'variables' | 'networkStatus' | 'refetch' | 'fetchMore' | 'startPolling' | 'stopPolling' | 'subscribeToMore' | 'updateQuery' | 'client' >
+export type FindQueryResult = Pick<QueryResult, 'data' | 'loading' | 'error' | 'variables' | 'networkStatus' | 'refetch' | 'fetchMore' | 'startPolling' | 'stopPolling' | 'subscribeToMore' | 'updateQuery' | 'client'>
 
-export interface FindChildrenParams extends FindQueryResult{
+export interface FindChildrenParams extends FindQueryResult {
     schema: Schema
     fields: string[]
     query: Query
@@ -26,17 +26,17 @@ export interface FindChildren {
     (findChildrenParams: FindChildrenParams): React.ReactNode
 }
 
-export type FindQueryProps = Pick<QueryProps ,'pollInterval' | 'notifyOnNetworkStatusChange' | 'fetchPolicy' | 'errorPolicy' | 'ssr' | 'displayName' | 'onCompleted' | 'onError'|'context'|'partialRefetch'>
+export type FindQueryProps = Pick<QueryProps, 'pollInterval' | 'notifyOnNetworkStatusChange' | 'fetchPolicy' | 'errorPolicy' | 'ssr' | 'displayName' | 'onCompleted' | 'onError' | 'context' | 'partialRefetch'>
 
 
-export interface FindProps extends FindQueryProps{
+export interface FindProps extends FindQueryProps {
     children?: FindChildren
     schema: Schema
     fields?: string[]
     omitFields?: string[]
     omitFieldsRegEx?: RegExp
     skip?: number
-
+    sort?: { [field: string]: -1 | 1 }
     where?: object
     after?: string
     first?: number
@@ -73,13 +73,13 @@ export class FindBase extends PureComponent<FindProps & FindBaseProps, FindBaseS
     render() {
 
         const {
-            fields: optionalFields, schema, after, first, type, where, skip,
+            fields: optionalFields, schema, after, first, type, where, skip, sort,
             omitFields,
             omitFieldsRegEx,
             children,
             pollInterval,
             notifyOnNetworkStatusChange,
-            fetchPolicy ,
+            fetchPolicy,
             errorPolicy,
             ssr,
             displayName,
@@ -90,13 +90,17 @@ export class FindBase extends PureComponent<FindProps & FindBaseProps, FindBaseS
             ...props
         } = this.props;
         let fields = filterFields(schema.getFields(), optionalFields, omitFields, omitFieldsRegEx)
-
+        let orderBy: undefined | string
+        if (sort) {
+            const field = Object.keys(sort)[0]
+            orderBy = field + (sort[field] > 0 ? '_ASC' : '_DESC')
+        }
         const {names} = schema
         const defaultQuery = this.buildQueryFromFields(fields)
         let queryString: string
         if (type === 'connection') {
-            queryString = `query ($where: ${names.input.where[type]}, $after: String, $first: Int, $skip: Int) 
-            { ${names.query[type]} (where: $where, after: $after, first: $first, skip: $skip) {
+            queryString = `query ($where: ${names.input.where[type]}, $after: String, $first: Int, $skip: Int, $orderBy: ${names.orderBy}) 
+            { ${names.query[type]} (where: $where, after: $after, first: $first, skip: $skip, orderBy: $orderBy) {
                 pageInfo {
                   hasNextPage
                   hasPreviousPage
@@ -123,7 +127,7 @@ export class FindBase extends PureComponent<FindProps & FindBaseProps, FindBaseS
         const query = {[names.input[type]]: where}
         this.queryHistory.push(query)
         FindBase.queries.push(query) //save queries to update cache purposes
-        const variables = {where, first, after, skip}
+        const variables = {where, first, after, skip, orderBy}
         return (
             <Query
                 query={QUERY}

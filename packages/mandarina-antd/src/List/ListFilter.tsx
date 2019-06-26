@@ -12,6 +12,7 @@ export interface OnFilterChange {
     (field: string, filter: any): void//todo variables format
 }
 
+
 export type Where = any
 
 interface ListFilterProps {

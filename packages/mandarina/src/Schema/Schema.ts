@@ -79,6 +79,7 @@ export class Schema {
                 updateMany: `updateMany${pluralUpper}`,
                 deleteMany: `deleteMany${pluralUpper}`
             },
+            orderBy: `${singleUpper}OrderByInput`,
             input: {
                 where: {
                     single: `${singleUpper}WhereUniqueInput!`,
@@ -612,9 +613,10 @@ export interface UserFieldDefinitionCommon {
         filterComponent?: FilterComponent
         CellComponent?: CellComponent
         loadingElement?: JSX.Element
-        noFilter?: boolean
+        noFilter?: true
         width?: number
         props?: any
+        noSort?: true
 
     }
     table?: {
@@ -678,9 +680,10 @@ export interface FieldDefinitionCommon extends UserFieldDefinitionCommon {
         filterComponent?: FilterComponent
         CellComponent?: CellComponent
         loadingElement?: JSX.Element
-        noFilter?: boolean
+        noFilter?: true
         width?: number
         props?: any
+        noSort?: true
     }
     table: {
         default?: any
@@ -723,6 +726,7 @@ export interface OverwriteDefinition {
         noFilter?: boolean
         width?: number
         props?: any
+        noSort: true
     }
 }
 
@@ -740,6 +744,7 @@ export interface Names {
         updateMany: string,
         deleteMany: string
     },
+    orderBy: string,
     input: {
         where: {
             single: string,
