@@ -1,6 +1,6 @@
 import {Find, Schema} from 'mandarina';
 import React, {ReactNode} from "react";
-import memoize from "memoize-one"
+import memoizeOne, {EqualityFn} from "memoize-one"
 import isEmpty from 'lodash.isempty'
 import {
     areEqual,
@@ -10,7 +10,7 @@ import {
     VariableSizeGrid as Grid
 } from 'react-window';
 import ListFilter, {OnFilterChange, Where} from "./ListFilter";
-import {CellComponent, FieldDefinition, FilterMethod, Overwrite} from "mandarina/build/Schema/Schema";
+import {CellComponent, FilterMethod, Overwrite} from "mandarina/build/Schema/Schema";
 import {filterFields} from "mandarina/build/utils";
 import {Empty} from "antd";
 import merge from 'lodash.merge'
@@ -23,8 +23,8 @@ import {RefetchQueriesProviderFn} from "react-apollo";
 import HeaderDefault, {HeaderDefaultProps} from "./HeaderDefault";
 import SortButton, {OnSortChange} from "./SortButton";
 import HideColumn from "./HideColumn";
-import _ from 'lodash';
-
+import {isEqual} from 'lodash';
+import set from 'lodash.set';
 
 export interface ListProps {
     schema: Schema
@@ -41,18 +41,25 @@ export interface ListProps {
     overLoad?: number
     overwrite?: Overwrite
     filters?: Filters
-    sort?: {[field: string]: 1|-1}
+    sort?: { [field: string]: 1 | -1 }
     onFilterChange?: (filters: Filters) => void
     onHideColumn?: (field: string) => void
     onSortChange?: (sort: { [field: string]: 1 | -1 }) => void
     BottomList?: ReactComponentLike
     header?: ReactComponentLike | HeaderDefaultProps
-    columns: Columns,
 
 }
 
-export type Column={[field:string]: number}
-export type Columns=Column[]
+
+export const equalityFn: EqualityFn = (
+    newArgs: any[],
+    lastArgs: any[],
+): boolean =>
+    newArgs.length === lastArgs.length &&
+    newArgs.every(
+        (newArg: any, index: number): boolean =>
+            isEqual(newArg, lastArgs[index]),
+    );
 
 export interface ConnectionResult {
     totalCount: {
@@ -98,7 +105,7 @@ export interface ColumnProps {
     CellComponent?: CellComponent
     loadingElement?: JSX.Element
     filter: boolean
-    noSort: true
+    noSort: boolean
 }
 
 const estimatedColumnWidthDefault = 200
@@ -107,10 +114,11 @@ export type Filters = { [field: string]: Where }
 
 interface ListState {
     filters: any,
-    sort?: {[field: string]: 1 |-1},
-    columns: ColumnProps[],
+    sort?: { [field: string]: 1 | -1 },
     height: number,
     width: number
+    fields?: string[]
+    overwrite?: Overwrite
 }
 
 export type Refetch = (refetchOptions: any) => Promise<any>
@@ -135,34 +143,22 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
         super(props);
         const {
             estimatedRowHeight = estimatedRowHeightDefault,
-            schema,
             fields,
-            omitFields,
-            omitFieldsRegEx,
             filters = {},
+            overwrite,
             sort,
         } = props
         //const definitions: Partial<FieldDefinitions> = {}
-        this.fields = filterFields(schema.getFields(), fields, omitFields, omitFieldsRegEx)
-        const columns: ColumnProps[] = []
-        this.state = {columns, height: this.props.height || 0, width: this.props.width || 0, filters,sort}
+        this.state = {fields, overwrite, height: this.props.height || 0, width: this.props.width || 0, filters, sort}
 
-        this.fields.forEach((field) => {
-            const column = this.getColumnDefinition(field)
-            if (column) columns.push(column)
-        })
 
-        // const columns = this.fields.reduce((result, field) => {
-        //
-        // }, [] as ColumnProps[]);
-
-        this.estimatedColumnWidth = columns.reduce((mem, {width}) => width + mem, 0) / columns.length
         this.tHead = React.createRef()
         this.container = React.createRef()
         this.firstLoad = Math.ceil((this.props.height || window.innerHeight) / estimatedRowHeight)
         this.overscanRowStopIndex = this.firstLoad
 
     }
+
     // static getDerivedStateFromProps(props, state) {
     //     // Any time the current user changes,
     //     // Reset any parts of state that are tied to that user.
@@ -222,17 +218,15 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
         const parentPath = path.join('.')
         const parentDef = this.props.schema.getPathDefinition(parentPath)
         const hasParentCellComponent = parentDef && parentDef.list && parentDef.list.CellComponent
-        let definition: FieldDefinition
-        const overwrite = this.props.overwrite && this.props.overwrite[field]
         if (hasParentCellComponent) {
-            definition = overwrite ? merge(parentDef, overwrite) : parentDef
             field = parentPath
-        } else {
-            const fieldDefinition = this.props.schema.getPathDefinition(field)
-            definition = overwrite ? merge(fieldDefinition, overwrite) : fieldDefinition
+        }
+        let definition = this.props.schema.getPathDefinition(field)
+        const overwriteDef = this.state.overwrite && this.state.overwrite[field]
+        if (overwriteDef) {
+            definition = merge(definition, overwriteDef)
         }
         if (definition.list.hidden) return
-        if (this.state.columns.some((column: ColumnProps) => column.field === field)) return
         return {
             field,
             loadingElement: definition.list.loadingElement,
@@ -245,9 +239,6 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
     }
 
 
-    getColumnWidth = (index: number) => {
-        return this.state.columns[index].width
-    }
     onScrollTimeoutId: number
     onScroll = ({scrollLeft, ...rest}: GridOnScrollProps) => {
         if (this.tHead.current) {
@@ -289,8 +280,15 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
 
     }
     onHideColumn = (field: string) => {
-        const columns = this.state.columns.filter(column => column.field !== field)
-        this.setState({columns})
+        console.log('onHideColumn field', field)
+        const overwrite = {...this.state.overwrite || {}}
+        console.log('overwrite1', overwrite)
+        set(overwrite, [field, 'list', 'hidden'], true)
+        console.log('overwrite2', overwrite)
+        this.setState({
+
+            overwrite
+        })
         if (this.props.onHideColumn) {
             this.props.onHideColumn(field)
         }
@@ -298,7 +296,7 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
     }
 
     onSortChange: OnSortChange = (field, direction) => {
-        let sort ={[field]:direction}
+        let sort = {[field]: direction}
         this.setState({sort})
         if (this.props.onSortChange) {
             this.props.onSortChange(sort)
@@ -307,7 +305,7 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
 
     }
 
-    getAllFilters = memoize(
+    getAllFilters = memoizeOne(
         (filters: Filters) => {
             const allFilters: Where[] = []
             for (const field in filters) {
@@ -318,11 +316,26 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
             }
             return allFilters
         }
-    );
+        , equalityFn);
+
+    calcFinalFields = memoizeOne((fields?: string[], omitFields?: string[], omitFieldsRegEx?: RegExp) => ensureId(filterFields(this.props.schema.getFields(), fields, omitFields, omitFieldsRegEx)), equalityFn)
+    calcColumns = memoizeOne((fields: string[], overwrite?: Overwrite) => {
+        const columns: ColumnProps[] = []
+        fields.forEach((field) => {
+            const column = this.getColumnDefinition(field)
+            if (column && !columns.some(({field}) => field === column.field)) columns.push(column)
+        })
+        return columns
+    }, equalityFn)
+
 
     render() {
-        const {schema, where, estimatedRowHeight, overscanRowsCount = 2, overLoad = 0, header} = this.props //todo rest props
-        const {columns, width, height, filters, sort} = this.state
+        const {schema, where, estimatedRowHeight, overscanRowsCount = 2, overLoad = 0, header, omitFields, omitFieldsRegEx} = this.props //todo rest props
+        const {fields: optionalFields, overwrite, width, height, filters, sort} = this.state
+        const fields = this.calcFinalFields(optionalFields, omitFields, omitFieldsRegEx)
+        const columns: ColumnProps[] = this.calcColumns(fields, overwrite)
+        const getColumnWidth = (index: number) => columns[index].width
+        this.estimatedColumnWidth = columns.reduce((mem, {width}) => width + mem, 0) / columns.length
         const allFilters = this.getAllFilters(filters)
         let whereAndFilter: { AND?: Where[] } | undefined
         if (where && !isEmpty(where) && allFilters.length > 0) {
@@ -332,7 +345,6 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
         } else if (allFilters.length > 0) {
             whereAndFilter = {AND: allFilters}
         }
-        const fields = ensureId(this.fields)
         return (
             <Find schema={schema} where={whereAndFilter} skip={0} first={this.firstLoad + overLoad}
                   sort={sort}
@@ -379,9 +391,9 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
                                 <div ref={this.tHead} className='mandarina-list-thead' style={{width}}>
                                     <div className={' mandarina-list-thead-row'}
                                          style={{width: this.estimatedColumnWidth * columns.length}}>
-                                        {columns.map(({title, field, filter, noSort}, columnIndex) => <div key={field}
-                                                                                                           className={'mandarina-list-thead-col ant-table-column-has-sorters ant-table-column-sort ' + field.replace(/\./g, '-')}
-                                                                                                           style={{width: this.getColumnWidth(columnIndex)}}>
+                                        {columns.map(({title, field, filter, noSort, width}) => <div key={field}
+                                                                                                     className={'mandarina-list-thead-col ant-table-column-has-sorters ant-table-column-sort ' + field.replace(/\./g, '-')}
+                                                                                                     style={{width}}>
                                             {<HideColumn onHide={() => this.onHideColumn(field)}/>}
                                             {title} {!noSort &&
                                         <SortButton onSortChange={this.onSortChange} field={field} sort={sort}/>}
@@ -400,7 +412,7 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
                                     estimatedColumnWidth={this.estimatedColumnWidth}
                                     estimatedRowHeight={estimatedRowHeight}
                                     columnCount={columns.length}
-                                    columnWidth={this.getColumnWidth}
+                                    columnWidth={getColumnWidth}
                                     rowHeight={(index: number) => estimatedRowHeight || estimatedRowHeightDefault}
                                     width={width}
                                     itemData={itemData}
