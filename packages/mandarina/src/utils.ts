@@ -17,7 +17,7 @@ export const getParents = (keys: string[]) => {
 
 
 export const filterFields = (allFields: string[], optionalFields?: string[], omitFields?: string[], omitRegEx?: RegExp) => {
-    let result = !optionalFields ? allFields : allFields.filter((field) => optionalFields.some((optional) => field === optional || field.indexOf(optional + '.') === 0))
+    let result = !optionalFields ? allFields : optionalFields.filter((field) => allFields.some((optional) => field === optional || field.indexOf(optional + '.') === 0))
 
     if (omitFields) {
         omitFields = omitFields.map(omit => omit.replace('.', '\\.'))
