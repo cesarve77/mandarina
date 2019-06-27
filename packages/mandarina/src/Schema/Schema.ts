@@ -585,7 +585,6 @@ export interface CellComponentProps {
     rowIndex: number
     data: any[]
     field: string
-
     [rest: string]: any
 }
 
@@ -616,7 +615,7 @@ export interface UserFieldDefinitionCommon {
         noFilter?: true
         width?: number
         props?: any
-        noSort?: true
+        noSort?: boolean
 
     }
     table?: {
@@ -683,7 +682,7 @@ export interface FieldDefinitionCommon extends UserFieldDefinitionCommon {
         noFilter?: true
         width?: number
         props?: any
-        noSort?: true
+        noSort?: boolean
     }
     table: {
         default?: any
@@ -726,7 +725,7 @@ export interface OverwriteDefinition {
         noFilter?: boolean
         width?: number
         props?: any
-        noSort: true
+        noSort?: boolean
     }
 }
 

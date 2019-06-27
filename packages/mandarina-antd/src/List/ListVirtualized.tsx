@@ -22,8 +22,8 @@ import {DocumentNode} from "graphql";
 import {RefetchQueriesProviderFn} from "react-apollo";
 import HeaderDefault, {HeaderDefaultProps} from "./HeaderDefault";
 import SortButton, {OnSortChange} from "./SortButton";
-
-
+import HideColumn from "./HideColumn";
+import _ from 'lodash';
 
 
 export interface ListProps {
@@ -43,12 +43,16 @@ export interface ListProps {
     filters?: Filters
     sort?: {[field: string]: 1|-1}
     onFilterChange?: (filters: Filters) => void
-    onSortChange?: (sort: {[field: string]: 1 | -1}) => void
+    onHideColumn?: (field: string) => void
+    onSortChange?: (sort: { [field: string]: 1 | -1 }) => void
     BottomList?: ReactComponentLike
     header?: ReactComponentLike | HeaderDefaultProps
+    columns: Columns,
 
 }
 
+export type Column={[field:string]: number}
+export type Columns=Column[]
 
 export interface ConnectionResult {
     totalCount: {
@@ -85,7 +89,6 @@ export interface Edge {
 
     }
 }
-
 
 
 export interface ColumnProps {
@@ -158,9 +161,20 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
         this.container = React.createRef()
         this.firstLoad = Math.ceil((this.props.height || window.innerHeight) / estimatedRowHeight)
         this.overscanRowStopIndex = this.firstLoad
-        //this.definitions=definitions
-    }
 
+    }
+    // static getDerivedStateFromProps(props, state) {
+    //     // Any time the current user changes,
+    //     // Reset any parts of state that are tied to that user.
+    //     // In this simple example, that's just the email.
+    //     if (!_.isEqual(props.fields ,state.fields) || _.isEqual(props.overwrite ,state.overwrite)) {
+    //         return {
+    //             prevPropsUserID: props.userID,
+    //             email: props.defaultEmail
+    //         };
+    //     }
+    //     return null;
+    // }
     static defaultProps = {
         Header: HeaderDefault,
         estimatedRowHeight: estimatedRowHeightDefault
@@ -226,7 +240,7 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
             title: definition.label ? definition.label : "",
             width: definition.list.width || estimatedColumnWidthDefault,
             filter: !definition.list.noFilter,
-            noSort: definition.isTable  || definition.isArray || field.indexOf('.')>0 || definition.list.noSort,
+            noSort: !!(definition.isTable || definition.isArray || field.indexOf('.') > 0 || definition.list.noSort),
         }
     }
 
@@ -274,7 +288,14 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
 
 
     }
+    onHideColumn = (field: string) => {
+        const columns = this.state.columns.filter(column => column.field !== field)
+        this.setState({columns})
+        if (this.props.onHideColumn) {
+            this.props.onHideColumn(field)
+        }
 
+    }
 
     onSortChange: OnSortChange = (field, direction) => {
         let sort ={[field]:direction}
@@ -301,7 +322,7 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
 
     render() {
         const {schema, where, estimatedRowHeight, overscanRowsCount = 2, overLoad = 0, header} = this.props //todo rest props
-        const {columns, width, height, filters,sort} = this.state
+        const {columns, width, height, filters, sort} = this.state
         const allFilters = this.getAllFilters(filters)
         let whereAndFilter: { AND?: Where[] } | undefined
         if (where && !isEmpty(where) && allFilters.length > 0) {
@@ -333,10 +354,11 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
                     const itemData = {data: this.data, columns, refetch, query, variables,}
                     let headerNode: ReactNode = null
                     if (typeof header === 'function') {
-                        const Header=header
-                        headerNode = <Header count={count} client={client} {...itemData} fields={fields} loading={loading}
-                                         schema={schema}
-                                         where={whereAndFilter}/>
+                        const Header = header
+                        headerNode =
+                            <Header count={count} client={client} {...itemData} fields={fields} loading={loading}
+                                    schema={schema}
+                                    where={whereAndFilter}/>
                     }
                     if (typeof header === 'object') {
                         headerNode =
@@ -358,9 +380,11 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
                                     <div className={' mandarina-list-thead-row'}
                                          style={{width: this.estimatedColumnWidth * columns.length}}>
                                         {columns.map(({title, field, filter, noSort}, columnIndex) => <div key={field}
-                                                                                                   className={'mandarina-list-thead-col ant-table-column-has-sorters ant-table-column-sort ' + field.replace(/\./g, '-')}
-                                                                                                   style={{width: this.getColumnWidth(columnIndex)}}>
-                                            {title} {!noSort && <SortButton onSortChange={this.onSortChange} field={field} sort={sort}/>}
+                                                                                                           className={'mandarina-list-thead-col ant-table-column-has-sorters ant-table-column-sort ' + field.replace(/\./g, '-')}
+                                                                                                           style={{width: this.getColumnWidth(columnIndex)}}>
+                                            {<HideColumn onHide={() => this.onHideColumn(field)}/>}
+                                            {title} {!noSort &&
+                                        <SortButton onSortChange={this.onSortChange} field={field} sort={sort}/>}
                                             {filter && <ListFilter onFilterChange={this.onFilterChange}
                                                                    field={field}
                                                                    filter={filters && filters[field]}
