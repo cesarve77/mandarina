@@ -5,6 +5,7 @@ import ListFilter, {OnFilterChange} from "./ListFilter";
 import {SortableContainer, SortableElement} from 'react-sortable-hoc';
 import {ColumnProps, OnHideColumn, OnResizeStop, Sort} from "./ListVirtualized";
 import {Schema} from "mandarina";
+// @ts-ignore
 import {ResizableBox, ResizeCallbackData} from 'react-resizable';
 import 'react-resizable/css/styles.css';
 
@@ -19,6 +20,7 @@ interface SortableColumnInterface {
     onHideColumn: OnHideColumn
     onResizeStop: OnResizeStop
     height: number
+    index: number
 }
 
 
@@ -29,27 +31,29 @@ interface SortableColumnsInterface {
 }
 
 
-export const SortableColumn = SortableElement(({column: {title, field, filter, noSort, width, columnIndex}, sort, filters, schema, onSortChange, onResizeStop, onFilterChange, onHideColumn, height}: SortableColumnInterface) => (
-        <ResizableBox
-            className={'mandarina-list-thead-col ant-table-column-has-sorters ant-table-column-sort ' + field.replace(/\./g, '-')}
-            width={width}
-            height={height}
-            handleSize={[10, 10]}
-            axis={'x'}
-            onResizeStop={(e: SyntheticEvent, data: ResizeCallbackData) => onResizeStop(field, data.size.width, columnIndex)}>
-            <div>
-                {title}
-                {!noSort && <SortButton onSortChange={onSortChange} field={field} sort={sort}/>}
-            </div>
+export const SortableColumn = SortableElement(({index, column: {title, field, filter, noSort, width}, sort, filters, schema, onSortChange, onResizeStop, onFilterChange, onHideColumn, height}: SortableColumnInterface) => {
+        return (
+            <ResizableBox
+                className={'mandarina-list-thead-col ant-table-column-has-sorters ant-table-column-sort ' + field.replace(/\./g, '-')}
+                width={width}
+                height={height}
+                handleSize={[10, 10]}
+                axis={'x'}
+                onResizeStop={(e: SyntheticEvent, data: ResizeCallbackData) => onResizeStop(field, data.size.width, index)}>
+                <div>
+                    {title}
+                    {!noSort && <SortButton onSortChange={onSortChange} field={field} sort={sort}/>}
+                </div>
 
-            {filter && <ListFilter onFilterChange={onFilterChange}
-                                   field={field}
-                                   filter={filters && filters[field]}
-                                   schema={schema}/>}
-            {<HideColumn onHide={() => onHideColumn(field)}/>}
+                {filter && <ListFilter onFilterChange={onFilterChange}
+                                       field={field}
+                                       filter={filters && filters[field]}
+                                       schema={schema}/>}
+                {<HideColumn onHide={() => onHideColumn(field,index)}/>}
 
-        </ResizableBox>
-    )
+            </ResizableBox>
+        );
+    }
 )
 
 export const SortableColumns = SortableContainer(({children, width, height}: SortableColumnsInterface) => {

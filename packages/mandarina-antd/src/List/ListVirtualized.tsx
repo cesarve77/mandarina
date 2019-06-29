@@ -27,10 +27,9 @@ import set from 'lodash.set';
 import {SortableColumn, SortableColumns} from "./SortableColumns";
 import arrayMove from 'array-move';
 import {SortEnd} from "react-sortable-hoc";
-import {deepClone} from "mandarina/build/Operations/Mutate";
 
 export interface OnHideColumn {
-    (field: string): void//todo variables format
+    (field: string, index: number): void//todo variables format
 }
 
 export interface OnResizeStop {
@@ -110,8 +109,6 @@ export interface Edge {
 
 
 export interface ColumnProps {
-    fieldIndex: number
-    columnIndex: number
     field: string
     title: string
     width: number
@@ -223,7 +220,7 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
         this.onResizeTimeoutId && window.clearTimeout(this.onResizeTimeoutId)
         this.onResizeTimeoutId = window.setTimeout(this.resize, 200)
     }
-    getColumnDefinition = (field: string, fieldIndex: number,columnIndex:number): ColumnProps | undefined => {
+    getColumnDefinition = (field: string): ColumnProps | null => {
         //detect if parent has a CellComponent
         const parentPath = getParentCellComponent(field, this.props.schema)
         if (parentPath) {
@@ -234,10 +231,8 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
         if (overwrite) {
             definition = merge(definition, overwrite)
         }
-        if (definition.list.hidden) return
+        if (definition.list.hidden) return null
         return {
-            columnIndex,
-            fieldIndex,
             field,
             loadingElement: definition.list.loadingElement,
             CellComponent: definition.list.CellComponent,
@@ -289,35 +284,39 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
 
 
     }
-    onHideColumn: OnHideColumn = (field: string) => {
+    onHideColumn: OnHideColumn = (field: string, index: number) => {
         this.setState(({overwrite}) => {
             const newOverwrite = {...overwrite} || {}
             set(newOverwrite, [field, 'list', 'hidden'], true)
             return {overwrite: newOverwrite}
         })
+        // @ts-ignore
+        this.gridRef.current && this.gridRef.current.resetAfterColumnIndex(index, true)
+
         if (this.props.onHideColumn) {
             this.props.onHideColumn(field)
         }
 
     }
-    onResizeStop: OnResizeStop = (field, width, columnIndex) => {
+    onResizeStop: OnResizeStop = (field, width, index) => {
         this.setState(({overwrite}) => {
-            const newOverwrite = {...overwrite}|| {}
+            const newOverwrite = {...overwrite} || {}
             set(newOverwrite, [field, 'list', 'width'], width)
-            console.log('newOverwrite',field, newOverwrite)
             return {overwrite: newOverwrite}
         })
-        console.log('this.gridRef.current', this.gridRef.current)
         // @ts-ignore
-        this.gridRef.current && this.gridRef.current.resetAfterColumnIndex(columnIndex, true)
-
+        this.gridRef.current && this.gridRef.current.resetAfterColumnIndex(index, true)
     }
     onColumnOrderChange = ({oldIndex, newIndex}: SortEnd) => {
-        this.setState(({fields}) => ({
-            fields: arrayMove(fields, oldIndex, newIndex),
-        }))
+        this.setState(({fields}) => {
+            return ({
+                fields: arrayMove(fields, oldIndex, newIndex),
+            });
+        })
         // @ts-ignore
-        this.gridRef.current && this.gridRef.current.resetAfterColumnIndex(columnIndex, true)
+        this.gridRef.current && this.gridRef.current.resetAfterColumnIndex(oldIndex, true)
+        // @ts-ignore
+        this.gridRef.current && this.gridRef.current.resetAfterColumnIndex(newIndex, true)
 
     }
     onSortChange: OnSortChange = (field, direction) => {
@@ -346,16 +345,14 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
     calcFinalFields = memoizeOne((fields: string[], omitFields?: string[], omitFieldsRegEx?: RegExp) => {
         return ensureId(filterFields(this.props.schema.getFields(), fields, omitFields, omitFieldsRegEx));
     }, equalityFn)
-    columnIndex=0
     calcColumns = memoizeOne((fields: string[], overwrite?: Overwrite) => {
-        console.log('calcColumnscalcColumnscalcColumnscalcColumnscalcColumnscalcColumnscalcColumnscalcColumns')
-        const columns: ColumnProps[] = []
-        fields.forEach((field, fieldIndex) => {
-            this.columnIndex=0
-            const column = this.getColumnDefinition(field, fieldIndex, this.columnIndex)
-            if (column && !columns.some(({field}) => field === column.field)) {
-                this.columnIndex++
+        const columns: (ColumnProps | null)[] = []
+        fields.forEach((field) => {
+            const column = this.getColumnDefinition(field)
+            if (column && !columns.some((c) => c && c.field === column.field)) {
                 columns.push(column)
+            } else {
+                columns.push(null)
             }
         })
         return columns
@@ -369,10 +366,11 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
         const fields = this.calcFinalFields(optionalFields, omitFields, omitFieldsRegEx)
         const columns = this.calcColumns(fields, overwrite)
         const getColumnWidth = (index: number) => {
-            console.log('getColumnWidth', index,columns[index].width)
+            if (columns[index] === null) return 0
+            // @ts-ignore
             return columns[index].width;
         }
-        this.estimatedColumnWidth = columns.reduce((mem, {width}) => width + mem, 0) / columns.length
+        this.estimatedColumnWidth = columns.reduce((mem, c) => c ? c.width + mem : 0, 0) / columns.length
         const allFilters = this.getAllFilters(filters)
         let whereAndFilter: { AND?: Where[] } | undefined
         if (where && !isEmpty(where) && allFilters.length > 0) {
@@ -439,21 +437,22 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
                                         onSortEnd={this.onColumnOrderChange}
                                         width={this.estimatedColumnWidth * columns.length}
                                         height={tHeadHeight}>
-                                        {columns.map((column) =>
-                                            <SortableColumn
-                                                height={tHeadHeight}
-                                                key={`item-${column.field}`}
-                                                index={column.fieldIndex}
-                                                column={column}
-                                                sort={sort}
-                                                filters={filters}
-                                                schema={schema}
-                                                onResizeStop={this.onResizeStop}
+                                        {columns.map((column, index) =>
+                                            column ?
+                                                <SortableColumn
+                                                    height={tHeadHeight}
+                                                    key={`item-${column.field}`}
+                                                    index={index}
+                                                    column={column}
+                                                    sort={sort}
+                                                    filters={filters}
+                                                    schema={schema}
+                                                    onResizeStop={this.onResizeStop}
 
-                                                onSortChange={this.onSortChange}
-                                                onFilterChange={this.onFilterChange}
-                                                onHideColumn={this.onHideColumn}
-                                            />)}
+                                                    onSortChange={this.onSortChange}
+                                                    onFilterChange={this.onFilterChange}
+                                                    onHideColumn={this.onHideColumn}
+                                                /> : <></>)}
                                     </SortableColumns>
                                 </div>
                                 {!loading && !count && <Empty style={{margin: '40px'}}/>}
@@ -510,6 +509,7 @@ const defaultLoadingElement = '...'
 
 const Cell = React.memo(
     ({columnIndex, rowIndex, data: {data, columns, query, refetch, variables}, style}: ListChildComponentProps & GridChildComponentProps & { data: { variables: any, query: DocumentNode, refetch: RefetchQueriesProviderFn, data: any, columns: ColumnProps[] } }) => {
+        if (!columns[columnIndex]) return null
         const field = columns[columnIndex].field
         const CellComponent = columns[columnIndex].CellComponent || DefaultCellComponent
         const loadingElement = columns[columnIndex].loadingElement || defaultLoadingElement

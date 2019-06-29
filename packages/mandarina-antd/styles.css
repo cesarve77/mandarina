@@ -90,6 +90,7 @@
     font-weight: bold;
     position: relative;
     display: flex;
+    flex: none;
     justify-content: center;
     flex-direction: column;
 }
