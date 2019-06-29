@@ -83,22 +83,33 @@
 
 
 .mandarina-list-thead-col {
+    -webkit-user-select: none; /* Safari */
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* IE10+/Edge */
+    user-select: none; /* Standard */
+    font-weight: bold;
     position: relative;
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
 }
 
-.mandarina-list-thead-row .mandarina-hide-column {
-    font-size: 6px;
-    top: 0;
-    right: 0;
+.mandarina-hide-column {
+    font-size: 8px;
+    top: 2px;
+    right: 2px;
     opacity: 0;
     transition-delay: 1.5s;
     transition: opacity  linear .3s ;
     position: absolute;
-
+    cursor: pointer;
 
 }
-
-.mandarina-list-thead-col:hover .mandarina-hide-column {
+.react-resizable-handle{
+    opacity: 0;
+    transition: opacity  linear .3s ;
+}
+.mandarina-list-thead-col:hover .react-resizable-handle,
+    .mandarina-list-thead-col:hover .mandarina-hide-column {
     opacity: 1;
-    cursor: pointer;
 }
