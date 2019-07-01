@@ -5,7 +5,7 @@ import SubmitField from "uniforms-antd/SubmitField";
 import {CreateProps, MutateResultProps, UpdateProps} from "mandarina/build/Operations/Mutate";
 import {OperationVariables} from "react-apollo";
 import {Bridge} from "./Bridge";
-import {filterFields} from "mandarina/build/utils";
+import {ensureId, filterFields} from "mandarina/build/utils";
 import {Model, Overwrite} from "mandarina/build/Schema/Schema";
 //
 const ErrorsField: any = require("./uniforms/ErrorsField").default
@@ -64,20 +64,6 @@ export interface ChildFunc {
     (props: any): JSX.Element
 }
 
-export const ensureId = (fields: string[]) => {
-    const result: string[] = []
-    fields.forEach((field) => {
-        const dot = field.lastIndexOf('.')
-        if (dot > 0) {
-            const fieldId = field.substr(0, dot ) + '.id'
-            if (!fields.includes(fieldId) && !result.includes(fieldId)) {
-                result.push(fieldId)
-            }
-        }
-        result.push(field)
-    })
-    return result
-}
 
 /**
  * If a fields is Table and the form is query, it'll remove all subfields diferents to id

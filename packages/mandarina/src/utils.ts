@@ -16,6 +16,21 @@ export const getParents = (keys: string[]) => {
 }
 
 
+export const ensureId = (fields: string[]) => {
+    const result: string[] = []
+    fields.forEach((field) => {
+        const dot = field.lastIndexOf('.')
+        if (dot > 0) {
+            const fieldId = field.substr(0, dot ) + '.id'
+            if (!fields.includes(fieldId) && !result.includes(fieldId)) {
+                result.push(fieldId)
+            }
+        }
+        result.push(field)
+    })
+    return result
+}
+
 export const filterFields = (allFields: string[], optionalFields?: string[], omitFields?: string[], omitRegEx?: RegExp) => {
     let result = !optionalFields ? allFields : optionalFields.filter((field) => allFields.some((optional) => field === optional || field.indexOf(optional + '.') === 0))
 

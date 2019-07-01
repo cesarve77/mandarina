@@ -7,7 +7,7 @@ import {ColumnProps, OnHideColumn, OnResizeStop, Sort} from "./ListVirtualized";
 import {Schema} from "mandarina";
 // @ts-ignore
 import {ResizableBox, ResizeCallbackData} from 'react-resizable';
-import 'react-resizable/css/styles.css';
+
 
 
 interface SortableColumnInterface {

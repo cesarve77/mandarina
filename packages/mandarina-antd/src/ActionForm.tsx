@@ -8,8 +8,9 @@ import AutoForm from 'uniforms-antd/AutoForm'
 import {Bridge} from "./Bridge";
 import {capitalize} from "mandarina/build/Schema/utils";
 import {buildQueryFromFields} from "mandarina/build/Operations/utils";
+import {ensureId} from "mandarina/build/utils";
 import SubmitField from "uniforms-antd/SubmitField";
-import {AutoFormProps, ensureId, normalizeFields} from "./Forms";
+import {AutoFormProps,  normalizeFields} from "./Forms";
 import {filterFields} from "mandarina/build/utils";
 import {refetchQueries} from "mandarina/build/Operations/Mutate";
 import {Overwrite} from "mandarina/build/Schema/Schema";

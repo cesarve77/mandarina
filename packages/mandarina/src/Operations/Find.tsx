@@ -4,7 +4,7 @@ import gql from "graphql-tag";
 import {Query, QueryProps, QueryResult} from "react-apollo";
 import {buildQueryFromFields} from "./utils";
 import pull from 'lodash.pull'
-import {filterFields} from "../utils";
+import {filterFields,ensureId} from "../utils";
 
 export type FindQueryResult = Pick<QueryResult, 'data' | 'loading' | 'error' | 'variables' | 'networkStatus' | 'refetch' | 'fetchMore' | 'startPolling' | 'stopPolling' | 'subscribeToMore' | 'updateQuery' | 'client'>
 
@@ -96,7 +96,7 @@ export class FindBase extends PureComponent<FindProps & FindBaseProps, FindBaseS
             orderBy = field + (sort[field] > 0 ? '_ASC' : '_DESC')
         }
         const {names} = schema
-        const defaultQuery = this.buildQueryFromFields(fields)
+        const defaultQuery = this.buildQueryFromFields(ensureId(fields))
         let queryString: string
         if (type === 'connection') {
             queryString = `query ($where: ${names.input.where[type]}, $after: String, $first: Int, $skip: Int, $orderBy: ${names.orderBy}) 

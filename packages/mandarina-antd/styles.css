@@ -1,3 +1,4 @@
+@import '~react-resizable/css/styles.css';
 .mandarina-list-thead {
     overflow: hidden;
     position: relative;
@@ -52,23 +53,23 @@
     border-top-left-radius: 0;
 }
 
-.mandarina-list-thead-row .mandarina-column-sorter-inner {
+.mandarina-column-sorter-inner {
     display: inline-block;
     position: relative;
     top: 7px;
     cursor: pointer;
 }
 
-.mandarina-list-thead-row .mandarina-column-sorter-up.on {
+.mandarina-column-sorter-up.on {
     color: #1890ff;
 }
 
-.mandarina-list-thead-row .mandarina-column-sorter-down.on {
+.mandarina-column-sorter-down.on {
     color: #1890ff;
 }
 
-.mandarina-list-thead-row .mandarina-column-sorter-up,
-.mandarina-list-thead-row .mandarina-column-sorter-down {
+.mandarina-column-sorter-up,
+.mandarina-column-sorter-down {
     color: #c1c1c1;
     font-size: 11px;
     -webkit-transform: scale(.91666667) rotate(0deg);
@@ -93,6 +94,17 @@
     flex: none;
     justify-content: center;
     flex-direction: column;
+    cursor: default;
+    transition: cursor 2s linear;
+}
+
+.mandarina-list-thead-col:hover {
+    transition: cursor 2s linear;
+    cursor: grab;
+}
+
+.mandarina-list-thead-col:active {
+    cursor: grabbing;
 }
 
 .mandarina-hide-column {
@@ -100,17 +112,20 @@
     top: 2px;
     right: 2px;
     opacity: 0;
-    transition-delay: 1.5s;
-    transition: opacity  linear .3s ;
+    transition: opacity linear .2s;
     position: absolute;
     cursor: pointer;
 
 }
-.react-resizable-handle{
+
+.react-resizable-handle {
     opacity: 0;
-    transition: opacity  linear .3s ;
+    transition: opacity linear .2s;
 }
+
 .mandarina-list-thead-col:hover .react-resizable-handle,
-    .mandarina-list-thead-col:hover .mandarina-hide-column {
+.mandarina-list-thead-col:hover .mandarina-hide-column {
     opacity: 1;
+    transition: opacity linear .3s 1s;
+
 }

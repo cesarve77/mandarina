@@ -15,7 +15,6 @@ import {filterFields} from "mandarina/build/utils";
 import {Empty} from "antd";
 import merge from 'lodash.merge'
 import {getDefaultFilterMethod} from "./ListFilters";
-import {ensureId} from "../Forms";
 import {ReactComponentLike} from "prop-types";
 import {get} from "mandarina/build/Schema/utils";
 import {DocumentNode} from "graphql";
@@ -25,8 +24,9 @@ import {OnSortChange} from "./SortButton";
 // import {isEqual} from 'lodash';
 import set from 'lodash.set';
 import {SortableColumn, SortableColumns} from "./SortableColumns";
-import arrayMove from 'array-move';
 import {SortEnd} from "react-sortable-hoc";
+import arrayMove from 'array-move'
+import {isEqual} from 'lodash';
 
 export interface OnHideColumn {
     (field: string, index: number): void//todo variables format
@@ -53,8 +53,10 @@ export interface ListProps {
     filters?: Filters
     sort?: { [field: string]: 1 | -1 }
     onFilterChange?: (filters: Filters) => void
-    onHideColumn?: (field: string) => void
+    onColumnOrderChange?: (fields: string[]) => void
+    onHideColumn?: (overwrite: Overwrite) => void
     onSortChange?: (sort: { [field: string]: 1 | -1 }) => void
+    onResizeStop: (overwrite: Overwrite) => void
     BottomList?: ReactComponentLike
     header?: ReactComponentLike | HeaderDefaultProps
 
@@ -118,7 +120,7 @@ export interface ColumnProps {
     noSort: boolean
 }
 
-const estimatedColumnWidthDefault = 200
+const estimatedColumnWidthDefault = 250
 const estimatedRowHeightDefault = 60
 export type Filters = { [field: string]: Where }
 export type Sort = { [field: string]: 1 | -1 }
@@ -168,20 +170,29 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
 
     }
 
-    // static getDerivedStateFromProps(props, state) {
-    //     // Any time the current user changes,
-    //     // Reset any parts of state that are tied to that user.
-    //     // In this simple example, that's just the email.
-    //     if (!_.isEqual(props.fields ,state.fields) || _.isEqual(props.overwrite ,state.overwrite)) {
-    //         return {
-    //             prevPropsUserID: props.userID,
-    //             email: props.defaultEmail
-    //         };
-    //     }
-    //     return null;
-    // }
+    static getDerivedStateFromProps(props: ListProps, state: ListState) {
+        console.log('getDerivedStateFromProps',props,state)
+        const result: Partial<ListState> = {}
+        if (!isEqual(props.fields, state.fields)) {
+            result.fields = props.fields
+        }
+        if (!isEqual(props.overwrite, state.overwrite)) {
+            result.overwrite = props.overwrite
+        }
+        if (!isEqual(props.sort, state.sort)) {
+            result.sort = props.sort
+        }
+        if (!isEqual(props.filters, state.filters)) {
+            result.filters = props.filters
+        }
+        console.log('result',result)
+        return result
+    }
+
     static defaultProps = {
         Header: HeaderDefault,
+        height:0,
+        width:0,
         estimatedRowHeight: estimatedRowHeightDefault
 
     }
@@ -220,28 +231,6 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
         this.onResizeTimeoutId && window.clearTimeout(this.onResizeTimeoutId)
         this.onResizeTimeoutId = window.setTimeout(this.resize, 200)
     }
-    getColumnDefinition = (field: string): ColumnProps | null => {
-        //detect if parent has a CellComponent
-        const parentPath = getParentCellComponent(field, this.props.schema)
-        if (parentPath) {
-            field = parentPath
-        }
-        let definition = this.props.schema.getPathDefinition(field)
-        const overwrite = this.state.overwrite && this.state.overwrite[field]
-        if (overwrite) {
-            definition = merge(definition, overwrite)
-        }
-        if (definition.list.hidden) return null
-        return {
-            field,
-            loadingElement: definition.list.loadingElement,
-            CellComponent: definition.list.CellComponent,
-            title: definition.label ? definition.label : "",
-            width: definition.list.width || estimatedColumnWidthDefault,
-            filter: !definition.list.noFilter,
-            noSort: !!(definition.isTable || definition.isArray || field.indexOf('.') > 0 || definition.list.noSort),
-        }
-    }
 
 
     onScrollTimeoutId: number
@@ -268,6 +257,29 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
         }, 100)
     }
 
+    getColumnDefinition = (field: string): ColumnProps | null => {
+        //detect if parent has a CellComponent
+        const parentPath = getParentCellComponent(field, this.props.schema)
+        if (parentPath) {
+            field = parentPath
+        }
+        let definition = this.props.schema.getPathDefinition(field)
+        const overwrite = this.state.overwrite && this.state.overwrite[field]
+        if (overwrite) {
+            definition = merge(definition, overwrite)
+        }
+        if (definition.list.hidden) return null
+        return {
+            field,
+            loadingElement: definition.list.loadingElement,
+            CellComponent: definition.list.CellComponent,
+            title: definition.label ? definition.label : "",
+            width: definition.list.width || estimatedColumnWidthDefault,
+            filter: !definition.list.noFilter,
+            noSort: !!(definition.isTable || definition.isArray || field.indexOf('.') > 0 || definition.list.noSort),
+        }
+    }
+
 
     onFilterChange: OnFilterChange = (field, filter) => {
         let filters = this.state.filters
@@ -288,20 +300,23 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
         this.setState(({overwrite}) => {
             const newOverwrite = {...overwrite} || {}
             set(newOverwrite, [field, 'list', 'hidden'], true)
+            if (this.props.onHideColumn) {
+                this.props.onHideColumn(newOverwrite)
+            }
             return {overwrite: newOverwrite}
         })
         // @ts-ignore
         this.gridRef.current && this.gridRef.current.resetAfterColumnIndex(index, true)
 
-        if (this.props.onHideColumn) {
-            this.props.onHideColumn(field)
-        }
 
     }
     onResizeStop: OnResizeStop = (field, width, index) => {
         this.setState(({overwrite}) => {
             const newOverwrite = {...overwrite} || {}
             set(newOverwrite, [field, 'list', 'width'], width)
+            if (this.props.onResizeStop) {
+                this.props.onResizeStop(newOverwrite)
+            }
             return {overwrite: newOverwrite}
         })
         // @ts-ignore
@@ -309,14 +324,34 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
     }
     onColumnOrderChange = ({oldIndex, newIndex}: SortEnd) => {
         this.setState(({fields}) => {
+            const field = fields[oldIndex]
+            const parent = getParentCellComponent(field, this.props.schema)
+            let newFields
+            if (parent) {
+                //if field has a parent cell component I just put all siblings at the end to no affect the order
+                //
+                newFields = arrayMove(fields, oldIndex, newIndex)
+                const siblings = newFields.filter(newField => newField !== field && newField.match(new RegExp(`^${parent}\.`)))
+                newFields = newFields.filter(newField => !(newField !== field && newField.match(new RegExp(`^${parent}\.`))))
+                newFields = newFields.concat(siblings)
+
+            } else {
+                newFields = arrayMove(fields, oldIndex, newIndex)
+            }
+
+            if (this.props.onColumnOrderChange) {
+                this.props.onColumnOrderChange(newFields)
+            }
             return ({
-                fields: arrayMove(fields, oldIndex, newIndex),
+                fields: newFields,
             });
+
         })
         // @ts-ignore
         this.gridRef.current && this.gridRef.current.resetAfterColumnIndex(oldIndex, true)
         // @ts-ignore
         this.gridRef.current && this.gridRef.current.resetAfterColumnIndex(newIndex, true)
+
 
     }
     onSortChange: OnSortChange = (field, direction) => {
@@ -343,7 +378,7 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
         , equalityFn);
 
     calcFinalFields = memoizeOne((fields: string[], omitFields?: string[], omitFieldsRegEx?: RegExp) => {
-        return ensureId(filterFields(this.props.schema.getFields(), fields, omitFields, omitFieldsRegEx));
+        return filterFields(this.props.schema.getFields(), fields, omitFields, omitFieldsRegEx);
     }, equalityFn)
     calcColumns = memoizeOne((fields: string[], overwrite?: Overwrite) => {
         const columns: (ColumnProps | null)[] = []
@@ -370,7 +405,7 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
             // @ts-ignore
             return columns[index].width;
         }
-        this.estimatedColumnWidth = columns.reduce((mem, c) => c ? c.width + mem : 0, 0) / columns.length
+        this.estimatedColumnWidth = columns.reduce((mem, c) => c ? c.width + mem : mem, 0) / columns.length
         const allFilters = this.getAllFilters(filters)
         let whereAndFilter: { AND?: Where[] } | undefined
         if (where && !isEmpty(where) && allFilters.length > 0) {
@@ -448,11 +483,10 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
                                                     filters={filters}
                                                     schema={schema}
                                                     onResizeStop={this.onResizeStop}
-
                                                     onSortChange={this.onSortChange}
                                                     onFilterChange={this.onFilterChange}
                                                     onHideColumn={this.onHideColumn}
-                                                /> : <></>)}
+                                                /> : <span key={index}></span>)}
                                     </SortableColumns>
                                 </div>
                                 {!loading && !count && <Empty style={{margin: '40px'}}/>}
