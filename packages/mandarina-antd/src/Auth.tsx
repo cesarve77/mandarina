@@ -3,11 +3,10 @@ import {Auth} from 'mandarina'
 import {CreateForm, CreateFormProps, UpdateForm, UpdateFormProps} from "./Forms";
 import {Spin} from "antd";
 import {ActionType, AuthChildrenProps} from "mandarina/build/Auth/Auth";
-import {ListProps, ListVirtualized} from "./List/ListVirtualized";
-import {List} from "./List/List";
-import {FindProps} from "mandarina/build/Operations/Find";
+import {ListProps as ListVirtualizedProps, ListVirtualized} from "./List/ListVirtualized";
+import {List, ListProps} from "./List/List";
 
-type ElemProps = CreateFormProps | UpdateFormProps | ListProps
+type ElemProps = CreateFormProps | UpdateFormProps | ListVirtualizedProps | ListProps
 
 export interface AuthElementsProps {
     denied?: ReactNode
@@ -15,7 +14,6 @@ export interface AuthElementsProps {
     userRoles: string[]
 
 }
-
 
 
 const AuthAntD = ({Component, schema, denied = null, userRoles = [], action, fields: optionalFields, omitFields, omitFieldsRegEx, Error, ...props}:
@@ -44,10 +42,8 @@ export const AuthCreateForm = (props: CreateFormProps & AuthElementsProps) =>
     <AuthAntD action={'create'} Component={CreateForm} {...props}/>
 
 
-export const AuthList = (props: FindProps & AuthElementsProps) =>
-    // @ts-ignore
+export const AuthList = (props: ListProps & AuthElementsProps) =>
     <AuthAntD action={'read'} Component={List} {...props}/>
 
-export const AuthListVirtualized = (props: FindProps & AuthElementsProps) =>
-    // @ts-ignore
+export const AuthListVirtualized = (props: ListVirtualizedProps & AuthElementsProps) =>
     <AuthAntD action={'read'} Component={ListVirtualized} {...props}/>

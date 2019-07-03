@@ -27,6 +27,7 @@ import {SortableColumn, SortableColumns} from "./SortableColumns";
 import {SortEnd} from "react-sortable-hoc";
 import arrayMove from 'array-move'
 import {isEqual} from 'lodash';
+import {deepClone} from "mandarina/build/Operations/Mutate";
 
 export interface OnHideColumn {
     (field: string, index: number): void//todo variables format
@@ -36,7 +37,17 @@ export interface OnResizeStop {
     (field: string, size: number, index: number): void//todo variables format
 }
 
-export interface ListProps {
+export interface ControlledListProps{
+    overwrite?: Overwrite
+    filters?: Filters
+    sort?: Sort
+    onFilterChange?: (filters: Filters) => void
+    onFieldsChange?: (fields: string[]) => void
+    onOverwriteChange?: (overwrite: Overwrite) => void
+    onSortChange?: (sort:Sort) => void
+}
+
+export interface ListProps extends ControlledListProps{
     schema: Schema
     fields?: string[]
     omitFields?: string[]
@@ -49,17 +60,8 @@ export interface ListProps {
     estimatedRowHeight?: number
     overscanRowsCount?: number
     overLoad?: number
-    overwrite?: Overwrite
-    filters?: Filters
-    sort?: { [field: string]: 1 | -1 }
-    onFilterChange?: (filters: Filters) => void
-    onColumnOrderChange?: (fields: string[]) => void
-    onHideColumn?: (overwrite: Overwrite) => void
-    onSortChange?: (sort: { [field: string]: 1 | -1 }) => void
-    onResizeStop: (overwrite: Overwrite) => void
-    BottomList?: ReactComponentLike
-    header?: ReactComponentLike | HeaderDefaultProps
 
+    header?: ReactComponentLike | HeaderDefaultProps
 }
 
 
@@ -171,28 +173,29 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
     }
 
     static getDerivedStateFromProps(props: ListProps, state: ListState) {
-        console.log('getDerivedStateFromProps',props,state)
         const result: Partial<ListState> = {}
-        if (!isEqual(props.fields, state.fields)) {
-            result.fields = props.fields
+        if (props.onFieldsChange &&  !isEqual(props.fields, state.fields)) {
+            result.fields = props.fields || props.schema.getFields()
         }
-        if (!isEqual(props.overwrite, state.overwrite)) {
+        console.log(props.overwrite, state.overwrite)
+        if ((props.onOverwriteChange) &&  !isEqual(props.overwrite, state.overwrite)) {
             result.overwrite = props.overwrite
         }
-        if (!isEqual(props.sort, state.sort)) {
+        if (props.onSortChange && !isEqual(props.sort, state.sort)) {
             result.sort = props.sort
         }
-        if (!isEqual(props.filters, state.filters)) {
-            result.filters = props.filters
+        console.log(!!props.onFilterChange ,props.filters,state.filters, !isEqual(props.filters, state.filters))
+        if (props.onFilterChange && !isEqual(props.filters, state.filters)) {
+            result.filters = props.filters || {}
         }
-        console.log('result',result)
+        console.log('result', result)
         return result
     }
 
     static defaultProps = {
         Header: HeaderDefault,
-        height:0,
-        width:0,
+        height: 0,
+        width: 0,
         estimatedRowHeight: estimatedRowHeightDefault
 
     }
@@ -282,47 +285,59 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
 
 
     onFilterChange: OnFilterChange = (field, filter) => {
-        let filters = this.state.filters
-        if (filter && !isEmpty(filter)) {
-            filters[field] = filter
-        } else {
-            delete filters[field]
-        }
-
-        this.setState({filters: {...filters}})
-        if (this.props.onFilterChange) {
-            this.props.onFilterChange(filters)
-        }
-
-
+        this.setState(({filters}) => {
+            const newFilters={...filters}
+            if (filter && !isEmpty(filter)) {
+                newFilters[field] = filter
+            } else {
+                delete newFilters[field]
+            }
+            if (this.props.onFilterChange) {
+                this.props.onFilterChange(newFilters)
+                return null
+            } else {
+                return newFilters
+            }
+        })
     }
     onHideColumn: OnHideColumn = (field: string, index: number) => {
+        // @ts-ignore
+        this.gridRef.current && this.gridRef.current.resetAfterColumnIndex(index, false)
+
         this.setState(({overwrite}) => {
             const newOverwrite = {...overwrite} || {}
             set(newOverwrite, [field, 'list', 'hidden'], true)
-            if (this.props.onHideColumn) {
-                this.props.onHideColumn(newOverwrite)
+            if (this.props.onOverwriteChange) {
+                this.props.onOverwriteChange(newOverwrite)
+                return null
+            }else{
+                return {overwrite: newOverwrite}
             }
-            return {overwrite: newOverwrite}
         })
-        // @ts-ignore
-        this.gridRef.current && this.gridRef.current.resetAfterColumnIndex(index, true)
 
 
     }
     onResizeStop: OnResizeStop = (field, width, index) => {
-        this.setState(({overwrite}) => {
-            const newOverwrite = {...overwrite} || {}
-            set(newOverwrite, [field, 'list', 'width'], width)
-            if (this.props.onResizeStop) {
-                this.props.onResizeStop(newOverwrite)
-            }
-            return {overwrite: newOverwrite}
-        })
         // @ts-ignore
-        this.gridRef.current && this.gridRef.current.resetAfterColumnIndex(index, true)
+        this.gridRef.current && this.gridRef.current.resetAfterColumnIndex(index, false)
+        this.setState(({overwrite}) => {
+            const newOverwrite = deepClone(overwrite) || {}
+            set(newOverwrite, [field, 'list', 'width'], width)
+            if (this.props.onOverwriteChange) {
+                this.props.onOverwriteChange(newOverwrite)
+                return null
+            }else{
+                return {overwrite: newOverwrite}
+
+            }
+        })
+
     }
     onColumnOrderChange = ({oldIndex, newIndex}: SortEnd) => {
+        // @ts-ignore
+        this.gridRef.current && this.gridRef.current.resetAfterColumnIndex(oldIndex, false)
+        // @ts-ignore
+        this.gridRef.current && this.gridRef.current.resetAfterColumnIndex(newIndex, false)
         this.setState(({fields}) => {
             const field = fields[oldIndex]
             const parent = getParentCellComponent(field, this.props.schema)
@@ -339,26 +354,25 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
                 newFields = arrayMove(fields, oldIndex, newIndex)
             }
 
-            if (this.props.onColumnOrderChange) {
-                this.props.onColumnOrderChange(newFields)
+            if (this.props.onFieldsChange) {
+                this.props.onFieldsChange(newFields)
+                return null
+            }else {
+                return ({fields: newFields});
             }
-            return ({
-                fields: newFields,
-            });
 
         })
-        // @ts-ignore
-        this.gridRef.current && this.gridRef.current.resetAfterColumnIndex(oldIndex, true)
-        // @ts-ignore
-        this.gridRef.current && this.gridRef.current.resetAfterColumnIndex(newIndex, true)
+
 
 
     }
     onSortChange: OnSortChange = (field, direction) => {
         let sort = {[field]: direction}
-        this.setState({sort})
         if (this.props.onSortChange) {
             this.props.onSortChange(sort)
+        }else{
+            this.setState({sort})
+
         }
 
 
@@ -438,13 +452,37 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
                     if (typeof header === 'function') {
                         const Header = header
                         headerNode =
-                            <Header count={count} client={client} {...itemData} fields={fields} loading={loading}
+                            <Header count={count}
+                                    client={client}
+                                    {...itemData}
+                                    fields={fields}
+                                    sort={sort}
+                                    filters={filters}
+                                    overwrite={overwrite}
+                                    onFieldsChange={this.props.onFieldsChange}
+                                    onSortChange={this.props.onSortChange}
+                                    onOverwriteChange={this.props.onOverwriteChange}
+                                    onFilterChange={this.props.onFilterChange}
+                                    loading={loading}
                                     schema={schema}
-                                    where={whereAndFilter}/>
+                                    where={whereAndFilter}
+
+                            />
                     }
                     if (typeof header === 'object') {
                         headerNode =
-                            <HeaderDefault count={count} client={client} {...itemData} fields={fields} loading={loading}
+                            <HeaderDefault count={count}
+                                           client={client}
+                                           {...itemData}
+                                           fields={fields}
+                                           sort={sort}
+                                           filters={filters}
+                                           overwrite={overwrite}
+                                           onFieldsChange={this.props.onFieldsChange}
+                                           onSortChange={this.props.onSortChange}
+                                           onOverwriteChange={this.props.onOverwriteChange}
+                                           onFilterChange={this.props.onFilterChange}
+                                           loading={loading}
                                            schema={schema}
                                            where={whereAndFilter}
                                            {...header}/>

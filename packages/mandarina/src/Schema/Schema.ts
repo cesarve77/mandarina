@@ -214,9 +214,12 @@ export class Schema {
      * @param removeExtraKeys
      */
     protected _clean(model: Model | undefined | null, fields: string[], removeExtraKeys = true) {
+        console.log('fields',fields)
+        console.log('model',model)
         if (removeExtraKeys && model && typeof model === 'object') {
             Object.keys(model).forEach((key) => {
                 if (!this.keys.includes(key)) {
+                    console.log('removeExtraKeys',key)
                     delete model[key]
                 }
             });

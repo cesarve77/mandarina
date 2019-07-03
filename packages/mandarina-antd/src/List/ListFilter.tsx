@@ -49,8 +49,8 @@ const ListFilter = React.memo(({onFilterChange, field, filter, schema}: ListFilt
                 <FieldComponent name='filter' label={false} col={false} defaultValue={''}/>
             </AutoForm>
         )
-    }, (prevProps, nextProps) =>
-    prevProps.field === nextProps.field && prevProps.onFilterChange === nextProps.onFilterChange && prevProps.schema === nextProps.schema
+    }, (prevProps, nextProps) =>false
+    // prevProps.field === nextProps.field && prevProps.onFilterChange === nextProps.onFilterChange && prevProps.schema === nextProps.schema
 )
 
 export default ListFilter
