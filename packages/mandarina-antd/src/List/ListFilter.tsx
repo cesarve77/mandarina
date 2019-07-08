@@ -5,13 +5,11 @@ import {Bridge} from "../Bridge";
 import {getDefaultComponent} from "./ListFilters";
 import {FilterComponent} from "mandarina/build/Schema/Schema";
 
-
 export const uuid = () => 'i' + (Date.now() - 1540000000000 + Math.random()).toString(36)
 
 export interface OnFilterChange {
     (field: string, filter: any): void//todo variables format
 }
-
 
 export type Where = any
 
@@ -49,8 +47,11 @@ const ListFilter = React.memo(({onFilterChange, field, filter, schema}: ListFilt
                 <FieldComponent name='filter' label={false} col={false} defaultValue={''}/>
             </AutoForm>
         )
-    }, (prevProps, nextProps) =>false
-    // prevProps.field === nextProps.field && prevProps.onFilterChange === nextProps.onFilterChange && prevProps.schema === nextProps.schema
+    },
+    (prevProps, nextProps) => {
+    return true
+        return prevProps.field === nextProps.field && prevProps.onFilterChange === nextProps.onFilterChange && prevProps.schema === nextProps.schema;
+    }
 )
 
 export default ListFilter

@@ -1,7 +1,8 @@
 import {Find, Schema} from 'mandarina';
 import React, {ReactNode} from "react";
-import memoizeOne, {EqualityFn} from "memoize-one"
+import memoizeOne from "memoize-one"
 import isEmpty from 'lodash.isempty'
+
 import {
     areEqual,
     GridChildComponentProps,
@@ -28,6 +29,8 @@ import {SortEnd} from "react-sortable-hoc";
 import arrayMove from 'array-move'
 import {isEqual} from 'lodash';
 import {deepClone} from "mandarina/build/Operations/Mutate";
+import {equalityFn} from "./utils";
+import Query from "react-apollo/Query";
 
 export interface OnHideColumn {
     (field: string, index: number): void//todo variables format
@@ -37,17 +40,17 @@ export interface OnResizeStop {
     (field: string, size: number, index: number): void//todo variables format
 }
 
-export interface ControlledListProps{
+export interface ControlledListProps {
     overwrite?: Overwrite
     filters?: Filters
     sort?: Sort
     onFilterChange?: (filters: Filters) => void
     onFieldsChange?: (fields: string[]) => void
     onOverwriteChange?: (overwrite: Overwrite) => void
-    onSortChange?: (sort:Sort) => void
+    onSortChange?: (sort: Sort) => void
 }
 
-export interface ListProps extends ControlledListProps{
+export interface ListProps extends ControlledListProps {
     schema: Schema
     fields?: string[]
     omitFields?: string[]
@@ -58,22 +61,12 @@ export interface ListProps extends ControlledListProps{
     height?: number
     width?: number
     estimatedRowHeight?: number
-    overscanRowsCount?: number
+    overscanRowCount?: number
     overLoad?: number
 
     header?: ReactComponentLike | HeaderDefaultProps
 }
 
-
-export const equalityFn: EqualityFn = (
-    newArgs: any[],
-    lastArgs: any[],
-): boolean =>
-    newArgs.length === lastArgs.length &&
-    newArgs.every(
-        (newArg: any, index: number): boolean =>
-            newArg === lastArgs[index],
-    );
 
 export interface ConnectionResult {
     totalCount: {
@@ -138,6 +131,10 @@ interface ListState {
 
 export type Refetch = (refetchOptions: any) => Promise<any>
 
+const createItemData = memoizeOne((data: any, columns: (ColumnProps | null)[], refetch: Refetch, query: Query, variables: any) => ({
+    data, columns, refetch, query, variables
+}));
+
 export class ListVirtualized extends React.Component<ListProps, ListState> {
     gridRef = React.createRef()
     data: any[] = []
@@ -174,21 +171,18 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
 
     static getDerivedStateFromProps(props: ListProps, state: ListState) {
         const result: Partial<ListState> = {}
-        if (props.onFieldsChange &&  !isEqual(props.fields, state.fields)) {
+        if (props.onFieldsChange && !isEqual(props.fields, state.fields)) {
             result.fields = props.fields || props.schema.getFields()
         }
-        console.log(props.overwrite, state.overwrite)
-        if ((props.onOverwriteChange) &&  !isEqual(props.overwrite, state.overwrite)) {
+        if ((props.onOverwriteChange) && !isEqual(props.overwrite, state.overwrite)) {
             result.overwrite = props.overwrite
         }
         if (props.onSortChange && !isEqual(props.sort, state.sort)) {
             result.sort = props.sort
         }
-        console.log(!!props.onFilterChange ,props.filters,state.filters, !isEqual(props.filters, state.filters))
         if (props.onFilterChange && !isEqual(props.filters, state.filters)) {
             result.filters = props.filters || {}
         }
-        console.log('result', result)
         return result
     }
 
@@ -285,8 +279,13 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
 
 
     onFilterChange: OnFilterChange = (field, filter) => {
+        this.data = []
+        // @ts-ignore
+        this.gridRef.current && this.gridRef.current.scrollToItem({
+            rowIndex: 0
+        });
         this.setState(({filters}) => {
-            const newFilters={...filters}
+            const newFilters = {...filters}
             if (filter && !isEmpty(filter)) {
                 newFilters[field] = filter
             } else {
@@ -310,7 +309,7 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
             if (this.props.onOverwriteChange) {
                 this.props.onOverwriteChange(newOverwrite)
                 return null
-            }else{
+            } else {
                 return {overwrite: newOverwrite}
             }
         })
@@ -326,7 +325,7 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
             if (this.props.onOverwriteChange) {
                 this.props.onOverwriteChange(newOverwrite)
                 return null
-            }else{
+            } else {
                 return {overwrite: newOverwrite}
 
             }
@@ -357,12 +356,11 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
             if (this.props.onFieldsChange) {
                 this.props.onFieldsChange(newFields)
                 return null
-            }else {
+            } else {
                 return ({fields: newFields});
             }
 
         })
-
 
 
     }
@@ -370,7 +368,7 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
         let sort = {[field]: direction}
         if (this.props.onSortChange) {
             this.props.onSortChange(sort)
-        }else{
+        } else {
             this.setState({sort})
 
         }
@@ -409,7 +407,7 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
 
 
     render() {
-        const {schema, where, estimatedRowHeight, overscanRowsCount = 2, overLoad = 0, header, omitFields, omitFieldsRegEx} = this.props //todo rest props
+        const {schema, where, estimatedRowHeight, overscanRowCount = 2, overLoad = 0, header, omitFields, omitFieldsRegEx} = this.props //todo rest props
 
         const {fields: optionalFields, width, height, filters, sort, overwrite} = this.state
         const fields = this.calcFinalFields(optionalFields, omitFields, omitFieldsRegEx)
@@ -429,6 +427,7 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
         } else if (allFilters.length > 0) {
             whereAndFilter = {AND: allFilters}
         }
+
         return (
             <Find schema={schema} where={whereAndFilter} skip={0} first={this.firstLoad + overLoad}
                   sort={sort}
@@ -447,7 +446,8 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
                     this.refetch = refetch
                     this.variables = variables
                     const tHeadHeight = this.tHead.current && this.tHead.current.offsetHeight || 0
-                    const itemData = {data: this.data, columns, refetch, query, variables,}
+                    const itemData = createItemData(this.data, columns, refetch, query, variables)
+
                     let headerNode: ReactNode = null
                     if (typeof header === 'function') {
                         const Header = header
@@ -501,7 +501,7 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
                                     <SortableColumns
                                         shouldCancelStart={(event) => {
                                             // @ts-ignore
-                                            return event.target && event.target.classList && event.target.classList.contains('react-resizable-handle')
+                                            return event.target && event.target.classList && event.target.classList.contains('react-resizable-handle') || event.target.classList.contains('no-draggable') || ['INPUT', 'SELECT', 'TEXTAREA'].includes(event.target.tagName)
                                         }}
                                         axis={'x'}
                                         lockAxis={'x'}
@@ -541,8 +541,7 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
                                     rowHeight={(index: number) => estimatedRowHeight || estimatedRowHeightDefault}
                                     width={width}
                                     itemData={itemData}
-                                    overscanColumnsCount={0}
-                                    overscanRowsCount={overscanRowsCount}
+                                    overscanRowCount={overscanRowCount}
                                     onItemsRendered={({
                                                           overscanRowStartIndex,
                                                           overscanRowStopIndex,
@@ -573,29 +572,28 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
 }
 
 
-export const DefaultCellComponent: CellComponent = ({columnIndex, rowIndex, data, field}) => {
-    const children = (data[rowIndex] && get(data[rowIndex], field.split('.'))) || []
-    return <>{children.map((child, i) => <span key={i}>{child}<br/></span>)}</>
-}
+export const DefaultCellComponent: CellComponent = React.memo(({columnIndex, rowIndex, data, field}) => {
+        const children = (data[rowIndex] && get(data[rowIndex], field.split('.'))) || []
+        return <>{children.map((child, i) => <span key={i}>{child}<br/></span>)}</>
+    }
+    , areEqual)
 const defaultLoadingElement = '...'
 
-const Cell = React.memo(
-    ({columnIndex, rowIndex, data: {data, columns, query, refetch, variables}, style}: ListChildComponentProps & GridChildComponentProps & { data: { variables: any, query: DocumentNode, refetch: RefetchQueriesProviderFn, data: any, columns: ColumnProps[] } }) => {
-        if (!columns[columnIndex]) return null
-        const field = columns[columnIndex].field
-        const CellComponent = columns[columnIndex].CellComponent || DefaultCellComponent
-        const loadingElement = columns[columnIndex].loadingElement || defaultLoadingElement
-        return (
-            <div className={'mandarina-list-cell ' + field.replace('.', '-')}
-                 style={style}>
-                {!data[rowIndex] && loadingElement}
-                {data[rowIndex] &&
-                <CellComponent columnIndex={columnIndex} rowIndex={rowIndex} data={data} field={field}
-                               refetch={refetch} variables={variables} query={query}/>}
-            </div>
-        )
-    }
-    , areEqual);
+const Cell = React.memo(({columnIndex, rowIndex, data: {data, columns, query, refetch, variables}, style}: ListChildComponentProps & GridChildComponentProps & { data: { variables: any, query: DocumentNode, refetch: RefetchQueriesProviderFn, data: any, columns: ColumnProps[] } }) => {
+    if (!columns[columnIndex]) return null
+    const field = columns[columnIndex].field
+    const CellComponent = columns[columnIndex].CellComponent || DefaultCellComponent
+    const loadingElement = columns[columnIndex].loadingElement || defaultLoadingElement
+    return (
+        <div className={'mandarina-list-cell ' + field.replace('.', '-')}
+             style={style}>
+            {!data[rowIndex] && loadingElement}
+            {data[rowIndex] &&
+            <CellComponent columnIndex={columnIndex} rowIndex={rowIndex} data={data} field={field}
+                           refetch={refetch} variables={variables} query={query}/>}
+        </div>
+    )
+}, areEqual)
 
 
 const getParentCellComponent = (field: string, schema: Schema) => {

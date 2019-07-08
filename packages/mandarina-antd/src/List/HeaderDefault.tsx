@@ -77,7 +77,7 @@ const HeaderDefault = ({counter = true, menuItems = [], count, ...props}: Header
     return (
         <Row gutter={0}>
             <Col span={12}>
-                {counter && `Total: ${count && count!==0 ? count : '...'}`}
+                {counter && `Total: ${count!==0 ? count : '...'}`}
             </Col>
             {!!menu.length && <Col span={12} style={{textAlign: 'right'}}>
                 <Dropdown placement="bottomLeft" overlay={<Menu>{menu}</Menu>}>

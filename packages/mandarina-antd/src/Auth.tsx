@@ -25,9 +25,10 @@ const AuthAntD = ({Component, schema, denied = null, userRoles = [], action, fie
                 if (error && Error) return <Error error={error}/>
                 if (!loading && fields && fields.length === 0) return denied
                 return (
-                    <Spin spinning={loading} style={{width: '100%'}}>
+                    <>
+                        {loading && <Spin spinning={loading} style={{width: '100%', height: '100%'}}/>}
                         {!loading && fields && <Component schema={schema} {...props} fields={fields}/>}
-                    </Spin>
+                    </>
                 );
             }}
         </Auth>

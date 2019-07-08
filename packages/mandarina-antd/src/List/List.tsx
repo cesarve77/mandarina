@@ -121,7 +121,6 @@ export class List extends React.Component<ListProps, { columns: ColumnProps<any>
         if (!fieldDefinition || isEmpty(fieldDefinition)) {
             throw new Error(`Field "${parent}" not found`)
         }
-        console.log('fieldDefinition', fieldDefinition);
         if (fieldDefinition.list.hidden) return
         const defaultWidth = window.innerWidth / this.fields.length
         let width: number | undefined

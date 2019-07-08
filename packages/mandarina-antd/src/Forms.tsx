@@ -119,7 +119,6 @@ const Form = ({
     const AllFields = ensureId(filterFields(schema.getFields(), optionalFields, omitFields, omitFieldsRegEx))
 
     const fields = normalizeFields(AllFields, schema, overwrite)
-    console.log('render1')
     return (
         <Component id={id} schema={schema} fields={fields} {...mutationProps}>
             {({mutate, doc = model, loading, ...rest}) => {
