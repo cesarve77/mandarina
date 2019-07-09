@@ -17,8 +17,10 @@ var __rest = (this && this.__rest) || function (s, e) {
     for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
         t[p] = s[p];
     if (s != null && typeof Object.getOwnPropertySymbols === "function")
-        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) if (e.indexOf(p[i]) < 0)
-            t[p[i]] = s[p[i]];
+        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
+            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
+                t[p[i]] = s[p[i]];
+        }
     return t;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
@@ -29,7 +31,15 @@ var react_apollo_1 = require("react-apollo");
 var utils_1 = require("./utils");
 var Find_1 = require("./Find");
 var utils_2 = require("../utils");
-exports.deepClone = function (obj) { return JSON.parse(JSON.stringify(obj)); };
+var lodash_1 = require("lodash");
+exports.deepClone = function (obj) {
+    return lodash_1.cloneDeep(obj);
+    // const result=JSON.parse(JSON.stringify(obj))
+    // if (typeof obj.type==='function'){
+    //     result.type=obj.type
+    // }
+    // return result
+};
 var Mutate = /** @class */ (function (_super) {
     __extends(Mutate, _super);
     function Mutate() {
@@ -65,6 +75,19 @@ var Mutate = /** @class */ (function (_super) {
     
                 }
             })*/
+        };
+        _this.invalidateCache = function (cache) {
+            // Loop through all the data in our cache
+            // And delete any items that start with "ListItem"
+            // This empties the cache of all of our list items and
+            // forces a refetch of the data.
+            // @ts-ignore
+            console.log('cache.data', cache.data);
+            // @ts-ignore
+            Object.keys(cache.data.data).forEach(function (key) {
+                // @ts-ignore
+                return key.match(/^ListItem/) && cache.data.delete(key);
+            });
         };
         return _this;
     }
@@ -109,14 +132,13 @@ var Mutate = /** @class */ (function (_super) {
         return exports.getSubSchemaMutations(model, schema, this.props.type);
     };
     Mutate.prototype.getTypesDoc = function (obj, schema) {
-        var _this = this;
         var wrapper = function (result) { return result; };
         var initiator = function (obj, schema) {
             var res = {
                 __typename: schema.name
             };
-            if (schema.keys.includes('id')) {
-                res.id = _this.props.type === 'update' ? obj.id : '';
+            if (obj.id) {
+                res.id = obj.id;
             }
             return res;
         };
@@ -131,13 +153,22 @@ var Mutate = /** @class */ (function (_super) {
     Mutate.prototype.mutate = function (model, mutationFn) {
         var _a;
         var _b = this.props, schema = _b.schema, where = _b.where, type = _b.type, optimisticResponse = _b.optimisticResponse;
+        console.log('where', where);
+        console.log('model', model);
         var cleaned = exports.deepClone(model);
         schema.clean(cleaned, this.filteredFields); // fill null all missing keys
+        console.log('cleaned', cleaned);
         var data = this.getSubSchemaMutations(cleaned, schema);
-        var mutation = { variables: { data: data } };
-        if (type === 'update') {
+        console.log('data', data);
+        var mutation = { variables: {} };
+        if (type !== 'delete') {
+            mutation.variables.data = data;
+        }
+        if (type === 'update' || type === 'delete') {
             mutation.variables.where = where;
             Object.assign(cleaned, where);
+            console.log(' type===\'delete\'', type === 'delete', where);
+            console.log('mutation.variables', mutation.variables);
         }
         if (optimisticResponse !== false) {
             if (!optimisticResponse) {
@@ -153,7 +184,7 @@ var Mutate = /** @class */ (function (_super) {
     };
     Mutate.prototype.render = function () {
         var _this = this;
-        var _a = this.props, type = _a.type, children = _a.children, schema = _a.schema, optionalFields = _a.fields, omitFields = _a.omitFields, omitFieldsRegEx = _a.omitFieldsRegEx, findLoading = _a.loading, variables = _a.variables, update = _a.update, ignoreResults = _a.ignoreResults, optimisticResponse = _a.optimisticResponse, _b = _a.refetchQueries, refetchQueries = _b === void 0 ? this.refetchQueries : _b, awaitRefetchQueries = _a.awaitRefetchQueries, onCompleted = _a.onCompleted, onError = _a.onError, context = _a.context, client = _a.client, doc = _a.doc, fetchPolicy = _a.fetchPolicy;
+        var _a = this.props, type = _a.type, children = _a.children, schema = _a.schema, optionalFields = _a.fields, omitFields = _a.omitFields, omitFieldsRegEx = _a.omitFieldsRegEx, findLoading = _a.loading, variables = _a.variables, _b = _a.update, update = _b === void 0 ? this.invalidateCache : _b, ignoreResults = _a.ignoreResults, optimisticResponse = _a.optimisticResponse, _c = _a.refetchQueries, refetchQueries = _c === void 0 ? this.refetchQueries : _c, awaitRefetchQueries = _a.awaitRefetchQueries, onCompleted = _a.onCompleted, onError = _a.onError, context = _a.context, client = _a.client, doc = _a.doc, fetchPolicy = _a.fetchPolicy;
         var fields = utils_2.filterFields(schema.getFields(), optionalFields, omitFields, omitFieldsRegEx);
         this.filteredFields = fields;
         var names = schema.names;
@@ -162,9 +193,14 @@ var Mutate = /** @class */ (function (_super) {
         if (type === 'update') {
             queryString = "mutation mutationFn($where: " + names.input.where.single + ", $data: " + names.input[type] + " ) { " + names.mutation[type] + "(data: $data, where: $where) " + this.query + " }";
         }
+        else if (type === 'delete') {
+            queryString = "mutation mutationFn($data: " + names.input[type] + " ) { " + names.mutation[type] + "(data: $data) {id} }";
+            console.log('queryString', queryString);
+        }
         else {
             queryString = "mutation mutationFn($data: " + names.input[type] + " ) { " + names.mutation[type] + "(data: $data) " + this.query + " }";
         }
+        console.log('*************queryString,', queryString);
         var MUTATION = graphql_tag_1.default(queryString);
         return (<react_apollo_1.Mutation mutation={MUTATION} refetchQueries={refetchQueries} variables={variables} update={update} ignoreResults={ignoreResults} optimisticResponse={optimisticResponse} awaitRefetchQueries={awaitRefetchQueries} onCompleted={onCompleted} onError={onError} context={context} client={client} fetchPolicy={fetchPolicy}>
                 {function (mutationFn, _a) {
@@ -186,6 +222,19 @@ var Mutate = /** @class */ (function (_super) {
 }(react_1.PureComponent));
 exports.Mutate = Mutate;
 var MutateWithApollo = react_apollo_1.withApollo(Mutate);
+exports.Delete = function (_a) {
+    var id = _a.id, schema = _a.schema, optimisticResponse = _a.optimisticResponse, props = __rest(_a, ["id", "schema", "optimisticResponse"]);
+    var where = undefined;
+    if (id) {
+        if (typeof id === 'string') {
+            where = { id: id };
+        }
+        else {
+            where = id;
+        }
+    }
+    return (<MutateWithApollo type='delete' schema={schema} where={where} optimisticResponse={optimisticResponse} {...props}/>);
+};
 exports.Create = function (_a) {
     var schema = _a.schema, optimisticResponse = _a.optimisticResponse, props = __rest(_a, ["schema", "optimisticResponse"]);
     return (<MutateWithApollo type='create' schema={schema} optimisticResponse={optimisticResponse} {...props}/>);
@@ -214,6 +263,8 @@ exports.refetchQueries = function (mutationResult, schema, client, refetchSchema
     if (refetchSchemas === void 0) { refetchSchemas = []; }
     var refetchQueries = [];
     var _a = schema.names.query, single = _a.single, plural = _a.plural, connection = _a.connection;
+    // @ts-ignore
+    window.client = client;
     // @ts-ignore
     client.cache.watches.forEach(function (_a) {
         var query = _a.query, variables = _a.variables;
@@ -296,10 +347,11 @@ exports.getSubSchemaMutations = function (model, schema, mutationType) {
                         };
                     }
                     else {
+                        var id = value.id, clone = __rest(value, ["id"]);
                         obj[key] = {
                             upsert: {
-                                create: exports.getSubSchemaMutations(value, schema_3, 'create'),
-                                update: exports.getSubSchemaMutations(value, schema_3, 'update')
+                                create: exports.getSubSchemaMutations(clone, schema_3, 'create'),
+                                update: exports.getSubSchemaMutations(clone, schema_3, 'update')
                             }
                         };
                     }

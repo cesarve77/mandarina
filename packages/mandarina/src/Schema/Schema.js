@@ -40,7 +40,7 @@ var Schema = /** @class */ (function () {
         this.pathDefinitions = {};
         //TODO VER QUE CONO ES ESTO, por que ahora todas tienen id ***** **** TODO WARNING
         this._isConnectingValue = function (value) {
-            return (value && value.hasOwnProperty && value.hasOwnProperty('id') && typeof value.id === 'string');
+            return (value && value.hasOwnProperty && value.hasOwnProperty('id') && typeof value.id === 'string' && Object.keys(value).length === 1);
         };
         var name = options.name, _a = options.recursive, recursive = _a === void 0 ? [] : _a, errorFromServerMapper = options.errorFromServerMapper, permissions = options.permissions;
         this.name = name;
@@ -54,8 +54,6 @@ var Schema = /** @class */ (function () {
         this.permissions = permissions || {};
         this.shape = lodash_mapvalues_1.default(shape, function (field, key) { return _this.applyDefinitionsDefaults(field, key); });
         this.keys = Object.keys(this.shape);
-        if (!this.keys.includes('id'))
-            this.extend({ id: { type: String } });
         this.filePath = this.getFilePath();
         var single = utils_1.singularize(this.name);
         var singleUpper = utils_1.capitalize(single);
@@ -72,6 +70,7 @@ var Schema = /** @class */ (function () {
                 updateMany: "updateMany" + pluralUpper,
                 deleteMany: "deleteMany" + pluralUpper
             },
+            orderBy: singleUpper + "OrderByInput",
             input: {
                 where: {
                     single: singleUpper + "WhereUniqueInput!",
@@ -187,15 +186,18 @@ var Schema = /** @class */ (function () {
      * Mutate the model,with all keys  proper types and null for undefined
      * TODO: Refactor to prevent mutation, fix it creating a new cloned model and returning it
      * @param model
-     * @param transform
+     * @param fields
      * @param removeExtraKeys
      */
     Schema.prototype._clean = function (model, fields, removeExtraKeys) {
         var _this = this;
         if (removeExtraKeys === void 0) { removeExtraKeys = true; }
+        console.log('fields', fields);
+        console.log('model', model);
         if (removeExtraKeys && model && typeof model === 'object') {
             Object.keys(model).forEach(function (key) {
                 if (!_this.keys.includes(key)) {
+                    console.log('removeExtraKeys', key);
                     delete model[key];
                 }
             });
@@ -358,7 +360,7 @@ var Schema = /** @class */ (function () {
                     var instance = new validator({ key: key, path: path, definition: definition, value: value });
                     var error = instance.validate(originalModel);
                     if (error) {
-                        return errors.push(error);
+                        errors.push(error);
                     }
                 }
                 //Check no array validators
@@ -372,9 +374,12 @@ var Schema = /** @class */ (function () {
                             var schema = _a.schema;
                             return schemaName_1 === schema;
                         }))) {
+                            pathHistory.push({ path: path, schema: schemaName_1 });
                             internalErrors_1 = internalErrors_1.concat(schema_2._validate(value, path + "." + i, pathHistory, originalModel));
                         }
-                        pathHistory.push({ path: path, schema: schemaName_1 });
+                        else {
+                            pathHistory.push({ path: path, schema: schemaName_1 });
+                        }
                     });
                     errors = errors.concat(internalErrors_1);
                 }
@@ -404,9 +409,12 @@ var Schema = /** @class */ (function () {
                     var schema = _a.schema;
                     return schemaName_2 === schema;
                 }))) {
+                    pathHistory.push({ path: path, schema: schemaName_2 });
                     internalErrors = schema._validate(value, path, pathHistory, originalModel);
                 }
-                pathHistory.push({ path: path, schema: schemaName_2 });
+                else {
+                    pathHistory.push({ path: path, schema: schemaName_2 });
+                }
                 return errors = errors.concat(internalErrors);
             }
             for (var _b = 0, _c = definition.validators; _b < _c.length; _b++) {
@@ -416,7 +424,7 @@ var Schema = /** @class */ (function () {
                 var instance = new validator({ key: key, path: path, definition: definition, value: value });
                 var error = instance.validate(originalModel);
                 if (error) {
-                    return errors.push(error);
+                    errors.push(error);
                 }
             }
         });
@@ -438,33 +446,33 @@ var Schema = /** @class */ (function () {
         }
         return errors;
     };
-    Schema.prototype._getFields = function (parent, pathHistory) {
+    Schema.prototype._getFields = function (parent, pathHistory, recursive) {
         var _this = this;
         if (parent === void 0) { parent = ''; }
         if (pathHistory === void 0) { pathHistory = []; }
+        if (recursive === void 0) { recursive = this.options.recursive || []; }
         var fields = [];
-        var schema = this;
-        schema.keys.forEach(function (key) {
+        var thisSchema = this;
+        thisSchema.keys.forEach(function (key) {
             var dot = parent ? '.' : '';
             var path = "" + parent + dot + key;
             var cleanPath = path.replace(/\.d+/, '');
-            var def = schema.getFieldDefinition(key);
-            var table;
+            var def = thisSchema.getFieldDefinition(key);
+            var schema;
             if (def.isArray) {
                 _this.arraysFields.push(path);
             }
             if (def.isTable) {
-                table = Schema.getInstance(def.type);
-                pathHistory.push({ path: path, table: _this.name });
+                schema = Schema.getInstance(def.type);
+                pathHistory.push({ path: path, schema: _this.name });
                 var fieldsInternal = [];
-                var tableName_1 = table.name;
-                var recursive = _this.options.recursive || [];
+                var schemaName_3 = schema.name;
                 // Check if we are entering in a recursive table, if actual table has been used before, reviewing the history
                 if (recursive.includes(cleanPath) || !pathHistory.some(function (_a) {
-                    var table = _a.table;
-                    return tableName_1 === table;
+                    var schema = _a.schema;
+                    return schemaName_3 === schema;
                 })) {
-                    fieldsInternal = table._getFields(path, pathHistory);
+                    fieldsInternal = schema._getFields(path, pathHistory, recursive);
                 }
                 // To intro a path in table options to continue deep in get fields
                 fields = fields.concat(fieldsInternal);

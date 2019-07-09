@@ -9,6 +9,7 @@ const HiddenTableField: any=require("./uniforms/HiddenTableField").default
 import ActionForm from './ActionForm'
 import {AuthCreateForm, AuthUpdateForm, AuthList, AuthListVirtualized} from './Auth'
 import {CreateForm} from './Forms'
+import {DeleteForm} from './Forms'
 import {UpdateForm} from './Forms'
 import {List} from './List/List'
 import {ListVirtualized} from './List/ListVirtualized'
@@ -30,6 +31,7 @@ export {
     NestField,
     TableField,
     ActionForm,
+    DeleteForm,
     CreateForm,
     UpdateForm,
 }

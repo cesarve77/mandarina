@@ -2,7 +2,7 @@ import React from 'react'
 import {Create, Schema, Update} from "mandarina";
 import AutoForm from "uniforms-antd/AutoForm"
 import SubmitField from "uniforms-antd/SubmitField";
-import {CreateProps, MutateResultProps, UpdateProps} from "mandarina/build/Operations/Mutate";
+import {CreateProps, Delete, MutateResultProps, UpdateProps} from "mandarina/build/Operations/Mutate";
 import {OperationVariables} from "react-apollo";
 import {Bridge} from "./Bridge";
 import {ensureId, filterFields} from "mandarina/build/utils";
@@ -24,10 +24,17 @@ export interface UpdateFormProps extends FormPropsOmitComponent {
     id: string | any
 }
 
+export interface DeleteFormProps extends FormPropsOmitComponent {
+    id: string
+}
+
+
 export const CreateForm = React.forwardRef<HTMLFormElement, CreateFormProps>((props: CreateFormProps, ref) =>
     <Form Component={Create} {...props} innerRef={ref}/>)
 export const UpdateForm = React.forwardRef<HTMLFormElement, UpdateFormProps>((props: UpdateFormProps, ref) =>
     <Form Component={Update} {...props} innerRef={ref}/>)
+export const DeleteForm = React.forwardRef<HTMLFormElement, DeleteFormProps>((props: DeleteFormProps, ref) =>
+    <Form Component={Delete} {...props} innerRef={ref}/>)
 
 export interface AutoFormProps {
     showInlineError?: boolean
@@ -84,7 +91,7 @@ export const normalizeFields = (fields: string[], schema: Schema, overwrite?: Ov
         }
         result.push(field)
     })
-    if (tables.length===0) return result
+    if (tables.length === 0) return result
     const rg = new RegExp(`^(${tables.join('|')})\\.(?!id$).*`)
     return result.filter((field) => !rg.test(field))
 }
@@ -116,13 +123,14 @@ const Form = ({
                   ...mutationProps
               }: FormProps) => {
     const bridge = new Bridge(schema, overwrite)
-    const AllFields = ensureId(filterFields(schema.getFields(), optionalFields, omitFields, omitFieldsRegEx))
-
+    const isDelete= Component===Delete
+    const AllFields = isDelete ? [] :ensureId(filterFields(schema.getFields(), optionalFields, omitFields, omitFieldsRegEx))
     const fields = normalizeFields(AllFields, schema, overwrite)
     return (
         <Component id={id} schema={schema} fields={fields} {...mutationProps}>
             {({mutate, doc = model, loading, ...rest}) => {
-                doc && schema.clean(doc,fields)
+                console.log('docdocdocdoc',doc)
+                doc && schema.clean(doc, fields)
                 return (
                     <AutoForm
                         schema={bridge}

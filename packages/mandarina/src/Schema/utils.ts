@@ -78,18 +78,19 @@ export const get = (obj: any={}, paths: string[]): any[] => {
     const len=paths.length
     for (let i=0;i<len;i++){
         const path=paths[i]
+         paths=paths.slice(i + 1)
         const val = obj[path]
+
         if (Array.isArray(val)) {
             val.forEach((val) => {
-                result.push(...get(val, paths.slice(i + 1)))
+                result.push(...get(val, paths))
             })
         } else if (val) {
-            const slice=paths.slice(i + 1)
-            if (slice.length === 0) {
+            if (paths.length === 0) {
                 result.push(val)
                 return result
             } else {
-                result.push(...get(val, slice))
+                result.push(...get(val, paths))
                 return result
             }
 

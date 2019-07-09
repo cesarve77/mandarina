@@ -574,6 +574,9 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
 
 export const DefaultCellComponent: CellComponent = React.memo(({columnIndex, rowIndex, data, field}) => {
         const children = (data[rowIndex] && get(data[rowIndex], field.split('.'))) || []
+        if (field==='tags.name')
+        console.log(field,data,children[0], children)
+
         return <>{children.map((child, i) => <span key={i}>{child}<br/></span>)}</>
     }
     , areEqual)

@@ -12,6 +12,11 @@ function bm(description = '') {
 describe('Util', () => {
     test("get with array values", () => {
         const obj = {
+            name: 'name',
+            tags: [
+                {name: 'tag1'},
+                {name: 'tag2'}
+            ],
             a: {
                 b: [
                     {
@@ -38,9 +43,14 @@ describe('Util', () => {
             }
         }
         bm()
-        const result = get(obj, 'a.b.c.d.e'.split('.'))
-        bm('getArrayValue')
-        expect(result).toMatchObject([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20])
+        let result
+        // let result = get(obj, 'a.b.c.d.e'.split('.'))
+        // bm('getArrayValue')
+        // expect(result).toMatchObject([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20])
+        result = get(obj, 'tags.name'.split('.'))
+        bm('tags')
+        expect(result).toMatchObject(['tag1','tag2'])
+
     });
 
     const data = {
