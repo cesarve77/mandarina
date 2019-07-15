@@ -89,7 +89,11 @@ export class FindBase extends PureComponent<FindProps & FindBaseProps, FindBaseS
             partialRefetch,
             ...props
         } = this.props;
+        console.log('optionalFields',optionalFields)
+        console.log('schema.getFields()',schema.getFields())
         let fields = filterFields(schema.getFields(), optionalFields, omitFields, omitFieldsRegEx)
+        console.log('fields',fields)
+
         let orderBy: undefined | string
         if (sort) {
             const field = Object.keys(sort)[0]
@@ -121,6 +125,7 @@ export class FindBase extends PureComponent<FindProps & FindBaseProps, FindBaseS
         } else {
             queryString = `query ($where: ${names.input.where[type]} ) { ${names.query[type]}  (where: $where) ${defaultQuery} }`
         }
+        console.log('queryString',queryString)
         const QUERY = gql(queryString)
         // save a rendered query history in the instance and in the class
         // for update cache queries on mutations

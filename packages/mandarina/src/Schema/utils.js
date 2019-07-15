@@ -74,30 +74,25 @@ exports.get = function (obj, paths) {
     if (obj === void 0) { obj = {}; }
     var result = [];
     var len = paths.length;
-    var _loop_1 = function (i) {
+    for (var i = 0; i < len; i++) {
         var path = paths[i];
+        paths = paths.slice(i + 1);
         var val = obj[path];
         if (Array.isArray(val)) {
             val.forEach(function (val) {
-                result.push.apply(result, exports.get(val, paths.slice(i + 1)));
+                result.push.apply(result, exports.get(val, paths));
             });
         }
         else if (val) {
-            var slice = paths.slice(i + 1);
-            if (slice.length === 0) {
+            if (paths.length === 0) {
                 result.push(val);
-                return { value: result };
+                return result;
             }
             else {
-                result.push.apply(result, exports.get(val, slice));
-                return { value: result };
+                result.push.apply(result, exports.get(val, paths));
+                return result;
             }
         }
-    };
-    for (var i = 0; i < len; i++) {
-        var state_1 = _loop_1(i);
-        if (typeof state_1 === "object")
-            return state_1.value;
     }
     return result;
 };
