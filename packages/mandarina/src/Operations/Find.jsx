@@ -59,7 +59,10 @@ var FindBase = /** @class */ (function (_super) {
     FindBase.prototype.render = function () {
         var _a;
         var _b = this.props, optionalFields = _b.fields, schema = _b.schema, after = _b.after, first = _b.first, type = _b.type, where = _b.where, skip = _b.skip, sort = _b.sort, omitFields = _b.omitFields, omitFieldsRegEx = _b.omitFieldsRegEx, children = _b.children, pollInterval = _b.pollInterval, notifyOnNetworkStatusChange = _b.notifyOnNetworkStatusChange, fetchPolicy = _b.fetchPolicy, errorPolicy = _b.errorPolicy, ssr = _b.ssr, displayName = _b.displayName, onCompleted = _b.onCompleted, onError = _b.onError, context = _b.context, partialRefetch = _b.partialRefetch, props = __rest(_b, ["fields", "schema", "after", "first", "type", "where", "skip", "sort", "omitFields", "omitFieldsRegEx", "children", "pollInterval", "notifyOnNetworkStatusChange", "fetchPolicy", "errorPolicy", "ssr", "displayName", "onCompleted", "onError", "context", "partialRefetch"]);
+        console.log('optionalFields', optionalFields);
+        console.log('schema.getFields()', schema.getFields());
         var fields = utils_2.filterFields(schema.getFields(), optionalFields, omitFields, omitFieldsRegEx);
+        console.log('fields', fields);
         var orderBy;
         if (sort) {
             var field = Object.keys(sort)[0];
@@ -74,6 +77,7 @@ var FindBase = /** @class */ (function (_super) {
         else {
             queryString = "query ($where: " + names.input.where[type] + " ) { " + names.query[type] + "  (where: $where) " + defaultQuery + " }";
         }
+        console.log('queryString', queryString);
         var QUERY = graphql_tag_1.default(queryString);
         // save a rendered query history in the instance and in the class
         // for update cache queries on mutations

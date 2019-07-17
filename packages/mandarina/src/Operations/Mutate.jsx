@@ -194,13 +194,12 @@ var Mutate = /** @class */ (function (_super) {
             queryString = "mutation mutationFn($where: " + names.input.where.single + ", $data: " + names.input[type] + " ) { " + names.mutation[type] + "(data: $data, where: $where) " + this.query + " }";
         }
         else if (type === 'delete') {
-            queryString = "mutation mutationFn($data: " + names.input[type] + " ) { " + names.mutation[type] + "(data: $data) {id} }";
-            console.log('queryString', queryString);
+            queryString = "mutation mutationFn($where: " + names.input.where.single + ") { " + names.mutation[type] + "(where: $where) {id} }";
         }
         else {
             queryString = "mutation mutationFn($data: " + names.input[type] + " ) { " + names.mutation[type] + "(data: $data) " + this.query + " }";
         }
-        console.log('*************queryString,', queryString);
+        console.log('queryString', queryString);
         var MUTATION = graphql_tag_1.default(queryString);
         return (<react_apollo_1.Mutation mutation={MUTATION} refetchQueries={refetchQueries} variables={variables} update={update} ignoreResults={ignoreResults} optimisticResponse={optimisticResponse} awaitRefetchQueries={awaitRefetchQueries} onCompleted={onCompleted} onError={onError} context={context} client={client} fetchPolicy={fetchPolicy}>
                 {function (mutationFn, _a) {

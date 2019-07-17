@@ -256,12 +256,11 @@ export class Mutate extends PureComponent<WithApolloClient<MutateProps & { type:
         if (type === 'update') {
             queryString = `mutation mutationFn($where: ${names.input.where.single}, $data: ${names.input[type]} ) { ${names.mutation[type]}(data: $data, where: $where) ${this.query} }`
         } else if (type === 'delete') {
-            queryString = `mutation mutationFn($data: ${names.input[type]} ) { ${names.mutation[type]}(data: $data) {id} }`
-            console.log('queryString', queryString)
+            queryString = `mutation mutationFn($where: ${names.input.where.single}) { ${names.mutation[type]}(where: $where) {id} }`
         } else {
             queryString = `mutation mutationFn($data: ${names.input[type]} ) { ${names.mutation[type]}(data: $data) ${this.query} }`
         }
-        console.log('*************queryString,', queryString)
+        console.log('queryString', queryString)
 
         const MUTATION = gql(queryString)
         return (

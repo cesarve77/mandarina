@@ -123,9 +123,15 @@ const getMainSchema = (schema: Schema, type: 'input' | 'type') => {
                 relation = `@relation(${relations.join(', ')})`
             }
         }
-        let scalarList = ''
+        let scalarList = '',createdAt='',updatedAt=''
         if (type === 'type' && fieldDefinition.table.scalarList) {
             scalarList = `@scalarList(strategy: ${fieldDefinition.table.scalarList.strategy})`
+        }
+        if (type === 'type' && (fieldDefinition.table.createdAt===true || (fieldDefinition.table.createdAt!==false && key==='createdAt'))) {
+            createdAt = `@createdAt`
+        }
+        if (type === 'type' && (fieldDefinition.table.createdAt===true || (fieldDefinition.table.updatedAt!==false && key==='updatedAt'))) {
+            createdAt = `@updatedAt`
         }
         if (!scalarList && type === 'type' && fieldDefinition.isArray && !fieldDefinition.isTable) {
             scalarList = `@scalarList(strategy: RELATION)`
@@ -133,7 +139,7 @@ const getMainSchema = (schema: Schema, type: 'input' | 'type') => {
         const fieldType = getGraphQLType(fieldDefinition, key, required, type === 'input');
 
         fieldDefinition.description && mainSchema.push(`# ${fieldDefinition.description}`);
-        mainSchema.push(`${key}: ${fieldType} ${unique} ${defaultValue} ${relation} ${scalarList} ${rename}`);
+        mainSchema.push(`${key}: ${fieldType} ${unique} ${createdAt} ${updatedAt} ${defaultValue} ${relation} ${scalarList} ${rename}`);
     }
     return mainSchema
 }

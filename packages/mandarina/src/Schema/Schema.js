@@ -192,12 +192,9 @@ var Schema = /** @class */ (function () {
     Schema.prototype._clean = function (model, fields, removeExtraKeys) {
         var _this = this;
         if (removeExtraKeys === void 0) { removeExtraKeys = true; }
-        console.log('fields', fields);
-        console.log('model', model);
         if (removeExtraKeys && model && typeof model === 'object') {
             Object.keys(model).forEach(function (key) {
                 if (!_this.keys.includes(key)) {
-                    console.log('removeExtraKeys', key);
                     delete model[key];
                 }
             });

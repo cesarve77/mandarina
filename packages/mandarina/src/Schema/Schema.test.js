@@ -50,6 +50,46 @@ describe('Schema', function () {
     //     expect(def).toHaveProperty('label', 'Label func',);
     //     expect(isRequired(def)).toBe(true)
     // });
+    test("family", function () {
+        var FamilySchema = new Schema_1.Schema({
+            parents: { type: ['FamilyParent'] }
+        }, { name: 'Family' });
+        new Schema_1.Schema({
+            firstName: { type: String, validators: ['required'] },
+            user: { type: 'User2' },
+        }, { name: 'FamilyParent' });
+        new Schema_1.Schema({
+            contactPreferencesEmail: { type: Boolean },
+            email: { type: String, validators: ['required', 'isEmail'] }
+        }, { name: 'User2' });
+        var model = { "parents": [{
+                    "id": null,
+                    "firstName": "1111",
+                    "surname": "1111",
+                    "user": { "id": null, "email": null, "contactPreferencesEmail": null, "type": "Family" },
+                    "mobilePhone": "11111",
+                    "contactPreferencesSms": null,
+                    "nationality": null,
+                    "gender": null,
+                    "dateOfBirth": null,
+                    "birthCountry": "Australia"
+                }, {
+                    "id": null,
+                    "firstName": "2222",
+                    "surname": "2222",
+                    "user": { "id": null, "email": null, "contactPreferencesEmail": null, "type": "Family" },
+                    "mobilePhone": "2222222",
+                    "contactPreferencesSms": null,
+                    "nationality": null,
+                    "gender": null,
+                    "dateOfBirth": null,
+                    "birthCountry": "Australia"
+                }], "dependents": [], "guests": []
+        };
+        var errors = FamilySchema.validate(model);
+        console.log('********', errors);
+        expect(errors).toHaveLength(2);
+    });
     test("validate valid", function () {
         var errors = User_1.User.validate({
             name: 'test 1'
