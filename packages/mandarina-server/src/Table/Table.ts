@@ -2,12 +2,13 @@ import {Prisma} from "prisma-binding";
 import {ContextParameters} from "graphql-yoga/dist/types";
 
 import {ActionType} from "mandarina/build/Auth/Auth";
-import {SchemaOptions} from "mandarina/build/Schema/Schema";
 import {Schema} from "mandarina";
 import {UniqueSchemaError} from 'mandarina/build/Errors/UniqueSchemaError';
 import {SchemaInstanceNotFound} from "mandarina/build/Errors/SchemaInstanceNotFound";
 import {capitalize} from 'mandarina/build/Schema/utils';
 import {MissingIdTableError} from "mandarina/build/Errors/MissingIDTableError";
+import {ErrorFromServerMapper} from "mandarina/src/Schema/Schema";
+import {flatten, unflatten} from "flat";
 
 
 /**
@@ -25,12 +26,7 @@ export class Table {
     public options: TableSchemaOptions & TableShapeOptions;
 
 
-    /**
-     *
-     * @param schema
-     * @param tableOptions
-     */
-    constructor(schema: Schema, tableOptions: TableShapeOptions) {
+    constructor(schema: Schema, tableOptions?: TableShapeOptions) {
         Table.instances = Table.instances || {};
         this.schema = schema;
         this.name = this.schema.name;
@@ -43,7 +39,7 @@ export class Table {
             throw new UniqueSchemaError(this.name);
         }
 
-        this.options = {...schema.options, ...tableOptions};
+        this.options = {...tableOptions};
 
         Table.instances[this.name] = this;
     }
@@ -85,7 +81,6 @@ export class Table {
         // OperationName for query is user or users, for mutation are createUser, updateUser ....
         const operationNames: string[] = Object.values(this.schema.names[type]);
         operationNames.forEach((operationName: string) => {
-
             result[operationName] = async (_: any, args: any = {}, context: Context, info: any) => {
                 console.log('*****************************************************')
                 console.log('operationName', operationName)
@@ -105,12 +100,11 @@ export class Table {
                 //const roles = use zr && user.roles
 
                 let result: any
-                console.log('type', type)
-                console.log('action', action)
+                const capitalizedAction = capitalize(action)
                 // TODO: Review the hooks architecture for adding a way to execute hooks of nested operations
                 if (type === 'mutation') {
 
-                    await this.callHook('beforeValidate', _, args, context, info);
+                    await this.callHook(this.name, 'beforeValidate', _, args, context, info);
 
                     //TODO: Flatting nested fields operation (context, update, create)
                     // console.log('123123123',this.flatFields(args.data))
@@ -122,24 +116,47 @@ export class Table {
                     //     await this.callHook('afterValidate', action, _, args, context, info);
                     // }
 
-                    await this.callHook(<HookName>`before${capitalize(action)}`, _, args, context, info);
+                    await this.callHook(this.name, <HookName>`before${capitalizedAction}`, _, args, context, info);
 
                     //this.validatePermissions(action, roles, args.data);
-                    console.dir(args,{depth: 6})
+
+                    /*
+                    HACK https://github.com/prisma/prisma/issues/4327
+                     */
+                    if (`before${capitalizedAction}` === 'beforeUpdate' || `before${capitalizedAction}` === 'beforeCreate') {
+                        const flat = flatten(args.data)
+                        const where = args.where
+                        let run = false
+                        let withDeleteMany: any = {}
+                        let withoutDeleteMany: any = {}
+                        Object.keys(flat).forEach((key) => {
+                            if (key.match(/\.deleteMany\.0$/)) {
+                                withDeleteMany[key] = flat[key]
+                            } else {
+                                run = true
+                                withoutDeleteMany[key] = flat[key]
+                            }
+                        })
+                        if (run) {
+                            await prismaMethod({where, data: unflatten(withDeleteMany)}, info);
+                            args.data = unflatten(withoutDeleteMany)
+                        }
+                    }
+
                     result = await prismaMethod(args, info);
 
                     context.result = result
 
-                    await this.callHook(<HookName>`after${capitalize(action)}`, _, args, context, info);
+                    await this.callHook(this.name, <HookName>`after${capitalizedAction}`, _, args, context, info);
 
                     //this.validatePermissions('read', roles, fieldsList(info));
                 }
                 if (type === 'query') {
-                    await this.callHook('beforeQuery', _, args, context, info);
+                    await this.callHook(this.name, 'beforeQuery', _, args, context, info);
                     //this.validatePermissions('read', roles, fieldsList(info));
                     result = await prismaMethod(args, info);
                     context.result = result
-                    await this.callHook('afterQuery', _, args, context, info);
+                    await this.callHook(this.name, 'afterQuery', _, args, context, info);
 
                 }
 
@@ -166,13 +183,17 @@ export class Table {
      * @param context
      * @param info
      */
-    private async callHook(name: HookName, _: any, args: any, context: any, info: any) {
-        console.log('hookHandler',name)
-        const hookHandler = this.options.hooks && this.options.hooks[name];
-        if (hookHandler) {
-            console.log('SIII')
-            await hookHandler(_, args, context, info);
+    private async callHook(schemaName: string, name: HookName, _: any, args: any, context: any, info: any) {
+        try {
+            const hookHandler = this.options.hooks && this.options.hooks[name];
+            if (hookHandler) {
+                await hookHandler(_, args, context, info);
+            }
+        } catch (e) {
+            console.error(`Error executing hook: "${name}" in Table: ${schemaName}"`)
+            console.error(e)
         }
+
     }
 
 
@@ -240,7 +261,8 @@ export interface TableSchemaOptions {
     middlewares?: Array<(user: any, context: any, info: any) => Promise<void>>
 }
 
-export interface TableShapeOptions extends SchemaOptions, TableSchemaOptions {
+export interface TableShapeOptions extends TableSchemaOptions {
+    errorFromServerMapper?: ErrorFromServerMapper
 }
 
 

@@ -5,7 +5,6 @@ import SubmitField from "uniforms-antd/SubmitField";
 import {CreateProps, Delete, MutateResultProps, UpdateProps} from "mandarina/build/Operations/Mutate";
 import {OperationVariables} from "react-apollo";
 import {Bridge} from "./Bridge";
-import {ensureId, filterFields} from "mandarina/build/utils";
 import {Model, Overwrite} from "mandarina/build/Schema/Schema";
 //
 const ErrorsField: any = require("./uniforms/ErrorsField").default
@@ -59,10 +58,8 @@ interface FormProps<TData = any, TVariables = OperationVariables> extends Mutate
     Component: Component
     schema: Schema
     id?: string | any
-    fields?: string[]
+    fields: string[]
     overwrite?: Overwrite
-    omitFields?: string[]
-    omitFieldsRegEx?: RegExp
     children?: ((props: any) => React.ReactNode | React.ReactNode[]) | React.ReactNode | React.ReactNode[]
 
 }
@@ -72,34 +69,34 @@ export interface ChildFunc {
 }
 
 
-/**
- * If a fields is Table and the form is query, it'll remove all subfields diferents to id
- * @param fields
- * @param schema
- * @param overwrite
- */
-export const normalizeFields = (fields: string[], schema: Schema, overwrite?: Overwrite) => {
-    const tables: string[] = []
-    const result: string[] = []
-    fields.forEach((field) => {
-        if (field.match(/\.id$/)) {
-            const parent = field.substr(0, field.length - 3)
-            const def = schema.getPathDefinition(parent)
-            // @ts-ignore
-            const query = (overwrite && overwrite[field] && overwrite[field].form && overwrite[field].form.props && overwrite[field].form.props.query) || (def && def.form && def.form.props && def.form.props.query)
-            if (query) tables.push(parent.replace(/\./, '\\.'))
-        }
-        result.push(field)
-    })
-    if (tables.length === 0) return result
-    const rg = new RegExp(`^(${tables.join('|')})\\.(?!id$).*`)
-    return result.filter((field) => !rg.test(field))
-}
+// /**
+//  * If a fields is Table and the form is query, it'll remove all subfields diferents to id
+//  * @param fields
+//  * @param schema
+//  * @param overwrite
+//  */
+// export const normalizeFields = (fields: string[], schema: Schema, overwrite?: Overwrite) => {
+//     const tables: string[] = []
+//     const result: string[] = []
+//     fields.forEach((field) => {
+//         if (field.match(/\.id$/)) {
+//             const parent = field.substr(0, field.length - 3)
+//             const def = schema.getPathDefinition(parent)
+//             // @ts-ignore
+//             const query = (overwrite && overwrite[field] && overwrite[field].form && overwrite[field].form.props && overwrite[field].form.props.query) || (def && def.form && def.form.props && def.form.props.query)
+//             if (query) tables.push(parent.replace(/\./, '\\.'))
+//         }
+//         result.push(field)
+//     })
+//     if (tables.length === 0) return result
+//     const rg = new RegExp(`^(${tables.join('|')})\\.(?!id$).*`)
+//     return result.filter((field) => !rg.test(field))
+// }
 
 
 const Form = ({
                   Component,
-                  fields: optionalFields,
+                  fields,
                   schema,
                   innerRef,
                   id,
@@ -114,23 +111,19 @@ const Form = ({
                   error,
                   modelTransform,
                   label,
-                  omitFields,
                   onSubmitSuccess,
                   onSubmitFailure,
-                  omitFieldsRegEx,
                   onChangeModel,
                   overwrite,
                   ...mutationProps
               }: FormProps) => {
-    const bridge = new Bridge(schema, overwrite)
-    const isDelete= Component===Delete
-    const AllFields = isDelete ? [] :ensureId(filterFields(schema.getFields(), optionalFields, omitFields, omitFieldsRegEx))
-    const fields = normalizeFields(AllFields, schema, overwrite)
+    const bridge = new Bridge(schema, fields,overwrite)
+    const isDelete = Component === Delete
+    const AllFields = isDelete ? [] : fields
     return (
-        <Component id={id} schema={schema} fields={fields} {...mutationProps}>
+        <Component id={id} schema={schema} fields={AllFields} {...mutationProps}>
             {({mutate, doc = model, loading, ...rest}) => {
-                console.log('docdocdocdoc',doc)
-                doc && schema.clean(doc, fields)
+                doc && schema.clean(doc, AllFields)
                 return (
                     <AutoForm
                         schema={bridge}
@@ -154,7 +147,7 @@ const Form = ({
                         onSubmitFailure={onSubmitFailure}
                         onValidate={(model: Object, error: any, callback: any) => {
                             try {
-                                bridge.getValidator({fields})(model)
+                                bridge.getValidator()(model)
                             } catch (e) {
                                 console.error(e)
                                 return callback(e)

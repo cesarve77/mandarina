@@ -36,7 +36,7 @@ export const isString = new ValidatorCreator((value) => !exists(value) || typeof
 
 export const isDate = new ValidatorCreator((value) => !exists(value) || value instanceof Date, 'isDate', '{{label}} is not a valid date')
 
-export const isArray = new ValidatorCreator((value) => !exists(value) || Array.isArray(value), 'isArray', "{{label}} should be a array", true)
+export const isArray = new ValidatorCreator((value) => exists(value) && Array.isArray(value), 'isArray', "{{label}} should be a array", true)
 
 export const isRegEx = new ValidatorCreator((value, param: RegExp) => !exists(value) || param.test(value), 'isRegEx', "{{label}} has an invalid format")
 

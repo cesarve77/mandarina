@@ -1,6 +1,5 @@
 import {Component, ReactNode} from "react"
 import {Schema} from "..";
-import {filterFields} from "../utils";
 import {withApollo, WithApolloClient} from "react-apollo";
 import gql from "graphql-tag";
 import {ApolloQueryResult} from "apollo-client";
@@ -8,7 +7,7 @@ import {ApolloQueryResult} from "apollo-client";
 export type ActionType = 'create' | 'read' | 'update' | 'delete'
 
 export interface AuthChildrenProps {
-    fields?: string[],
+    fields: string[],
     error?: Error,
     loading: boolean
 }
@@ -17,9 +16,7 @@ export interface AuthProps {
     action: ActionType
     schema: Schema
     userRoles: string[]
-    fields?: string[]
-    omitFields?: string[]
-    omitFieldsRegEx?: RegExp
+    fields: string[]
     children: ({fields, error, loading}: AuthChildrenProps) => ReactNode
 }
 
@@ -28,12 +25,12 @@ type AuthPropsWithClient = WithApolloClient<AuthProps>
 class Auth extends Component<AuthPropsWithClient, { loading: boolean, fields: string[], error?: Error }> {
     constructor(props: AuthPropsWithClient) {
         super(props)
-        let {action, schema, userRoles} = props;
-        const fields = getFields({action, schema, userRoles})
-        if (fields === null) {
+        let {action, schema, userRoles, fields} = props;
+        const finalFields = getFields({fields, action, schema, userRoles})
+        if (finalFields === null) {
             this.state = {loading: true, fields: []}
         } else {
-            this.state = {loading: false, fields}
+            this.state = {loading: false, fields: finalFields}
         }
     }
 
@@ -53,9 +50,12 @@ class Auth extends Component<AuthPropsWithClient, { loading: boolean, fields: st
     }
 
     render() {
-        let {children, fields: optionalFields, omitFields, omitFieldsRegEx} = this.props;
-        const {loading, fields: authFields, error} = this.state
-        const fields = authFields ? filterFields(authFields, optionalFields, omitFields, omitFieldsRegEx) : undefined
+        let {children, fields: hardCodeFields} = this.props;
+        const {loading, fields: schemaFields, error} = this.state
+        console.log('hardCodeFields',hardCodeFields)
+        console.log('schemaFields',schemaFields)
+        const fields = hardCodeFields.filter(field => schemaFields.includes(field))
+        console.log('fields',fields)
         return children({fields, loading, error})
     }
 }
@@ -67,7 +67,7 @@ export default withApollo<AuthProps>(Auth)
 export const addToSet = (into: any[], toBeAdded: any[]) => toBeAdded.forEach(item => !into.includes(item) && into.push(item))
 
 
-let roles: string[] = []
+let roles=new Set<string>()
 export let authFields: {
     [tableName: string]: {
         [action in ActionType]: {
@@ -81,20 +81,16 @@ export const actions = ['read', 'create', 'update', 'delete']
 
 
 export const getRoles = () => {
-    if (roles.length === 0) {
+    if (roles.size === 0) {
         const schemas = Object.values(Schema.instances)
         schemas.forEach((schema: Schema) => {
-            authFields[schema.name] = authFields[schema.name] || {read: {}, create: {}, update: {}, delete: {}}
-            const permissions = schema.getPermissions()
-            actions.forEach((action) => {
-                const tableRoles = Object.keys(permissions[action])
-                tableRoles.forEach(role => {
-                    authFields[schema.name][action][role] = permissions[action][role]
-                    if (role && !roles.includes(role)) {
-                        roles.push(role)
-                    }
-                })
-
+            const fields = schema.getFields()
+            fields.forEach(field => {
+                const permissions = schema.getPathDefinition(field).permissions
+                if (permissions.read) permissions.read.forEach(r=>roles.add(r))
+                if (permissions.update) permissions.update.forEach(r=>roles.add(r))
+                if (permissions.create) permissions.create.forEach(r=>roles.add(r))
+                if (permissions.delete) permissions.delete.forEach(r=>roles.add(r))
             })
         })
     }
@@ -102,22 +98,19 @@ export const getRoles = () => {
 }
 export const getFields = (args: AuthArgs) => {
     const allRoles = getRoles()
+    for (const userRole of args.userRoles) {
+        if (!allRoles.has(userRole)) return null;
+    }
+
     if (!actions.includes(args.action)) throw new Error(`Action only can be one of ['read', 'create', 'update', 'delete'] now is: ${args.action} `)
-    if (!authFields[args.schema.name]) throw new Error(`Table ${args.schema} not found getting AuthFields `)
-    const allTableFields = args.schema.getFields()
-    const tablePermissions = args.schema.getPermissions()
-    const everyone = tablePermissions[args.action].everyone
-    let fields: string[] = everyone ? everyone : []
-    let extraRoles: string[] = []
-    args.userRoles.forEach((role) => {
-        if (allRoles.includes(role)) {
-            addToSet(fields, authFields[args.schema.name][args.action][role] || [])
-        } else {
-            extraRoles.push(role)
-        }
+    const finalFields: string[]=[]
+    const t=new Date().getTime()
+    args.fields.forEach(field=>{
+        if (args.schema.getFieldPermission(field,args.userRoles,args.action)) finalFields.push(field)
+
     })
-    if (!extraRoles.length) return allTableFields.filter(field => fields.includes(field)) // for keep the order
-    return null
+    console.log('time',new Date().getTime()-t)
+    return finalFields
 
     /*const staticRoles = roles.filter(permissionRoles.includes)
     const dynamicRoles = roles.filter((field: string) => !permissionRoles.includes(field))
@@ -159,6 +152,7 @@ export const getFields = (args: AuthArgs) => {
 
 
 export interface AuthArgs {
+    fields: string[]
     schema: Schema,
     action: ActionType,
     userRoles: string[]

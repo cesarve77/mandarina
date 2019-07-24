@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import filterDOMProps from "uniforms/filterDOMProps";
 import AutoField from "./AutoField";
 import {Row} from "antd";
-import {getDecendents, getParents} from "mandarina/build/utils";
+import {getDecendentsDot, getParentsDot} from "mandarina/build/utils";
 
 
 class AutoFields extends Component {
@@ -55,13 +55,13 @@ class AutoFields extends Component {
                 ))
         )
         const filteredField=fieldList.filter(field => omitFields.indexOf(field) === -1)
-        const parents=getParents(filteredField)
+        const parents=getParentsDot(filteredField)
         return createElement(
             element,
             props,
             parents
                 .map(field => {
-                    let fields=getDecendents(filteredField,field)
+                    let fields=getDecendentsDot(filteredField,field)
                     if (fields.length>0){
                         return createElement(autoField, {key: field, name: field, fields})
                     }

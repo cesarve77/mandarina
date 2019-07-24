@@ -29,8 +29,6 @@ export default class HiddenTableField extends BaseField {
     render() {
         const props = this.getFieldProps();
         const value=props.value && props.value.id
-        console.log('value',props,value)
-
         return props.noDOM ? (
             nothing
         ) : (
@@ -40,7 +38,7 @@ export default class HiddenTableField extends BaseField {
                 name={props.name}
                 ref={props.inputRef}
                 type="hidden"
-                value={value}
+                value={value || ''}
                 {...filterDOMProps(props)}
             />
         );

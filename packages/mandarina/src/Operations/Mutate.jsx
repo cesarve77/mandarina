@@ -30,7 +30,6 @@ var graphql_tag_1 = require("graphql-tag");
 var react_apollo_1 = require("react-apollo");
 var utils_1 = require("./utils");
 var Find_1 = require("./Find");
-var utils_2 = require("../utils");
 var lodash_1 = require("lodash");
 exports.deepClone = function (obj) {
     return lodash_1.cloneDeep(obj);
@@ -110,7 +109,7 @@ var Mutate = /** @class */ (function (_super) {
             var data_1 = initiator(obj, schema);
             Object.keys(obj).forEach(function (key) {
                 var value = obj[key];
-                var definition = schema.getFieldDefinition(key);
+                var definition = schema.getPathDefinition(key);
                 if (typeof value === "object" && value !== null && value !== undefined && !(value instanceof Date)) {
                     if (definition.isTable) {
                         var schema_1 = __1.Schema.getInstance(definition.type);
@@ -153,13 +152,9 @@ var Mutate = /** @class */ (function (_super) {
     Mutate.prototype.mutate = function (model, mutationFn) {
         var _a;
         var _b = this.props, schema = _b.schema, where = _b.where, type = _b.type, optimisticResponse = _b.optimisticResponse;
-        console.log('where', where);
-        console.log('model', model);
         var cleaned = exports.deepClone(model);
-        schema.clean(cleaned, this.filteredFields); // fill null all missing keys
-        console.log('cleaned', cleaned);
+        schema.clean(cleaned, this.props.fields); // fill null all missing keys
         var data = this.getSubSchemaMutations(cleaned, schema);
-        console.log('data', data);
         var mutation = { variables: {} };
         if (type !== 'delete') {
             mutation.variables.data = data;
@@ -167,8 +162,6 @@ var Mutate = /** @class */ (function (_super) {
         if (type === 'update' || type === 'delete') {
             mutation.variables.where = where;
             Object.assign(cleaned, where);
-            console.log(' type===\'delete\'', type === 'delete', where);
-            console.log('mutation.variables', mutation.variables);
         }
         if (optimisticResponse !== false) {
             if (!optimisticResponse) {
@@ -184,11 +177,9 @@ var Mutate = /** @class */ (function (_super) {
     };
     Mutate.prototype.render = function () {
         var _this = this;
-        var _a = this.props, type = _a.type, children = _a.children, schema = _a.schema, optionalFields = _a.fields, omitFields = _a.omitFields, omitFieldsRegEx = _a.omitFieldsRegEx, findLoading = _a.loading, variables = _a.variables, _b = _a.update, update = _b === void 0 ? this.invalidateCache : _b, ignoreResults = _a.ignoreResults, optimisticResponse = _a.optimisticResponse, _c = _a.refetchQueries, refetchQueries = _c === void 0 ? this.refetchQueries : _c, awaitRefetchQueries = _a.awaitRefetchQueries, onCompleted = _a.onCompleted, onError = _a.onError, context = _a.context, client = _a.client, doc = _a.doc, fetchPolicy = _a.fetchPolicy;
-        var fields = utils_2.filterFields(schema.getFields(), optionalFields, omitFields, omitFieldsRegEx);
-        this.filteredFields = fields;
+        var _a = this.props, type = _a.type, children = _a.children, schema = _a.schema, fields = _a.fields, findLoading = _a.loading, variables = _a.variables, _b = _a.update, update = _b === void 0 ? this.invalidateCache : _b, ignoreResults = _a.ignoreResults, optimisticResponse = _a.optimisticResponse, _c = _a.refetchQueries, refetchQueries = _c === void 0 ? this.refetchQueries : _c, awaitRefetchQueries = _a.awaitRefetchQueries, onCompleted = _a.onCompleted, onError = _a.onError, context = _a.context, client = _a.client, doc = _a.doc, fetchPolicy = _a.fetchPolicy;
         var names = schema.names;
-        this.query = fields ? utils_1.buildQueryFromFields(fields) : this.buildQueryFromFields();
+        this.query = utils_1.buildQueryFromFields(fields);
         var queryString;
         if (type === 'update') {
             queryString = "mutation mutationFn($where: " + names.input.where.single + ", $data: " + names.input[type] + " ) { " + names.mutation[type] + "(data: $data, where: $where) " + this.query + " }";
@@ -204,6 +195,9 @@ var Mutate = /** @class */ (function (_super) {
         return (<react_apollo_1.Mutation mutation={MUTATION} refetchQueries={refetchQueries} variables={variables} update={update} ignoreResults={ignoreResults} optimisticResponse={optimisticResponse} awaitRefetchQueries={awaitRefetchQueries} onCompleted={onCompleted} onError={onError} context={context} client={client} fetchPolicy={fetchPolicy}>
                 {function (mutationFn, _a) {
             var loading = _a.loading, data = _a.data, error = _a.error, called = _a.called, client = _a.client;
+            if (error) {
+                console.error(error);
+            }
             return children({
                 schema: schema,
                 mutate: function (model) { return _this.mutate(model, mutationFn); },
@@ -289,7 +283,7 @@ exports.getSubSchemaMutations = function (model, schema, mutationType) {
         return model;
     Object.keys(model).forEach(function (key) {
         var value = model[key];
-        var definition = schema.getFieldDefinition(key);
+        var definition = schema.getPathDefinition(key);
         //1 to n relations
         if (definition.isTable) {
             if (definition.isArray) {

@@ -40,7 +40,6 @@ var graphql_tag_1 = require("graphql-tag");
 var react_apollo_1 = require("react-apollo");
 var utils_1 = require("./utils");
 var lodash_pull_1 = require("lodash.pull");
-var utils_2 = require("../utils");
 var FindBase = /** @class */ (function (_super) {
     __extends(FindBase, _super);
     function FindBase(props) {
@@ -58,18 +57,14 @@ var FindBase = /** @class */ (function (_super) {
     };
     FindBase.prototype.render = function () {
         var _a;
-        var _b = this.props, optionalFields = _b.fields, schema = _b.schema, after = _b.after, first = _b.first, type = _b.type, where = _b.where, skip = _b.skip, sort = _b.sort, omitFields = _b.omitFields, omitFieldsRegEx = _b.omitFieldsRegEx, children = _b.children, pollInterval = _b.pollInterval, notifyOnNetworkStatusChange = _b.notifyOnNetworkStatusChange, fetchPolicy = _b.fetchPolicy, errorPolicy = _b.errorPolicy, ssr = _b.ssr, displayName = _b.displayName, onCompleted = _b.onCompleted, onError = _b.onError, context = _b.context, partialRefetch = _b.partialRefetch, props = __rest(_b, ["fields", "schema", "after", "first", "type", "where", "skip", "sort", "omitFields", "omitFieldsRegEx", "children", "pollInterval", "notifyOnNetworkStatusChange", "fetchPolicy", "errorPolicy", "ssr", "displayName", "onCompleted", "onError", "context", "partialRefetch"]);
-        console.log('optionalFields', optionalFields);
-        console.log('schema.getFields()', schema.getFields());
-        var fields = utils_2.filterFields(schema.getFields(), optionalFields, omitFields, omitFieldsRegEx);
-        console.log('fields', fields);
+        var _b = this.props, fields = _b.fields, schema = _b.schema, after = _b.after, first = _b.first, type = _b.type, where = _b.where, skip = _b.skip, sort = _b.sort, children = _b.children, pollInterval = _b.pollInterval, notifyOnNetworkStatusChange = _b.notifyOnNetworkStatusChange, fetchPolicy = _b.fetchPolicy, errorPolicy = _b.errorPolicy, ssr = _b.ssr, displayName = _b.displayName, onCompleted = _b.onCompleted, onError = _b.onError, context = _b.context, partialRefetch = _b.partialRefetch, props = __rest(_b, ["fields", "schema", "after", "first", "type", "where", "skip", "sort", "children", "pollInterval", "notifyOnNetworkStatusChange", "fetchPolicy", "errorPolicy", "ssr", "displayName", "onCompleted", "onError", "context", "partialRefetch"]);
         var orderBy;
         if (sort) {
             var field = Object.keys(sort)[0];
             orderBy = field + (sort[field] > 0 ? '_ASC' : '_DESC');
         }
         var names = schema.names;
-        var defaultQuery = this.buildQueryFromFields(utils_2.ensureId(fields));
+        var defaultQuery = this.buildQueryFromFields(fields);
         var queryString;
         if (type === 'connection') {
             queryString = "query ($where: " + names.input.where[type] + ", $after: String, $first: Int, $skip: Int, $orderBy: " + names.orderBy + ") \n            { " + names.query[type] + " (where: $where, after: $after, first: $first, skip: $skip, orderBy: $orderBy) {\n                pageInfo {\n                  hasNextPage\n                  hasPreviousPage\n                  startCursor\n                  endCursor\n                }\n                edges {\n                  node  " + defaultQuery + "\n                }\n              }\n              totalCount: " + names.query[type] + " (where: $where) {\n                aggregate {\n                  count\n                }\n              }    \n            }";
@@ -98,6 +93,9 @@ var FindBase = /** @class */ (function (_super) {
                 else {
                     data = data && data[names.query[type]];
                 }
+            }
+            else {
+                console.error(error);
             }
             if (!children)
                 return null;

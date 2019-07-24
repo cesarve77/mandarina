@@ -4,7 +4,7 @@ import filterDOMProps from 'uniforms/filterDOMProps';
 import injectName from 'uniforms/injectName';
 import joinName from 'uniforms/joinName';
 import AutoField from './AutoField';
-import {getDecendents, getParents} from "mandarina/build/utils";
+import {getDecendentsDot, getParentsDot} from "mandarina/build/utils";
 import * as PropTypes from "prop-types";
 
 
@@ -13,9 +13,9 @@ class Nest extends Component {
     parents=[]
     constructor(props) {
         super(props)
-        this.parents =getParents(props.fields)
+        this.parents =getParentsDot(props.fields)
         this.parents.forEach((parent) => {
-            this.decendents[parent] = getDecendents(props.fields, parent)
+            this.decendents[parent] = getDecendentsDot(props.fields, parent)
         })
     }
     render() {

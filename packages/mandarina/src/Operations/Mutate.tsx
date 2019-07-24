@@ -9,7 +9,6 @@ import {MutationBaseOptions} from "apollo-client/core/watchQueryOptions";
 import {FetchResult} from "react-apollo/Mutation";
 import {ApolloClient, OperationVariables} from "apollo-client";
 import {DocumentNode} from "graphql";
-import {filterFields} from "../utils";
 import {cloneDeep as deepCloneLodash} from 'lodash'
 import {DataProxy} from "apollo-cache";
 
@@ -28,9 +27,7 @@ export type MutateResultProps =
 export interface MutateProps extends MutateResultProps {
     children: MutateChildren
     schema: Schema
-    fields?: string[]
-    omitFields?: string[]
-    omitFieldsRegEx?: RegExp
+    fields: string[]
     where?: any
     loading?: boolean
     doc?: Object
@@ -108,7 +105,7 @@ export class Mutate extends PureComponent<WithApolloClient<MutateProps & { type:
             const data = initiator(obj, schema)
             Object.keys(obj).forEach((key) => {
                 const value = obj[key]
-                let definition = schema.getFieldDefinition(key)
+                let definition = schema.getPathDefinition(key)
                 if (typeof value === "object" && value !== null && value !== undefined && !(value instanceof Date)) {
                     if (definition.isTable) {
                         const schema = Schema.getInstance(definition.type)
@@ -153,13 +150,9 @@ export class Mutate extends PureComponent<WithApolloClient<MutateProps & { type:
      */
     mutate(model: Model, mutationFn: MutationFn): Promise<void | FetchResult<Model>> {
         const {schema, where, type, optimisticResponse} = this.props
-        console.log('where', where)
-        console.log('model', model)
         const cleaned = deepClone(model)
-        schema.clean(cleaned, this.filteredFields)// fill null all missing keys
-        console.log('cleaned', cleaned)
+        schema.clean(cleaned, this.props.fields)// fill null all missing keys
         const data = this.getSubSchemaMutations(cleaned, schema)
-        console.log('data', data)
         const mutation: MutationBaseOptions = {variables: {}}
         if (type !== 'delete') {
             mutation.variables!.data = data
@@ -167,8 +160,6 @@ export class Mutate extends PureComponent<WithApolloClient<MutateProps & { type:
         if (type === 'update' || type === 'delete') {
             mutation.variables!.where = where
             Object.assign(cleaned, where)
-            console.log(' type===\'delete\'', type === 'delete', where)
-            console.log('mutation.variables', mutation.variables)
         }
         if (optimisticResponse !== false) {
             if (!optimisticResponse) {
@@ -215,7 +206,6 @@ export class Mutate extends PureComponent<WithApolloClient<MutateProps & { type:
             }
         })*/
     }
-    filteredFields: string[]
     invalidateCache = (cache: DataProxy) => {
         // Loop through all the data in our cache
         // And delete any items that start with "ListItem"
@@ -226,14 +216,14 @@ export class Mutate extends PureComponent<WithApolloClient<MutateProps & { type:
         // @ts-ignore
 
         Object.keys(cache.data.data).forEach(key =>
-                // @ts-ignore
+            // @ts-ignore
             key.match(/^ListItem/) && cache.data.delete(key)
         )
     }
 
     render() {
         const {
-            type, children, schema, fields: optionalFields, omitFields, omitFieldsRegEx, loading: findLoading,
+            type, children, schema, fields, loading: findLoading,
             variables,
             update = this.invalidateCache,
             ignoreResults,
@@ -247,11 +237,10 @@ export class Mutate extends PureComponent<WithApolloClient<MutateProps & { type:
             doc,
             fetchPolicy,
         } = this.props;
-        let fields = filterFields(schema.getFields(), optionalFields, omitFields, omitFieldsRegEx)
-        this.filteredFields = fields
+
 
         const {names} = schema
-        this.query = fields ? buildQueryFromFields(fields) : this.buildQueryFromFields()
+        this.query = buildQueryFromFields(fields)
         let queryString
         if (type === 'update') {
             queryString = `mutation mutationFn($where: ${names.input.where.single}, $data: ${names.input[type]} ) { ${names.mutation[type]}(data: $data, where: $where) ${this.query} }`
@@ -285,16 +274,21 @@ export class Mutate extends PureComponent<WithApolloClient<MutateProps & { type:
                     called,
                     client,
 
-                }: MutationResult) => children({
-                    schema,
-                    mutate: (model: Model) => this.mutate(model, mutationFn),
-                    loading: findLoading || loading,
-                    data,
-                    error,
-                    called,
-                    client,
-                    doc,
-                })}
+                }: MutationResult) => {
+                    if (error) {
+                        console.error(error)
+                    }
+                    return children({
+                        schema,
+                        mutate: (model: Model) => this.mutate(model, mutationFn),
+                        loading: findLoading || loading,
+                        data,
+                        error,
+                        called,
+                        client,
+                        doc,
+                    });
+                }}
             </Mutation>
         )
     }
@@ -376,7 +370,7 @@ export const getSubSchemaMutations = (model: Model, schema: Schema, mutationType
     if (typeof model !== "object" || model === undefined || model === null) return model
     Object.keys(model).forEach((key) => {
         const value = model[key]
-        let definition = schema.getFieldDefinition(key)
+        let definition = schema.getPathDefinition(key)
         //1 to n relations
         if (definition.isTable) {
             if (definition.isArray) {
@@ -406,10 +400,13 @@ export const getSubSchemaMutations = (model: Model, schema: Schema, mutationType
                             result['set'].push({id: item.id})
                         } else {
                             result['create'] = result['create'] || []
+
                             result['create'].push(getSubSchemaMutations(item, schema, 'create'))
                         }
                     } else {
                         result['create'] = result['create'] || []
+                        result['deleteMany']= [{}]
+
                         result['create'].push(getSubSchemaMutations(item, schema, 'create'))
                     }
 
@@ -436,7 +433,9 @@ export const getSubSchemaMutations = (model: Model, schema: Schema, mutationType
                         }
                     }
                 } else {
-                    obj[key] = {create: getSubSchemaMutations(value, schema, 'create')}
+                    obj[key] = {
+                        create: getSubSchemaMutations(value, schema, 'create'),
+                    }
                 }
 
             }

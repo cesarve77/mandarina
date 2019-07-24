@@ -18,7 +18,7 @@ interface FlatOptions {
 }
 
 declare module 'flat' {
-    export function flatter(original: any, options?: FlatOptions): FlatObj
+    export function flatten(original: any, options?: FlatOptions): FlatObj
 
     export function unflatten(original: FlatObj, options?: FlatOptions): any
 }

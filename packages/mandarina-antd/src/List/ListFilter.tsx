@@ -22,16 +22,25 @@ interface ListFilterProps {
 
 const ListFilter = React.memo(({onFilterChange, field, filter, schema}: ListFilterProps) => {
         const fieldDefinition = schema.getPathDefinition(field)
-        if (fieldDefinition.isTable) throw new Error(`ListFilter "${field}" cannot be a table`)
+        let FieldComponent: FilterComponent
+        if (fieldDefinition.isTable){
+            if (fieldDefinition.list.filterComponent === undefined ){
+                throw new Error(`Field: "${field}" you need to set "list.noFilter" to true, or pass your custom filterComponent  "`)
+            }else{
+                FieldComponent=fieldDefinition.list.filterComponent
+            }
+        }else{
+            FieldComponent = fieldDefinition.list.filterComponent === undefined ? getDefaultComponent(field, fieldDefinition) : fieldDefinition.list.filterComponent
+        }
         const name = uuid() //todo remove this dependeincy making schema get optional name
-        let FieldComponent: FilterComponent = fieldDefinition.list.filterComponent === undefined ? getDefaultComponent(field, fieldDefinition) : fieldDefinition.list.filterComponent
+
         fieldDefinition.validators = fieldDefinition.validators.filter(({validatorName}) => validatorName !== 'required')
         const filterSchema = new Schema({
             filter: fieldDefinition,
         }, {
             name
         })
-        const bridge = new Bridge(filterSchema)
+        const bridge = new Bridge(filterSchema,filterSchema.getFields())
         return FieldComponent && (
             <AutoForm schema={bridge} autosave autosaveDelay={400}
                 // onChangeModel={(model: any) => console.log(model)}

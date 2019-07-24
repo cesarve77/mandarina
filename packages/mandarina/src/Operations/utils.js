@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var flat_1 = require("flat");
+var utils_1 = require("../utils");
 /**
  * get grqphql string from a list of field in dot notation
  * @param  keys - list of fields in dot notation
@@ -12,6 +13,7 @@ exports.buildQueryFromFields = function (keys) {
         fields.push('id');
     }
     fields = fields.map(function (field) { return field.replace(/\.\$(\.?)/g, '$1'); });
+    fields = utils_1.ensureId(fields);
     var fieldsFlat = fields.reduce(function (obj, key) {
         var _a;
         return Object.assign(obj, (_a = {}, _a[key] = {}, _a));

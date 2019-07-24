@@ -3,7 +3,7 @@ import {Find, Schema} from 'mandarina';
 import * as React from "react";
 import {FieldDefinition, Overwrite} from 'mandarina/build/Schema/Schema'
 import {OnFilterChange, Where} from "./ListFilter";
-import {filterFields, getDecendents, getParents} from 'mandarina/build/utils'
+import {getDecendentsDot, getParentsDot} from 'mandarina/build/utils'
 import {ColumnProps} from 'antd/lib/table';
 import isEmpty from "lodash.isempty";
 import {DefaultCellComponent} from "./ListVirtualized";
@@ -16,9 +16,8 @@ export type onResize = (e: any, {size}: { size: { width: number } }) => void
 
 export interface ListProps extends FindQueryProps {
     schema: Schema
-    fields?: string[]
-    omitFields?: string[]
-    omitFieldsRegEx?: RegExp
+    fields: string[]
+
     overwrite?: Overwrite
     pageSize?: number
     first?: number
@@ -61,7 +60,6 @@ export interface Edge {
 // };
 
 export class List extends React.Component<ListProps, { columns: ColumnProps<any>[] }> {
-    fields: string[]
     me: React.RefObject<HTMLDivElement>
     fetchMore: () => void
     refetch: any //todo
@@ -72,9 +70,8 @@ export class List extends React.Component<ListProps, { columns: ColumnProps<any>
     constructor(props: ListProps) {
         super(props);
         //const definitions: Partial<FieldDefinitions> = {}
-        const {schema, fields, omitFields, omitFieldsRegEx} = this.props
-        this.fields = filterFields(schema.getFields(), fields, omitFields, omitFieldsRegEx)
-        const columns = this.getColumns(this.fields)
+        const {fields} = this.props
+        const columns = this.getColumns(fields)
         this.state = {columns}
         this.me = React.createRef();
         //this.definitions=definitions
@@ -89,9 +86,9 @@ export class List extends React.Component<ListProps, { columns: ColumnProps<any>
 
     getColumns(fields: string[], path = "") {
         const columns: ColumnProps<any>[] = []
-        const parents = getParents(fields)
+        const parents = getParentsDot(fields)
         parents.forEach((parent, index) => {
-            const decedents = getDecendents(fields, parent)
+            const decedents = getDecendentsDot(fields, parent)
             const field = path ? `${path}.${parent}` : parent
             const column = this.getColumnDefinition(field, decedents, index)
             if (column) {
@@ -122,9 +119,9 @@ export class List extends React.Component<ListProps, { columns: ColumnProps<any>
             throw new Error(`Field "${parent}" not found`)
         }
         if (fieldDefinition.list.hidden) return
-        const defaultWidth = window.innerWidth / this.fields.length
+        const defaultWidth = window.innerWidth / this.props.fields.length
         let width: number | undefined
-        if (index !== this.fields.length - 1) {
+        if (index !== this.props.fields.length - 1) {
             width = defaultWidth
         }
 
@@ -229,19 +226,20 @@ export class List extends React.Component<ListProps, { columns: ColumnProps<any>
         });
     };
     firstLoad: boolean = true
-
     render() {
-        const {schema, first, where, ...findBaseProps} = this.props
+        const {schema, first,fields, where, ...findBaseProps} = this.props
         const {columns} = this.state
+        console.log('list where',where)
+
         return (
             <div className="list-wrapper" style={{width: '100%'}} ref={this.me}>
-                <Find schema={schema} where={where} first={first} fields={this.fields}
+                <Find schema={schema} where={where} first={first} fields={fields}
 
                       onCompleted={this.onScroll}
                       {...findBaseProps}
                 >
                     {({data = [], variables, refetch, loading, count, pageInfo, fetchMore, error}) => {
-
+                console.log('list data ',data)
                         this.refetch = refetch
                         this.variables = variables
                         this.buildFetchMore(fetchMore, pageInfo && pageInfo.endCursor)

@@ -23,13 +23,13 @@ import {Integer} from "./Schema";
 
 let paramCounter = 0
 const getParams = (value: any, type: any): ValidatorParams => {
+
+
     paramCounter++
     return {
         key: `key${paramCounter}`,
         path: '',
         definition: {
-            form:{},
-            unique: false,
             label: `Key ${paramCounter}`,
             type,
             validators: [],
@@ -70,6 +70,7 @@ describe('Validators', () => {
 
         validator = new Validator(getParams(undefined, Number))
         error = validator.validate()
+        console.log('error', error)
         expect(error).toHaveProperty('validatorName', 'required');
 
         validator = new Validator(getParams(undefined, String))
@@ -107,6 +108,9 @@ describe('Validators', () => {
         let validator = new Validator(getParams(10, Number))
         let error = validator.validate()
         expect(error).toBeUndefined()
+         validator = new Validator(getParams(undefined, Number))
+         error = validator.validate()
+        expect(error).toHaveProperty('validatorName', 'minNumber');
 
         validator = new Validator(getParams(5, Number))
         error = validator.validate()

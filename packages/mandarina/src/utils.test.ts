@@ -1,4 +1,4 @@
-import {filterFields, getParents} from "./utils";
+import {filterFields, getParentsDot} from "./utils";
 
 const fields = [
     'loggedAt',
@@ -112,8 +112,8 @@ describe('util ', () => {
         filtered = filterFields(fields, ['parents', 'inspections', 'availability.reason', 'guests.blueCard'])
         expect(filtered.length).toBe(fields.length - 31)
     })
-    test("getParents", () => {
-        let parents=getParents(fields)
+    test("getParentsDot", () => {
+        let parents=getParentsDot(fields)
         expect(parents).toMatchObject([ 'loggedAt',
             'reviewedAt',
             'parents',

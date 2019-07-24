@@ -4,7 +4,6 @@ import gql from "graphql-tag";
 import {Query, QueryProps, QueryResult} from "react-apollo";
 import {buildQueryFromFields} from "./utils";
 import pull from 'lodash.pull'
-import {filterFields,ensureId} from "../utils";
 
 export type FindQueryResult = Pick<QueryResult, 'data' | 'loading' | 'error' | 'variables' | 'networkStatus' | 'refetch' | 'fetchMore' | 'startPolling' | 'stopPolling' | 'subscribeToMore' | 'updateQuery' | 'client'>
 
@@ -32,9 +31,7 @@ export type FindQueryProps = Pick<QueryProps, 'pollInterval' | 'notifyOnNetworkS
 export interface FindProps extends FindQueryProps {
     children?: FindChildren
     schema: Schema
-    fields?: string[]
-    omitFields?: string[]
-    omitFieldsRegEx?: RegExp
+    fields: string[]
     skip?: number
     sort?: { [field: string]: -1 | 1 }
     where?: object
@@ -73,9 +70,7 @@ export class FindBase extends PureComponent<FindProps & FindBaseProps, FindBaseS
     render() {
 
         const {
-            fields: optionalFields, schema, after, first, type, where, skip, sort,
-            omitFields,
-            omitFieldsRegEx,
+            fields, schema, after, first, type, where, skip, sort,
             children,
             pollInterval,
             notifyOnNetworkStatusChange,
@@ -89,10 +84,6 @@ export class FindBase extends PureComponent<FindProps & FindBaseProps, FindBaseS
             partialRefetch,
             ...props
         } = this.props;
-        console.log('optionalFields',optionalFields)
-        console.log('schema.getFields()',schema.getFields())
-        let fields = filterFields(schema.getFields(), optionalFields, omitFields, omitFieldsRegEx)
-        console.log('fields',fields)
 
         let orderBy: undefined | string
         if (sort) {
@@ -100,7 +91,7 @@ export class FindBase extends PureComponent<FindProps & FindBaseProps, FindBaseS
             orderBy = field + (sort[field] > 0 ? '_ASC' : '_DESC')
         }
         const {names} = schema
-        const defaultQuery = this.buildQueryFromFields(ensureId(fields))
+        const defaultQuery = this.buildQueryFromFields(fields)
         let queryString: string
         if (type === 'connection') {
             queryString = `query ($where: ${names.input.where[type]}, $after: String, $first: Int, $skip: Int, $orderBy: ${names.orderBy}) 
@@ -125,7 +116,7 @@ export class FindBase extends PureComponent<FindProps & FindBaseProps, FindBaseS
         } else {
             queryString = `query ($where: ${names.input.where[type]} ) { ${names.query[type]}  (where: $where) ${defaultQuery} }`
         }
-        console.log('queryString',queryString)
+        console.log('queryString', queryString)
         const QUERY = gql(queryString)
         // save a rendered query history in the instance and in the class
         // for update cache queries on mutations
@@ -171,6 +162,8 @@ export class FindBase extends PureComponent<FindProps & FindBaseProps, FindBaseS
                         } else {
                             data = data && data[names.query[type]]
                         }
+                    }else{
+                        console.error(error)
                     }
                     if (!children) return null
                     return children({

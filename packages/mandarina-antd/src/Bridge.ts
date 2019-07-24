@@ -21,12 +21,16 @@ export interface FieldProps {
 }
 
 export class Bridge {
+    protected fields: string[]
     protected schema: Schema
     protected overwrite?: Overwrite
-    protected fields: { [field: string]: FieldDefinition } = {}
+    protected fieldDefinitions: { [field: string]: FieldDefinition } = {}
     protected fieldProps: { [field: string]: FieldProps } = {}
 
-    constructor(schema: Schema, overwrite?: Overwrite) {
+    constructor(schema: Schema, fields:string[],overwrite?: Overwrite) {
+        if (!schema) throw new Error('Param "schema" missing creating a new Bridge')
+        if (!fields) throw new Error('Param "fields" missing creating a new Bridge')
+        this.fields = fields
         this.schema = schema
         this.overwrite = overwrite
     }
@@ -59,7 +63,7 @@ export class Bridge {
             //todo checck cuando las porpiedades que sobran
             if (this.schema.errorFromServerMapper) {
                 const errors: string[] = []
-                this.schema.getFields().forEach((field) => {
+                this.fields.forEach((field) => {
                     const serverError = this.schema.errorFromServerMapper && this.schema.errorFromServerMapper(field, error)
                     if (serverError) errors.push(serverError)
                 })
@@ -76,9 +80,9 @@ export class Bridge {
     // Field's definition (`field` prop).
     getField(name: string): FieldDefinition {
         const overwrite = this.overwrite && this.overwrite[name]
-        if (!this.fields[name]) this.fields[name] = overwrite ? merge(deepClone(this.schema.getPathDefinition(name)), overwrite) : this.schema.getPathDefinition(name)
-        if (!this.fields[name] || !this.fields[name].type) throw new Error(`No field named "${name}" in schema ${this.schema.name}`)
-        return this.fields[name]
+        if (!this.fieldDefinitions[name]) this.fieldDefinitions[name] = overwrite ? merge(deepClone(this.schema.getPathDefinition(name)), overwrite) : this.schema.getPathDefinition(name)
+        if (!this.fieldDefinitions[name] || !this.fieldDefinitions[name].type) throw new Error(`No field named "${name}" in schema ${this.schema.name}`)
+        return this.fieldDefinitions[name]
     }
 
     getType(name: string): Native {
@@ -113,7 +117,7 @@ export class Bridge {
             let item = {}
             if (field.isTable) {
                 const schema = Schema.getInstance(field.type)
-                schema.clean(item)
+                schema.clean(item,this.fields)
             }
 
             return item
@@ -208,22 +212,17 @@ export class Bridge {
 
 // Function with one argument - model - which throws errors when model is
 // invalid.
-    getValidator({fields}: { fields?: string[] } = {}): (model: any) => void {
+    getValidator(): (model: any) => void {
         return (model: any) => {
             let enter = false
-            const errors = this.schema.validate(model, fields)
+            const errors = this.schema.validate(model,this.fields)
             if (errors.length) {
                 const error = {}
                 errors.forEach((e) => {
-                    if (fields) {
-                        if (fields.includes(e.path.replace(/\.\d+/g, ''))) {
+                        if (this.fields.includes(Schema.cleanKey(e.path))) {
                             enter = true
                             error[e.path] = e.message
                         }
-                    } else {
-                        enter = true
-                        error[e.path] = e.message
-                    }
                 })
                 if (enter) throw {...error}
 

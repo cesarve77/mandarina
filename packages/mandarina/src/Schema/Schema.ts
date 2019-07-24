@@ -2,12 +2,13 @@
 import mapValues from 'lodash.mapvalues';
 import * as inflection from "inflection";
 import {ErrorValidator, Validator, ValidatorCreator} from "./ValidatorCreator";
-import {extraKey, isDate, isInteger, isNumber, isString, required} from "./Validators";
+import {isDate, isInteger, isNumber, isString, required} from "./Validators";
 import {capitalize, forceType, hasValidator, pluralize, singularize} from "./utils";
 import {UniqueSchemaError} from '../Errors/UniqueSchemaError';
 import {SchemaInstanceNotFound} from '../Errors/SchemaInstanceNotFound';
-import {getDecendents} from "../utils";
+import {getDecendentsDot} from "../utils";
 import * as React from "react";
+import {flatten} from "flat";
 
 
 /**
@@ -22,9 +23,6 @@ import * as React from "react";
  * Schemas are rigid and dynamic, maybe it is the biggest limitation of mandarina, you are no able to build a schema on the fly or programmatically.
  */
 
-const getDefaultPermissions = () => ({read: {}, create: {}, update: {}, delete: {}});
-const defaultActions = Object.keys(getDefaultPermissions());
-
 
 export class Schema {
     static instances: { [actionName: string]: Schema };
@@ -32,22 +30,26 @@ export class Schema {
     public keys: string[]
     public shape: SchemaShape;
     public permissions: Permissions;
-    public options: InstanceOptions
     public errorFromServerMapper: ErrorFromServerMapper | undefined
-    public arraysFields: string[] = []
     public names: Names;
+    fields: string[]
+    subSchemas: string[]
     private pathDefinitions: { [key: string]: FieldDefinition } = {}
-    private fields: string[]
     private original: Model;
     private filePath: string;
-    private rolePermissions: {
-        read: { [role: string]: string[] }
-        create: { [role: string]: string[] }
-        update: { [role: string]: string[] }
-    };
+    private fieldsPermissions: {
+        [field: string]: {
+            [role: string]: {
+                read: boolean
+                create: boolean
+                update: boolean
+                delete: boolean
+            }
+        }
+    } = {}
 
     constructor(shape: UserSchemaShape, options: SchemaOptions) {
-        const {name, recursive = [], errorFromServerMapper, permissions} = options;
+        const {name, errorFromServerMapper, permissions} = options;
         this.name = name;
 
         Schema.instances = Schema.instances || {};
@@ -58,7 +60,6 @@ export class Schema {
         Schema.instances[this.name] = this;
 
         this.errorFromServerMapper = errorFromServerMapper;
-        this.options = {recursive};
         this.permissions = permissions || {};
         this.shape = mapValues(shape, (field, key) => this.applyDefinitionsDefaults(field, key));
         this.keys = Object.keys(this.shape);
@@ -100,6 +101,8 @@ export class Schema {
         return Schema.instances[name];
     }
 
+    static cleanKey = (key: string) => key.replace(/\.\d+/g, '') //clean key
+
     extend(shape: UserSchemaShape) {
         this.shape = {
             ...this.shape,
@@ -108,29 +111,30 @@ export class Schema {
         this.keys = Object.keys(this.shape);
     }
 
-    getFieldDefinition(key: string): FieldDefinition {
-
-        return {...this.shape[key]};
-    }
-
-    getPathDefinition(key: string): FieldDefinition {
-        //key=key.replace(/\.\d+/,'')
-        if (!this.pathDefinitions[key]) {
-            this.pathDefinitions[key] = this.generatePathDefinition(key);
+    getPathDefinition(field: string): FieldDefinition {
+        if (!this.pathDefinitions[field]) {
+            this.pathDefinitions[field] = this.generatePathDefinition(field);
         }
-
-        return this.pathDefinitions[key];
+        const definition = this.pathDefinitions[field]
+        if (!definition || Object.keys(definition).length === 0) {
+            throw new Error(`Field "${field}" not found`)
+        }
+        return definition
     }
 
     getFields(): string[] {
-        if (!this.fields) {
-            this.fields = this._getFields();
-        }
-
-        return this.fields;
+        if (this.fields) return this.fields
+        this.fields = this.keys.filter(field => !this.getPathDefinition(field).isTable);
+        return this.fields
     }
 
-    clean(model: Model, fields = this.getFields()) {
+    getSubSchemas(): string[] {
+        if (this.subSchemas) return this.subSchemas
+        this.subSchemas = this.keys.filter(field => this.getPathDefinition(field).isTable);
+        return this.subSchemas
+    }
+
+    clean(model: Model, fields: string[]) {
         this.original = model;
         this._clean(model, fields);
     }
@@ -153,57 +157,49 @@ export class Schema {
         return this.filePath
     }
 
-    validate(model: Model, fields: string[] = this.getFields()): ErrorValidator[] {
+    validate(model: Model, fields: string[]): ErrorValidator[] {
         this.clean(model, fields)
-        return this._validate(model, '', [{schema: this.name, path: ''}], model);
+        return this._validate(model, fields);
+    }
+    getSchemaPermission(roles: string[], action: Action ) {
+        if (!this.permissions) return true
+        for (const role in roles){
+            if (!this.permissions[action]) return true
+            // @ts-ignore
+            if (this.permissions[action].includes(role)) return true
+        }
+        return false
+    }
+    getFieldPermission(field: string, roles: string[], action: Action) {
+        const parentPath = field.split('.').shift() as string
+        const def = this.getPathDefinition(field)
+        let parentDef: FieldDefinition | undefined
+        if (parentPath) {
+            parentDef = this.getPathDefinition(parentPath)
+        }
+        const parentRoles = parentDef && parentDef.permissions[action]
+        const fieldRoles = def.permissions[action]
+        const lappedRoles = parentRoles || fieldRoles
+        for (const role of roles) {
+            this.fieldsPermissions[field] = this.fieldsPermissions[field] || {}
+            this.fieldsPermissions[field][role] = this.fieldsPermissions[field][role] || {}
+            if (this.fieldsPermissions[field][role][action] === undefined) {
+
+                this.fieldsPermissions[field][role][action] = !lappedRoles || (
+                    (lappedRoles.includes('everybody') || lappedRoles.includes(role)) &&
+                    !lappedRoles.includes('nobody'))
+
+
+            }
+            console.log(field, lappedRoles, this.fieldsPermissions[field][role][action])
+            if (this.fieldsPermissions[field][role][action]) return true;
+        }
+
+        return false
     }
 
-    /**
-     * Returns the the authorization schema definition for the instance
-     *
-     * @return Permissions
-     */
-    getPermissions() {
-        const fields = this.getFields();
-        if (!this.rolePermissions) {
-            this.rolePermissions = getDefaultPermissions();
-
-            fields.forEach((field) => {
-                const def = this.getPathDefinition(field)
-                const parentPath = field.split('.').shift() as string
-                let parentDef: FieldDefinition | undefined
-                if (parentPath) {
-                    parentDef = this.getPathDefinition(parentPath)
-                }
-
-                defaultActions.forEach((action) => {
-                    const parentRoles = parentDef && parentDef.permissions[action]
-                    const roles: string[] = def.permissions[action]
-                    if ((parentRoles && parentRoles.includes('nobody')) || (roles && roles.includes('nobody'))) { // if the first parent has nobody the there no permission for any children
-                        return
-                    }
-
-                    if (!roles && !parentRoles) {
-                        this.rolePermissions[action].everyone = this.rolePermissions[action].everyone || []
-                        this.rolePermissions[action].everyone.push(field)
-                        return
-                    } else if (roles) {
-                        roles.forEach((role) => {
-                            if (parentRoles && parentRoles.includes(role)) {
-                                this.rolePermissions[action][role] = this.rolePermissions[action][role] || []
-                                this.rolePermissions[action][role].push(field)
-                            } else {
-                                this.rolePermissions[action][role] = this.rolePermissions[action][role] || []
-                                this.rolePermissions[action][role].push(field)
-                            }
-
-                        })
-
-                    }
-                })
-            });
-        }
-        return this.rolePermissions;
+    _getKeyDefinition(key: string): FieldDefinition {
+        return {...this.shape[key]};
     }
 
     /**
@@ -214,23 +210,21 @@ export class Schema {
      * @param removeExtraKeys
      */
     protected _clean(model: Model | undefined | null, fields: string[], removeExtraKeys = true) {
-        console.log('fields',fields)
-        console.log('model',model)
+
         if (removeExtraKeys && model && typeof model === 'object') {
             Object.keys(model).forEach((key) => {
                 if (!this.keys.includes(key)) {
-                    console.log('removeExtraKeys',key)
                     delete model[key]
                 }
             });
         }
 
         this.keys.forEach((key): any => {
-
+                console.log('fields every',fields)
             if (key !== '___typename' && fields.every((field) => field !== key && field.indexOf(key + '.') < 0)) {
                 return model && delete model[key]
             }
-            const definition = this.getFieldDefinition(key);
+            const definition = this.getPathDefinition(key);
 
             if (!definition.isTable && typeof model === 'object' && model !== undefined && model !== null) {
                 model[key] = forceType(model[key], definition.type);
@@ -241,7 +235,7 @@ export class Schema {
                     return model[key] = definition.defaultValue;
                 }
                 const schema = Schema.getInstance(definition.type)
-                schema._clean(model[key], getDecendents(fields, key));
+                schema._clean(model[key], getDecendentsDot(fields, key));
                 return;
 
             } else if (definition.isArray && typeof model === 'object' && model !== undefined && model !== null) {
@@ -249,7 +243,7 @@ export class Schema {
                 if (definition.isTable) {
                     const schema = Schema.getInstance(definition.type)
                     model[key] = model[key].map((value: any) => {
-                        schema._clean(value, getDecendents(fields, key))
+                        schema._clean(value, getDecendentsDot(fields, key))
                         return value
                     });
                 } else {
@@ -368,10 +362,10 @@ export class Schema {
         const paths = key.split('.')
         let schema: Schema = this;
 
-        let def: FieldDefinition = schema.getFieldDefinition(paths[0])
+        let def: FieldDefinition = schema._getKeyDefinition(paths[0])
         paths.forEach((path) => {
             if (!path.match(/\$|^\d+$/)) { //example user.0
-                def = schema.getFieldDefinition(path)
+                def = schema._getKeyDefinition(path)
                 if (def.isTable) {
                     schema = Schema.getInstance(def.type)
                 }
@@ -380,160 +374,26 @@ export class Schema {
         return def
     }
 
-//TODO VER QUE CONO ES ESTO, por que ahora todas tienen id ***** **** TODO WARNING
-    private _isConnectingValue = (value: any) => {
-        return (value && value.hasOwnProperty && value.hasOwnProperty('id') && typeof value.id === 'string' && Object.keys(value).length === 1)
-    }
-
-    private _validate(model: Model, parent: string = '', pathHistory: { schema: string, path: string }[] = [], originalModel: Model): ErrorValidator[] {
-
+    private _validate(model: Model, fields?: string[]): ErrorValidator[] {
         let errors: ErrorValidator[] = [];
-        const shape = {...model};
-        const recursive = this.options.recursive || []
-        this.keys.forEach((key): any => {
-
-            delete shape[key];
-            const dot = parent ? '.' : '';
-            const path: string = `${parent}${dot}${key}`;
-            const cleanPath = path.replace(/\.d+/, '')
-
-            const definition = this.getFieldDefinition(key);
-            const value: any = model && model[key];
-
-
-            if (definition.isArray) {
-                //check arrayValidators (min array count for example)
-                for (const validator of definition.validators) {
-                    if (!validator.arrayValidator) continue
-                    const instance = new validator({key, path, definition, value});
-                    const error = instance.validate(originalModel);
-
-                    if (error) {
-                        errors.push(error);
-                    }
-                }
-                //Check no array validators
-                // TODO: Tal vez es mejor chequear en default value que siempre tenga un valor
-                if (definition.isTable && value) {
-                    const schema = Schema.getInstance(definition.type)
-                    const schemaName = schema.name;
-
-                    let internalErrors: ErrorValidator[] = [];
-
-                    value.forEach((value: any, i: number) => {
-                        if (!this._isConnectingValue(value) && (recursive.includes(cleanPath) || !pathHistory.some(({schema}) => schemaName === schema))) {
-                            pathHistory.push({path, schema: schemaName});
-                            internalErrors = [...internalErrors, ...schema._validate(value, `${path}.${i}`, pathHistory, originalModel)];
-
-                        } else {
-                            pathHistory.push({path: path, schema: schemaName});
-                        }
-                    });
-                    errors = [...errors, ...internalErrors];
-                } else if (value) {
-                    // TODO: Es mejor chquear en default value que siempre tenga un valor
-                    value.forEach((value: any, i: number): any => {
-                        for (const validator of definition.validators) {
-                            if (validator.arrayValidator) continue
-                            const instance = new validator({key, path, definition, value});
-                            const error = instance.validate(originalModel);
-                            if (error) {
-                                return errors.push(error);
-                            }
-                        }
-                    })
-                }
-
-                return errors;
-            } else if (definition.isTable) {
-                const schema = Schema.getInstance(definition.type)
-                const schemaName = schema.name;
-                let internalErrors: ErrorValidator[] = [];
-                // Check if we are entering in a recursive table, if actual table has been used before, reviewing the history
-                if (!this._isConnectingValue(value) && (recursive.includes(cleanPath) || !pathHistory.some(({schema}) => schemaName === schema))) {
-                    pathHistory.push({path: path, schema: schemaName});
-                    internalErrors = schema._validate(value, path, pathHistory, originalModel);
-                } else {
-                    pathHistory.push({path: path, schema: schemaName});
-                }
-
-
-                return errors = [...errors, ...internalErrors];
-            }
-
+        const flatModel = flatten(model)
+        Object.keys(flatModel).forEach(key => {
+            const value = flatModel[key]
+            const cleanKey = Schema.cleanKey(key)
+            if (fields && !fields.includes(cleanKey)) return
+            const last = cleanKey.split('.').pop() as string
+            const definition = this.getPathDefinition(cleanKey);
             for (const validator of definition.validators) {
-                if (validator.arrayValidator) continue
-                const instance = new validator({key, path, definition, value});
-
-                const error = instance.validate(originalModel);
+                if (definition.isArray && !validator.arrayValidator) continue
+                const instance = new validator({key: last, path: key, definition, value});
+                const error = instance.validate(model);
                 if (error) {
                     errors.push(error);
                 }
             }
-
-
-        });
-
-        const extraKeys = Object.keys(shape);
-
-        if (extraKeys.length) {
-            extraKeys.forEach(key => {
-                if (key === 'id') return
-                const Validator = extraKey.getValidatorWithParam()
-                // Mock definition for a not existent key
-                const definition = this.applyDefinitionsDefaults({label: key, type: String}, key)
-
-                errors.push(<ErrorValidator>new Validator({
-                    key,
-                    definition,
-                    path: parent,
-                    value: key
-                }).validate(originalModel))
-            })
-
-
-        }
-
+        })
         return errors;
     }
-
-    private _getFields(parent: string = '', pathHistory: { schema: string, path: string }[] = [], recursive: string[] = this.options.recursive || []): string[] {
-        let fields: string[] = [];
-        let thisSchema = this;
-
-        thisSchema.keys.forEach(key => {
-
-            const dot = parent ? '.' : '';
-            const path = `${parent}${dot}${key}`;
-            const cleanPath = path.replace(/\.d+/, '')
-            const def = thisSchema.getFieldDefinition(key);
-            let schema: Schema | undefined;
-
-            if (def.isArray) {
-                this.arraysFields.push(path);
-
-            }
-            if (def.isTable) {
-                schema = Schema.getInstance(def.type)
-                pathHistory.push({path: path, schema: this.name});
-                let fieldsInternal: string[] = [];
-                const schemaName = schema.name;
-
-                // Check if we are entering in a recursive table, if actual table has been used before, reviewing the history
-                if (recursive.includes(cleanPath) || !pathHistory.some(({schema}) => schemaName === schema)) {
-                    fieldsInternal = schema._getFields(path, pathHistory, recursive);
-                }
-
-                // To intro a path in table options to continue deep in get fields
-                fields = [...fields, ...fieldsInternal];
-            } else {
-                fields.push(path);
-            }
-        });
-
-        return fields;
-    }
-
 
 }
 
@@ -553,13 +413,9 @@ export namespace Integer {
 
 export type ErrorFromServerMapper = (field: string, error: any) => string | undefined;
 
-export interface InstanceOptions {
-    recursive?: string[]
-}
 
 export interface SchemaOptions {
     name: string
-    recursive?: string[]
     errorFromServerMapper?: ErrorFromServerMapper
     permissions?: Permissions
 }
@@ -588,6 +444,7 @@ export interface CellComponentProps {
     rowIndex: number
     data: any[]
     field: string
+
     [rest: string]: any
 }
 
@@ -625,6 +482,8 @@ export interface UserFieldDefinitionCommon {
         default?: any
         rename?: string
         unique?: boolean,
+        createdAt?: boolean,
+        updatedAt?: boolean,
         relation?: string | {
             link?: 'INLINE' | 'TABLE'
             name?: string
@@ -691,6 +550,8 @@ export interface FieldDefinitionCommon extends UserFieldDefinitionCommon {
         default?: any
         rename?: string
         unique?: boolean,
+        createdAt?: boolean,
+        updatedAt?: boolean,
         relation?: string | {
             link?: 'INLINE' | 'TABLE'
             name?: string
@@ -758,7 +619,7 @@ export interface Names {
     }
 }
 
-export type Permission = ['everyone'] | ['nobody'] | string[]
+export type Permission = ('everyone' | 'nobody' | string)[]
 
 export interface Permissions {
     read?: Permission
@@ -767,4 +628,6 @@ export interface Permissions {
     delete?: Permission
 }
 
+
+export type Action = keyof Permissions
 

@@ -5,7 +5,7 @@ import {ColumnProps, ControlledListProps, Refetch} from "./ListVirtualized";
 import {Schema} from "mandarina";
 import {Button, Col, Dropdown, Menu, Row} from "antd";
 
-export interface HeaderProps  extends ControlledListProps{
+export interface HeaderProps extends ControlledListProps {
     count: number
     data: any
     columns: (ColumnProps | null)[]
@@ -23,10 +23,11 @@ export interface HeaderProps  extends ControlledListProps{
 
 
 export type Action = (props: HeaderActionButtonProps) => void | Promise<any>
-export type ContentFnc=(props: HeaderActionButtonProps) =>ReactNode
+export type ContentFnc = (props: HeaderActionButtonProps) => ReactNode
+
 export interface HeaderDefaultProps {
     counter?: boolean
-    menuItems?: (({ action?: Action, content: ReactNode | ReactElement | ContentFnc}) | string)[]
+    menuItems?: (({ action?: Action, content: ReactNode | ReactElement | ContentFnc }) | string)[]
 }
 
 
@@ -40,7 +41,7 @@ const getOption = (optionName: string) => {
 
 const HeaderDefault = ({counter = true, menuItems = [], count, ...props}: HeaderDefaultProps & HeaderProps) => {
     const [loadingAction, setLoadingAction] = useState(false)
-    const menu = menuItems.map((item,index) => {
+    const menu = menuItems.map((item, index) => {
         if (typeof item === 'string') {
             const existingOption = getOption(item)
             if (existingOption) {
@@ -63,20 +64,21 @@ const HeaderDefault = ({counter = true, menuItems = [], count, ...props}: Header
         }
 
         // @ts-ignore
-        if (React.isValidElement(content) &&  content.type.name !== 'SubMenu' && content.type.name !== "Menu") {
+        if (React.isValidElement(content) && content.type.name !== 'SubMenu' && content.type.name !== "Menu") {
             return <Menu.Item key={index} onClick={onClick}>{content}</Menu.Item>
         }
 
-        if (typeof content==='function'){
-            return content({count,setLoadingAction, ...props})
+        if (typeof content === 'function') {
+            return content({count, setLoadingAction, ...props})
         }
         return content
 
     })
+    console.log('count', count)
     return (
         <Row gutter={0}>
             <Col span={12}>
-                {counter && `Total: ${count!==0 && count ? count : '...'}`}
+                {counter && `Total: ${count === 0 || count ? count : '...'}`}
             </Col>
             {!!menu.length && <Col span={12} style={{textAlign: 'right'}}>
                 <Dropdown placement="bottomLeft" overlay={<Menu>{menu}</Menu>}>

@@ -19,20 +19,19 @@ var __makeTemplateObject = (this && this.__makeTemplateObject) || function (cook
 Object.defineProperty(exports, "__esModule", { value: true });
 var react_1 = require("react");
 var __1 = require("..");
-var utils_1 = require("../utils");
 var react_apollo_1 = require("react-apollo");
 var graphql_tag_1 = require("graphql-tag");
 var Auth = /** @class */ (function (_super) {
     __extends(Auth, _super);
     function Auth(props) {
         var _this = _super.call(this, props) || this;
-        var action = props.action, schema = props.schema, userRoles = props.userRoles;
-        var fields = exports.getFields({ action: action, schema: schema, userRoles: userRoles });
-        if (fields === null) {
+        var action = props.action, schema = props.schema, userRoles = props.userRoles, fields = props.fields;
+        var finalFields = exports.getFields({ fields: fields, action: action, schema: schema, userRoles: userRoles });
+        if (finalFields === null) {
             _this.state = { loading: true, fields: [] };
         }
         else {
-            _this.state = { loading: false, fields: fields };
+            _this.state = { loading: false, fields: finalFields };
         }
         return _this;
     }
@@ -53,32 +52,36 @@ var Auth = /** @class */ (function (_super) {
         }
     };
     Auth.prototype.render = function () {
-        var _a = this.props, children = _a.children, optionalFields = _a.fields, omitFields = _a.omitFields, omitFieldsRegEx = _a.omitFieldsRegEx;
-        var _b = this.state, loading = _b.loading, authFields = _b.fields, error = _b.error;
-        var fields = authFields ? utils_1.filterFields(authFields, optionalFields, omitFields, omitFieldsRegEx) : undefined;
+        var _a = this.props, children = _a.children, hardCodeFields = _a.fields;
+        var _b = this.state, loading = _b.loading, schemaFields = _b.fields, error = _b.error;
+        console.log('hardCodeFields', hardCodeFields);
+        console.log('schemaFields', schemaFields);
+        var fields = hardCodeFields.filter(function (field) { return schemaFields.includes(field); });
+        console.log('fields', fields);
         return children({ fields: fields, loading: loading, error: error });
     };
     return Auth;
 }(react_1.Component));
 exports.default = react_apollo_1.withApollo(Auth);
 exports.addToSet = function (into, toBeAdded) { return toBeAdded.forEach(function (item) { return !into.includes(item) && into.push(item); }); };
-var roles = [];
+var roles = new Set();
 exports.authFields = {};
 exports.actions = ['read', 'create', 'update', 'delete'];
 exports.getRoles = function () {
-    if (roles.length === 0) {
+    if (roles.size === 0) {
         var schemas = Object.values(__1.Schema.instances);
         schemas.forEach(function (schema) {
-            exports.authFields[schema.name] = exports.authFields[schema.name] || { read: {}, create: {}, update: {}, delete: {} };
-            var permissions = schema.getPermissions();
-            exports.actions.forEach(function (action) {
-                var tableRoles = Object.keys(permissions[action]);
-                tableRoles.forEach(function (role) {
-                    exports.authFields[schema.name][action][role] = permissions[action][role];
-                    if (role && !roles.includes(role)) {
-                        roles.push(role);
-                    }
-                });
+            var fields = schema.getFields();
+            fields.forEach(function (field) {
+                var permissions = schema.getPathDefinition(field).permissions;
+                if (permissions.read)
+                    permissions.read.forEach(function (r) { return roles.add(r); });
+                if (permissions.update)
+                    permissions.update.forEach(function (r) { return roles.add(r); });
+                if (permissions.create)
+                    permissions.create.forEach(function (r) { return roles.add(r); });
+                if (permissions.delete)
+                    permissions.delete.forEach(function (r) { return roles.add(r); });
             });
         });
     }
@@ -86,26 +89,21 @@ exports.getRoles = function () {
 };
 exports.getFields = function (args) {
     var allRoles = exports.getRoles();
+    for (var _i = 0, _a = args.userRoles; _i < _a.length; _i++) {
+        var userRole = _a[_i];
+        if (!allRoles.has(userRole))
+            return null;
+    }
     if (!exports.actions.includes(args.action))
         throw new Error("Action only can be one of ['read', 'create', 'update', 'delete'] now is: " + args.action + " ");
-    if (!exports.authFields[args.schema.name])
-        throw new Error("Table " + args.schema + " not found getting AuthFields ");
-    var allTableFields = args.schema.getFields();
-    var tablePermissions = args.schema.getPermissions();
-    var everyone = tablePermissions[args.action].everyone;
-    var fields = everyone ? everyone : [];
-    var extraRoles = [];
-    args.userRoles.forEach(function (role) {
-        if (allRoles.includes(role)) {
-            exports.addToSet(fields, exports.authFields[args.schema.name][args.action][role] || []);
-        }
-        else {
-            extraRoles.push(role);
-        }
+    var finalFields = [];
+    var t = new Date().getTime();
+    args.fields.forEach(function (field) {
+        if (args.schema.getFieldPermission(field, args.userRoles, args.action))
+            finalFields.push(field);
     });
-    if (!extraRoles.length)
-        return allTableFields.filter(function (field) { return fields.includes(field); }); // for keep the order
-    return null;
+    console.log('time', new Date().getTime() - t);
+    return finalFields;
     /*const staticRoles = roles.filter(permissionRoles.includes)
     const dynamicRoles = roles.filter((field: string) => !permissionRoles.includes(field))
 

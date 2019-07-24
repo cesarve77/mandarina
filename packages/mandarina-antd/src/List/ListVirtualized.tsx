@@ -12,7 +12,6 @@ import {
 } from 'react-window';
 import {OnFilterChange, Where} from "./ListFilter";
 import {CellComponent, FilterMethod, Overwrite} from "mandarina/build/Schema/Schema";
-import {filterFields} from "mandarina/build/utils";
 import {Empty} from "antd";
 import merge from 'lodash.merge'
 import {getDefaultFilterMethod} from "./ListFilters";
@@ -52,9 +51,7 @@ export interface ControlledListProps {
 
 export interface ListProps extends ControlledListProps {
     schema: Schema
-    fields?: string[]
-    omitFields?: string[]
-    omitFieldsRegEx?: RegExp
+    fields: string[]
     pageSize?: number
     first?: number
     where?: any
@@ -261,6 +258,7 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
             field = parentPath
         }
         let definition = this.props.schema.getPathDefinition(field)
+
         const overwrite = this.state.overwrite && this.state.overwrite[field]
         if (overwrite) {
             definition = merge(definition, overwrite)
@@ -279,6 +277,7 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
 
 
     onFilterChange: OnFilterChange = (field, filter) => {
+        console.log('onFilterChange',field,filter)
         this.data = []
         // @ts-ignore
         this.gridRef.current && this.gridRef.current.scrollToItem({
@@ -295,7 +294,8 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
                 this.props.onFilterChange(newFilters)
                 return null
             } else {
-                return newFilters
+
+                return {filters: newFilters}
             }
         })
     }
@@ -389,9 +389,6 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
         }
         , equalityFn);
 
-    calcFinalFields = memoizeOne((fields: string[], omitFields?: string[], omitFieldsRegEx?: RegExp) => {
-        return filterFields(this.props.schema.getFields(), fields, omitFields, omitFieldsRegEx);
-    }, equalityFn)
     calcColumns = memoizeOne((fields: string[], overwrite?: Overwrite) => {
         const columns: (ColumnProps | null)[] = []
         fields.forEach((field) => {
@@ -407,10 +404,11 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
 
 
     render() {
-        const {schema, where, estimatedRowHeight, overscanRowCount = 2, overLoad = 0, header, omitFields, omitFieldsRegEx} = this.props //todo rest props
+        const {schema, where, estimatedRowHeight, overscanRowCount = 2, overLoad = 0, header} = this.props //todo rest props
 
-        const {fields: optionalFields, width, height, filters, sort, overwrite} = this.state
-        const fields = this.calcFinalFields(optionalFields, omitFields, omitFieldsRegEx)
+        const {fields, width, height, filters, sort, overwrite} = this.state
+
+        console.log('state filters',filters)
         const columns = this.calcColumns(fields, overwrite)
         const getColumnWidth = (index: number) => {
             if (columns[index] === null) return 0
@@ -574,8 +572,8 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
 
 export const DefaultCellComponent: CellComponent = React.memo(({columnIndex, rowIndex, data, field}) => {
         const children = (data[rowIndex] && get(data[rowIndex], field.split('.'))) || []
-        if (field==='tags.name')
-        console.log(field,data,children[0], children)
+        if (field === 'tags.name')
+            console.log(field, data, children[0], children)
 
         return <>{children.map((child, i) => <span key={i}>{child}<br/></span>)}</>
     }

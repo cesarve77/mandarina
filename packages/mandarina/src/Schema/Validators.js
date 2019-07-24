@@ -34,6 +34,6 @@ exports.isNumber = new ValidatorCreator_1.ValidatorCreator(function (value) { re
 exports.isInteger = new ValidatorCreator_1.ValidatorCreator(function (value) { return !exists(value) || typeof value === 'number' && value % 1 === 0; }, 'isInteger', '{{label}} must be an integer');
 exports.isString = new ValidatorCreator_1.ValidatorCreator(function (value) { return !exists(value) || typeof value === 'string'; }, 'isString', '{{label}} must be an string');
 exports.isDate = new ValidatorCreator_1.ValidatorCreator(function (value) { return !exists(value) || value instanceof Date; }, 'isDate', '{{label}} is not a valid date');
-exports.isArray = new ValidatorCreator_1.ValidatorCreator(function (value) { return !exists(value) || Array.isArray(value); }, 'isArray', "{{label}} should be a array", true);
+exports.isArray = new ValidatorCreator_1.ValidatorCreator(function (value) { return exists(value) && Array.isArray(value); }, 'isArray', "{{label}} should be a array", true);
 exports.isRegEx = new ValidatorCreator_1.ValidatorCreator(function (value, param) { return !exists(value) || param.test(value); }, 'isRegEx', "{{label}} has an invalid format");
 exports.isEmail = new ValidatorCreator_1.ValidatorCreator(function (value) { return !exists(value) || /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/.test(value); }, 'isEmail', "{{label}} has an invalid format");

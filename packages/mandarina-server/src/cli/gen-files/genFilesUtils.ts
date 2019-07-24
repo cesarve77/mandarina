@@ -3,7 +3,6 @@ import {capitalize, isRequired} from "mandarina/build/Schema/utils";
 import {CustomAction} from "../../";
 import path from "path";
 import fs from "fs";
-import {getParents} from "mandarina/build/utils";
 import merge from 'lodash.merge'
 import {FieldDefinition} from "mandarina/build/Schema/Schema";
 //
@@ -92,7 +91,7 @@ const getMainSchema = (schema: Schema, type: 'input' | 'type') => {
             mainSchema.push(`id: ID! @id`);
             continue
         }
-        const fieldDefinition = schema.getFieldDefinition(key)
+        const fieldDefinition = schema.getPathDefinition(key)
 
         const required = isRequired(fieldDefinition) ? '!' : ''
         const unique = type === 'type' && fieldDefinition.table.unique ? '@unique' : ''
@@ -117,20 +116,19 @@ const getMainSchema = (schema: Schema, type: 'input' | 'type') => {
                 if (fieldDefinition.table.relation.onDelete) {
                     relations.push(`onDelete: ${fieldDefinition.table.relation.onDelete}`)
                 }
-
             }
             if (relations.length > 0) {
                 relation = `@relation(${relations.join(', ')})`
             }
         }
-        let scalarList = '',createdAt='',updatedAt=''
+        let scalarList = '', createdAt = '', updatedAt = ''
         if (type === 'type' && fieldDefinition.table.scalarList) {
             scalarList = `@scalarList(strategy: ${fieldDefinition.table.scalarList.strategy})`
         }
-        if (type === 'type' && (fieldDefinition.table.createdAt===true || (fieldDefinition.table.createdAt!==false && key==='createdAt'))) {
+        if (type === 'type' && (fieldDefinition.table.createdAt === true || (fieldDefinition.table.createdAt !== false && key === 'createdAt'))) {
             createdAt = `@createdAt`
         }
-        if (type === 'type' && (fieldDefinition.table.createdAt===true || (fieldDefinition.table.updatedAt!==false && key==='updatedAt'))) {
+        if (type === 'type' && (fieldDefinition.table.createdAt === true || (fieldDefinition.table.updatedAt !== false && key === 'updatedAt'))) {
             createdAt = `@updatedAt`
         }
         if (!scalarList && type === 'type' && fieldDefinition.isArray && !fieldDefinition.isTable) {
@@ -185,10 +183,10 @@ export const resetDir = (dir: string) => {
     fs.readdirSync(datamodelDir).forEach((file: string) => fs.unlinkSync(path.join(datamodelDir, file)));
 }
 
-export const savePrismaYaml = (datamodel: string[], dir: string, endpoint: string, secret?: string,) => {
+export const savePrismaYaml = (datamodel: Set<string>, dir: string, endpoint: string, secret?: string,) => {
     const prismaDir = path.join(process.cwd(), dir)
     const prismaYaml = path.join(prismaDir, `prisma.yml`)
-    const data: { endpoint: string, datamodel: string[], secret?: string } = {endpoint, datamodel,}
+    const data: { endpoint: string, datamodel: Set<string>, secret?: string } = {endpoint, datamodel,}
     if (secret) data.secret = secret
     saveYaml(prismaYaml, data)
 }
@@ -215,22 +213,24 @@ const saveYaml = (file: string, data: any) => {
     const yaml: any = require("yaml")
     const contentFile = fs.readFileSync(file, {encoding: 'utf8'}).replace(/([\t ]*)PRISMA_CONFIG *: *(\||>)?\n/, '$1PRISMA_CONFIG:\n')
     let originalData = yaml.parse(contentFile) || {};
-
+    data.datamodel = Array.from(data.datamodel)
     const newData = merge(originalData, data)
     const str = yaml.stringify(newData).replace(/([\t ]*)PRISMA_CONFIG *: *\n/, '$1PRISMA_CONFIG: |\n')
     fs.writeFileSync(file, str);
 }
-export const getSubSchemas = (schema: Schema, processedSchemas:string[]=[]): string[] => {
+export const getSubSchemas = (schema: Schema, processedSchemas: string[] = []): string[] => {
     const subSchemas: string[] = []
     if (processedSchemas.includes(schema.name)) return subSchemas
     processedSchemas.push(schema.name)
-    const parents = getParents(schema.getFields())
-    parents.forEach((field) => {
+    schema.getSubSchemas().forEach(field => {
         const fieldDefinition = schema.getPathDefinition(field)
-        if (fieldDefinition.isTable && !(fieldDefinition.form && fieldDefinition.form.props && fieldDefinition.form.props.query)) {
+        if (!fieldDefinition.isTable) return
+        console.log('parent',schema.name,field)
+
+        if (!(fieldDefinition.form && fieldDefinition.form.props && fieldDefinition.form.props.query)) {
             const schemaName = fieldDefinition.type
             subSchemas.push(schemaName)
-            subSchemas.push(...getSubSchemas(Schema.getInstance(schemaName),processedSchemas))
+            subSchemas.push(...getSubSchemas(Schema.getInstance(schemaName), processedSchemas))
         }
     })
     return subSchemas

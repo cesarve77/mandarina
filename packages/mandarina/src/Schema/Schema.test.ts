@@ -73,30 +73,14 @@ describe('Schema', () => {
         },{name: 'User2'})
 
         const model={"parents": [{
-                "id": null,
                 "firstName": "1111",
-                "surname": "1111",
-                "user": {"id": null, "email": null, "contactPreferencesEmail": null, "type": "Family"},
-                "mobilePhone": "11111",
-                "contactPreferencesSms": null,
-                "nationality": null,
-                "gender": null,
-                "dateOfBirth": null,
-                "birthCountry": "Australia"
+                "user": { "email": null,},
             }, {
-                "id": null,
                 "firstName": "2222",
-                "surname": "2222",
-                "user": {"id": null, "email": null, "contactPreferencesEmail": null, "type": "Family"},
-                "mobilePhone": "2222222",
-                "contactPreferencesSms": null,
-                "nationality": null,
-                "gender": null,
-                "dateOfBirth": null,
-                "birthCountry": "Australia"
-            }], "dependents": [], "guests": []
+                "user": { "email": null,},
+            }]
         }
-        const errors=FamilySchema.validate(model)
+        const errors=FamilySchema.validate(model,['parents.firstName','parents.user.email'])
         console.log('********',errors)
         expect(errors).toHaveLength(2)
     })
@@ -155,7 +139,7 @@ describe('Schema type validators', () => {
                 description: 'date',
                 label: 'date',
                 validators: ['required']
-            }
+            },
         }
 
         const schema = new Schema(userShape, {name: 'Profile'})
@@ -163,21 +147,26 @@ describe('Schema type validators', () => {
             name: '123',
             height: '5',
             age: '15',
-            bod: '15/10/2018',
-        })
+            bod: 'xxxxx',
+        },[  'name',
+            'height',
+            'age',
+            'bod',])
+        console.log('errors,',errors)
         expect(errors[0]).toHaveProperty('label', 'height');
-        expect(errors[0]).toHaveProperty('validatorName', 'isNumber');
-        expect(errors[1]).toHaveProperty('label', 'age');
-        expect(errors[1]).toHaveProperty('validatorName', 'isInteger');
-        expect(errors[2]).toHaveProperty('label', 'date');
-        expect(errors[2]).toHaveProperty('validatorName', 'isDate');
+        expect(errors[0]).toHaveProperty('validatorName', 'minNumber');
+        expect(errors[1]).toHaveProperty('label', 'date');
+        expect(errors[1]).toHaveProperty('validatorName', 'isDate');
 
         errors = schema.validate({
             name: undefined,
             height: 5,
             age: 15.5,
             bod: new Date(),
-        })
+        },[  'name',
+            'height',
+            'age',
+            'bod',])
         expect(errors[0]).toHaveProperty('label', 'name');
         expect(errors[0]).toHaveProperty('validatorName', 'required');
         expect(errors[1]).toHaveProperty('label', 'height');
@@ -243,7 +232,7 @@ describe('Nested Schema', () => {
 
     });
     test("validate valid omit", () => {
-        const errors = userSchema.validate({
+        let errors = userSchema.validate({
             name: 'name 1',
             card: {
                 number: 123,
@@ -256,8 +245,17 @@ describe('Nested Schema', () => {
                 }
             }
 
-        })
+        },['name','card.number'])
         expect(errors).toHaveLength(0)
+         errors = userSchema.validate({
+            name: 'name 1',
+            card: {
+                number: null,
+
+            }
+
+         },['name','card.number'])
+        expect(errors).toHaveLength(1)
     });
 
     test("validate invalid omit", () => {
@@ -265,7 +263,7 @@ describe('Nested Schema', () => {
             name: 'name 1',
             card: {}
 
-        })
+        },['name','card.number'])
         expect(errors).toHaveLength(1)
     });
 

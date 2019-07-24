@@ -77,12 +77,12 @@ export class ValidatorCreator {
 
             constructor({key, definition, path, value}: ValidatorParams) {
                 this.key = key
-                this.definition = definition
+                this.definition = definition as FieldDefinition
                 this.label = definition.label ? definition.label : ""
                 if (Array.isArray(definition.type)) {
                     this.type = definition.type[0]
                 } else {
-                    this.type = definition.type
+                    this.type = definition.type as  Native | string
                 }
 
                 this.value = value
@@ -140,7 +140,7 @@ export namespace ValidateFunction {
 
 export interface ValidatorParams {
     key: string,
-    definition: FieldDefinition,
+    definition: Partial<FieldDefinition>,
     value?: any,
     path: string,
 }

@@ -16,11 +16,10 @@ export interface AuthElementsProps {
 }
 
 
-const AuthAntD = ({Component, schema, denied = null, userRoles = [], action, fields: optionalFields, omitFields, omitFieldsRegEx, Error, ...props}:
+const AuthAntD = ({Component, schema, denied = null, userRoles = [], action, fields, Error, ...props}:
                       { Component: ComponentType<ElemProps>, action: ActionType } & ElemProps & AuthElementsProps) => {
     return (
-        <Auth schema={schema} action={action} userRoles={userRoles} fields={optionalFields} omitFields={omitFields}
-              omitFieldsRegEx={omitFieldsRegEx}>
+        <Auth schema={schema} action={action} userRoles={userRoles} fields={fields} >
             {({fields, loading, error}: AuthChildrenProps) => {
                 if (error && Error) return <Error error={error}/>
                 if (!loading && fields && fields.length === 0) return denied

@@ -8,10 +8,8 @@ import AutoForm from 'uniforms-antd/AutoForm'
 import {Bridge} from "./Bridge";
 import {capitalize} from "mandarina/build/Schema/utils";
 import {buildQueryFromFields} from "mandarina/build/Operations/utils";
-import {ensureId} from "mandarina/build/utils";
 import SubmitField from "uniforms-antd/SubmitField";
-import {AutoFormProps,  normalizeFields} from "./Forms";
-import {filterFields} from "mandarina/build/utils";
+import {AutoFormProps} from "./Forms";
 import {refetchQueries} from "mandarina/build/Operations/Mutate";
 import {Overwrite} from "mandarina/build/Schema/Schema";
 
@@ -20,11 +18,9 @@ export interface ActionFormProps extends AutoFormProps {
     schema: Schema
     actionName: string,
     result: string,
-    fields?: string[]
+    fields: string[]
     resultFields?: string[]
-    omitFields?: string[]
     children?: React.ReactNode | ((props: any) => React.ReactNode | React.ReactNode[])
-    omitFieldsRegEx?: RegExp
     refetchSchemas?: string[]
     overwrite?: Overwrite
 
@@ -42,13 +38,11 @@ class ActionForm extends PureComponent<WithApolloClient<ActionFormProps>> {
             result,
             actionName,
             schema,
-            omitFields,
             children,
             onChange,
             refetchQueries = this.refetchQueries,
             onCompleted,
-            fields: optionalFields,
-            omitFieldsRegEx,
+            fields,
             onSubmit,
             update,
             ignoreResults,
@@ -64,23 +58,19 @@ class ActionForm extends PureComponent<WithApolloClient<ActionFormProps>> {
             ...rest
         } = this.props
         const {changed} = this.state
-        const schemaName = result.replace(/[\[\]\!]/g, '')
-        const AllFields = ensureId(filterFields(schema.getFields(), optionalFields, omitFields, omitFieldsRegEx))
-        const fields = normalizeFields(AllFields, schema, overwrite)
         let queryFromFields = ''
-        try {
-            let resultSchema = Schema.getInstance(schemaName)
-            queryFromFields = buildQueryFromFields(filterFields(resultSchema.getFields(), resultFields))
-        } catch (e) {
+        const schemaName = result.replace(/[\[\]\!]/g, '')
+        if (Schema.instances[schemaName]){
+            if (!resultFields) throw new Error('ActionForm: if the result is a Schema you need to enter resultFields')
+            queryFromFields = buildQueryFromFields(resultFields)
         }
-
         const gqlString = `
             mutation ${actionName}($data: ${capitalize(schema.name)}Input!) {
                 ${actionName}(data: $data)
                     ${queryFromFields}
             }
         `;
-        const bridge = new Bridge(schema, overwrite)
+        const bridge = new Bridge(schema, fields, overwrite)
         const MUTATION = gql(gqlString)
         return (
             <Mutation mutation={MUTATION}
@@ -107,7 +97,7 @@ class ActionForm extends PureComponent<WithApolloClient<ActionFormProps>> {
                                   schema={bridge}
                                   onValidate={(model: Object, error: any, callback: any) => {
                                       try {
-                                          bridge.getValidator({fields})(model)
+                                          bridge.getValidator()(model)
 
                                       } catch (e) {
                                           console.error(e)
@@ -129,7 +119,7 @@ class ActionForm extends PureComponent<WithApolloClient<ActionFormProps>> {
                             {children && !Array.isArray(children) && (typeof children === "function") && children({loading})}
                             {!children && (
                                 <>
-                                    <AutoFields autoField={AutoField} fields={fields} omitFields={omitFields}/>
+                                    <AutoFields autoField={AutoField} fields={fields}/>
                                     <ErrorsField style={{marginBottom: '15px'}}/>
                                     <SubmitField size='large' loading={loading}/>
                                 </>)
