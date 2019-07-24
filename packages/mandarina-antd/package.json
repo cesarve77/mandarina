@@ -31,8 +31,8 @@
     "memoize-one": "^5.0.4",
     "react-resizable": "^1.8.0",
     "react-window": "^1.8.3",
-    "uniforms": "^2.1.0",
-    "uniforms-antd": "^2.1.0",
+    "uniforms": "^1.31.1",
+    "uniforms-antd": "^1.31.1",
     "react-sortable-hoc": "latest",
     "array-move": "latest"
   },

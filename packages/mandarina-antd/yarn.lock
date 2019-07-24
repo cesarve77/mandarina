@@ -5842,22 +5842,21 @@ unicode-property-aliases-ecmascript@^1.0.4:
   resolved "https://registry.yarnpkg.com/unicode-property-aliases-ecmascript/-/unicode-property-aliases-ecmascript-1.0.5.tgz#a9cc6cc7ce63a0a3023fc99e341b94431d405a57"
   integrity sha512-L5RAqCfXqAwR3RriF8pM0lU0w4Ryf/GgzONwi6KnL1taJQa7x1TCxdJnILX59WIGOwR57IVxn7Nej0fz1Ny6fw==
 
-uniforms-antd@^2.1.0:
-  version "2.1.0"
-  resolved "https://registry.yarnpkg.com/uniforms-antd/-/uniforms-antd-2.1.0.tgz#dc019277f432c50c2986f913935e1da6e978ed8f"
-  integrity sha512-faNNo8+7tgPBn5l1rJyZ/H6ZiiCP3lbTfQT1QuD72bN3C8qEmPXaRzQqwU/sAu7H49hApv+0Ym5uIOdV2tnRYg==
+uniforms-antd@^1.31.1:
+  version "1.31.1"
+  resolved "https://registry.yarnpkg.com/uniforms-antd/-/uniforms-antd-1.31.1.tgz#e95cfc195b5b46015e2b145ab57875d26f3c59df"
+  integrity sha512-vcTmTqs0gplbmN3xOYGng8kLozH5URoicnLZt0C6VN0DYUBRHxjJWYD/ade2NNhWjyoMhJ0Ys0wx7norrWhgmw==
   dependencies:
     "@babel/runtime" "^7.0.0"
     invariant "^2.0.0"
     lodash "^4.0.0"
     prop-types "^15.5.7"
-    uniforms "^2.1.0"
     warning "^4.0.0"
 
-uniforms@^2.1.0:
-  version "2.1.0"
-  resolved "https://registry.yarnpkg.com/uniforms/-/uniforms-2.1.0.tgz#1bbe5d6ac5cbe1a2ae61f5732e1ede5c57108647"
-  integrity sha512-grgVx+GFyaP7uF7pfNQj8N7ADXnaHEnr8gREwWFb7NYssg4w9gmSC9WfKjcBzcJs8Poshgenzk3Z+IkvrVwxug==
+uniforms@^1.31.1:
+  version "1.31.1"
+  resolved "https://registry.yarnpkg.com/uniforms/-/uniforms-1.31.1.tgz#7df7e79f7a17c7b34e4660e243e9674781c08662"
+  integrity sha512-gR5EDyqmZ6fmqglX8acOJENKKJX+TQmytdXqsAyLCpLQZcwlZd0CoQTw9aVkDEBYx+RCO1S+A7CEu42iXwvTCQ==
   dependencies:
     "@babel/runtime" "^7.0.0"
     invariant "^2.0.0"
