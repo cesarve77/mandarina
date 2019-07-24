@@ -15,7 +15,7 @@ import {Integer} from 'mandarina'
 import HiddenField from "uniforms-antd/HiddenField";
 import filterDOMProps from "uniforms/filterDOMProps";
 
-filterDOMProps.register('col', 'loading', 'omitFields', 'minCount', 'maxCount', 'fields', 'submitting', 'validating', 'fieldDefinition')
+filterDOMProps.register('col', 'loading',  'minCount', 'maxCount', 'fields', 'submitting', 'validating', 'fieldDefinition')
 
 
 class CustomAuto extends BaseField {

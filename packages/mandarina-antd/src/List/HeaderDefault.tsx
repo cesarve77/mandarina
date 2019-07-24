@@ -62,13 +62,13 @@ const HeaderDefault = ({counter = true, menuItems = [], count, ...props}: Header
                 setLoadingAction(false)
             }
         }
-
         // @ts-ignore
         if (React.isValidElement(content) && content.type.name !== 'SubMenu' && content.type.name !== "Menu") {
             return <Menu.Item key={index} onClick={onClick}>{content}</Menu.Item>
         }
 
         if (typeof content === 'function') {
+            // @ts-ignore
             return content({count, setLoadingAction, ...props})
         }
         return content

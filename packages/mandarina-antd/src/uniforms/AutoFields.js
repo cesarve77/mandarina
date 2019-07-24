@@ -10,11 +10,11 @@ class AutoFields extends Component {
 
     componentWillMount(){
         let {uniforms: {schema, error}} = this.context;
-        this.fields=this.props.fields ||  schema.getSubfields()
+        this.fields=this.props.fields
         const groups = {}
         const groupErrors = []
         this.fields.forEach((field) => {
-            const {type, uniforms: {group = 'default'} = {}} = schema.getField(field)
+            const {uniforms: {group = 'default'} = {}} = schema.getField(field)
             groups[group] = groups[group] || []
             groups[group].push(field)
             const hasError = !!schema.getError(field, error)
@@ -38,30 +38,29 @@ class AutoFields extends Component {
 
     render() {
 
-        let {autoField, element, omitFields, fields, loading, ...props} = this.props;
-        const fieldList=fields || this.fields
+        let {autoField, element,  fields, loading, ...props} = this.props;
+
         if (this.groupNames.length > 1) return (
                 this.groupNames.map((groupName) => (
                     <Row key={groupName}>
                         {createElement(
                             element,
                             props,
-                            this.groups[groupName].filter(field => omitFields.indexOf(field) === -1)
+                            this.groups[groupName]
                                 .map(field => {
-                                    return createElement(autoField, {key: field, name: field, omitFields})
+                                    return createElement(autoField, {key: field, name: field})
                                 })
                         )}
                     </Row>
                 ))
         )
-        const filteredField=fieldList.filter(field => omitFields.indexOf(field) === -1)
-        const parents=getParentsDot(filteredField)
+        const parents=getParentsDot(fields)
         return createElement(
             element,
             props,
             parents
                 .map(field => {
-                    let fields=getDecendentsDot(filteredField,field)
+                    let fields=getDecendentsDot(fields,field)
                     if (fields.length>0){
                         return createElement(autoField, {key: field, name: field, fields})
                     }
@@ -76,15 +75,12 @@ AutoFields.contextTypes = AutoField.contextTypes;
 AutoFields.propTypes = {
     autoField: PropTypes.oneOfType([PropTypes.func, PropTypes.string]),
     element: PropTypes.oneOfType([PropTypes.func, PropTypes.string]),
-
     fields: PropTypes.arrayOf(PropTypes.string),
-    omitFields: PropTypes.arrayOf(PropTypes.string)
 };
 
 AutoFields.defaultProps = {
     autoField: AutoField,
     element: 'div',
-    omitFields: []
 };
 
 filterDOMProps.register('col')
