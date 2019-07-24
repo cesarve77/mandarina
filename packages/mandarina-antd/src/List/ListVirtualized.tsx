@@ -393,7 +393,7 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
         const columns: (ColumnProps | null)[] = []
         fields.forEach((field) => {
             const column = this.getColumnDefinition(field)
-            if (column && !columns.some((c) => c && c.field === column.field)) {
+            if (column && !columns.some((c) => !!(c && c.field === column.field))) {
                 columns.push(column)
             } else {
                 columns.push(null)

@@ -25,7 +25,7 @@
     "graphql-yoga": "^1.17.4",
     "merge-graphql-schemas": "^1.5.8",
     "prisma-binding": "^2.3.10",
-    "typescript": "3.5.2",
+    "typescript": "^3.5.3",
     "react-apollo": "^2.5.5",
     "apollo-link-http": "^1.5.14",
     "apollo-cache-inmemory": "^1.5.1",
