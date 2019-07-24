@@ -1,5 +1,5 @@
 import Mandarina from "../Mandarina";
-import {ActionType, getRoles, getFields, addToSet, authFields} from "mandarina/build/Auth/Auth";
+import {ActionType, addToSet, getFields, getRoles} from "mandarina/build/Auth/Auth";
 import {Schema} from "mandarina";
 
 interface AuthInterface {
@@ -10,21 +10,20 @@ interface AuthInterface {
 }
 
 
-
 export const actions = ['read', 'create', 'update', 'delete']
 
 export const Auth: AuthInterface = {
     getRoles,
     resolvers: {
-        AuthFields: async (_: any, {action,table,fields}: AuthArgs, context: any, info: any) => {
+        AuthFields: async (_: any, {action, table, fields}: AuthArgs, context: any, info: any) => {
             const allRoles = Auth.getRoles()
             const user = await Mandarina.config.getUser(context)
 
-            const userRoles:string[] = (user && user.roles) || []
-            const schema=Schema.getInstance(table)
-            const finalFields=new Set(getFields({userRoles,schema,action,fields}) || [])
-            let tableRoles: Set<string> =new Set()
-            let extraRoles: Set<string> =new Set()
+            const userRoles: string[] = (user && user.roles) || []
+            const schema = Schema.getInstance(table)
+            const finalFields = new Set(getFields({userRoles, schema, action, fields}) || [])
+            let tableRoles: Set<string> = new Set()
+            let extraRoles: Set<string> = new Set()
 
             userRoles.forEach((role) => {
                 if (allRoles.has(role)) {
@@ -33,7 +32,7 @@ export const Auth: AuthInterface = {
                     extraRoles.add(role)
                 }
             })
-            if (extraRoles.size===0) return fields.filter(field=>finalFields.has(field)) // for keep the order
+            if (extraRoles.size === 0) return fields.filter(field => finalFields.has(field)) // for keep the order
 
             const alcFields = await context.prisma.query.authTables({
                 where: {
@@ -45,7 +44,7 @@ export const Auth: AuthInterface = {
             // TODO esto no funciuona
             addToSet(fields, alcFields)
 
-            return fields.filter(field=>fields.includes(field)) // for keep the order
+            return fields.filter(field => fields.includes(field)) // for keep the order
             /*const staticRoles = roles.filter(permissionRoles.includes)
             const dynamicRoles = roles.filter((field: string) => !permissionRoles.includes(field))
 
