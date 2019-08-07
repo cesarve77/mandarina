@@ -17,7 +17,6 @@ export type onResize = (e: any, {size}: { size: { width: number } }) => void
 export interface ListProps extends FindQueryProps {
     schema: Schema
     fields: string[]
-
     overwrite?: Overwrite
     pageSize?: number
     first?: number

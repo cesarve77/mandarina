@@ -8,9 +8,9 @@ import {getDecendentsDot, getParentsDot} from "mandarina/build/utils";
 
 class AutoFields extends Component {
 
-    componentWillMount(){
+    componentWillMount() {
         let {uniforms: {schema, error}} = this.context;
-        this.fields=this.props.fields
+        this.fields = this.props.fields || schema.getSubfields()
         const groups = {}
         const groupErrors = []
         this.fields.forEach((field) => {
@@ -32,36 +32,37 @@ class AutoFields extends Component {
             const {uniforms: {order = 0} = {}} = schema.getField(groups[groupName][0])
             return order
         })
-        this.groups=groups
-        this.groupNames=groupNames
+        this.groups = groups
+        this.groupNames = groupNames
     }
 
     render() {
 
-        let {autoField, element,  fields, loading, ...props} = this.props;
-
+        let {autoField, element, fields,omitFields=[], loading, ...props} = this.props;
+        const fieldList=fields || this.fields
         if (this.groupNames.length > 1) return (
-                this.groupNames.map((groupName) => (
-                    <Row key={groupName}>
-                        {createElement(
-                            element,
-                            props,
-                            this.groups[groupName]
-                                .map(field => {
-                                    return createElement(autoField, {key: field, name: field})
-                                })
-                        )}
-                    </Row>
-                ))
+            this.groupNames.map((groupName) => (
+                <Row key={groupName}>
+                    {createElement(
+                        element,
+                        props,
+                        this.groups[groupName]
+                            .map(field => {
+                                return createElement(autoField, {key: field, name: field})
+                            })
+                    )}
+                </Row>
+            ))
         )
-        const parents=getParentsDot(fields)
+        const filteredField=fieldList.filter(field => omitFields.indexOf(field) === -1)
+        const parents=getParentsDot(filteredField)
         return createElement(
             element,
             props,
             parents
                 .map(field => {
-                    let fields=getDecendentsDot(fields,field)
-                    if (fields.length>0){
+                    let fields = getDecendentsDot(filteredField, field)
+                    if (fields.length > 0) {
                         return createElement(autoField, {key: field, name: field, fields})
                     }
                     return createElement(autoField, {key: field, name: field})
@@ -76,6 +77,7 @@ AutoFields.propTypes = {
     autoField: PropTypes.oneOfType([PropTypes.func, PropTypes.string]),
     element: PropTypes.oneOfType([PropTypes.func, PropTypes.string]),
     fields: PropTypes.arrayOf(PropTypes.string),
+    omitFields: PropTypes.arrayOf(PropTypes.string),
 };
 
 AutoFields.defaultProps = {

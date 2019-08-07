@@ -75,7 +75,6 @@ export const getGraphQLType = (def: FieldDefinition, key: string, required: '' |
         default:
             const schemaName = def.type
             if (isInput && def.isTable && def.form && def.form.props && def.form.props.query) {
-                console.log('`${schemaName}WhereUnique${input}${required}`', `${schemaName}WhereUnique${input}${required}`)
                 return `${schemaName}WhereUnique${input}${required}`
             }
             return def.type + input + required;
@@ -225,8 +224,6 @@ export const getSubSchemas = (schema: Schema, processedSchemas: string[] = []): 
     schema.getSubSchemas().forEach(field => {
         const fieldDefinition = schema.getPathDefinition(field)
         if (!fieldDefinition.isTable) return
-        console.log('parent',schema.name,field)
-
         if (!(fieldDefinition.form && fieldDefinition.form.props && fieldDefinition.form.props.query)) {
             const schemaName = fieldDefinition.type
             subSchemas.push(schemaName)

@@ -161,15 +161,17 @@ export class Schema {
         this.clean(model, fields)
         return this._validate(model, fields);
     }
-    getSchemaPermission(roles: string[], action: Action ) {
+
+    getSchemaPermission(roles: string[], action: Action) {
         if (!this.permissions) return true
-        for (const role in roles){
+        for (const role in roles) {
             if (!this.permissions[action]) return true
             // @ts-ignore
             if (this.permissions[action].includes(role)) return true
         }
         return false
     }
+
     getFieldPermission(field: string, roles: string[], action: Action) {
         const parentPath = field.split('.').shift() as string
         const def = this.getPathDefinition(field)
@@ -184,17 +186,12 @@ export class Schema {
             this.fieldsPermissions[field] = this.fieldsPermissions[field] || {}
             this.fieldsPermissions[field][role] = this.fieldsPermissions[field][role] || {}
             if (this.fieldsPermissions[field][role][action] === undefined) {
-
                 this.fieldsPermissions[field][role][action] = !lappedRoles || (
                     (lappedRoles.includes('everybody') || lappedRoles.includes(role)) &&
                     !lappedRoles.includes('nobody'))
-
-
             }
-            console.log(field, lappedRoles, this.fieldsPermissions[field][role][action])
             if (this.fieldsPermissions[field][role][action]) return true;
         }
-
         return false
     }
 
@@ -220,7 +217,6 @@ export class Schema {
         }
 
         this.keys.forEach((key): any => {
-                console.log('fields every',fields)
             if (key !== '___typename' && fields.every((field) => field !== key && field.indexOf(key + '.') < 0)) {
                 return model && delete model[key]
             }
@@ -374,22 +370,32 @@ export class Schema {
         return def
     }
 
+
     private _validate(model: Model, fields?: string[]): ErrorValidator[] {
         let errors: ErrorValidator[] = [];
         const flatModel = flatten(model)
         Object.keys(flatModel).forEach(key => {
+
             const value = flatModel[key]
             const cleanKey = Schema.cleanKey(key)
             if (fields && !fields.includes(cleanKey)) return
             const last = cleanKey.split('.').pop() as string
             const definition = this.getPathDefinition(cleanKey);
             for (const validator of definition.validators) {
-                if (definition.isArray && !validator.arrayValidator) continue
+                if (
+                    definition.isArray &&
+                    validator.arrayValidator &&
+                    key.match(/\.\d+$/)  //if is a scalar like user.0
+                ) {
+                    continue
+                }
                 const instance = new validator({key: last, path: key, definition, value});
                 const error = instance.validate(model);
                 if (error) {
                     errors.push(error);
                 }
+
+
             }
         })
         return errors;
