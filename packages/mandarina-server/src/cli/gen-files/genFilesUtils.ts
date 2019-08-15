@@ -213,8 +213,11 @@ const saveYaml = (file: string, data: any) => {
     const contentFile = fs.readFileSync(file, {encoding: 'utf8'}).replace(/([\t ]*)PRISMA_CONFIG *: *(\||>)?\n/, '$1PRISMA_CONFIG:\n')
     let originalData = yaml.parse(contentFile) || {};
     delete originalData.datamodel
-    data.datamodel = Array.from(data.datamodel)
-    const newData = merge(originalData, data)
+    let newData = data
+    if (data.datamodel){
+        data.datamodel = Array.from(data.datamodel)
+         newData = merge(originalData, data)
+    }
     const str = yaml.stringify(newData).replace(/([\t ]*)PRISMA_CONFIG *: *\n/, '$1PRISMA_CONFIG: |\n')
     fs.writeFileSync(file, str);
 }

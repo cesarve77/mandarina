@@ -22,6 +22,7 @@ export const genFile = () => {
     createDir(config.dir.prisma)
     resetDir(config.dir.prisma)
     const models: Set<string> = new Set()
+    let processedSubSchemas: string[]=[]
     for (const schemaName in Table.instances) {
         const schema = Schema.getInstance(schemaName)
         const fileName = schema.name.toLowerCase()
@@ -29,13 +30,17 @@ export const genFile = () => {
         saveFile(config.dir.prisma, fileName, graphql, 'model',)
         models.add(`datamodel/${fileName}.model.graphql`)
         const subSchemas = getSubSchemas(schema)
-        subSchemas.forEach((subsSchema) => {
+        for (const subsSchema of subSchemas) {
+            if (processedSubSchemas.includes(subsSchema)) {
+                continue;
+            }
+            processedSubSchemas.push(schemaName)
             const schema = Schema.getInstance(subsSchema)
             const graphql = getGraphQLModel(schema)
             const fileName = getFileName(schema)
             models.add(`datamodel/${fileName}.model.graphql`)
             saveFile(config.dir.prisma, fileName, graphql, 'model',)
-        })
+        }
 
     }
     const database = config.prisma.database || 'default'
@@ -43,7 +48,7 @@ export const genFile = () => {
     savePrismaYaml(models, config.dir.prisma, `${config.prisma.host}:${config.prisma.port}/${database}/${stage}`, config.secret)
     saveDockerComposeYaml(config.dir.prisma, config.prisma.port)
 
-
+    processedSubSchemas=[]
     for (const schemaName in CustomAction.instances) {
         const fileName = schemaName.toLowerCase()
         const action = CustomAction.getInstance(schemaName)
@@ -54,12 +59,14 @@ export const genFile = () => {
         const graphql = getGraphQLInput(schema)
         saveFile(config.dir.prisma, fileName, graphql, 'input',)
         const subSchemas = getSubSchemas(schema)
-        subSchemas.forEach((subsSchema) => {
+        for (const subsSchema of subSchemas) {
+            if (processedSubSchemas.includes(subsSchema)) continue;
+            processedSubSchemas.push(schemaName)
             const schema = Schema.getInstance(subsSchema)
             const graphql = getGraphQLInput(schema)
             const fileName = getFileName(schema)
             saveFile(config.dir.prisma, fileName, graphql, 'input',)
-        })
+        }
     }
     if (config.options && config.options.auth) {
         const authOperation = getAuthOperation()
