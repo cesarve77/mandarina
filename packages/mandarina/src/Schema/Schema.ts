@@ -111,12 +111,14 @@ export class Schema {
         this.keys = Object.keys(this.shape);
     }
 
+    hasPath(field: string): boolean {
+        const definition=this._getPathDefinition(field)
+        return !(!definition || Object.keys(definition).length === 0)
+    }
+
     getPathDefinition(field: string): FieldDefinition {
-        if (!this.pathDefinitions[field]) {
-            this.pathDefinitions[field] = this.generatePathDefinition(field);
-        }
-        const definition = this.pathDefinitions[field]
-        if (!definition || Object.keys(definition).length === 0) {
+        const definition = this._getPathDefinition(field)
+        if (!definition) {
             throw new Error(`Field "${field}" not found`)
         }
         return definition
@@ -199,66 +201,7 @@ export class Schema {
         return {...this.shape[key]};
     }
 
-    /**
-     * Mutate the model,with all keys  proper types and null for undefined
-     * TODO: Refactor to prevent mutation, fix it creating a new cloned model and returning it
-     * @param model
-     * @param fields
-     * @param removeExtraKeys
-     */
-    protected _clean(model: Model | undefined | null, fields: string[], removeExtraKeys = true) {
-
-        if (removeExtraKeys && model && typeof model === 'object') {
-            Object.keys(model).forEach((key) => {
-                if (!this.keys.includes(key)) {
-                    delete model[key]
-                }
-            });
-        }
-
-        this.keys.forEach((key): any => {
-            if (key !== '___typename' && fields.every((field) => field !== key && field.indexOf(key + '.') < 0)) {
-                return model && delete model[key]
-            }
-            const definition = this.getPathDefinition(key);
-
-            if (!definition.isTable && typeof model === 'object' && model !== undefined && model !== null) {
-                model[key] = forceType(model[key], definition.type);
-                model[key] = model[key] === 0 ? 0 : model[key] || definition.defaultValue;
-
-            } else if (definition.isTable && !definition.isArray && typeof model === 'object' && model !== undefined && model !== null) {
-                if (model[key] !== 0 && !model[key]) {
-                    return model[key] = definition.defaultValue;
-                }
-                const schema = Schema.getInstance(definition.type)
-                schema._clean(model[key], getDecendentsDot(fields, key));
-                return;
-
-            } else if (definition.isArray && typeof model === 'object' && model !== undefined && model !== null) {
-                model[key] = forceType(model[key], Array)
-                if (definition.isTable) {
-                    const schema = Schema.getInstance(definition.type)
-                    model[key] = model[key].map((value: any) => {
-                        schema._clean(value, getDecendentsDot(fields, key))
-                        return value
-                    });
-                } else {
-                    model[key] = model[key].map((value: any) => forceType(value, definition.type));
-                }
-                return;
-            }
-
-
-            if (model) {
-                model[key] = definition.transformValue.call({
-                    model: this.original,
-                    siblings: model
-                }, model[key]);
-            }
-        })
-    }
-
-    private applyDefinitionsDefaults(definition: UserFieldDefinition, key: string): FieldDefinition {
+    applyDefinitionsDefaults(definition: UserFieldDefinition, key: string): FieldDefinition {
         const fieldDefinition = <FieldDefinition>{};
 
         if (!definition.validators) {
@@ -352,6 +295,72 @@ export class Schema {
             fieldDefinition.label = inflection.transform(key, ['underscore', 'humanize']);
         }
         return fieldDefinition;
+    }
+
+    /**
+     * Mutate the model,with all keys  proper types and null for undefined
+     * TODO: Refactor to prevent mutation, fix it creating a new cloned model and returning it
+     * @param model
+     * @param fields
+     * @param removeExtraKeys
+     */
+    protected _clean(model: Model | undefined | null, fields: string[], removeExtraKeys = true) {
+
+        if (removeExtraKeys && model && typeof model === 'object') {
+            Object.keys(model).forEach((key) => {
+                if (!this.keys.includes(key)) {
+                    delete model[key]
+                }
+            });
+        }
+
+        this.keys.forEach((key): any => {
+            if (key !== '___typename' && fields.every((field) => field !== key && field.indexOf(key + '.') < 0)) {
+                return model && delete model[key]
+            }
+            const definition = this.getPathDefinition(key);
+
+            if (!definition.isTable && typeof model === 'object' && model !== undefined && model !== null) {
+                model[key] = forceType(model[key], definition.type);
+                model[key] = model[key] === 0 ? 0 : model[key] || definition.defaultValue;
+
+            } else if (definition.isTable && !definition.isArray && typeof model === 'object' && model !== undefined && model !== null) {
+                if (model[key] !== 0 && !model[key]) {
+                    return model[key] = definition.defaultValue;
+                }
+                const schema = Schema.getInstance(definition.type)
+                schema._clean(model[key], getDecendentsDot(fields, key));
+                return;
+
+            } else if (definition.isArray && typeof model === 'object' && model !== undefined && model !== null) {
+                model[key] = forceType(model[key], Array)
+                if (definition.isTable) {
+                    const schema = Schema.getInstance(definition.type)
+                    model[key] = model[key].map((value: any) => {
+                        schema._clean(value, getDecendentsDot(fields, key))
+                        return value
+                    });
+                } else {
+                    model[key] = model[key].map((value: any) => forceType(value, definition.type));
+                }
+                return;
+            }
+
+
+            if (model) {
+                model[key] = definition.transformValue.call({
+                    model: this.original,
+                    siblings: model
+                }, model[key]);
+            }
+        })
+    }
+
+    private _getPathDefinition(field: string): FieldDefinition {
+        if (!this.pathDefinitions[field]) {
+            this.pathDefinitions[field] = this.generatePathDefinition(field);
+        }
+        return this.pathDefinitions[field]
     }
 
     private generatePathDefinition(key: string): FieldDefinition {

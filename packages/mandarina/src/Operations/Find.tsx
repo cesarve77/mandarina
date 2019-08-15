@@ -91,7 +91,7 @@ export class FindBase extends PureComponent<FindProps & FindBaseProps, FindBaseS
             orderBy = field + (sort[field] > 0 ? '_ASC' : '_DESC')
         }
         const {names} = schema
-        const defaultQuery = this.buildQueryFromFields(fields)
+        const defaultQuery = this.buildQueryFromFields(fields.filter(field=>this.props.schema.hasPath(field)))
         let queryString: string
         if (type === 'connection') {
             queryString = `query ($where: ${names.input.where[type]}, $after: String, $first: Int, $skip: Int, $orderBy: ${names.orderBy}) 

@@ -127,7 +127,7 @@ const getMainSchema = (schema: Schema, type: 'input' | 'type') => {
         if (type === 'type' && (fieldDefinition.table.createdAt === true || (fieldDefinition.table.createdAt !== false && key === 'createdAt'))) {
             createdAt = `@createdAt`
         }
-        if (type === 'type' && (fieldDefinition.table.createdAt === true || (fieldDefinition.table.updatedAt !== false && key === 'updatedAt'))) {
+        if (type === 'type' && (fieldDefinition.table.updatedAt === true || (fieldDefinition.table.updatedAt !== false && key === 'updatedAt'))) {
             createdAt = `@updatedAt`
         }
         if (!scalarList && type === 'type' && fieldDefinition.isArray && !fieldDefinition.isTable) {
@@ -212,6 +212,7 @@ const saveYaml = (file: string, data: any) => {
     const yaml: any = require("yaml")
     const contentFile = fs.readFileSync(file, {encoding: 'utf8'}).replace(/([\t ]*)PRISMA_CONFIG *: *(\||>)?\n/, '$1PRISMA_CONFIG:\n')
     let originalData = yaml.parse(contentFile) || {};
+    delete originalData.datamodel
     data.datamodel = Array.from(data.datamodel)
     const newData = merge(originalData, data)
     const str = yaml.stringify(newData).replace(/([\t ]*)PRISMA_CONFIG *: *\n/, '$1PRISMA_CONFIG: |\n')

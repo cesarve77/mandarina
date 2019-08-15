@@ -9,8 +9,7 @@ import {capitalize} from 'mandarina/build/Schema/utils';
 import {MissingIdTableError} from "mandarina/build/Errors/MissingIDTableError";
 import {ErrorFromServerMapper} from "mandarina/src/Schema/Schema";
 import {flatten, unflatten} from "flat";
-
-
+import graphqlFields  from 'graphql-fields'
 /**
  *
  * A Table instance is the representation of the one of several of the followings:
@@ -84,7 +83,8 @@ export class Table {
             result[operationName] = async (_: any, args: any = {}, context: Context, info: any) => {
                 console.log('*****************************************************')
                 console.log('operationName', operationName)
-                console.log('args', args)
+                console.log('args')
+                console.dir(args, {depth: null})
                 let time = new Date().getTime()
                 const bm = (description?: string) => {
                     if (description) {
@@ -97,8 +97,6 @@ export class Table {
                 const subOperationName: ActionType | string = operationName.substr(0, 6)
                 const action: ActionType = <ActionType>(['create', 'update', 'delete'].includes(subOperationName) ? subOperationName : 'read')
                 const prismaMethod = context.prisma[type][operationName];
-                //const roles = use zr && user.roles
-
                 let result: any
                 const capitalizedAction = capitalize(action)
                 // TODO: Review the hooks architecture for adding a way to execute hooks of nested operations
@@ -152,15 +150,21 @@ export class Table {
                     //this.validatePermissions('read', roles, fieldsList(info));
                 }
                 if (type === 'query') {
-                    await this.callHook(this.name, 'beforeQuery', _, args, context, info);
+                    //await this.callHook(this.name, 'beforeQuery', _, args, context, info);
                     //this.validatePermissions('read', roles, fieldsList(info));
                     result = await prismaMethod(args, info);
+                    console.log(  graphqlFields(info))
+
+
                     context.result = result
-                    await this.callHook(this.name, 'afterQuery', _, args, context, info);
+                    //await this.callHook(this.name, 'afterQuery', _, args, context, info);
 
                 }
 
                 bm('done in ')
+                console.log('result')
+                console.dir(result)
+
                 console.log('*****************************************************')
                 return result;
             }

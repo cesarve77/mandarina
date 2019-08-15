@@ -52,10 +52,10 @@ class Auth extends Component<AuthPropsWithClient, { loading: boolean, fields: st
     render() {
         let {children, fields: hardCodeFields} = this.props;
         const {loading, fields: schemaFields, error} = this.state
-        console.log('hardCodeFields',hardCodeFields)
-        console.log('schemaFields',schemaFields)
+        console.log('hardCodeFields', hardCodeFields)
+        console.log('schemaFields', schemaFields)
         const fields = hardCodeFields.filter(field => schemaFields.includes(field))
-        console.log('fields',fields)
+        console.log('fields', fields)
         return children({fields, loading, error})
     }
 }
@@ -67,7 +67,7 @@ export default withApollo<AuthProps>(Auth)
 export const addToSet = (into: any[], toBeAdded: any[]) => toBeAdded.forEach(item => !into.includes(item) && into.push(item))
 
 
-let roles=new Set<string>()
+let roles = new Set<string>()
 export let authFields: {
     [tableName: string]: {
         [action in ActionType]: {
@@ -87,10 +87,10 @@ export const getRoles = () => {
             const fields = schema.getFields()
             fields.forEach(field => {
                 const permissions = schema.getPathDefinition(field).permissions
-                if (permissions.read) permissions.read.forEach(r=>roles.add(r))
-                if (permissions.update) permissions.update.forEach(r=>roles.add(r))
-                if (permissions.create) permissions.create.forEach(r=>roles.add(r))
-                if (permissions.delete) permissions.delete.forEach(r=>roles.add(r))
+                if (permissions.read) permissions.read.forEach(r => roles.add(r))
+                if (permissions.update) permissions.update.forEach(r => roles.add(r))
+                if (permissions.create) permissions.create.forEach(r => roles.add(r))
+                if (permissions.delete) permissions.delete.forEach(r => roles.add(r))
             })
         })
     }
@@ -103,13 +103,16 @@ export const getFields = (args: AuthArgs) => {
     }
 
     if (!actions.includes(args.action)) throw new Error(`Action only can be one of ['read', 'create', 'update', 'delete'] now is: ${args.action} `)
-    const finalFields: string[]=[]
-    const t=new Date().getTime()
-    args.fields.forEach(field=>{
-        if (args.schema.getFieldPermission(field,args.userRoles,args.action)) finalFields.push(field)
-
+    const finalFields: string[] = []
+    const t = new Date().getTime()
+    args.fields.forEach(field => {
+        if (!args.schema.hasPath(field)) {
+            finalFields.push(field)
+        } else if (args.schema.getFieldPermission(field, args.userRoles, args.action)) {
+            finalFields.push(field)
+        }
     })
-    console.log('time',new Date().getTime()-t)
+    console.log('time', new Date().getTime() - t)
     return finalFields
 
     /*const staticRoles = roles.filter(permissionRoles.includes)

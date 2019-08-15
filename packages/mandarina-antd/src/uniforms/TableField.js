@@ -4,7 +4,6 @@ import gql from "graphql-tag";
 import SelectField from "uniforms-antd/SelectField";
 import {Spin} from "antd";
 import {Schema} from 'mandarina'
-import wrapField from "uniforms-antd/wrapField";
 import connectField from "uniforms/connectField";
 
 const defaultLabeler = (doc) => {
@@ -43,7 +42,7 @@ export const joinValues = (obj, defaultValue, divider = ' ') => {
 
 
 const Table = ({query, where, mode, labeler = defaultLabeler, ...props}) => {
-    const table = (props.field.form && props.field.form.props && props.field.form.props.type) || props.field.type
+    const table = (props && props.type) || props.field.type
     if (typeof query === 'string') {
         const schema = Schema.getInstance(table)
         const queryName = schema.names.query.plural
@@ -52,12 +51,12 @@ const Table = ({query, where, mode, labeler = defaultLabeler, ...props}) => {
         return (
             <Query query={QUERY} variables={{where}}>
                 {({loading, error, data, variables, refetch}) => {
-                    if (error) return <Error variables={variables} error={error} refetch={refetch}/> //TODO: create ERROR component
+                    if (error) throw error
                     const docs = loading ? [] : data[queryName]
                     const allowedValues = docs.map(({id}) => id)
                     const transform = getTransform(docs, labeler)
                     let mode = props.mode,
-                        value = props.field.type === String ?  props.value :props.value && props.value.id || ''
+                        value = props.field.type === String ? props.value : props.value && props.value.id || ''
                     let onChange = value => {
 
                         if (props.field.type === String) {
@@ -83,16 +82,16 @@ const Table = ({query, where, mode, labeler = defaultLabeler, ...props}) => {
 
                         }
                     }
-                    return wrapField(props, <SelectField {...props}
-                                                         transform={transform}
-                                                         placeholder={props.loading ? '.... ... .. .' : props.placeholder}
-                                                         disabled={loading || props.disabled}
-                                                         onChange={onChange}
-                                                         value={value}
-                                                         notFoundContent={loading ? <Spin size="small"/> : null}
-                                                         mode={mode}
-                                                         allowedValues={allowedValues}
-                    />)
+                    return <SelectField {...props}
+                                        transform={transform}
+                                        placeholder={props.loading ? '.... ... .. .' : props.placeholder}
+                                        disabled={loading || props.disabled}
+                                        onChange={onChange}
+                                        value={value}
+                                        notFoundContent={loading ? <Spin size="small"/> : null}
+                                        mode={mode}
+                                        allowedValues={allowedValues}
+                    />
                 }}
             </Query>
         )
