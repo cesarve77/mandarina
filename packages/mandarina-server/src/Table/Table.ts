@@ -8,8 +8,9 @@ import {SchemaInstanceNotFound} from "mandarina/build/Errors/SchemaInstanceNotFo
 import {capitalize} from 'mandarina/build/Schema/utils';
 import {MissingIdTableError} from "mandarina/build/Errors/MissingIDTableError";
 import {ErrorFromServerMapper} from "mandarina/src/Schema/Schema";
-import {flatten, unflatten} from "flat";
-import graphqlFields  from 'graphql-fields'
+    import {flatten, unflatten} from "flat";
+import graphqlFields from 'graphql-fields'
+
 /**
  *
  * A Table instance is the representation of the one of several of the followings:
@@ -74,12 +75,18 @@ export class Table {
         }
     }
  */
+    shouldHasMAnyUpdate() {
+        const fields = this.schema.getFields().filter(f => f !== 'createdAt' && f !== 'createdAt')
+        return fields.length > 0
+    }
+
     getDefaultActions(type: operationType) {
 
         const result = {};
         // OperationName for query is user or users, for mutation are createUser, updateUser ....
         const operationNames: string[] = Object.values(this.schema.names[type]);
         operationNames.forEach((operationName: string) => {
+            if (!this.shouldHasMAnyUpdate()) return
             result[operationName] = async (_: any, args: any = {}, context: Context, info: any) => {
                 console.log('*****************************************************')
                 console.log('operationName', operationName)
@@ -129,9 +136,9 @@ export class Table {
                         let withoutDeleteMany: any = {}
                         Object.keys(flat).forEach((key) => {
                             if (key.match(/\.deleteMany\.0$/)) {
+                                run = true
                                 withDeleteMany[key] = flat[key]
                             } else {
-                                run = true
                                 withoutDeleteMany[key] = flat[key]
                             }
                         })
@@ -140,7 +147,6 @@ export class Table {
                             args.data = unflatten(withoutDeleteMany)
                         }
                     }
-
                     result = await prismaMethod(args, info);
 
                     context.result = result
@@ -153,7 +159,7 @@ export class Table {
                     //await this.callHook(this.name, 'beforeQuery', _, args, context, info);
                     //this.validatePermissions('read', roles, fieldsList(info));
                     result = await prismaMethod(args, info);
-                    console.log(  graphqlFields(info))
+                    // console.log(graphqlFields(info))
 
 
                     context.result = result
