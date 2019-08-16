@@ -8,8 +8,7 @@ import {SchemaInstanceNotFound} from "mandarina/build/Errors/SchemaInstanceNotFo
 import {capitalize} from 'mandarina/build/Schema/utils';
 import {MissingIdTableError} from "mandarina/build/Errors/MissingIDTableError";
 import {ErrorFromServerMapper} from "mandarina/src/Schema/Schema";
-    import {flatten, unflatten} from "flat";
-import graphqlFields from 'graphql-fields'
+import {flatten, unflatten} from "flat";
 
 /**
  *
