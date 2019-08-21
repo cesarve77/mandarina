@@ -20,7 +20,7 @@ interface ListFilterProps {
     filter?: any
 }
 
-const ListFilter = React.memo(({onFilterChange, field, filter, schema}: ListFilterProps) => {
+export const ListFilter = React.memo(({onFilterChange, field, filter, schema}: ListFilterProps) => {
         const fieldDefinition = schema.getPathDefinition(field)
         let FieldComponent: FilterComponent
         if (fieldDefinition.isTable){

@@ -8,7 +8,8 @@ import {SchemaInstanceNotFound} from "mandarina/build/Errors/SchemaInstanceNotFo
 import {capitalize} from 'mandarina/build/Schema/utils';
 import {MissingIdTableError} from "mandarina/build/Errors/MissingIDTableError";
 import {ErrorFromServerMapper} from "mandarina/src/Schema/Schema";
-import {flatten, unflatten} from "flat";
+
+// import {flatten, unflatten} from "flat";
 
 /**
  *
@@ -87,10 +88,10 @@ export class Table {
         operationNames.forEach((operationName: string) => {
             if (!this.shouldHasMAnyUpdate()) return
             result[operationName] = async (_: any, args: any = {}, context: Context, info: any) => {
-                console.log('*****************************************************')
-                console.log('operationName', operationName)
-                console.log('args')
-                console.dir(args, {depth: null})
+                // console.log('*****************************************************')
+                // console.log('operationName', operationName)
+                // console.log('args')
+                // console.dir(args, {depth: null})
                 let time = new Date().getTime()
                 const bm = (description?: string) => {
                     if (description) {
@@ -106,13 +107,12 @@ export class Table {
                 let result: any
                 const capitalizedAction = capitalize(action)
                 // TODO: Review the hooks architecture for adding a way to execute hooks of nested operations
+
+                await this.callHook(this.name, 'beforeValidate', _, args, context, info);
+
+
                 if (type === 'mutation') {
 
-                    await this.callHook(this.name, 'beforeValidate', _, args, context, info);
-
-                    //TODO: Flatting nested fields operation (context, update, create)
-                    // console.log('123123123',this.flatFields(args.data))
-                    // const errors = this.schema.validate(this.flatFields(args.data));
 
                     // if (errors.length > 0) {
                     //     await this.callHook('validationFailed', action, _, args, context, info);
@@ -127,27 +127,27 @@ export class Table {
                     /*
                     HACK https://github.com/prisma/prisma/issues/4327
                      */
-                    if (`before${capitalizedAction}` === 'beforeUpdate' || `before${capitalizedAction}` === 'beforeCreate') {
-                        const flat = flatten(args.data)
-                        const where = args.where
-                        let run = false
-                        let withDeleteMany: any = {}
-                        let withoutDeleteMany: any = {}
-                        Object.keys(flat).forEach((key) => {
-                            if (key.match(/\.deleteMany\.0$/)) {
-                                run = true
-                                withDeleteMany[key] = flat[key]
-                            } else {
-                                withoutDeleteMany[key] = flat[key]
-                            }
-                        })
-                        if (run) {
-                            await prismaMethod({where, data: unflatten(withDeleteMany)}, info);
-                            args.data = unflatten(withoutDeleteMany)
-                        }
-                    }
+                    // if (`before${capitalizedAction}` === 'beforeUpdate' || `before${capitalizedAction}` === 'beforeCreate') {
+                    //     const flat = flatten(args.data)
+                    //     const where = args.where
+                    //     let run = false
+                    //     let withDeleteMany: any = {}
+                    //     let withoutDeleteMany: any = {}
+                    //     Object.keys(flat).forEach((key) => {
+                    //         if (key.match(/\.deleteMany\.0$/)) {
+                    //             run = true
+                    //             withDeleteMany[key] = flat[key]
+                    //         } else {
+                    //             withoutDeleteMany[key] = flat[key]
+                    //         }
+                    //     })
+                    //     if (run) {
+                    //         await prismaMethod({where, data: unflatten(withDeleteMany)}, info);
+                    //         args.data = unflatten(withoutDeleteMany)
+                    //     }
+                    // }
                     result = await prismaMethod(args, info);
-
+                    //
                     context.result = result
 
                     await this.callHook(this.name, <HookName>`after${capitalizedAction}`, _, args, context, info);
@@ -155,22 +155,22 @@ export class Table {
                     //this.validatePermissions('read', roles, fieldsList(info));
                 }
                 if (type === 'query') {
-                    //await this.callHook(this.name, 'beforeQuery', _, args, context, info);
+                    await this.callHook(this.name, 'beforeQuery', _, args, context, info);
                     //this.validatePermissions('read', roles, fieldsList(info));
                     result = await prismaMethod(args, info);
                     // console.log(graphqlFields(info))
 
 
                     context.result = result
-                    //await this.callHook(this.name, 'afterQuery', _, args, context, info);
+                    await this.callHook(this.name, 'afterQuery', _, args, context, info);
 
                 }
 
-                bm('done in ')
-                console.log('result')
-                console.dir(result)
-
-                console.log('*****************************************************')
+                // bm('done in ')
+                // console.log('result')
+                // console.dir(result)
+                //
+                // console.log('*****************************************************')
                 return result;
             }
         });
@@ -193,9 +193,47 @@ export class Table {
      * @param info
      */
     private async callHook(schemaName: string, name: HookName, _: any, args: any, context: any, info: any) {
+        console.log('--------------------')
+        console.log(schemaName, name, args)
+        console.log('--------------------')
         try {
             const hookHandler = this.options.hooks && this.options.hooks[name];
             if (hookHandler) {
+                let data: any = args.data
+                const fields = Object.keys(data)
+                const schema = Schema.getInstance(schemaName)
+                for (const field of fields) {
+                    const def = schema.getPathDefinition(field)
+                    const inline = !!(def.table && def.table.relation && def.table.relation.link === 'INLINE')
+                    if (def.isTable) {
+                        const operations = Object.keys(data[field])
+                        for (const operation of operations) {
+                            const hookName = `before${capitalize(operation)}` as HookName
+                            const args2 = data[field][operation]
+                            if (!Table.instances[def.type]) continue
+                            const table = Table.getInstance(def.type)
+                            if (Array.isArray(args2)) {
+                                for (const arg2 of args2) {
+                                    if (inline) {
+                                        await table.callHook(def.type, hookName, _, {data: arg2}, context, info)
+                                    } else {
+                                        await table.callHook(def.type, hookName, _, arg2, context, info)
+                                    }
+
+                                }
+                            } else {
+                                if (inline) {
+                                    await table.callHook(def.type, hookName, _, {data: args2}, context, info)
+                                } else {
+                                    await table.callHook(def.type, hookName, _, args2, context, info)
+                                }
+                            }
+
+                        }
+
+                    }
+                }
+
                 await hookHandler(_, args, context, info);
             }
         } catch (e) {

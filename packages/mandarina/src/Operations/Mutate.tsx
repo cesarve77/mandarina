@@ -2,7 +2,7 @@ import React, {PureComponent} from "react"
 import {Schema} from '..'
 import gql from "graphql-tag";
 import {Mutation, MutationFn, MutationProps, MutationResult, withApollo, WithApolloClient} from "react-apollo";
-import {buildQueryFromFields} from "./utils";
+import {buildQueryFromFields, generateUUID} from "./utils";
 import {FindOne} from './Find'
 import {Native} from "../Schema/Schema";
 import {MutationBaseOptions} from "apollo-client/core/watchQueryOptions";
@@ -366,6 +366,7 @@ export const refetchQueries = (mutationResult: FetchResult, schema: Schema, clie
 }
 
 export const getSubSchemaMutations = (model: Model, schema: Schema, mutationType: MutationType) => {
+    console.log('model', model)
     const obj: any = {}
     if (typeof model !== "object" || model === undefined || model === null) return model
     Object.keys(model).forEach((key) => {
@@ -381,7 +382,9 @@ export const getSubSchemaMutations = (model: Model, schema: Schema, mutationType
                 let result: { create?: any[], update?: any[], set?: any[] } = {}
                 if (value.length === 0 && mutationType === 'update') result.set = []
                 value.forEach((item: any) => {
+                    console.log('item',item)
                     if (item && item.id && Object.keys(item).length === 1) {
+                        console.log(1)
                         result['connect'] = result['connect'] || []
                         result['connect'].push(getSubSchemaMutations(item, schema, mutationType))
                         if (mutationType === 'update') {
@@ -389,7 +392,11 @@ export const getSubSchemaMutations = (model: Model, schema: Schema, mutationType
                             result['set'].push({id: item.id})
                         }
                     } else if (item && item.id) {
+                        console.log(2)
+
                         if (mutationType === 'update') {
+                            console.log(21)
+
                             const {id, ...clone} = item
                             result['update'] = result['update'] || []
                             result['update'].push({
@@ -399,13 +406,22 @@ export const getSubSchemaMutations = (model: Model, schema: Schema, mutationType
                             result['set'] = result['set'] || []
                             result['set'].push({id: item.id})
                         } else {
+                            console.log(22)
+                            item.id = generateUUID()
+                            console.log('generateUUID', item.id)
+                            result['set'] = result['set'] || []
+                            result['set'].push({id: item.id})
                             result['create'] = result['create'] || []
-
                             result['create'].push(getSubSchemaMutations(item, schema, 'create'))
                         }
                     } else {
+                        console.log(3)
+                        item.id = generateUUID()
+                        console.log('generateUUID', item.id)
+                        result['set'] = result['set'] || []
+                        result['set'].push({id: item.id})
                         result['create'] = result['create'] || []
-                        result['deleteMany']= [{}]
+                        //miresult['deleteMany']= [{}]
 
                         result['create'].push(getSubSchemaMutations(item, schema, 'create'))
                     }
@@ -449,5 +465,6 @@ export const getSubSchemaMutations = (model: Model, schema: Schema, mutationType
 
         }
     })
+    console.log('obj', obj)
     return obj
 }
