@@ -382,9 +382,7 @@ export const getSubSchemaMutations = (model: Model, schema: Schema, mutationType
                 let result: { create?: any[], update?: any[], set?: any[] } = {}
                 if (value.length === 0 && mutationType === 'update') result.set = []
                 value.forEach((item: any) => {
-                    console.log('item',item)
                     if (item && item.id && Object.keys(item).length === 1) {
-                        console.log(1)
                         result['connect'] = result['connect'] || []
                         result['connect'].push(getSubSchemaMutations(item, schema, mutationType))
                         if (mutationType === 'update') {
@@ -392,11 +390,7 @@ export const getSubSchemaMutations = (model: Model, schema: Schema, mutationType
                             result['set'].push({id: item.id})
                         }
                     } else if (item && item.id) {
-                        console.log(2)
-
                         if (mutationType === 'update') {
-                            console.log(21)
-
                             const {id, ...clone} = item
                             result['update'] = result['update'] || []
                             result['update'].push({
@@ -406,18 +400,14 @@ export const getSubSchemaMutations = (model: Model, schema: Schema, mutationType
                             result['set'] = result['set'] || []
                             result['set'].push({id: item.id})
                         } else {
-                            console.log(22)
                             item.id = generateUUID()
-                            console.log('generateUUID', item.id)
                             result['set'] = result['set'] || []
                             result['set'].push({id: item.id})
                             result['create'] = result['create'] || []
                             result['create'].push(getSubSchemaMutations(item, schema, 'create'))
                         }
                     } else {
-                        console.log(3)
                         item.id = generateUUID()
-                        console.log('generateUUID', item.id)
                         result['set'] = result['set'] || []
                         result['set'].push({id: item.id})
                         result['create'] = result['create'] || []
@@ -427,6 +417,10 @@ export const getSubSchemaMutations = (model: Model, schema: Schema, mutationType
                     }
 
                 })
+                if (result && result.create && !result.update ) {
+                    delete result.set
+
+                }
                 obj[key] = result
             } else {
                 const schema = Schema.getInstance(definition.type)
@@ -465,6 +459,5 @@ export const getSubSchemaMutations = (model: Model, schema: Schema, mutationType
 
         }
     })
-    console.log('obj', obj)
     return obj
 }

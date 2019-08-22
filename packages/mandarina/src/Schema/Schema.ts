@@ -297,25 +297,12 @@ export class Schema {
         return fieldDefinition;
     }
 
-    validateMutation(action: Action, mutation: any, roles?: null | string[], inline: boolean = false) {
-        if (!Array.isArray(mutation)) {
-            mutation = [mutation]
-        }
-        console.log('********************************************************************************************')
-        console.log('action', action)
-        console.log('mutation', mutation)
-        console.log('roles', roles)
-        console.log('********************************************************************************************')
+    validateMutation(action: Action, mutation: any, roles?: null | string[]) {
         if (!roles) {
             roles = ['everyone']
         }
         for (const m of mutation) {
-            let data: any
-            if (action === 'update' && !inline) {
-                data = m.data
-            } else {
-                data = m
-            }
+            let data: any = m.data
             const fields = Object.keys(data)
             for (const field of fields) {
                 const def = this.getPathDefinition(field)
@@ -325,13 +312,19 @@ export class Schema {
                     const schema = Schema.getInstance(def.type)
                     const operations = Object.keys(data[field])
                     for (const operation of operations) {
-                        if (operation === 'set') {
+
+                        if (operation === 'set' || operation === 'connect') {
                             const allowed = this.getFieldPermission(field, roles, 'update')
                             if (!allowed) throw new Error(`401, You are not allowed to update "${field}" on ${this.name}`)
                         }
-                        if (operation === 'set') continue
+                        if (operation === 'set' || operation === 'connect') continue
+                        let args2 = data[field][operation]
+                        if (!Array.isArray(args2)) args2 = [args2]
+                        for (let arg2 of args2) {
+                            if (inline) arg2 = {data: arg2}
+                            schema.validateMutation(operation as Action, arg2, roles)
+                        }
 
-                        schema.validateMutation(operation as Action, data[field][operation], roles, inline)
                     }
                 } else {
                     const allowed = this.getFieldPermission(field, roles, action)
