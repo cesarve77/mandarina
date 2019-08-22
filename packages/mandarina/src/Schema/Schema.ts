@@ -112,7 +112,7 @@ export class Schema {
     }
 
     hasPath(field: string): boolean {
-        const definition=this._getPathDefinition(field)
+        const definition = this._getPathDefinition(field)
         return !(!definition || Object.keys(definition).length === 0)
     }
 
@@ -297,6 +297,51 @@ export class Schema {
         return fieldDefinition;
     }
 
+    validateMutation(action: Action, mutation: any, roles?: null | string[], inline: boolean = false) {
+        if (!Array.isArray(mutation)) {
+            mutation = [mutation]
+        }
+        console.log('********************************************************************************************')
+        console.log('action', action)
+        console.log('mutation', mutation)
+        console.log('roles', roles)
+        console.log('********************************************************************************************')
+        if (!roles) {
+            roles = ['everyone']
+        }
+        for (const m of mutation) {
+            let data: any
+            if (action === 'update' && !inline) {
+                data = m.data
+            } else {
+                data = m
+            }
+            const fields = Object.keys(data)
+            for (const field of fields) {
+                const def = this.getPathDefinition(field)
+                const inline = !!(def.table && def.table.relation && def.table.relation.link === 'INLINE')
+
+                if (def.isTable) {
+                    const schema = Schema.getInstance(def.type)
+                    const operations = Object.keys(data[field])
+                    for (const operation of operations) {
+                        if (operation === 'set') {
+                            const allowed = this.getFieldPermission(field, roles, 'update')
+                            if (!allowed) throw new Error(`401, You are not allowed to update "${field}" on ${this.name}`)
+                        }
+                        if (operation === 'set') continue
+
+                        schema.validateMutation(operation as Action, data[field][operation], roles, inline)
+                    }
+                } else {
+                    const allowed = this.getFieldPermission(field, roles, action)
+                    if (!allowed) throw new Error(`401, You are not allowed to ${action} "${field}" on ${def.type}`)
+                }
+            }
+
+        }
+    }
+
     /**
      * Mutate the model,with all keys  proper types and null for undefined
      * TODO: Refactor to prevent mutation, fix it creating a new cloned model and returning it
@@ -379,7 +424,6 @@ export class Schema {
         return def
     }
 
-
     private _validate(model: Model, fields?: string[]): ErrorValidator[] {
         let errors: ErrorValidator[] = [];
         const flatModel = flatten(model)
@@ -409,7 +453,6 @@ export class Schema {
         })
         return errors;
     }
-
 }
 
 export interface Model {

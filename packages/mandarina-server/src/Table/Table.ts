@@ -8,6 +8,8 @@ import {SchemaInstanceNotFound} from "mandarina/build/Errors/SchemaInstanceNotFo
 import {capitalize} from 'mandarina/build/Schema/utils';
 import {MissingIdTableError} from "mandarina/build/Errors/MissingIDTableError";
 import {ErrorFromServerMapper} from "mandarina/src/Schema/Schema";
+import Mandarina from "../Mandarina";
+import {deepClone} from "mandarina/build/Operations/Mutate";
 
 // import {flatten, unflatten} from "flat";
 
@@ -88,6 +90,7 @@ export class Table {
         operationNames.forEach((operationName: string) => {
             if (!this.shouldHasMAnyUpdate()) return
             result[operationName] = async (_: any, args: any = {}, context: Context, info: any) => {
+                const user = await Mandarina.config.getUser(context)
                 // console.log('*****************************************************')
                 // console.log('operationName', operationName)
                 // console.log('args')
@@ -107,23 +110,15 @@ export class Table {
                 let result: any
                 const capitalizedAction = capitalize(action)
                 // TODO: Review the hooks architecture for adding a way to execute hooks of nested operations
-
                 await this.callHook(this.name, 'beforeValidate', _, args, context, info);
-
-
                 if (type === 'mutation') {
-
-
                     // if (errors.length > 0) {
                     //     await this.callHook('validationFailed', action, _, args, context, info);
                     // } else {
                     //     await this.callHook('afterValidate', action, _, args, context, info);
                     // }
-
+                    this.schema.validateMutation(action, deepClone(args), user && user.roles);
                     await this.callHook(this.name, <HookName>`before${capitalizedAction}`, _, args, context, info);
-
-                    //this.validatePermissions(action, roles, args.data);
-
                     /*
                     HACK https://github.com/prisma/prisma/issues/4327
                      */
@@ -149,9 +144,7 @@ export class Table {
                     result = await prismaMethod(args, info);
                     //
                     context.result = result
-
                     await this.callHook(this.name, <HookName>`after${capitalizedAction}`, _, args, context, info);
-
                     //this.validatePermissions('read', roles, fieldsList(info));
                 }
                 if (type === 'query') {
@@ -159,13 +152,9 @@ export class Table {
                     //this.validatePermissions('read', roles, fieldsList(info));
                     result = await prismaMethod(args, info);
                     // console.log(graphqlFields(info))
-
-
                     context.result = result
                     await this.callHook(this.name, 'afterQuery', _, args, context, info);
-
                 }
-
                 // bm('done in ')
                 // console.log('result')
                 // console.dir(result)
@@ -183,7 +172,12 @@ export class Table {
     }
 
     /**
-     * Simple wrapper to execute the table hook if exists
+     * Go back a mutation object to the original object
+     */
+
+
+    /**
+     * Simple wrapper to execute the table hook if exists and sub hook (nested hooks)
      *
      * @param name
      * @param actionType
