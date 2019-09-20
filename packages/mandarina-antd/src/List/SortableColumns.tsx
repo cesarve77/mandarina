@@ -19,7 +19,7 @@ interface SortableColumnInterface {
     onHideColumn: OnHideColumn
     onResizeStop: OnResizeStop
     height: number
-    index: number
+    columnIndex: number
 }
 
 
@@ -30,7 +30,8 @@ interface SortableColumnsInterface {
 }
 
 
-export const SortableColumn = SortableElement(({index, column: {title, field, filter, noSort, width}, sort, filters, schema, onSortChange, onResizeStop, onFilterChange, onHideColumn, height}: SortableColumnInterface) => {
+export const SortableColumn = SortableElement(({columnIndex, column: {title, field, filter, noSort, width}, sort, filters, schema, onSortChange, onResizeStop, onFilterChange, onHideColumn, height}: SortableColumnInterface) => {
+    console.log('columnIndex',columnIndex)
         return (
             <ResizableBox
                 className={'mandarina-list-thead-col ant-table-column-has-sorters ant-table-column-sort ' + field.replace(/\./g, '-')}
@@ -38,7 +39,7 @@ export const SortableColumn = SortableElement(({index, column: {title, field, fi
                 height={height}
                 handleSize={[10, 10]}
                 axis={'x'}
-                onResizeStop={(e: SyntheticEvent, data: ResizeCallbackData) => onResizeStop(field, data.size.width, index)}>
+                onResizeStop={(e: SyntheticEvent, data: ResizeCallbackData) => onResizeStop(field, data.size.width, columnIndex)}>
                 <div>
                     {title}
                     {!noSort && <SortButton onSortChange={onSortChange} field={field} sort={sort}/>}
@@ -48,7 +49,7 @@ export const SortableColumn = SortableElement(({index, column: {title, field, fi
                                        field={field}
                                        filter={filters && filters[field]}
                                        schema={schema}/>}
-                {<HideColumn onHide={() => onHideColumn(field, index)}/>}
+                {<HideColumn onHide={() => onHideColumn(field, columnIndex)}/>}
 
             </ResizableBox>
         );

@@ -534,6 +534,7 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
                                                     height={tHeadHeight}
                                                     key={`item-${column.field}`}
                                                     index={index}
+                                                    columnIndex={index}
                                                     column={column}
                                                     sort={sort}
                                                     filters={filters}
