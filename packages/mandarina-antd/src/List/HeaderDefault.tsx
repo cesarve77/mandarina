@@ -74,7 +74,6 @@ const HeaderDefault = ({counter = true, menuItems = [], count, ...props}: Header
         return content
 
     })
-    console.log('count', count)
     return (
         <Row gutter={0}>
             <Col span={12}>

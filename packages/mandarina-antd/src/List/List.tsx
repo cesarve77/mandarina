@@ -229,8 +229,6 @@ export class List extends React.Component<ListProps, { columns: ColumnProps<any>
     render() {
         const {schema, first,fields, where, ...findBaseProps} = this.props
         const {columns} = this.state
-        console.log('list where',where)
-
         return (
             <div className="list-wrapper" style={{width: '100%'}} ref={this.me}>
                 <Find schema={schema} where={where} first={first} fields={fields}
@@ -239,7 +237,6 @@ export class List extends React.Component<ListProps, { columns: ColumnProps<any>
                       {...findBaseProps}
                 >
                     {({data = [], variables, refetch, loading, count, pageInfo, fetchMore, error}) => {
-                console.log('list data ',data)
                         this.refetch = refetch
                         this.variables = variables
                         this.buildFetchMore(fetchMore, pageInfo && pageInfo.endCursor)

@@ -194,7 +194,6 @@ describe('Mutate', () => {
             const subMutations = getSubSchemaMutations({
                 cars: [{brand: 'Ford', plate: 'xxx000'}, {brand: 'Ford', plate: 'yyy111'}],
             }, User, 'update')
-            console.log('subMutations', subMutations)
             expect(subMutations).toEqual({
                     "cars": {
                         "deleteMany": [{}],

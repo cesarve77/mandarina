@@ -266,7 +266,6 @@ export class Mutate extends PureComponent<WithApolloClient<MutateProps & { type:
         // This empties the cache of all of our schema and
         // forces a refetch of the data.
         // @ts-ignore
-        console.log('cache.data', cache.data)
         // @ts-ignore
 
         Object.keys(cache.data.data).forEach(key => {
@@ -421,7 +420,6 @@ export const refetchQueries = (mutationResult: FetchResult, client: ApolloClient
 }
 
 export const getSubSchemaMutations = (model: Model, schema: Schema, mutationType: MutationType) => {
-    console.log('model', model)
     const obj: any = {}
     if (typeof model !== "object" || model === undefined || model === null) return model
     Object.keys(model).forEach((key) => {

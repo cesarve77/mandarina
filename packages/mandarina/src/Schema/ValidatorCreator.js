@@ -77,7 +77,7 @@ var ValidatorCreator = /** @class */ (function () {
                         return {
                             key: this.key,
                             label: this.label,
-                            message: exports.compileMessage({ label: this.label, template: template, param: Validator.param }),
+                            message: exports.compileMessage({ label: this.label, template: template, param: Validator.param, value: this.value }),
                             value: this.value,
                             validatorName: name,
                             path: this.path,

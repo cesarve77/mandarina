@@ -52,10 +52,7 @@ class Auth extends Component<AuthPropsWithClient, { loading: boolean, fields: st
     render() {
         let {children, fields: hardCodeFields} = this.props;
         const {loading, fields: schemaFields, error} = this.state
-        console.log('hardCodeFields', hardCodeFields)
-        console.log('schemaFields', schemaFields)
         const fields = hardCodeFields.filter(field => schemaFields.includes(field))
-        console.log('fields', fields)
         return children({fields, loading, error})
     }
 }

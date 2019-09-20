@@ -31,7 +31,6 @@ interface SortableColumnsInterface {
 
 
 export const SortableColumn = SortableElement(({index, column: {title, field, filter, noSort, width}, sort, filters, schema, onSortChange, onResizeStop, onFilterChange, onHideColumn, height}: SortableColumnInterface) => {
-        console.log('title', title)
         return (
             <ResizableBox
                 className={'mandarina-list-thead-col ant-table-column-has-sorters ant-table-column-sort ' + field.replace(/\./g, '-')}

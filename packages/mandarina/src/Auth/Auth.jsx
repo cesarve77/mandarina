@@ -54,10 +54,7 @@ var Auth = /** @class */ (function (_super) {
     Auth.prototype.render = function () {
         var _a = this.props, children = _a.children, hardCodeFields = _a.fields;
         var _b = this.state, loading = _b.loading, schemaFields = _b.fields, error = _b.error;
-        console.log('hardCodeFields', hardCodeFields);
-        console.log('schemaFields', schemaFields);
         var fields = hardCodeFields.filter(function (field) { return schemaFields.includes(field); });
-        console.log('fields', fields);
         return children({ fields: fields, loading: loading, error: error });
     };
     return Auth;
