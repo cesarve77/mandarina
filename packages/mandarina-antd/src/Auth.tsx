@@ -12,12 +12,12 @@ export interface AuthElementsProps {
     denied?: ReactNode
     Error?: ElementType<{ error: Error }>
     userRoles: string[]
-
+    innerRef?: React.Ref<HTMLFormElement>
 }
 
 
-const AuthAntD = ({Component, schema, denied = null, userRoles = [], action, fields, Error, ...props}:
-                      { Component: ComponentType<ElemProps>, action: ActionType } & ElemProps & AuthElementsProps) => {
+const AuthAntD = ({Component,innerRef, schema, denied = null, userRoles = [], action, fields, Error, ...props}:
+                      { Component: ComponentType<ElemProps>, action: ActionType } & ElemProps & AuthElementsProps ) => {
     return (
         <Auth schema={schema} action={action} userRoles={userRoles} fields={fields} >
             {({fields, loading, error}: AuthChildrenProps) => {
@@ -26,7 +26,7 @@ const AuthAntD = ({Component, schema, denied = null, userRoles = [], action, fie
                 return (
                     <>
                         {loading && <Spin spinning={loading} style={{width: '100%', height: '100%'}}/>}
-                        {!loading && fields && <Component schema={schema} {...props} fields={fields}/>}
+                        {!loading && fields && <Component  ref={innerRef} schema={schema} {...props} fields={fields}/>}
                     </>
                 );
             }}
@@ -37,6 +37,7 @@ const AuthAntD = ({Component, schema, denied = null, userRoles = [], action, fie
 
 export const AuthUpdateForm = (props: UpdateFormProps & AuthElementsProps) =>
     <AuthAntD action={'update'} Component={UpdateForm} {...props}/>
+
 
 export const AuthCreateForm = (props: CreateFormProps & AuthElementsProps) =>
     <AuthAntD action={'create'} Component={CreateForm} {...props}/>

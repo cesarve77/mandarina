@@ -7,13 +7,15 @@ var utils_1 = require("../utils");
  * @param  keys - list of fields in dot notation
  * @return  grqphql string
  */
-exports.buildQueryFromFields = function (keys) {
+exports.buildQueryFromFields = function (keys, sureId) {
+    if (sureId === void 0) { sureId = true; }
     var fields = keys.slice();
-    if (!fields.includes('id')) {
+    if (sureId && !fields.includes('id')) {
         fields.push('id');
     }
     fields = fields.map(function (field) { return field.replace(/\.\$(\.?)/g, '$1'); });
-    fields = utils_1.ensureId(fields);
+    if (sureId)
+        fields = utils_1.ensureId(fields);
     var fieldsFlat = fields.reduce(function (obj, key) {
         var _a;
         return Object.assign(obj, (_a = {}, _a[key] = {}, _a));

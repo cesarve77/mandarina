@@ -72,8 +72,16 @@ describe('Util', () => {
                 goals: null,
                 location: '000000',
             }
-        }
+        },
+        parents:[{name:'cesar'}]
     }
+    test("get array with the same property name ", () => {
+        bm()
+        const value = get(data, 'parents'.split('.'))
+        expect(value).toMatchObject([{name:'cesar'}])
+        bm('group.location.location')
+    });
+
     test("get nested object with the same property name ", () => {
         bm()
         const value = get(data, 'group.location.location'.split('.'))

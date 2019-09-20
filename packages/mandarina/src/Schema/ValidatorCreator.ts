@@ -97,7 +97,7 @@ export class ValidatorCreator {
                     return {
                         key: this.key,
                         label: this.label,
-                        message: compileMessage({label: this.label, template, param: Validator.param}),
+                        message: compileMessage({label: this.label, template, param: Validator.param, value: this.value }),
                         value: this.value,
                         validatorName: name,
                         path: this.path,

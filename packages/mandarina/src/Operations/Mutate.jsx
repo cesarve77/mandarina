@@ -31,6 +31,7 @@ var react_apollo_1 = require("react-apollo");
 var utils_1 = require("./utils");
 var Find_1 = require("./Find");
 var lodash_1 = require("lodash");
+var utils_2 = require("../utils");
 exports.deepClone = function (obj) {
     return lodash_1.cloneDeep(obj);
     // const result=JSON.parse(JSON.stringify(obj))
@@ -45,7 +46,7 @@ var Mutate = /** @class */ (function (_super) {
         var _this = _super !== null && _super.apply(this, arguments) || this;
         _this.buildQueryFromFields = function () { return utils_1.buildQueryFromFields(_this.props.fields || _this.props.schema.getFields()); };
         _this.refetchQueries = function (mutationResult) {
-            return exports.refetchQueries(mutationResult, _this.props.schema, _this.props.client, _this.props.refetchSchemas);
+            return exports.refetchQueries(mutationResult, _this.props.client, _this.props.refetchSchemas, _this.props.schema);
             /*if (this.props.type === 'update') return //for updates the cache is automatic updated by apollo
     
             const {schema: {names}} = this.props;
@@ -252,10 +253,10 @@ exports.Update = function (_a) {
     }}
         </Find_1.FindOne>);
 };
-exports.refetchQueries = function (mutationResult, schema, client, refetchSchemas) {
+exports.refetchQueries = function (mutationResult, client, refetchSchemas, schema) {
     if (refetchSchemas === void 0) { refetchSchemas = []; }
     var refetchQueries = [];
-    var _a = schema.names.query, single = _a.single, plural = _a.plural, connection = _a.connection;
+    var _a = (schema && schema.names.query) || {}, _b = _a.single, single = _b === void 0 ? '' : _b, _c = _a.plural, plural = _c === void 0 ? '' : _c, _d = _a.connection, connection = _d === void 0 ? '' : _d;
     // @ts-ignore
     window.client = client;
     // @ts-ignore
@@ -278,6 +279,7 @@ exports.refetchQueries = function (mutationResult, schema, client, refetchSchema
     return refetchQueries;
 };
 exports.getSubSchemaMutations = function (model, schema, mutationType) {
+    console.log('model', model);
     var obj = {};
     if (typeof model !== "object" || model === undefined || model === null)
         return model;
@@ -315,15 +317,25 @@ exports.getSubSchemaMutations = function (model, schema, mutationType) {
                             result_1['set'].push({ id: item.id });
                         }
                         else {
+                            item.id = utils_2.generateUUID();
+                            result_1['set'] = result_1['set'] || [];
+                            result_1['set'].push({ id: item.id });
                             result_1['create'] = result_1['create'] || [];
                             result_1['create'].push(exports.getSubSchemaMutations(item, schema_2, 'create'));
                         }
                     }
                     else {
+                        item.id = utils_2.generateUUID();
+                        result_1['set'] = result_1['set'] || [];
+                        result_1['set'].push({ id: item.id });
                         result_1['create'] = result_1['create'] || [];
+                        //miresult['deleteMany']= [{}]
                         result_1['create'].push(exports.getSubSchemaMutations(item, schema_2, 'create'));
                     }
                 });
+                if (result_1 && result_1.create && !result_1.update) {
+                    delete result_1.set;
+                }
                 obj[key] = result_1;
             }
             else {
@@ -350,7 +362,9 @@ exports.getSubSchemaMutations = function (model, schema, mutationType) {
                     }
                 }
                 else {
-                    obj[key] = { create: exports.getSubSchemaMutations(value, schema_3, 'create') };
+                    obj[key] = {
+                        create: exports.getSubSchemaMutations(value, schema_3, 'create'),
+                    };
                 }
             }
         }

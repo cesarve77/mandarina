@@ -2,7 +2,7 @@ import {Schema} from "mandarina";
 import {FieldDefinition, Native, Overwrite} from "mandarina/build/Schema/Schema";
 import {Validator} from "mandarina/build/Schema/ValidatorCreator";
 import * as React from "react";
-import merge from "lodash.merge";
+import {merge} from "lodash";
 import {deepClone} from "mandarina/build/Operations/Mutate";
 
 export interface ErrorInterface {
@@ -164,9 +164,7 @@ export class Bridge {
             if (validatorIsAllowed) allowedValues = validatorIsAllowed.param
             const required = !!this.findValidator('required', field)
             let uniforms = field.form, component = field.form.component
-
             let placeholder = field.form && field.form.props && field.form.props.placeholder
-
             if (props.placeholder === false || props.placeholder === null) {
                 placeholder = '';
             }

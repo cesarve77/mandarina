@@ -83,7 +83,12 @@ export const get = (obj: any={}, paths: string[]): any[] => {
 
         if (Array.isArray(val)) {
             val.forEach((val) => {
-                result.push(...get(val, paths))
+                if (paths.length===0){
+                    result.push(val)
+                }else{
+                    result.push(...get(val, paths))
+                }
+
             })
         } else if (val) {
             if (paths.length === 0) {

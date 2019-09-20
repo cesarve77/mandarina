@@ -99,8 +99,12 @@ exports.getFields = function (args) {
     var finalFields = [];
     var t = new Date().getTime();
     args.fields.forEach(function (field) {
-        if (args.schema.getFieldPermission(field, args.userRoles, args.action))
+        if (!args.schema.hasPath(field)) {
             finalFields.push(field);
+        }
+        else if (args.schema.getFieldPermission(field, args.userRoles, args.action)) {
+            finalFields.push(field);
+        }
     });
     console.log('time', new Date().getTime() - t);
     return finalFields;

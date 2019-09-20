@@ -80,7 +80,12 @@ exports.get = function (obj, paths) {
         var val = obj[path];
         if (Array.isArray(val)) {
             val.forEach(function (val) {
-                result.push.apply(result, exports.get(val, paths));
+                if (paths.length === 0) {
+                    result.push(val);
+                }
+                else {
+                    result.push.apply(result, exports.get(val, paths));
+                }
             });
         }
         else if (val) {

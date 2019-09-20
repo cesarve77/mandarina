@@ -5,9 +5,8 @@ import {FieldDefinition, Overwrite} from 'mandarina/build/Schema/Schema'
 import {OnFilterChange, Where} from "./ListFilter";
 import {getDecendentsDot, getParentsDot} from 'mandarina/build/utils'
 import {ColumnProps} from 'antd/lib/table';
-import isEmpty from "lodash.isempty";
+import {isEmpty,merge} from "lodash";
 import {DefaultCellComponent} from "./ListVirtualized";
-import merge from 'lodash.merge'
 import {FindQueryProps} from "mandarina/build/Operations/Find";
 import {deepClone} from "mandarina/build/Operations/Mutate";
 //import ListHeader from "./ListHeader";
@@ -21,6 +20,8 @@ export interface ListProps extends FindQueryProps {
     pageSize?: number
     first?: number
     where?: any
+    ref?: React.Ref<HTMLFormElement>
+
 }
 
 export interface FieldDefinitions {

@@ -3,7 +3,7 @@ import {capitalize, isRequired} from "mandarina/build/Schema/utils";
 import {CustomAction} from "../../";
 import path from "path";
 import fs from "fs";
-import merge from 'lodash.merge'
+import {merge} from 'lodash'
 import {FieldDefinition} from "mandarina/build/Schema/Schema";
 //
 // export const getDeclarationType = (type: any, key: string): string => {

@@ -2,7 +2,7 @@ import React, {PureComponent} from "react"
 import {Schema} from '..'
 import gql from "graphql-tag";
 import {Mutation, MutationFn, MutationProps, MutationResult, withApollo, WithApolloClient} from "react-apollo";
-import {buildQueryFromFields, generateUUID} from "./utils";
+import {buildQueryFromFields} from "./utils";
 import {FindOne} from './Find'
 import {Native} from "../Schema/Schema";
 import {MutationBaseOptions} from "apollo-client/core/watchQueryOptions";
@@ -11,6 +11,7 @@ import {ApolloClient, OperationVariables} from "apollo-client";
 import {DocumentNode} from "graphql";
 import {cloneDeep as deepCloneLodash} from 'lodash'
 import {DataProxy} from "apollo-cache";
+import {generateUUID} from "../utils";
 
 export const deepClone = (obj: any): any => {
     return deepCloneLodash(obj)
@@ -174,51 +175,105 @@ export class Mutate extends PureComponent<WithApolloClient<MutateProps & { type:
         return mutationFn(mutation)
     }
 
+    // update = (proxy: DataProxy, mutationResult: FetchResult<any>) => {
+    //     if (this.props.type === 'create') {
+    //         // @ts-ignore
+    //         window.proxy = proxy
+    //         console.log('mutationResult', mutationResult)
+    //         const doc = mutationResult && mutationResult[this.props.schema.names.mutation.create]
+    //
+    //         // @ts-ignore
+    //         const queries = proxy.data && proxy.data.data && proxy.data.data.ROOT_QUERY
+    //         console.log('queries', queries)
+    //         if (!queries) return
+    //         const {names} = this.props.schema
+    //
+    //         Object.keys(queries).forEach(query => {
+    //             const regExp = new RegExp(`^(${this.props.schema.names.query.connection}|${this.props.schema.names.query.plural})\\((.*)\\)`)
+    //             // @ts-ignore
+    //
+    //             const match = query.match(regExp)
+    //
+    //             if (match) {
+    //                 const queryName = match[1]
+    //                 const queryFields = queryName === names.query.connection ? `
+    //                      pageInfo {
+    //                       hasNextPage
+    //                       hasPreviousPage
+    //                       startCursor
+    //                       endCursor
+    //                     }
+    //                     edges {
+    //                       node  {id}
+    //                     }` : ` {id}`
+    //                 const queryString = `
+    //                   query ($where: ${names.input.where.connection}, $after: String, $first: Int, $skip: Int, $orderBy: ${names.orderBy})
+    //                     { ${queryName} (where: $where, after: $after, first: $first, skip: $skip, orderBy: $orderBy) {
+    //                             ${queryFields}
+    //                         }
+    //                     }`
+    //                 console.log('queryFields', queryFields)
+    //                 console.log('queryString', queryString)
+    //                 const QUERY = gql(queryString)
+    //                 let docs
+    //                 const variables = JSON.parse(match[2])
+    //
+    //                 try {
+    //                     const cache = proxy.readQuery({query: QUERY, variables});
+    //                     // @ts-ignore
+    //                     console.log(cache)
+    //                     docs = cache && cache[queryName]
+    //                 } catch (e) {
+    //                     console.error('error', e)
+    //                     docs = []
+    //                 }
+    //
+    //                 console.log('docs', docs)
+    //                 const where = variables.where || {}
+    //                 const after = variables.after
+    //                 const first = variables.first
+    //                 const skip = variables.skip
+    //                 const orderBy = variables.orderBy
+    //                 if (queryName === names.query.connection) {
+    //                     docs.edges.push({node: doc})
+    //                 } else {
+    //                     docs = docs.push(doc)
+    //                 }
+    //                 console.log('nodes', docs)
+    //
+    //                 proxy.writeQuery({
+    //                     query: QUERY,
+    //                     variables,
+    //                     data: {[queryName]: docs}
+    //                 });
+    //
+    //             }
+    //             console.log('key.match(regExp)',)
+    //         })
+    //         console.log('proxy', proxy)
+    //     }
+    // }
+    //
+    //
+
     refetchQueries = (mutationResult: FetchResult) => {
-        return refetchQueries(mutationResult, this.props.schema, this.props.client, this.props.refetchSchemas)
-
-        /*if (this.props.type === 'update') return //for updates the cache is automatic updated by apollo
-
-        const {schema: {names}} = this.props;
-        const doc = data && data[names.mutation.create]
-        if (!Array.isArray(FindBase.queries)) return //no quiries to update
-        FindBase.queries.forEach((cachedQuery) => {
-            const cachedQueryName = Object.keys(cachedQuery)[0]
-            const where = cachedQuery[cachedQueryName]
-            const docIsInQuery = evalWhere(doc, where)
-
-            if (cachedQueryName === names.query.plural && docIsInQuery) {
-                const QUERY = gql(`query ($where: ${names.input.where.plural} ) { ${names.query.plural}  (where: $where) ${this.query} }`)
-                let docs
-                try {
-                    const cache = proxy.readQuery({query: QUERY, variables: {where}});
-                    docs = cache && cache[names.query.plural]
-                } catch (e) {
-                    console.error('error')
-                    docs = []
-                }
-                proxy.writeQuery({
-                    query: QUERY,
-                    variables: {where},
-                    data: {[names.query.plural]: docs.concat([doc])}
-                });
-
-            }
-        })*/
+        return refetchQueries(mutationResult, this.props.client, this.props.refetchSchemas, this.props.schema)
     }
     invalidateCache = (cache: DataProxy) => {
+        if (this.props.type === 'update') return
         // Loop through all the data in our cache
-        // And delete any items that start with "ListItem"
-        // This empties the cache of all of our list items and
+        // And delete any items that start with "this.props.schema.name"
+        // This empties the cache of all of our schema and
         // forces a refetch of the data.
         // @ts-ignore
         console.log('cache.data', cache.data)
         // @ts-ignore
 
-        Object.keys(cache.data.data).forEach(key =>
+        Object.keys(cache.data.data).forEach(key => {
+            const regExp = new RegExp(`^${this.props.schema.name}:`)
             // @ts-ignore
-            key.match(/^ListItem/) && cache.data.delete(key)
-        )
+            key.match(regExp) && cache.data.delete(key)
+        })
     }
 
     render() {
@@ -341,9 +396,9 @@ export const Update = ({id, schema, children, fields, optimisticResponse, ...pro
     );
 }
 
-export const refetchQueries = (mutationResult: FetchResult, schema: Schema, client: ApolloClient<any>, refetchSchemas: string[] = [],) => {
+export const refetchQueries = (mutationResult: FetchResult, client: ApolloClient<any>, refetchSchemas: string[] = [], schema?: Schema) => {
     const refetchQueries: { query: DocumentNode, variables?: OperationVariables }[] = []
-    const {single, plural, connection} = schema.names.query
+    const {single = '', plural = '', connection = ''} = (schema && schema.names.query) || {}
     // @ts-ignore
     window.client = client
     // @ts-ignore
@@ -417,7 +472,7 @@ export const getSubSchemaMutations = (model: Model, schema: Schema, mutationType
                     }
 
                 })
-                if (result && result.create && !result.update ) {
+                if (result && result.create && !result.update) {
                     delete result.set
 
                 }

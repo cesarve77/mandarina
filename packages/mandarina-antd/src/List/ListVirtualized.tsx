@@ -1,7 +1,7 @@
 import {Find, Schema} from 'mandarina';
 import React, {ReactNode} from "react";
 import memoizeOne from "memoize-one"
-import isEmpty from 'lodash.isempty'
+import {isEmpty} from 'lodash'
 
 import {
     areEqual,
@@ -13,7 +13,7 @@ import {
 import {OnFilterChange, Where} from "./ListFilter";
 import {CellComponent, FilterMethod, Overwrite} from "mandarina/build/Schema/Schema";
 import {Empty} from "antd";
-import merge from 'lodash.merge'
+import {merge} from 'lodash'
 import {getDefaultFilterMethod} from "./ListFilters";
 import {ReactComponentLike} from "prop-types";
 import {get} from "mandarina/build/Schema/utils";
@@ -22,11 +22,10 @@ import {RefetchQueriesProviderFn} from "react-apollo";
 import HeaderDefault, {HeaderDefaultProps} from "./HeaderDefault";
 import {OnSortChange} from "./SortButton";
 // import {isEqual} from 'lodash';
-import set from 'lodash.set';
+import {set,isEqual} from 'lodash';
 import {SortableColumn, SortableColumns} from "./SortableColumns";
 import {SortEnd} from "react-sortable-hoc";
 import arrayMove from 'array-move'
-import {isEqual} from 'lodash';
 import {deepClone} from "mandarina/build/Operations/Mutate";
 import {equalityFn} from "./utils";
 import Query from "react-apollo/Query";
@@ -49,6 +48,7 @@ export interface ControlledListProps {
     onSortChange?: (sort: Sort) => void
 }
 
+
 export interface ListProps extends ControlledListProps {
     schema: Schema
     fields: string[]
@@ -62,6 +62,8 @@ export interface ListProps extends ControlledListProps {
     overLoad?: number
 
     header?: ReactComponentLike | HeaderDefaultProps
+    ref?: React.Ref<HTMLFormElement>
+
 }
 
 
@@ -104,9 +106,10 @@ export interface Edge {
 
 export interface ColumnProps {
     field: string
-    title: string
+    title: ReactNode
     width: number
     CellComponent?: CellComponent
+    props?: any
     loadingElement?: JSX.Element
     filter: boolean
     noSort: boolean
@@ -131,6 +134,7 @@ export type Refetch = (refetchOptions: any) => Promise<any>
 const createItemData = memoizeOne((data: any, columns: (ColumnProps | null)[], refetch: Refetch, query: Query, variables: any) => ({
     data, columns, refetch, query, variables
 }));
+
 
 export class ListVirtualized extends React.Component<ListProps, ListState> {
     gridRef = React.createRef();
@@ -171,7 +175,10 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
         if (props.onFieldsChange && !isEqual(props.fields, state.fields)) {
             result.fields = props.fields || props.schema.getFields()
         }
+        console.log('getDerivedStateFromProps',props.overwrite)
+
         if ((props.onOverwriteChange) && !isEqual(props.overwrite, state.overwrite)) {
+            console.log('*************************')
             result.overwrite = props.overwrite
         }
         if (props.onSortChange && !isEqual(props.sort, state.sort)) {
@@ -258,17 +265,23 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
             field = parentPath
         }
         const overwrite = this.state.overwrite && this.state.overwrite[field];
+
         let definition
-        if (!this.props.schema.hasPath(field) && field.indexOf('.')<0 && overwrite){
-            console.log('overwriteoverwriteoverwriteoverwriteoverwriteoverwriteoverwriteoverwriteoverwrite')
-            definition = merge(this.props.schema.applyDefinitionsDefaults({type:String},field), {list:{noFilter: true, noSort: true}}, overwrite)
-        }else{
+        if (!this.props.schema.hasPath(field) && field.indexOf('.') < 0 && overwrite) {
+            definition = merge({
+                list: {
+                    noFilter: true,
+                    noSort: true
+                }
+            }, deepClone(this.props.schema.applyDefinitionsDefaults({type: String}, field)), overwrite)
+        } else {
             definition = this.props.schema.getPathDefinition(field);
             if (overwrite) {
-                definition = merge(definition,overwrite)
+                definition = merge(deepClone(definition), overwrite)
+
             }
         }
-        if (!definition.list ) throw new Error('You need to provide overwrite full definition for ')
+        if (!definition.list) throw new Error(`You need to provide overwrite full definition for "${field}"`)
 
         if (definition.list.hidden) return null;
         return {
@@ -279,12 +292,13 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
             width: definition.list.width || estimatedColumnWidthDefault,
             filter: !definition.list.noFilter,
             noSort: !!(definition.isTable || definition.isArray || field.indexOf('.') > 0 || definition.list.noSort),
+            props: definition.list.props || {},
         }
     };
 
 
     onFilterChange: OnFilterChange = (field, filter) => {
-        console.log('onFilterChange',field,filter);
+        console.log('onFilterChange', field, filter);
         this.data = [];
         // @ts-ignore
         this.gridRef.current && this.gridRef.current.scrollToItem({
@@ -437,7 +451,7 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
                   fields={fields}
                   notifyOnNetworkStatusChange>
                 {({data = [], query, variables, refetch, loading, count, client}) => {
-                    console.log('list Find',data);
+                    console.log('list Find', data);
                     let dataCollection = data;
                     if (this.data.length === 0 && data && !loading) {
                         this.data = Array(count).fill(undefined)
@@ -473,7 +487,7 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
 
                             />
                     }
-                    if (typeof header === 'object') {
+                    if (typeof header === 'object' || !header) {
                         headerNode =
                             <HeaderDefault count={count}
                                            client={client}
@@ -578,9 +592,6 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
 
 export const DefaultCellComponent: CellComponent = React.memo(({columnIndex, rowIndex, data, field}) => {
         const children = (data[rowIndex] && get(data[rowIndex], field.split('.'))) || [];
-        if (field === 'tags.name')
-            console.log(field, data, children[0], children);
-
         return <>{children.map((child, i) => <span key={i}>{child}<br/></span>)}</>
     }
     , areEqual);
@@ -591,13 +602,17 @@ const Cell = React.memo(({columnIndex, rowIndex, data: {data, columns, query, re
     const field = columns[columnIndex].field;
     const CellComponent = columns[columnIndex].CellComponent || DefaultCellComponent;
     const loadingElement = columns[columnIndex].loadingElement || defaultLoadingElement;
+    const props=columns[columnIndex].props || {};
     return (
         <div className={'mandarina-list-cell ' + field.replace('.', '-')}
              style={style}>
             {!data[rowIndex] && loadingElement}
             {data[rowIndex] &&
             <CellComponent columnIndex={columnIndex} rowIndex={rowIndex} data={data} field={field}
-                           refetch={refetch} variables={variables} query={query}/>}
+                           refetch={refetch} variables={variables} query={query}
+                           {...props}
+
+            />}
         </div>
     )
 }, areEqual);

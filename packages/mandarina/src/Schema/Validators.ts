@@ -26,7 +26,7 @@ export const minCount = new ValidatorCreator((value, param) => Array.isArray(val
 
 export const maxCount = new ValidatorCreator((value, param) => Array.isArray(value) && value.length <= param, 'maxCount', '{{label}} cannot specify more than {{param}} values', true)
 
-export const isAllowed = new ValidatorCreator((value, param) => !exists(value) || param.includes(value), 'isAllowed', '{{label}} has not an allowed value "{{value}}"')
+export const isAllowed = new ValidatorCreator((value, param) => !exists(value) || param.includes(value), 'isAllowed', '{{label}} has not an allowed value "{{value}}", allowed values are {{param}}')
 
 export const isNumber = new ValidatorCreator((value) => !exists(value) || typeof value === 'number', 'isNumber', '{{label}} must be an integer')
 
@@ -41,6 +41,10 @@ export const isArray = new ValidatorCreator((value) => exists(value) && Array.is
 export const isRegEx = new ValidatorCreator((value, param: RegExp) => !exists(value) || param.test(value), 'isRegEx', "{{label}} has an invalid format")
 
 export const isEmail = new ValidatorCreator((value) => !exists(value) || /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/.test(value), 'isEmail', "{{label}} has an invalid format")
+
+export const isTopLevelDomain = new ValidatorCreator((value) => !exists(value) || /^(\w+\.\w{2,63})$/.test(value), 'isTopLevelDomain', "{{label}} has an invalid format")
+
+export const isUrl = new ValidatorCreator((value) => !exists(value) || /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/.test(value), 'isUrl', "{{label}} has an invalid format")
 
 
 

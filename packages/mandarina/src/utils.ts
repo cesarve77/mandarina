@@ -30,3 +30,11 @@ export const ensureId = (fields: string[]) => {
     })
     return result
 }
+
+export const generateRandomNumber = (min = 0, max = 1) => Math.floor(Math.random() * (max - min + 1) + min)
+
+export const generateRandomAlpha=(n: number=3)=>generateRandomNumber(Math.pow(36,n-1),Math.pow(36,n)).toString(36)
+
+export const generateUUID = (gap: number=33853318889500) =>
+    (new Date().getTime() + gap).toString(36) + generateRandomAlpha(16)
+

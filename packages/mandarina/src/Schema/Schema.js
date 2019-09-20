@@ -12,7 +12,7 @@ var __assign = (this && this.__assign) || function () {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 // @ts-ignore
-var lodash_mapvalues_1 = require("lodash.mapvalues");
+var lodash_1 = require("lodash");
 var inflection = require("inflection");
 var ValidatorCreator_1 = require("./ValidatorCreator");
 var Validators_1 = require("./Validators");
@@ -46,7 +46,7 @@ var Schema = /** @class */ (function () {
         Schema.instances[this.name] = this;
         this.errorFromServerMapper = errorFromServerMapper;
         this.permissions = permissions || {};
-        this.shape = lodash_mapvalues_1.default(shape, function (field, key) { return _this.applyDefinitionsDefaults(field, key); });
+        this.shape = lodash_1.mapValues(shape, function (field, key) { return _this.applyDefinitionsDefaults(field, key); });
         this.keys = Object.keys(this.shape);
         this.filePath = this.getFilePath();
         var single = utils_1.singularize(this.name);
@@ -84,15 +84,16 @@ var Schema = /** @class */ (function () {
     };
     Schema.prototype.extend = function (shape) {
         var _this = this;
-        this.shape = __assign({}, this.shape, lodash_mapvalues_1.default(shape, function (def, key) { return _this.applyDefinitionsDefaults(def, key); }));
+        this.shape = __assign({}, this.shape, lodash_1.mapValues(shape, function (def, key) { return _this.applyDefinitionsDefaults(def, key); }));
         this.keys = Object.keys(this.shape);
     };
+    Schema.prototype.hasPath = function (field) {
+        var definition = this._getPathDefinition(field);
+        return !(!definition || Object.keys(definition).length === 0);
+    };
     Schema.prototype.getPathDefinition = function (field) {
-        if (!this.pathDefinitions[field]) {
-            this.pathDefinitions[field] = this.generatePathDefinition(field);
-        }
-        var definition = this.pathDefinitions[field];
-        if (!definition || Object.keys(definition).length === 0) {
+        var definition = this._getPathDefinition(field);
+        if (!definition) {
             throw new Error("Field \"" + field + "\" not found");
         }
         return definition;
@@ -167,7 +168,6 @@ var Schema = /** @class */ (function () {
                 this.fieldsPermissions[field][role][action] = !lappedRoles || ((lappedRoles.includes('everybody') || lappedRoles.includes(role)) &&
                     !lappedRoles.includes('nobody'));
             }
-            console.log(field, lappedRoles, this.fieldsPermissions[field][role][action]);
             if (this.fieldsPermissions[field][role][action])
                 return true;
         }
@@ -175,63 +175,6 @@ var Schema = /** @class */ (function () {
     };
     Schema.prototype._getKeyDefinition = function (key) {
         return __assign({}, this.shape[key]);
-    };
-    /**
-     * Mutate the model,with all keys  proper types and null for undefined
-     * TODO: Refactor to prevent mutation, fix it creating a new cloned model and returning it
-     * @param model
-     * @param fields
-     * @param removeExtraKeys
-     */
-    Schema.prototype._clean = function (model, fields, removeExtraKeys) {
-        var _this = this;
-        if (removeExtraKeys === void 0) { removeExtraKeys = true; }
-        if (removeExtraKeys && model && typeof model === 'object') {
-            Object.keys(model).forEach(function (key) {
-                if (!_this.keys.includes(key)) {
-                    delete model[key];
-                }
-            });
-        }
-        this.keys.forEach(function (key) {
-            console.log('fields every', fields);
-            if (key !== '___typename' && fields.every(function (field) { return field !== key && field.indexOf(key + '.') < 0; })) {
-                return model && delete model[key];
-            }
-            var definition = _this.getPathDefinition(key);
-            if (!definition.isTable && typeof model === 'object' && model !== undefined && model !== null) {
-                model[key] = utils_1.forceType(model[key], definition.type);
-                model[key] = model[key] === 0 ? 0 : model[key] || definition.defaultValue;
-            }
-            else if (definition.isTable && !definition.isArray && typeof model === 'object' && model !== undefined && model !== null) {
-                if (model[key] !== 0 && !model[key]) {
-                    return model[key] = definition.defaultValue;
-                }
-                var schema = Schema.getInstance(definition.type);
-                schema._clean(model[key], utils_2.getDecendentsDot(fields, key));
-                return;
-            }
-            else if (definition.isArray && typeof model === 'object' && model !== undefined && model !== null) {
-                model[key] = utils_1.forceType(model[key], Array);
-                if (definition.isTable) {
-                    var schema_1 = Schema.getInstance(definition.type);
-                    model[key] = model[key].map(function (value) {
-                        schema_1._clean(value, utils_2.getDecendentsDot(fields, key));
-                        return value;
-                    });
-                }
-                else {
-                    model[key] = model[key].map(function (value) { return utils_1.forceType(value, definition.type); });
-                }
-                return;
-            }
-            if (model) {
-                model[key] = definition.transformValue.call({
-                    model: _this.original,
-                    siblings: model
-                }, model[key]);
-            }
-        });
     };
     Schema.prototype.applyDefinitionsDefaults = function (definition, key) {
         var fieldDefinition = {};
@@ -315,6 +258,111 @@ var Schema = /** @class */ (function () {
         }
         return fieldDefinition;
     };
+    Schema.prototype.validateMutation = function (action, mutation, roles) {
+        if (!roles) {
+            roles = ['everyone'];
+        }
+        for (var _i = 0, mutation_1 = mutation; _i < mutation_1.length; _i++) {
+            var m = mutation_1[_i];
+            var data = m.data;
+            var fields = Object.keys(data);
+            for (var _a = 0, fields_1 = fields; _a < fields_1.length; _a++) {
+                var field = fields_1[_a];
+                var def = this.getPathDefinition(field);
+                var inline = !!(def.table && def.table.relation && def.table.relation.link === 'INLINE');
+                if (def.isTable) {
+                    var schema = Schema.getInstance(def.type);
+                    var operations = Object.keys(data[field]);
+                    for (var _b = 0, operations_1 = operations; _b < operations_1.length; _b++) {
+                        var operation = operations_1[_b];
+                        if (operation === 'set' || operation === 'connect') {
+                            var allowed = this.getFieldPermission(field, roles, 'update');
+                            if (!allowed)
+                                throw new Error("401, You are not allowed to update \"" + field + "\" on " + this.name);
+                        }
+                        if (operation === 'set' || operation === 'connect')
+                            continue;
+                        var args2 = data[field][operation];
+                        if (!Array.isArray(args2))
+                            args2 = [args2];
+                        for (var _c = 0, args2_1 = args2; _c < args2_1.length; _c++) {
+                            var arg2 = args2_1[_c];
+                            if (inline)
+                                arg2 = { data: arg2 };
+                            schema.validateMutation(operation, arg2, roles);
+                        }
+                    }
+                }
+                else {
+                    var allowed = this.getFieldPermission(field, roles, action);
+                    if (!allowed)
+                        throw new Error("401, You are not allowed to " + action + " \"" + field + "\" on " + def.type);
+                }
+            }
+        }
+    };
+    /**
+     * Mutate the model,with all keys  proper types and null for undefined
+     * TODO: Refactor to prevent mutation, fix it creating a new cloned model and returning it
+     * @param model
+     * @param fields
+     * @param removeExtraKeys
+     */
+    Schema.prototype._clean = function (model, fields, removeExtraKeys) {
+        var _this = this;
+        if (removeExtraKeys === void 0) { removeExtraKeys = true; }
+        if (removeExtraKeys && model && typeof model === 'object') {
+            Object.keys(model).forEach(function (key) {
+                if (!_this.keys.includes(key)) {
+                    delete model[key];
+                }
+            });
+        }
+        this.keys.forEach(function (key) {
+            if (key !== '___typename' && fields.every(function (field) { return field !== key && field.indexOf(key + '.') < 0; })) {
+                return model && delete model[key];
+            }
+            var definition = _this.getPathDefinition(key);
+            if (!definition.isTable && typeof model === 'object' && model !== undefined && model !== null) {
+                model[key] = utils_1.forceType(model[key], definition.type);
+                model[key] = model[key] === 0 ? 0 : model[key] || definition.defaultValue;
+            }
+            else if (definition.isTable && !definition.isArray && typeof model === 'object' && model !== undefined && model !== null) {
+                if (model[key] !== 0 && !model[key]) {
+                    return model[key] = definition.defaultValue;
+                }
+                var schema = Schema.getInstance(definition.type);
+                schema._clean(model[key], utils_2.getDecendentsDot(fields, key));
+                return;
+            }
+            else if (definition.isArray && typeof model === 'object' && model !== undefined && model !== null) {
+                model[key] = utils_1.forceType(model[key], Array);
+                if (definition.isTable) {
+                    var schema_1 = Schema.getInstance(definition.type);
+                    model[key] = model[key].map(function (value) {
+                        schema_1._clean(value, utils_2.getDecendentsDot(fields, key));
+                        return value;
+                    });
+                }
+                else {
+                    model[key] = model[key].map(function (value) { return utils_1.forceType(value, definition.type); });
+                }
+                return;
+            }
+            if (model) {
+                model[key] = definition.transformValue.call({
+                    model: _this.original,
+                    siblings: model
+                }, model[key]);
+            }
+        });
+    };
+    Schema.prototype._getPathDefinition = function (field) {
+        if (!this.pathDefinitions[field]) {
+            this.pathDefinitions[field] = this.generatePathDefinition(field);
+        }
+        return this.pathDefinitions[field];
+    };
     Schema.prototype.generatePathDefinition = function (key) {
         var paths = key.split('.');
         var schema = this;
@@ -342,8 +390,12 @@ var Schema = /** @class */ (function () {
             var definition = _this.getPathDefinition(cleanKey);
             for (var _i = 0, _a = definition.validators; _i < _a.length; _i++) {
                 var validator = _a[_i];
-                if (definition.isArray && !validator.arrayValidator)
+                if (definition.isArray &&
+                    validator.arrayValidator &&
+                    key.match(/\.\d+$/) //if is a scalar like user.0
+                ) {
                     continue;
+                }
                 var instance = new validator({ key: last, path: key, definition: definition, value: value });
                 var error = instance.validate(model);
                 if (error) {

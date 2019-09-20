@@ -1,4 +1,4 @@
-import {filterFields, getParentsDot} from "./utils";
+import { getParentsDot} from "./utils";
 
 const fields = [
     'loggedAt',
@@ -102,16 +102,7 @@ const fields = [
     'inspections.familyStatus'
 ]
 describe('util ', () => {
-    test("filterFields", () => {
-        let filtered = filterFields(fields, ['parents'])
-        expect(filtered.length).toBe(fields.length - 16)
-        filtered = filterFields(fields, ['parents', 'inspections'])
-        expect(filtered.length).toBe(fields.length - 23)
-        filtered = filterFields(fields, ['parents', 'inspections', 'availability.reason'])
-        expect(filtered.length).toBe(fields.length - 24)
-        filtered = filterFields(fields, ['parents', 'inspections', 'availability.reason', 'guests.blueCard'])
-        expect(filtered.length).toBe(fields.length - 31)
-    })
+
     test("getParentsDot", () => {
         let parents=getParentsDot(fields)
         expect(parents).toMatchObject([ 'loggedAt',

@@ -30,7 +30,7 @@ export interface ActionFormProps extends AutoFormProps {
 class ActionForm extends PureComponent<WithApolloClient<ActionFormProps>> {
     state: { changed: boolean } = {changed: false}
     refetchQueries = (mutationResult: FetchResult) => {
-        return refetchQueries(mutationResult, this.props.schema, this.props.client, this.props.refetchSchemas)
+        return refetchQueries(mutationResult, this.props.client, this.props.refetchSchemas,this.props.schema)
     }
 
     render() {
@@ -63,6 +63,9 @@ class ActionForm extends PureComponent<WithApolloClient<ActionFormProps>> {
         if (Schema.instances[schemaName]){
             if (!resultFields) throw new Error('ActionForm: if the result is a Schema you need to enter resultFields')
             queryFromFields = buildQueryFromFields(resultFields)
+        }
+        if (resultFields){
+            queryFromFields = buildQueryFromFields(resultFields,false)
         }
         const gqlString = `
             mutation ${actionName}($data: ${capitalize(schema.name)}Input!) {

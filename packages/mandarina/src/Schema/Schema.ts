@@ -1,5 +1,5 @@
 // @ts-ignore
-import mapValues from 'lodash.mapvalues';
+import {mapValues} from 'lodash';
 import * as inflection from "inflection";
 import {ErrorValidator, Validator, ValidatorCreator} from "./ValidatorCreator";
 import {isDate, isInteger, isNumber, isString, required} from "./Validators";
@@ -518,12 +518,12 @@ export interface UserFieldDefinitionCommon {
         }
     }
     list?: {
-        hidden?: true
+        hidden?: boolean
         filterMethod?: FilterMethod
         filterComponent?: FilterComponent
         CellComponent?: CellComponent
         loadingElement?: JSX.Element
-        noFilter?: true
+        noFilter?: boolean
         width?: number
         props?: any
         noSort?: boolean
@@ -587,12 +587,12 @@ export interface FieldDefinitionCommon extends UserFieldDefinitionCommon {
         }
     }
     list: {
-        hidden?: true
+        hidden?: boolean
         filterMethod?: FilterMethod
         filterComponent?: FilterComponent
         CellComponent?: CellComponent
         loadingElement?: JSX.Element
-        noFilter?: true
+        noFilter?: boolean
         width?: number
         props?: any
         noSort?: boolean
@@ -632,7 +632,7 @@ export interface OverwriteDefinition {
         props?: any
     }
     list?: {
-        hidden?: true
+        hidden?: boolean
         filterMethod?: FilterMethod
         filterComponent?: FilterComponent
         CellComponent?: CellComponent

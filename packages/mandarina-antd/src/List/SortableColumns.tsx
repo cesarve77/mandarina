@@ -9,7 +9,6 @@ import {Schema} from "mandarina";
 import {ResizableBox, ResizeCallbackData} from 'react-resizable';
 
 
-
 interface SortableColumnInterface {
     column: ColumnProps
     sort?: Sort
@@ -32,6 +31,7 @@ interface SortableColumnsInterface {
 
 
 export const SortableColumn = SortableElement(({index, column: {title, field, filter, noSort, width}, sort, filters, schema, onSortChange, onResizeStop, onFilterChange, onHideColumn, height}: SortableColumnInterface) => {
+        console.log('title', title)
         return (
             <ResizableBox
                 className={'mandarina-list-thead-col ant-table-column-has-sorters ant-table-column-sort ' + field.replace(/\./g, '-')}
@@ -49,7 +49,7 @@ export const SortableColumn = SortableElement(({index, column: {title, field, fi
                                        field={field}
                                        filter={filters && filters[field]}
                                        schema={schema}/>}
-                {<HideColumn onHide={() => onHideColumn(field,index)}/>}
+                {<HideColumn onHide={() => onHideColumn(field, index)}/>}
 
             </ResizableBox>
         );

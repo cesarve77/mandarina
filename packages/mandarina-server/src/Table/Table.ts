@@ -10,6 +10,7 @@ import {MissingIdTableError} from "mandarina/build/Errors/MissingIDTableError";
 import {ErrorFromServerMapper} from "mandarina/src/Schema/Schema";
 import Mandarina from "../Mandarina";
 import {deepClone} from "mandarina/build/Operations/Mutate";
+import {flatten} from "flat";
 
 // import {flatten, unflatten} from "flat";
 
@@ -77,7 +78,7 @@ export class Table {
         }
     }
  */
-    shouldHasMAnyUpdate() {
+    shouldHasManyUpdate() {
         const fields = this.schema.getFields().filter(f => f !== 'createdAt' && f !== 'createdAt')
         return fields.length > 0
     }
@@ -88,7 +89,7 @@ export class Table {
         // OperationName for query is user or users, for mutation are createUser, updateUser ....
         const operationNames: string[] = Object.values(this.schema.names[type]);
         operationNames.forEach((operationName: string) => {
-            if (!this.shouldHasMAnyUpdate()) return
+            if (!this.shouldHasManyUpdate()) return
             result[operationName] = async (_: any, args: any = {}, context: Context, info: any) => {
                 const user = await Mandarina.config.getUser(context)
                 // console.log('*****************************************************')
@@ -148,6 +149,8 @@ export class Table {
                     //this.validatePermissions('read', roles, fieldsList(info));
                 }
                 if (type === 'query') {
+                    const graphqlFields = require('graphql-fields');
+                    console.log(flatten(graphqlFields(info)))
                     await this.callHook(this.name, 'beforeQuery', _, args, context, info);
                     //this.validatePermissions('read', roles, fieldsList(info));
                     result = await prismaMethod(args, info);
@@ -299,7 +302,11 @@ export interface TableSchemaOptions {
         beforeQuery?: Hook
         afterQuery?: Hook
     }
-    middlewares?: Array<(user: any, context: any, info: any) => Promise<void>>
+    filters?: Filter[]
+}
+
+export type Filter = {
+    [field: string]: { roles: string[], operator: string, value: any }
 }
 
 export interface TableShapeOptions extends TableSchemaOptions {
@@ -320,4 +327,6 @@ type HookName =
     | 'afterUpdate'
     | 'beforeQuery'
     | 'afterQuery'
+
+
 

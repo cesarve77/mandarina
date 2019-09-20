@@ -3,7 +3,7 @@ import {Schema} from '..'
 import gql from "graphql-tag";
 import {Query, QueryProps, QueryResult} from "react-apollo";
 import {buildQueryFromFields} from "./utils";
-import pull from 'lodash.pull'
+import {pull} from 'lodash'
 
 export type FindQueryResult = Pick<QueryResult, 'data' | 'loading' | 'error' | 'variables' | 'networkStatus' | 'refetch' | 'fetchMore' | 'startPolling' | 'stopPolling' | 'subscribeToMore' | 'updateQuery' | 'client'>
 

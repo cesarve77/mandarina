@@ -46,10 +46,15 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-var UniqueTableError_1 = require("mandarina/build/Errors/UniqueTableError");
-var TableInstanceNotFound_1 = require("mandarina/build/Errors/TableInstanceNotFound");
+var mandarina_1 = require("mandarina");
+var UniqueSchemaError_1 = require("mandarina/build/Errors/UniqueSchemaError");
+var SchemaInstanceNotFound_1 = require("mandarina/build/Errors/SchemaInstanceNotFound");
 var utils_1 = require("mandarina/build/Schema/utils");
 var MissingIDTableError_1 = require("mandarina/build/Errors/MissingIDTableError");
+var Mandarina_1 = require("../Mandarina");
+var Mutate_1 = require("mandarina/build/Operations/Mutate");
+var flat_1 = require("flat");
+// import {flatten, unflatten} from "flat";
 /**
  *
  * A Table instance is the representation of the one of several of the followings:
@@ -58,11 +63,6 @@ var MissingIDTableError_1 = require("mandarina/build/Errors/MissingIDTableError"
  * List of results
  */
 var Table = /** @class */ (function () {
-    /**
-     *
-     * @param schema
-     * @param tableOptions
-     */
     function Table(schema, tableOptions) {
         Table.instances = Table.instances || {};
         this.schema = schema;
@@ -71,14 +71,14 @@ var Table = /** @class */ (function () {
             throw new MissingIDTableError_1.MissingIdTableError(this.name);
         }
         if (Table.instances[this.name]) {
-            throw new UniqueTableError_1.UniqueTableError(this.name);
+            throw new UniqueSchemaError_1.UniqueSchemaError(this.name);
         }
-        this.options = __assign({}, schema.options, tableOptions);
+        this.options = __assign({}, tableOptions);
         Table.instances[this.name] = this;
     }
     Table.getInstance = function (name) {
         if (!Table.instances[name]) {
-            throw new TableInstanceNotFound_1.TableInstanceNotFound(name);
+            throw new SchemaInstanceNotFound_1.SchemaInstanceNotFound(name);
         }
         return Table.instances[name];
     };
@@ -104,22 +104,32 @@ var Table = /** @class */ (function () {
         }
     }
  */
+    Table.prototype.shouldHasManyUpdate = function () {
+        var fields = this.schema.getFields().filter(function (f) { return f !== 'createdAt' && f !== 'createdAt'; });
+        return fields.length > 0;
+    };
     Table.prototype.getDefaultActions = function (type) {
         var _this = this;
         var result = {};
         // OperationName for query is user or users, for mutation are createUser, updateUser ....
         var operationNames = Object.values(this.schema.names[type]);
         operationNames.forEach(function (operationName) {
+            if (!_this.shouldHasManyUpdate())
+                return;
             result[operationName] = function (_, args, context, info) {
                 if (args === void 0) { args = {}; }
                 return __awaiter(_this, void 0, void 0, function () {
-                    var time, bm, subOperationName, action, prismaMethod, result;
+                    var user, time, bm, subOperationName, action, prismaMethod, result, capitalizedAction, graphqlFields;
                     return __generator(this, function (_a) {
                         switch (_a.label) {
-                            case 0:
-                                console.log('*****************************************************');
-                                console.log('operationName', operationName);
-                                console.log('args', args);
+                            case 0: return [4 /*yield*/, Mandarina_1.default.config.getUser(context)
+                                // console.log('*****************************************************')
+                                // console.log('operationName', operationName)
+                                // console.log('args')
+                                // console.dir(args, {depth: null})
+                            ];
+                            case 1:
+                                user = _a.sent();
                                 time = new Date().getTime();
                                 bm = function (description) {
                                     if (description) {
@@ -131,60 +141,77 @@ var Table = /** @class */ (function () {
                                 subOperationName = operationName.substr(0, 6);
                                 action = (['create', 'update', 'delete'].includes(subOperationName) ? subOperationName : 'read');
                                 prismaMethod = context.prisma[type][operationName];
-                                console.log('type', type);
-                                console.log('action', action);
-                                console.log('before', "before" + utils_1.capitalize(action));
-                                if (!(type === 'mutation')) return [3 /*break*/, 5];
-                                return [4 /*yield*/, this.callHook('beforeValidate', _, args, context, info)];
-                            case 1:
-                                _a.sent();
-                                //TODO: Flatting nested fields operation (context, update, create)
-                                // console.log('123123123',this.flatFields(args.data))
-                                // const errors = this.schema.validate(this.flatFields(args.data));
-                                // if (errors.length > 0) {
-                                //     await this.callHook('validationFailed', action, _, args, context, info);
-                                // } else {
-                                //     await this.callHook('afterValidate', action, _, args, context, info);
-                                // }
-                                return [4 /*yield*/, this.callHook("before" + utils_1.capitalize(action), _, args, context, info)];
+                                capitalizedAction = utils_1.capitalize(action);
+                                // TODO: Review the hooks architecture for adding a way to execute hooks of nested operations
+                                return [4 /*yield*/, this.callHook(this.name, 'beforeValidate', _, args, context, info)];
                             case 2:
-                                //TODO: Flatting nested fields operation (context, update, create)
-                                // console.log('123123123',this.flatFields(args.data))
-                                // const errors = this.schema.validate(this.flatFields(args.data));
+                                // TODO: Review the hooks architecture for adding a way to execute hooks of nested operations
+                                _a.sent();
+                                if (!(type === 'mutation')) return [3 /*break*/, 6];
                                 // if (errors.length > 0) {
                                 //     await this.callHook('validationFailed', action, _, args, context, info);
                                 // } else {
                                 //     await this.callHook('afterValidate', action, _, args, context, info);
                                 // }
-                                _a.sent();
-                                return [4 /*yield*/, prismaMethod(args, info)];
+                                this.schema.validateMutation(action, Mutate_1.deepClone(args), user && user.roles);
+                                return [4 /*yield*/, this.callHook(this.name, "before" + capitalizedAction, _, args, context, info)];
                             case 3:
-                                //this.validatePermissions(action, roles, args.data);
-                                result = _a.sent();
-                                context.result = result;
-                                return [4 /*yield*/, this.callHook("after" + utils_1.capitalize(action), _, args, context, info)];
-                            case 4:
-                                _a.sent();
-                                _a.label = 5;
-                            case 5:
-                                if (!(type === 'query')) return [3 /*break*/, 9];
-                                return [4 /*yield*/, this.callHook('beforeQuery', _, args, context, info)];
-                            case 6:
                                 _a.sent();
                                 return [4 /*yield*/, prismaMethod(args, info)];
+                            case 4:
+                                /*
+                                HACK https://github.com/prisma/prisma/issues/4327
+                                 */
+                                // if (`before${capitalizedAction}` === 'beforeUpdate' || `before${capitalizedAction}` === 'beforeCreate') {
+                                //     const flat = flatten(args.data)
+                                //     const where = args.where
+                                //     let run = false
+                                //     let withDeleteMany: any = {}
+                                //     let withoutDeleteMany: any = {}
+                                //     Object.keys(flat).forEach((key) => {
+                                //         if (key.match(/\.deleteMany\.0$/)) {
+                                //             run = true
+                                //             withDeleteMany[key] = flat[key]
+                                //         } else {
+                                //             withoutDeleteMany[key] = flat[key]
+                                //         }
+                                //     })
+                                //     if (run) {
+                                //         await prismaMethod({where, data: unflatten(withDeleteMany)}, info);
+                                //         args.data = unflatten(withoutDeleteMany)
+                                //     }
+                                // }
+                                result = _a.sent();
+                                //
+                                context.result = result;
+                                return [4 /*yield*/, this.callHook(this.name, "after" + capitalizedAction, _, args, context, info)];
+                            case 5:
+                                _a.sent();
+                                _a.label = 6;
+                            case 6:
+                                if (!(type === 'query')) return [3 /*break*/, 10];
+                                graphqlFields = require('graphql-fields');
+                                console.log(flat_1.flatten(graphqlFields(info)));
+                                return [4 /*yield*/, this.callHook(this.name, 'beforeQuery', _, args, context, info)];
                             case 7:
+                                _a.sent();
+                                return [4 /*yield*/, prismaMethod(args, info)];
+                            case 8:
                                 //this.validatePermissions('read', roles, fieldsList(info));
                                 result = _a.sent();
+                                // console.log(graphqlFields(info))
                                 context.result = result;
-                                return [4 /*yield*/, this.callHook('afterQuery', _, args, context, info)];
-                            case 8:
-                                _a.sent();
-                                _a.label = 9;
+                                return [4 /*yield*/, this.callHook(this.name, 'afterQuery', _, args, context, info)];
                             case 9:
-                                console.log('result', result);
-                                bm('done in ');
-                                console.log('*****************************************************');
-                                return [2 /*return*/, result];
+                                _a.sent();
+                                _a.label = 10;
+                            case 10: 
+                            // bm('done in ')
+                            // console.log('result')
+                            // console.dir(result)
+                            //
+                            // console.log('*****************************************************')
+                            return [2 /*return*/, result];
                         }
                     });
                 });
@@ -196,7 +223,10 @@ var Table = /** @class */ (function () {
         // TODO: Do we need to implement this method?
     };
     /**
-     * Simple wrapper to execute the table hook if exists
+     * Go back a mutation object to the original object
+     */
+    /**
+     * Simple wrapper to execute the table hook if exists and sub hook (nested hooks)
      *
      * @param name
      * @param actionType
@@ -205,20 +235,88 @@ var Table = /** @class */ (function () {
      * @param context
      * @param info
      */
-    Table.prototype.callHook = function (name, _, args, context, info) {
+    Table.prototype.callHook = function (schemaName, name, _, args, context, info) {
         return __awaiter(this, void 0, void 0, function () {
-            var hookHandler;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
+            var hookHandler, data, fields, schema, _i, fields_1, field, def, inline, operations, _a, operations_1, operation, hookName, args2, table, _b, args2_1, arg2, e_1;
+            return __generator(this, function (_c) {
+                switch (_c.label) {
                     case 0:
-                        console.log('this.options.hooks', name, this.options.hooks);
-                        hookHandler = this.options.hooks && this.options.hooks[name];
-                        if (!hookHandler) return [3 /*break*/, 2];
-                        return [4 /*yield*/, hookHandler(_, args, context, info)];
+                        console.log('--------------------');
+                        console.log(schemaName, name, args);
+                        console.log('--------------------');
+                        _c.label = 1;
                     case 1:
-                        _a.sent();
-                        _a.label = 2;
-                    case 2: return [2 /*return*/];
+                        _c.trys.push([1, 19, , 20]);
+                        hookHandler = this.options.hooks && this.options.hooks[name];
+                        if (!hookHandler) return [3 /*break*/, 18];
+                        data = args.data;
+                        fields = Object.keys(data);
+                        schema = mandarina_1.Schema.getInstance(schemaName);
+                        _i = 0, fields_1 = fields;
+                        _c.label = 2;
+                    case 2:
+                        if (!(_i < fields_1.length)) return [3 /*break*/, 16];
+                        field = fields_1[_i];
+                        def = schema.getPathDefinition(field);
+                        inline = !!(def.table && def.table.relation && def.table.relation.link === 'INLINE');
+                        if (!def.isTable) return [3 /*break*/, 15];
+                        operations = Object.keys(data[field]);
+                        _a = 0, operations_1 = operations;
+                        _c.label = 3;
+                    case 3:
+                        if (!(_a < operations_1.length)) return [3 /*break*/, 15];
+                        operation = operations_1[_a];
+                        hookName = "before" + utils_1.capitalize(operation);
+                        args2 = data[field][operation];
+                        if (!Table.instances[def.type])
+                            return [3 /*break*/, 14];
+                        table = Table.getInstance(def.type);
+                        if (!Array.isArray(args2)) return [3 /*break*/, 10];
+                        _b = 0, args2_1 = args2;
+                        _c.label = 4;
+                    case 4:
+                        if (!(_b < args2_1.length)) return [3 /*break*/, 9];
+                        arg2 = args2_1[_b];
+                        if (!inline) return [3 /*break*/, 6];
+                        return [4 /*yield*/, table.callHook(def.type, hookName, _, { data: arg2 }, context, info)];
+                    case 5:
+                        _c.sent();
+                        return [3 /*break*/, 8];
+                    case 6: return [4 /*yield*/, table.callHook(def.type, hookName, _, arg2, context, info)];
+                    case 7:
+                        _c.sent();
+                        _c.label = 8;
+                    case 8:
+                        _b++;
+                        return [3 /*break*/, 4];
+                    case 9: return [3 /*break*/, 14];
+                    case 10:
+                        if (!inline) return [3 /*break*/, 12];
+                        return [4 /*yield*/, table.callHook(def.type, hookName, _, { data: args2 }, context, info)];
+                    case 11:
+                        _c.sent();
+                        return [3 /*break*/, 14];
+                    case 12: return [4 /*yield*/, table.callHook(def.type, hookName, _, args2, context, info)];
+                    case 13:
+                        _c.sent();
+                        _c.label = 14;
+                    case 14:
+                        _a++;
+                        return [3 /*break*/, 3];
+                    case 15:
+                        _i++;
+                        return [3 /*break*/, 2];
+                    case 16: return [4 /*yield*/, hookHandler(_, args, context, info)];
+                    case 17:
+                        _c.sent();
+                        _c.label = 18;
+                    case 18: return [3 /*break*/, 20];
+                    case 19:
+                        e_1 = _c.sent();
+                        console.error("Error executing hook: \"" + name + "\" in Table: " + schemaName + "\"");
+                        console.error(e_1);
+                        return [3 /*break*/, 20];
+                    case 20: return [2 /*return*/];
                 }
             });
         });

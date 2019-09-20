@@ -17,14 +17,18 @@ type Component = (props: CreateProps | UpdateProps) => JSX.Element
 type FormPropsOmitComponent = Omit<FormProps, 'Component'>
 
 export interface CreateFormProps extends FormPropsOmitComponent {
+    ref?: React.Ref<HTMLFormElement>
 }
 
 export interface UpdateFormProps extends FormPropsOmitComponent {
     id: string | any
+    ref?: React.Ref<HTMLFormElement>
+
 }
 
 export interface DeleteFormProps extends FormPropsOmitComponent {
     id: string
+    ref?: React.Ref<HTMLFormElement>
 }
 
 
