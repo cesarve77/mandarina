@@ -1,7 +1,8 @@
 import {Find, Schema} from 'mandarina';
 import React, {ReactNode} from "react";
 import memoizeOne from "memoize-one"
-import {isEmpty} from 'lodash'
+// import {isEqual} from 'lodash';
+import {isEmpty, isEqual, merge, set} from 'lodash'
 
 import {
     areEqual,
@@ -12,8 +13,7 @@ import {
 } from 'react-window';
 import {OnFilterChange, Where} from "./ListFilter";
 import {CellComponent, FilterMethod, Overwrite} from "mandarina/build/Schema/Schema";
-import {Empty} from "antd";
-import {merge} from 'lodash'
+import {Dropdown, Empty, Icon, Menu} from "antd";
 import {getDefaultFilterMethod} from "./ListFilters";
 import {ReactComponentLike} from "prop-types";
 import {get} from "mandarina/build/Schema/utils";
@@ -21,8 +21,6 @@ import {DocumentNode} from "graphql";
 import {RefetchQueriesProviderFn} from "react-apollo";
 import HeaderDefault, {HeaderDefaultProps} from "./HeaderDefault";
 import {OnSortChange} from "./SortButton";
-// import {isEqual} from 'lodash';
-import {set,isEqual} from 'lodash';
 import {SortableColumn, SortableColumns} from "./SortableColumns";
 import {SortEnd} from "react-sortable-hoc";
 import arrayMove from 'array-move'
@@ -175,10 +173,7 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
         if (props.onFieldsChange && !isEqual(props.fields, state.fields)) {
             result.fields = props.fields || props.schema.getFields()
         }
-        console.log('getDerivedStateFromProps',props.overwrite)
-
         if ((props.onOverwriteChange) && !isEqual(props.overwrite, state.overwrite)) {
-            console.log('*************************')
             result.overwrite = props.overwrite
         }
         if (props.onSortChange && !isEqual(props.sort, state.sort)) {
@@ -298,7 +293,6 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
 
 
     onFilterChange: OnFilterChange = (field, filter) => {
-        console.log('onFilterChange', field, filter);
         this.data = [];
         // @ts-ignore
         this.gridRef.current && this.gridRef.current.scrollToItem({
@@ -320,13 +314,13 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
             }
         })
     };
-    onHideColumn: OnHideColumn = (field: string, index: number) => {
+    onHideOrShowColumn = (field: string, index: number, show: boolean) => {
         // @ts-ignore
         this.gridRef.current && this.gridRef.current.resetAfterColumnIndex(index, false);
 
         this.setState(({overwrite}) => {
-            const newOverwrite = {...overwrite} || {};
-            set(newOverwrite, [field, 'list', 'hidden'], true);
+            const newOverwrite = deepClone(overwrite) || {};
+            set(newOverwrite, [field, 'list', 'hidden'], !show);
             if (this.props.onOverwriteChange) {
                 this.props.onOverwriteChange(newOverwrite);
                 return null
@@ -336,6 +330,15 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
         })
 
 
+    };
+    onHideColumn: OnHideColumn = (field: string, index: number) => {
+        const {fields, overwrite} = this.state;
+        const showingColumns = this.calcColumns(fields, overwrite).reduce((mem, col) => mem + (!!col ? 1 : 0), 0)
+        if (showingColumns === 1) return
+        this.onHideOrShowColumn(field, index, false)
+    };
+    onShowColumn: OnHideColumn = (field: string, index: number) => {
+        this.onHideOrShowColumn(field, index, true)
     };
     onResizeStop: OnResizeStop = (field, width, index) => {
         // @ts-ignore
@@ -430,7 +433,7 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
         const {fields, width, height, filters, sort, overwrite} = this.state;
         const columns = this.calcColumns(fields, overwrite);
         const getColumnWidth = (index: number) => {
-            if (columns[index] === null) return 0;
+            if (!columns[index]) return 0;
             // @ts-ignore
             return columns[index].width;
         };
@@ -444,14 +447,27 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
         } else if (allFilters.length > 0) {
             whereAndFilter = {AND: allFilters}
         }
-        console.log('rerender');
+        const overwriteKeys = overwrite && Object.keys(overwrite) || []
+        const hiddenColumnMenu = overwriteKeys.reduce<ReactNode[]>((menu, field) => {
+            // @ts-ignore
+            if (overwrite && overwrite[field] && overwrite[field].list && overwrite[field].list.hidden) {
+                const label = this.props.schema.getPathDefinition(field).label
+                menu.push(<Menu.Item
+                    onClick={() => this.onShowColumn(field, this.props.fields.indexOf(field))}
+                    key={field}><Icon type={'eye'}/>{label}</Menu.Item>)
+            }
+            return menu
+        }, [])
+        if (hiddenColumnMenu.length===0){
+            hiddenColumnMenu.push(<Menu.Item key={'mandarina_oHiddenColumn'} disabled>No
+                hidden columns</Menu.Item>)
+        }
         return (
             <Find schema={schema} where={whereAndFilter} skip={0} first={this.firstLoad + overLoad}
                   sort={sort}
                   fields={fields}
                   notifyOnNetworkStatusChange>
                 {({data = [], query, variables, refetch, loading, count, client}) => {
-                    console.log('list Find', data);
                     let dataCollection = data;
                     if (this.data.length === 0 && data && !loading) {
                         this.data = Array(count).fill(undefined)
@@ -513,39 +529,41 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
                                      width,
                                      height: height + tHeadHeight
                                  }}>
+                                <Dropdown overlay={<Menu>{hiddenColumnMenu}</Menu>} trigger={['contextMenu']}>
+                                    <div ref={this.tHead} className='mandarina-list-thead'
+                                         style={{width, height: tHeadHeight ? tHeadHeight : 'auto'}}>
+                                        <SortableColumns
+                                            shouldCancelStart={(event) => {
+                                                // @ts-ignore
+                                                return event.target && event.target.classList && event.target.classList.contains('react-resizable-handle') || event.target.classList.contains('no-draggable') || ['INPUT', 'SELECT', 'TEXTAREA'].includes(event.target.tagName)
+                                            }}
+                                            axis={'x'}
+                                            lockAxis={'x'}
+                                            pressThreshold={10}
+                                            distance={10}
+                                            onSortEnd={this.onColumnOrderChange}
+                                            width={this.estimatedColumnWidth * columns.length}
+                                            height={tHeadHeight}>
+                                            {columns.map((column, index) =>
+                                                column ?
+                                                    <SortableColumn
+                                                        height={tHeadHeight}
+                                                        key={`item-${column.field}`}
+                                                        index={index}
+                                                        columnIndex={index}
+                                                        column={column}
+                                                        sort={sort}
+                                                        filters={filters}
+                                                        schema={schema}
+                                                        onResizeStop={this.onResizeStop}
+                                                        onSortChange={this.onSortChange}
+                                                        onFilterChange={this.onFilterChange}
+                                                        onHideColumn={this.onHideColumn}
+                                                    /> : <span key={index}></span>)}
+                                        </SortableColumns>
+                                    </div>
+                                </Dropdown>
 
-                                <div ref={this.tHead} className='mandarina-list-thead'
-                                     style={{width, height: tHeadHeight ? tHeadHeight : 'auto'}}>
-                                    <SortableColumns
-                                        shouldCancelStart={(event) => {
-                                            // @ts-ignore
-                                            return event.target && event.target.classList && event.target.classList.contains('react-resizable-handle') || event.target.classList.contains('no-draggable') || ['INPUT', 'SELECT', 'TEXTAREA'].includes(event.target.tagName)
-                                        }}
-                                        axis={'x'}
-                                        lockAxis={'x'}
-                                        pressThreshold={10}
-                                        distance={10}
-                                        onSortEnd={this.onColumnOrderChange}
-                                        width={this.estimatedColumnWidth * columns.length}
-                                        height={tHeadHeight}>
-                                        {columns.map((column, index) =>
-                                            column ?
-                                                <SortableColumn
-                                                    height={tHeadHeight}
-                                                    key={`item-${column.field}`}
-                                                    index={index}
-                                                    columnIndex={index}
-                                                    column={column}
-                                                    sort={sort}
-                                                    filters={filters}
-                                                    schema={schema}
-                                                    onResizeStop={this.onResizeStop}
-                                                    onSortChange={this.onSortChange}
-                                                    onFilterChange={this.onFilterChange}
-                                                    onHideColumn={this.onHideColumn}
-                                                /> : <span key={index}></span>)}
-                                    </SortableColumns>
-                                </div>
                                 {!loading && !count && <Empty style={{margin: '40px'}}/>}
                                 {height !== 0 &&
                                 <Grid
@@ -603,7 +621,7 @@ const Cell = React.memo(({columnIndex, rowIndex, data: {data, columns, query, re
     const field = columns[columnIndex].field;
     const CellComponent = columns[columnIndex].CellComponent || DefaultCellComponent;
     const loadingElement = columns[columnIndex].loadingElement || defaultLoadingElement;
-    const props=columns[columnIndex].props || {};
+    const props = columns[columnIndex].props || {};
     return (
         <div className={'mandarina-list-cell ' + field.replace('.', '-')}
              style={style}>
