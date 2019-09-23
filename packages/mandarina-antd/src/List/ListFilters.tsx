@@ -1,8 +1,13 @@
 import {FieldDefinitionNative, FilterComponent, Native} from "mandarina/build/Schema/Schema";
 import {Where} from "./ListFilter";
-import {set,get,isEmpty,unset} from "lodash";
+import {get, isEmpty, set, unset} from "lodash";
 import connectField from 'uniforms/connectField'
-import {DatePicker, Dropdown, Input, InputNumber, Menu, Switch} from "antd";
+import DatePicker from "antd/lib/date-picker";
+import Dropdown from "antd/lib/dropdown";
+import Input from "antd/lib/input";
+import InputNumber from "antd/lib/input-number";
+import Menu from "antd/lib/menu";
+import Switch from "antd/lib/switch";
 import React, {useState} from "react";
 import {Integer, Schema} from "mandarina";
 import {forceType} from "mandarina/build/Schema/utils";

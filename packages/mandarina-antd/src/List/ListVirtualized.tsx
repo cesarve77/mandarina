@@ -13,7 +13,10 @@ import {
 } from 'react-window';
 import {OnFilterChange, Where} from "./ListFilter";
 import {CellComponent, FilterMethod, Overwrite} from "mandarina/build/Schema/Schema";
-import {Dropdown, Empty, Icon, Menu} from "antd";
+import Dropdown from "antd/lib/dropdown";
+import Empty from "antd/lib/empty";
+import Icon  from "antd/lib/icon";
+import  Menu from "antd/lib/menu";
 import {getDefaultFilterMethod} from "./ListFilters";
 import {ReactComponentLike} from "prop-types";
 import {get} from "mandarina/build/Schema/utils";

@@ -1,5 +1,5 @@
 import React from "react"
-import {Icon} from "antd";
+import Icon from "antd/lib/icon";
 
 export interface OnSortChange {
     (field: string, direction: -1 | 1): void

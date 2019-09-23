@@ -13,7 +13,7 @@ import gql from "graphql-tag";
 import {Schema} from 'mandarina'
 import {buildQueryFromFields} from "mandarina/build/Operations/utils";
 import {refetchQueries} from "mandarina/build/Operations/Mutate";
-import {Button} from "antd";
+import Button from "antd/lib/button";
 import {ButtonProps} from "antd/lib/button";
 
 

@@ -1,4 +1,4 @@
-import {Table as TableAntD} from 'antd';
+import TableAntD from 'antd/lib/table';
 import {Find, Schema} from 'mandarina';
 import * as React from "react";
 import {FieldDefinition, Overwrite} from 'mandarina/build/Schema/Schema'

@@ -1,7 +1,7 @@
 import React, {ComponentType, ElementType, ReactNode} from "react"
 import {Auth} from 'mandarina'
 import {CreateForm, CreateFormProps, UpdateForm, UpdateFormProps} from "./Forms";
-import {Spin} from "antd";
+import Spin from "antd/lib/spin";
 import {ActionType, AuthChildrenProps} from "mandarina/build/Auth/Auth";
 import {ListProps as ListVirtualizedProps, ListVirtualized} from "./List/ListVirtualized";
 import {List, ListProps} from "./List/List";

@@ -3,7 +3,11 @@ import Query from "react-apollo/Query";
 import {ApolloClient} from "apollo-client";
 import {ColumnProps, ControlledListProps, Refetch} from "./ListVirtualized";
 import {Schema} from "mandarina";
-import {Button, Col, Dropdown, Menu, Row} from "antd";
+import Button from "antd/lib/button";
+import Col from "antd/lib/col";
+import Dropdown from "antd/lib/dropdown";
+import Menu from "antd/lib/menu";
+import Row from "antd/lib/row";
 
 export interface HeaderProps extends ControlledListProps {
     count: number
