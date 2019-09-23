@@ -1,6 +1,6 @@
 {
   "name": "mandarina",
-  "version": "0.6.12",
+  "version": "0.6.13",
   "description": "",
   "main": "build/index.js",
   "types": "build/index.d.ts",
@@ -29,7 +29,6 @@
     "react-dom": "^16.8.6",
     "lodash": "^4.17.15",
     "@types/lodash": "^4.14.138"
-
   },
   "devDependencies": {
     "@babel/cli": "^7.4.4",

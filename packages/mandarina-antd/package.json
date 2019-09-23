@@ -1,6 +1,6 @@
 {
   "name": "mandarina-antd",
-  "version": "0.6.12",
+  "version": "0.6.13",
   "description": "Antd styling for mandarina",
   "main": "build/index.js",
   "types": "build/index.d.ts",
@@ -15,7 +15,6 @@
   "dependencies": {
     "@types/memoize-one": "^4.1.1",
     "array-move": "latest",
-
     "invariant": "^2.2.4",
     "memoize-one": "^5.0.4",
     "react-resizable": "^1.8.0",

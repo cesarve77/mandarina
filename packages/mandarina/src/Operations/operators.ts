@@ -1,4 +1,4 @@
-import get from "lodash.get"
+import {get} from "lodash"
 
 /**
  *  take a model, and evaluate the where clause (a prisma where shape) and return if the model complain with the clause
