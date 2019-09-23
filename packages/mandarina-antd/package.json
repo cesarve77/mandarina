@@ -14,9 +14,8 @@
   },
   "dependencies": {
     "@types/memoize-one": "^4.1.1",
-    "antd": "^3.20.5",
     "array-move": "latest",
-    "graphql": "^14.3.1",
+
     "invariant": "^2.2.4",
     "memoize-one": "^5.0.4",
     "react-resizable": "^1.8.0",
@@ -50,6 +49,8 @@
     "typescript": "^3.5.3"
   },
   "peerDependencies": {
+    "antd": "^3.20.5",
+    "graphql": "^14.3.1",
     "apollo-client": "^2.6.3",
     "graphql-tag": "^2.10.1",
     "mandarina": "latest",
