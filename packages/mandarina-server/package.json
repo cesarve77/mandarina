@@ -1,6 +1,6 @@
 {
   "name": "mandarina-server",
-  "version": "0.6.17",
+  "version": "0.6.18",
   "description": "Mandarina for server side",
   "main": "build/index.js",
   "types": "build/index.d.ts",
@@ -35,7 +35,7 @@
     "typescript": "^3.5.3"
   },
   "scripts": {
-    "postinstall": "tsc"
+    "postinstall": "yarn tsc"
   },
   "jest": {
     "coverageDirectory": "coverage",

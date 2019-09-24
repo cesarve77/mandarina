@@ -1,6 +1,6 @@
 {
   "name": "mandarina",
-  "version": "0.6.17",
+  "version": "0.6.18",
   "description": "",
   "main": "build/index.js",
   "types": "build/index.d.ts",
@@ -63,7 +63,7 @@
     "unfetch": "^4.1.0"
   },
   "scripts": {
-    "postinstall": "tsc"
+    "postinstall": "yarn tsc"
   },
   "jest": {
     "coverageDirectory": "coverage",
