@@ -70,7 +70,6 @@ describe('Validators', () => {
 
         validator = new Validator(getParams(undefined, Number))
         error = validator.validate()
-        console.log('error', error)
         expect(error).toHaveProperty('validatorName', 'required');
 
         validator = new Validator(getParams(undefined, String))

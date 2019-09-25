@@ -33,9 +33,8 @@ export const ListFilter = React.memo(({onFilterChange, field, filter, schema}: L
         } else {
             FieldComponent = fieldDefinition.list.filterComponent === undefined ? getDefaultComponent(field, fieldDefinition) : fieldDefinition.list.filterComponent
         }
-        const name = uuid() //todo remove this dependeincy making schema get optional name
-
-        fieldDefinition.validators = fieldDefinition.validators.filter(({validatorName}) => validatorName !== 'required')
+        const name = `filter-${field}-${uuid()}` //todo remove this dependeincy making schema get optional name
+        fieldDefinition.validators = fieldDefinition.validators.filter(({validatorName, arrayValidator, tableValidator}) => validatorName !== 'required' && !arrayValidator && !tableValidator)
         const filterSchema = new Schema({
             filter: fieldDefinition,
         }, {

@@ -81,7 +81,6 @@ describe('Schema', () => {
             }]
         }
         const errors=FamilySchema.validate(model,['parents.firstName','parents.user.email'])
-        console.log('********',errors)
         expect(errors).toHaveLength(2)
     })
     test("validate valid", () => {
@@ -152,7 +151,6 @@ describe('Schema type validators', () => {
             'height',
             'age',
             'bod',])
-        console.log('errors,',errors)
         expect(errors[0]).toHaveProperty('label', 'height');
         expect(errors[0]).toHaveProperty('validatorName', 'minNumber');
         expect(errors[1]).toHaveProperty('label', 'date');

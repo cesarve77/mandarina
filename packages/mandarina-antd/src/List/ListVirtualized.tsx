@@ -472,7 +472,6 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
                   fields={fields}
                   notifyOnNetworkStatusChange>
                 {({data = [], query, variables, error, refetch, loading, count, client}) => {
-                    console.log('error', error)
 
                     let dataCollection = data;
                     if (this.data.length === 0 && data && !loading) {

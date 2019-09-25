@@ -101,7 +101,6 @@ export const getFields = (args: AuthArgs) => {
 
     if (!actions.includes(args.action)) throw new Error(`Action only can be one of ['read', 'create', 'update', 'delete'] now is: ${args.action} `)
     const finalFields: string[] = []
-    const t = new Date().getTime()
     args.fields.forEach(field => {
         if (!args.schema.hasPath(field)) {
             finalFields.push(field)
@@ -109,7 +108,6 @@ export const getFields = (args: AuthArgs) => {
             finalFields.push(field)
         }
     })
-    console.log('time', new Date().getTime() - t)
     return finalFields
 
     /*const staticRoles = roles.filter(permissionRoles.includes)

@@ -435,7 +435,6 @@ export class Schema {
         let errors: ErrorValidator[] = [];
         const flatModel = flatten(model)
         const flatModelKeys = insertParents(Object.keys(flatModel))
-        console.log('flatModelKeys', flatModelKeys)
 
         flatModelKeys.forEach(key => {
             const value = get(model, key)
@@ -460,7 +459,6 @@ export class Schema {
                 }
                 const instance = new validator({key: last, path: key, definition, value});
                 const error = instance.validate(model);
-                console.log('******',last,key,value,validator.validatorName,error)
 
                 if (error) {
                     errors.push(error);

@@ -19,7 +19,6 @@ export const getParentsDot = (keys: string[]) => {
 export const insertParents = (keys: string[]) => {
     for (let i = 0; i < keys.length; i++) {
         const key = keys[i]
-        console.log(i, key)
         const parent = key.substring(0, key.lastIndexOf('.'))
         if (parent && !keys.includes(parent)) {
             keys.splice(i, 0, parent)

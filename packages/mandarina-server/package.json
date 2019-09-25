@@ -1,6 +1,6 @@
 {
   "name": "mandarina-server",
-  "version": "0.6.20",
+  "version": "0.6.21",
   "description": "Mandarina for server side",
   "main": "build/index.js",
   "types": "build/index.d.ts",
@@ -17,7 +17,6 @@
     "graphql-fields": "latest",
     "yaml": "^1.6.0",
     "typescript": "^3.6.3"
-
   },
   "peerDependencies": {
     "@types/node": "^12.0.10",
