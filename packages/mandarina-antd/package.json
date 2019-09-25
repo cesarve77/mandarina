@@ -18,7 +18,7 @@
     "@types/memoize-one": "^4.1.1",
     "array-move": "latest",
     "invariant": "^2.2.4",
-    "memoize-one": "^5.0.4",
+    "memoize-one": "^5.1.1",
     "react-resizable": "^1.8.0",
     "react-sortable-hoc": "^1.10.1",
     "react-window": "^1.8.4",
