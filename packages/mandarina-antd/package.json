@@ -1,6 +1,6 @@
 {
   "name": "mandarina-antd",
-  "version": "0.6.19",
+  "version": "0.6.20",
   "description": "Antd styling for mandarina",
   "main": "build/index.js",
   "types": "build/index.d.ts",
@@ -23,7 +23,9 @@
     "react-sortable-hoc": "^1.10.1",
     "react-window": "^1.8.4",
     "uniforms": "^1.31.1",
-    "uniforms-antd": "^1.31.1"
+    "uniforms-antd": "^1.31.1",
+    "typescript": "^3.6.3"
+
   },
   "devDependencies": {
     "@babel/cli": "^7.4.4",
@@ -46,7 +48,7 @@
     "react-apollo": "2.5.6",
     "react-dom": "^16.8.6",
     "react-test-renderer": "^16.8.6",
-    "typescript": "^3.5.3",
+    "typescript": "^3.6.3",
     "graphql": "14.5.7",
     "antd": "^3.20.5"
   },
