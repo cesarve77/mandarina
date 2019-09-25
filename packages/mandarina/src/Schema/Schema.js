@@ -408,7 +408,6 @@ var Schema = /** @class */ (function () {
         var errors = [];
         var flatModel = flat_1.flatten(model);
         var flatModelKeys = utils_2.insertParents(Object.keys(flatModel));
-        console.log('flatModelKeys', flatModelKeys);
         flatModelKeys.forEach(function (key) {
             var value = lodash_1.get(model, key);
             var cleanKey = Schema.cleanKey(key);
@@ -432,7 +431,6 @@ var Schema = /** @class */ (function () {
                 }
                 var instance = new validator({ key: last, path: key, definition: definition, value: value });
                 var error = instance.validate(model);
-                console.log('******', last, key, value, validator.validatorName, error);
                 if (error) {
                     errors.push(error);
                 }
