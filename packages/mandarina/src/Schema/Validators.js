@@ -2,7 +2,13 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 var ValidatorCreator_1 = require("./ValidatorCreator");
 var exists = function (value) { return value === 0 || value; };
+var noEmpty = function (value) {
+    if (value && value.id)
+        return true;
+    return typeof value === 'object' && Object.keys(value).length > (value.hasOwnProperty('id') ? 1 : 0);
+};
 exports.required = new ValidatorCreator_1.ValidatorCreator(exists, 'required', '{{label}} is required');
+exports.isNoEmpty = new ValidatorCreator_1.ValidatorCreator(noEmpty, 'noEmpty', '{{label}} is required', false, true);
 exports.maxNumber = new ValidatorCreator_1.ValidatorCreator(function (value, param) { return value <= param; }, 'maxNumber', '{{label}} cannot exceed {{param}}');
 exports.maxNumberExclusive = new ValidatorCreator_1.ValidatorCreator(function (value, param) { return value < param; }, 'maxNumberExclusive', '{{label}} must be less than {{param}}');
 exports.minNumber = new ValidatorCreator_1.ValidatorCreator(function (value, param) { return value >= param; }, 'minNumber', '{{label}} must be at least {{param}}');

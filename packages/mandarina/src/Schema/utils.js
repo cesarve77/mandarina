@@ -60,7 +60,7 @@ exports.forceType = function (value, type) {
     // Could not convert
     return value;
 };
-exports.isRequired = function (field) { return exports.hasValidator(field.validators, 'required'); };
+exports.isRequired = function (field) { return exports.hasValidator(field.validators, 'required') || exports.hasValidator(field.validators, 'noEmpty'); };
 exports.hasValidator = function (validators, name) {
     if (!name)
         return false;
