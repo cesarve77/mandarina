@@ -55,7 +55,16 @@ export class Bridge {
         return error && error[name];
     }
 
+    getAncestors=(field:string,parents:string[]=[])=>{
+        const lastDot=field.lastIndexOf('.')
+        console.log(field,lastDot)
 
+        if (lastDot>=0){
+            const parent=field.substring(0,lastDot)
+            return [...this.getAncestors(parent),parent]
+        }
+        return []
+    }
     // All error messages from error.
     getErrorMessages(error: ErrorInterface): string[] {
         //for errors coming from server

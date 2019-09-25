@@ -135,6 +135,7 @@ var Schema = /** @class */ (function () {
         return this.filePath;
     };
     Schema.prototype.validate = function (model, fields) {
+        fields = utils_2.insertParents(fields);
         this.clean(model, fields);
         return this._validate(model, fields);
     };
@@ -177,6 +178,7 @@ var Schema = /** @class */ (function () {
         return __assign({}, this.shape[key]);
     };
     Schema.prototype.applyDefinitionsDefaults = function (definition, key) {
+        var _this = this;
         var fieldDefinition = {};
         if (!definition.validators) {
             definition.validators = [];
@@ -222,20 +224,44 @@ var Schema = /** @class */ (function () {
                 fieldDefinition.isTable = true;
                 fieldDefinition.type = definition.type[0];
                 fieldDefinition.defaultValue = definition.defaultValue || {};
+                fieldDefinition.validators.forEach(function (_a) {
+                    var tableValidator = _a.tableValidator, arrayValidator = _a.arrayValidator, validatorName = _a.validatorName;
+                    if (!tableValidator && !arrayValidator) {
+                        throw new Error("Field \"" + key + "\" in schema \"" + _this.name + "\" only accept validator of type Table or Array and has validator \"" + validatorName + "\"");
+                    }
+                });
             }
             else {
                 fieldDefinition.type = definition.type[0];
                 fieldDefinition.defaultValue = definition.defaultValue || null;
+                fieldDefinition.validators.forEach(function (_a) {
+                    var tableValidator = _a.tableValidator, validatorName = _a.validatorName;
+                    if (tableValidator) {
+                        throw new Error("Field \"" + key + "\" in schema \"" + _this.name + "\" only accept validator of type array or scalar and has validator \"" + validatorName + "\"");
+                    }
+                });
             }
         }
         else if ((typeof definition.type === 'string')) {
             fieldDefinition.isTable = true;
             fieldDefinition.type = definition.type;
             fieldDefinition.defaultValue = definition.defaultValue || {};
+            fieldDefinition.validators.forEach(function (_a) {
+                var tableValidator = _a.tableValidator, validatorName = _a.validatorName;
+                if (!tableValidator) {
+                    throw new Error("Field \"" + key + "\" in schema \"" + _this.name + "\" only accept validator of type Table and has validator \"" + validatorName + "\"");
+                }
+            });
         }
         else {
             fieldDefinition.type = definition.type;
             fieldDefinition.defaultValue = definition.defaultValue === 0 ? 0 : definition.defaultValue || null;
+            fieldDefinition.validators.forEach(function (_a) {
+                var tableValidator = _a.tableValidator, arrayValidator = _a.arrayValidator, validatorName = _a.validatorName;
+                if (tableValidator || arrayValidator) {
+                    throw new Error("Field \"" + key + "\" in schema \"" + _this.name + "\" only accept validator of type scalar and has validator \"" + validatorName + "\"");
+                }
+            });
         }
         definition.permissions = definition.permissions || this.permissions;
         fieldDefinition.permissions = definition.permissions;
@@ -309,15 +335,15 @@ var Schema = /** @class */ (function () {
      * @param removeExtraKeys
      */
     Schema.prototype._clean = function (model, fields, removeExtraKeys) {
+        // if (removeExtraKeys && model && typeof model === 'object') {
+        //     Object.keys(model).forEach((key) => {
+        //         if (!this.keys.includes(key)) {
+        //             delete model[key]
+        //         }
+        //     });
+        // }
         var _this = this;
         if (removeExtraKeys === void 0) { removeExtraKeys = true; }
-        if (removeExtraKeys && model && typeof model === 'object') {
-            Object.keys(model).forEach(function (key) {
-                if (!_this.keys.includes(key)) {
-                    delete model[key];
-                }
-            });
-        }
         this.keys.forEach(function (key) {
             if (key !== '___typename' && fields.every(function (field) { return field !== key && field.indexOf(key + '.') < 0; })) {
                 return model && delete model[key];
@@ -328,8 +354,8 @@ var Schema = /** @class */ (function () {
                 model[key] = model[key] === 0 ? 0 : model[key] || definition.defaultValue;
             }
             else if (definition.isTable && !definition.isArray && typeof model === 'object' && model !== undefined && model !== null) {
-                if (model[key] !== 0 && !model[key]) {
-                    return model[key] = definition.defaultValue;
+                if (!model[key]) {
+                    model[key] = definition.defaultValue;
                 }
                 var schema = Schema.getInstance(definition.type);
                 schema._clean(model[key], utils_2.getDecendentsDot(fields, key));
@@ -381,8 +407,10 @@ var Schema = /** @class */ (function () {
         var _this = this;
         var errors = [];
         var flatModel = flat_1.flatten(model);
-        Object.keys(flatModel).forEach(function (key) {
-            var value = flatModel[key];
+        var flatModelKeys = utils_2.insertParents(Object.keys(flatModel));
+        console.log('flatModelKeys', flatModelKeys);
+        flatModelKeys.forEach(function (key) {
+            var value = lodash_1.get(model, key);
             var cleanKey = Schema.cleanKey(key);
             if (fields && !fields.includes(cleanKey))
                 return;
@@ -390,6 +418,12 @@ var Schema = /** @class */ (function () {
             var definition = _this.getPathDefinition(cleanKey);
             for (var _i = 0, _a = definition.validators; _i < _a.length; _i++) {
                 var validator = _a[_i];
+                if (definition.isTable &&
+                    validator.tableValidator &&
+                    key.match(/\.\d+$/) //if is a scalar like user.0
+                ) {
+                    continue;
+                }
                 if (definition.isArray &&
                     validator.arrayValidator &&
                     key.match(/\.\d+$/) //if is a scalar like user.0
@@ -398,6 +432,7 @@ var Schema = /** @class */ (function () {
                 }
                 var instance = new validator({ key: last, path: key, definition: definition, value: value });
                 var error = instance.validate(model);
+                console.log('******', last, key, value, validator.validatorName, error);
                 if (error) {
                     errors.push(error);
                 }

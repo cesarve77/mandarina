@@ -2,7 +2,14 @@ import {ValidatorCreator} from "./ValidatorCreator";
 
 const exists = (value: any) => value === 0 || value
 
+const noEmpty = (value: any) => {
+    if (value && value.id) return true
+    return typeof value === 'object' && Object.keys(value).length > (value.hasOwnProperty('id') ? 1 : 0)
+}
+
 export const required = new ValidatorCreator(exists, 'required', '{{label}} is required')
+
+export const isNoEmpty = new ValidatorCreator(noEmpty, 'noEmpty', '{{label}} is required', false, true)
 
 export const maxNumber = new ValidatorCreator((value, param) => value <= param, 'maxNumber', '{{label}} cannot exceed {{param}}')
 

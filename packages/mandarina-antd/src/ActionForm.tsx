@@ -98,16 +98,6 @@ class ActionForm extends PureComponent<WithApolloClient<ActionFormProps>> {
                                   onSubmitSuccess={onSubmitSuccess}
                                   onSubmitFailure={onSubmitFailure}
                                   schema={bridge}
-                                  onValidate={(model: Object, error: any, callback: any) => {
-                                      try {
-                                          bridge.getValidator()(model)
-
-                                      } catch (e) {
-                                          console.error(e)
-                                          return callback(e)
-                                      }
-                                      return callback(null)
-                                  }}
                                   onChange={(key: string, value: any) => {
                                       if (error) this.setState({changed: true})
                                       onChange && onChange(key, value)

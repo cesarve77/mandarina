@@ -9,6 +9,7 @@ import {isEmpty,merge} from "lodash";
 import {DefaultCellComponent} from "./ListVirtualized";
 import {FindQueryProps} from "mandarina/build/Operations/Find";
 import {deepClone} from "mandarina/build/Operations/Mutate";
+import {Result} from "antd";
 //import ListHeader from "./ListHeader";
 export type onResize = (e: any, {size}: { size: { width: number } }) => void
 
@@ -237,6 +238,7 @@ export class List extends React.Component<ListProps, { columns: ColumnProps<any>
                       {...findBaseProps}
                 >
                     {({data = [], variables, refetch, loading, count, pageInfo, fetchMore, error}) => {
+                        if (error) return <Result status={"500"} subTitle={error.message}/>
                         this.refetch = refetch
                         this.variables = variables
                         this.buildFetchMore(fetchMore, pageInfo && pageInfo.endCursor)

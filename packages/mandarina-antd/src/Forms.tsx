@@ -149,15 +149,7 @@ const Form = ({
                         autoField={AutoField}
                         onSubmitSuccess={onSubmitSuccess}
                         onSubmitFailure={onSubmitFailure}
-                        onValidate={(model: Object, error: any, callback: any) => {
-                            try {
-                                bridge.getValidator()(model)
-                            } catch (e) {
-                                console.error(e)
-                                return callback(e)
-                            }
-                            return callback(null)
-                        }}
+
                     >
 
                         {children && typeof children !== "function" && children}

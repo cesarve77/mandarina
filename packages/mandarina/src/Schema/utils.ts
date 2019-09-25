@@ -63,7 +63,7 @@ export const forceType = (value: any, type: Native): any => {
 }
 
 
-export const isRequired = (field: FieldDefinition): boolean =>hasValidator(field.validators,'required')
+export const isRequired = (field: FieldDefinition): boolean =>hasValidator(field.validators,'required') ||  hasValidator(field.validators,'noEmpty')
 
 export const hasValidator = (validators: Validator[],name?: string): boolean => {
     if (!name) return false

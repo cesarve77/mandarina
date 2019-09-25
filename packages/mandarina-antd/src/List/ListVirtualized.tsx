@@ -16,7 +16,7 @@ import {CellComponent, FilterMethod, Overwrite} from "mandarina/build/Schema/Sch
 import Dropdown from "antd/lib/dropdown";
 import Empty from "antd/lib/empty";
 import Icon  from "antd/lib/icon";
-import  Menu from "antd/lib/menu";
+import Menu from "antd/lib/menu";
 import {getDefaultFilterMethod} from "./ListFilters";
 import {ReactComponentLike} from "prop-types";
 import {get} from "mandarina/build/Schema/utils";
@@ -30,6 +30,7 @@ import arrayMove from 'array-move'
 import {deepClone} from "mandarina/build/Operations/Mutate";
 import {equalityFn} from "./utils";
 import Query from "react-apollo/Query";
+import {Result} from "antd";
 
 export interface OnHideColumn {
     (field: string, index: number): void//todo variables format
@@ -461,7 +462,7 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
             }
             return menu
         }, [])
-        if (hiddenColumnMenu.length===0){
+        if (hiddenColumnMenu.length === 0) {
             hiddenColumnMenu.push(<Menu.Item key={'mandarina_oHiddenColumn'} disabled>No
                 hidden columns</Menu.Item>)
         }
@@ -470,7 +471,9 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
                   sort={sort}
                   fields={fields}
                   notifyOnNetworkStatusChange>
-                {({data = [], query, variables, refetch, loading, count, client}) => {
+                {({data = [], query, variables, error, refetch, loading, count, client}) => {
+                    console.log('error', error)
+
                     let dataCollection = data;
                     if (this.data.length === 0 && data && !loading) {
                         this.data = Array(count).fill(undefined)
@@ -524,6 +527,7 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
                                            where={whereAndFilter}
                                            {...header}/>
                     }
+
                     return (
                         <>
                             {headerNode}
@@ -566,8 +570,8 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
                                         </SortableColumns>
                                     </div>
                                 </Dropdown>
-
-                                {!loading && !count && <Empty style={{margin: '40px'}}/>}
+                                {error && <Result status={"500"} subTitle={error.message}/>}
+                                {!error && !loading && !count && <Empty style={{margin: '40px'}}/>}
                                 {height !== 0 &&
                                 <Grid
                                     ref={this.gridRef}

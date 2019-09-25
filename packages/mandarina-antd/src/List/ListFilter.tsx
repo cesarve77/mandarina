@@ -3,7 +3,8 @@ import AutoForm from "uniforms-antd/AutoForm";
 import {Schema} from "mandarina";
 import {Bridge} from "../Bridge";
 import {getDefaultComponent} from "./ListFilters";
-import {FilterComponent} from "mandarina/build/Schema/Schema";
+import {FieldDefinition, FilterComponent} from "mandarina/build/Schema/Schema";
+import {deepClone} from "mandarina/build/Operations/Mutate";
 
 export const uuid = () => 'i' + (Date.now() - 1540000000000 + Math.random()).toString(36)
 
@@ -21,15 +22,15 @@ interface ListFilterProps {
 }
 
 export const ListFilter = React.memo(({onFilterChange, field, filter, schema}: ListFilterProps) => {
-        const fieldDefinition = schema.getPathDefinition(field)
+        const fieldDefinition: FieldDefinition = deepClone(schema.getPathDefinition(field))
         let FieldComponent: FilterComponent
-        if (fieldDefinition.isTable){
-            if (fieldDefinition.list.filterComponent === undefined ){
+        if (fieldDefinition.isTable) {
+            if (fieldDefinition.list.filterComponent === undefined) {
                 throw new Error(`Field: "${field}" you need to set "list.noFilter" to true, or pass your custom filterComponent  "`)
-            }else{
-                FieldComponent=fieldDefinition.list.filterComponent
+            } else {
+                FieldComponent = fieldDefinition.list.filterComponent
             }
-        }else{
+        } else {
             FieldComponent = fieldDefinition.list.filterComponent === undefined ? getDefaultComponent(field, fieldDefinition) : fieldDefinition.list.filterComponent
         }
         const name = uuid() //todo remove this dependeincy making schema get optional name
@@ -40,7 +41,7 @@ export const ListFilter = React.memo(({onFilterChange, field, filter, schema}: L
         }, {
             name
         })
-        const bridge = new Bridge(filterSchema,filterSchema.getFields())
+        const bridge = new Bridge(filterSchema, filterSchema.getFields())
         return FieldComponent && (
             <AutoForm schema={bridge} autosave autosaveDelay={400}
                 // onChangeModel={(model: any) => console.log(model)}
@@ -58,7 +59,6 @@ export const ListFilter = React.memo(({onFilterChange, field, filter, schema}: L
         )
     },
     (prevProps, nextProps) => {
-    return true
         return prevProps.field === nextProps.field && prevProps.onFilterChange === nextProps.onFilterChange && prevProps.schema === nextProps.schema;
     }
 )

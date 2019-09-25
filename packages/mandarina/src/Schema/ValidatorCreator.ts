@@ -22,12 +22,14 @@ export class ValidatorCreator {
     public template: string;
     public validation: Validation;
     public arrayValidator: boolean;
+    public tableValidator: boolean;
 
-    constructor(validation: Validation, name: string, template: string = '{{label}} is invalid.', arrayValidator: boolean = false) {
+    constructor(validation: Validation, name: string, template: string = '{{label}} is invalid.', arrayValidator: boolean = false, tableValidator: boolean = false) {
         this.validation = validation
         this.template = template
         this.name = name
         this.arrayValidator = arrayValidator
+        this.tableValidator = tableValidator
         ValidatorCreator.instances = ValidatorCreator.instances || {}
         if (ValidatorCreator.instances[name]) throw new Error(`Validator named ${name} already exists, names should be uniques`)
         ValidatorCreator.instances[name] = this
@@ -64,9 +66,11 @@ export class ValidatorCreator {
         const validation = this.validation
         const template = this.template
         const arrayValidator = this.arrayValidator
+        const tableValidator = this.tableValidator
         const validator = class Validator implements ValidatorInterface {
             static param: any
             static arrayValidator: boolean = arrayValidator
+            static tableValidator: boolean = tableValidator
             static validatorName: string | undefined = name
             key: string
             label: string
@@ -109,6 +113,7 @@ export class ValidatorCreator {
         }
         validator.param = param
         validator.arrayValidator = arrayValidator
+        validator.tableValidator = tableValidator
         return validator
 
     }
@@ -128,6 +133,7 @@ export interface ValidatorInterface {
 export interface Validator {
     validatorName: string | undefined
     arrayValidator: boolean
+    tableValidator: boolean
     param: any
 
     new({key, definition, path, value}: ValidatorParams): ValidatorInterface

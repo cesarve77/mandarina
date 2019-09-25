@@ -1,8 +1,18 @@
-import {getSubSchemaMutations} from './Mutate'
+import {deepClone, getSubSchemaMutations} from './Mutate'
 import {User} from "../../../../__TEST__/app/lib/schemas/User";
 
 
 describe('Mutate', () => {
+    describe('deepClone', () => {
+        test("deepClone functionz ", () => {
+            const obj = {a: 1, b: 2, f: (x) => x * 2}
+            const clone=deepClone(obj)
+            const rest=clone.f(4)
+            expect(rest).toBe(8)
+        })
+
+    })
+
     describe('getSubSchemaMutations', () => {
         test("1 to n table create -> create ", () => {
             const subMutations = getSubSchemaMutations({

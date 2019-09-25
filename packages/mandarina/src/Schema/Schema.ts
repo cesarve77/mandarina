@@ -1,12 +1,12 @@
 // @ts-ignore
-import {mapValues} from 'lodash';
+import {get, mapValues} from 'lodash';
 import * as inflection from "inflection";
 import {ErrorValidator, Validator, ValidatorCreator} from "./ValidatorCreator";
 import {isDate, isInteger, isNumber, isString, required} from "./Validators";
 import {capitalize, forceType, hasValidator, pluralize, singularize} from "./utils";
 import {UniqueSchemaError} from '../Errors/UniqueSchemaError';
 import {SchemaInstanceNotFound} from '../Errors/SchemaInstanceNotFound';
-import {getDecendentsDot} from "../utils";
+import {getDecendentsDot, insertParents} from "../utils";
 import * as React from "react";
 import {flatten} from "flat";
 
@@ -160,6 +160,7 @@ export class Schema {
     }
 
     validate(model: Model, fields: string[]): ErrorValidator[] {
+        fields=insertParents(fields)
         this.clean(model, fields)
         return this._validate(model, fields);
     }
@@ -257,18 +258,31 @@ export class Schema {
                 fieldDefinition.isTable = true
                 fieldDefinition.type = definition.type[0]
                 fieldDefinition.defaultValue = definition.defaultValue || {};
+                fieldDefinition.validators.forEach(({tableValidator,arrayValidator,validatorName})=>{if (!tableValidator && !arrayValidator){
+                    throw new Error(`Field "${key}" in schema "${this.name}" only accept validator of type Table or Array and has validator "${validatorName}"`)
+                }})
             } else {
                 fieldDefinition.type = definition.type[0] as Native
                 fieldDefinition.defaultValue = definition.defaultValue || null;
+                fieldDefinition.validators.forEach(({tableValidator,validatorName})=>{if (tableValidator){
+                    throw new Error(`Field "${key}" in schema "${this.name}" only accept validator of type array or scalar and has validator "${validatorName}"`)
+                }})
             }
 
         } else if ((typeof definition.type === 'string')) {
             fieldDefinition.isTable = true
             fieldDefinition.type = definition.type as string
             fieldDefinition.defaultValue = definition.defaultValue || {};
+            fieldDefinition.validators.forEach(({tableValidator,validatorName})=>{if (!tableValidator){
+                throw new Error(`Field "${key}" in schema "${this.name}" only accept validator of type Table and has validator "${validatorName}"`)
+            }})
         } else {
             fieldDefinition.type = definition.type
             fieldDefinition.defaultValue = definition.defaultValue === 0 ? 0 : definition.defaultValue || null;
+
+            fieldDefinition.validators.forEach(({tableValidator,arrayValidator,validatorName})=>{if (tableValidator ||arrayValidator){
+                throw new Error(`Field "${key}" in schema "${this.name}" only accept validator of type scalar and has validator "${validatorName}"`)
+            }})
         }
 
 
@@ -344,13 +358,13 @@ export class Schema {
      */
     protected _clean(model: Model | undefined | null, fields: string[], removeExtraKeys = true) {
 
-        if (removeExtraKeys && model && typeof model === 'object') {
-            Object.keys(model).forEach((key) => {
-                if (!this.keys.includes(key)) {
-                    delete model[key]
-                }
-            });
-        }
+        // if (removeExtraKeys && model && typeof model === 'object') {
+        //     Object.keys(model).forEach((key) => {
+        //         if (!this.keys.includes(key)) {
+        //             delete model[key]
+        //         }
+        //     });
+        // }
 
         this.keys.forEach((key): any => {
             if (key !== '___typename' && fields.every((field) => field !== key && field.indexOf(key + '.') < 0)) {
@@ -363,8 +377,8 @@ export class Schema {
                 model[key] = model[key] === 0 ? 0 : model[key] || definition.defaultValue;
 
             } else if (definition.isTable && !definition.isArray && typeof model === 'object' && model !== undefined && model !== null) {
-                if (model[key] !== 0 && !model[key]) {
-                    return model[key] = definition.defaultValue;
+                if (!model[key]) {
+                    model[key] = definition.defaultValue;
                 }
                 const schema = Schema.getInstance(definition.type)
                 schema._clean(model[key], getDecendentsDot(fields, key));
@@ -420,14 +434,23 @@ export class Schema {
     private _validate(model: Model, fields?: string[]): ErrorValidator[] {
         let errors: ErrorValidator[] = [];
         const flatModel = flatten(model)
-        Object.keys(flatModel).forEach(key => {
+        const flatModelKeys = insertParents(Object.keys(flatModel))
+        console.log('flatModelKeys', flatModelKeys)
 
-            const value = flatModel[key]
+        flatModelKeys.forEach(key => {
+            const value = get(model, key)
             const cleanKey = Schema.cleanKey(key)
             if (fields && !fields.includes(cleanKey)) return
             const last = cleanKey.split('.').pop() as string
             const definition = this.getPathDefinition(cleanKey);
             for (const validator of definition.validators) {
+                if (
+                    definition.isTable &&
+                    validator.tableValidator &&
+                    key.match(/\.\d+$/)  //if is a scalar like user.0
+                ) {
+                    continue
+                }
                 if (
                     definition.isArray &&
                     validator.arrayValidator &&
@@ -437,6 +460,8 @@ export class Schema {
                 }
                 const instance = new validator({key: last, path: key, definition, value});
                 const error = instance.validate(model);
+                console.log('******',last,key,value,validator.validatorName,error)
+
                 if (error) {
                     errors.push(error);
                 }
