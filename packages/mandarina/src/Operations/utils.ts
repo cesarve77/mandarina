@@ -17,4 +17,3 @@ export const buildQueryFromFields = (keys: string[], sureId = true) => {
     const obj = unflatten(fieldsFlat)
     return JSON.stringify(obj).replace(/\{\}|\"|\:|null/g, '')
 }
-

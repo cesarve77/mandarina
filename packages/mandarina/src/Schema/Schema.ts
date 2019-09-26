@@ -9,7 +9,6 @@ import {SchemaInstanceNotFound} from '../Errors/SchemaInstanceNotFound';
 import {getDecendentsDot, insertParents} from "../utils";
 import * as React from "react";
 import {flatten} from "flat";
-import {deepClone} from "../Operations/Mutate";
 
 
 /**
@@ -139,10 +138,7 @@ export class Schema {
 
     clean(model: Model, fields: string[]) {
         this.original = model;
-        console.log(11111,deepClone(model))
         this._clean(model, fields);
-        console.log(22222,deepClone(model))
-
     }
 
     getFilePath() {

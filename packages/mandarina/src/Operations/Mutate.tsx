@@ -15,12 +15,9 @@ import {generateUUID} from "../utils";
 
 export const deepClone = (obj: any): any => {
     return deepCloneLodash(obj)
-    // const result=JSON.parse(JSON.stringify(obj))
-    // if (typeof obj.type==='function'){
-    //     result.type=obj.type
-    // }
-    // return result
 }
+
+
 export type MutateResultProps =
     { refetchSchemas?: string[] }
     & Pick<MutationProps, 'client' | 'ignoreResults' | 'variables' | 'optimisticResponse' | 'refetchQueries' | 'awaitRefetchQueries' | 'update' | 'onCompleted' | 'onError' | 'context' | 'fetchPolicy'>
