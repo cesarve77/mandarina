@@ -41,30 +41,29 @@ export class Bridge {
 
 
     // Field's scoped error.
-    getError(name: string, error: ErrorInterface): string | undefined {
+    getError(name: string, error: ErrorInterface): true | string | undefined {
+        if (error && typeof error.message === 'string' && this.schema.errorFromServerMapper) {
+            return this.schema.errorFromServerMapper(name, error)
+        }
+        if (error && Object.keys(error).some(e=>e.match(new RegExp(`^${name}\\.`)))) return true
+        return error && error[name];
+    }
+
+    getErrorMessage(name: string, error: ErrorInterface):  string | undefined {
         if (error && typeof error.message === 'string' && this.schema.errorFromServerMapper) {
             return this.schema.errorFromServerMapper(name, error)
         }
         return error && error[name];
     }
 
-    getErrorMessage(name: string, error: ErrorInterface): string | undefined {
-        if (error && typeof error.message === 'string' && this.schema.errorFromServerMapper) {
-            return this.schema.errorFromServerMapper(name, error)
+    getAncestors=(field:string): string[]=>{
+        const lastDot=field.lastIndexOf('.')
+        if (lastDot>=0){
+            const parent=field.substring(0,lastDot)
+            return [...this.getAncestors(parent),parent]
         }
-        return error && error[name];
+        return []
     }
-
-    // getAncestors=(field:string,parents:string[]=[])=>{
-    //     const lastDot=field.lastIndexOf('.')
-    //     console.log(field,lastDot)
-    //
-    //     if (lastDot>=0){
-    //         const parent=field.substring(0,lastDot)
-    //         return [...this.getAncestors(parent),parent]
-    //     }
-    //     return []
-    // }
     // All error messages from error.
     getErrorMessages(error: ErrorInterface): string[] {
         //for errors coming from server
@@ -81,9 +80,11 @@ export class Bridge {
             return [error.message.replace('GraphQL error:', '')]
         }
         //for errors generates here
-        return error
-            ? Object.keys(error).map(field => error[field])
-            : [];
+        if (error){
+            return Object.keys(error).map(field => error[field])
+        }
+        return []
+
     }
 
     // Field's definition (`field` prop).

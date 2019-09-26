@@ -9,6 +9,7 @@ import {SchemaInstanceNotFound} from '../Errors/SchemaInstanceNotFound';
 import {getDecendentsDot, insertParents} from "../utils";
 import * as React from "react";
 import {flatten} from "flat";
+import {deepClone} from "../Operations/Mutate";
 
 
 /**
@@ -138,7 +139,10 @@ export class Schema {
 
     clean(model: Model, fields: string[]) {
         this.original = model;
+        console.log(11111,deepClone(model))
         this._clean(model, fields);
+        console.log(22222,deepClone(model))
+
     }
 
     getFilePath() {
@@ -358,13 +362,13 @@ export class Schema {
      */
     protected _clean(model: Model | undefined | null, fields: string[], removeExtraKeys = true) {
 
-        // if (removeExtraKeys && model && typeof model === 'object') {
-        //     Object.keys(model).forEach((key) => {
-        //         if (!this.keys.includes(key)) {
-        //             delete model[key]
-        //         }
-        //     });
-        // }
+        if (removeExtraKeys && model && typeof model === 'object') {
+            Object.keys(model).forEach((key) => {
+                if (!this.keys.includes(key)) {
+                    delete model[key]
+                }
+            });
+        }
 
         this.keys.forEach((key): any => {
             if (key !== '___typename' && fields.every((field) => field !== key && field.indexOf(key + '.') < 0)) {
@@ -374,10 +378,10 @@ export class Schema {
 
             if (!definition.isTable && typeof model === 'object' && model !== undefined && model !== null) {
                 model[key] = forceType(model[key], definition.type);
-                model[key] = model[key] === 0 ? 0 : model[key] || definition.defaultValue;
+                model[key] = model[key] === undefined ||  model[key] === null ? definition.defaultValue : model[key]
 
             } else if (definition.isTable && !definition.isArray && typeof model === 'object' && model !== undefined && model !== null) {
-                if (!model[key]) {
+                if (model[key]===null || model[key]===undefined) {
                     model[key] = definition.defaultValue;
                 }
                 const schema = Schema.getInstance(definition.type)
