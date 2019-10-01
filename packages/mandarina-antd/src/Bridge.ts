@@ -27,7 +27,7 @@ export class Bridge {
     protected fieldDefinitions: { [field: string]: FieldDefinition } = {}
     protected fieldProps: { [field: string]: FieldProps } = {}
 
-    constructor(schema: Schema, fields:string[],overwrite?: Overwrite) {
+    constructor(schema: Schema, fields: string[], overwrite?: Overwrite) {
         if (!schema) throw new Error('Param "schema" missing creating a new Bridge')
         if (!fields) throw new Error('Param "fields" missing creating a new Bridge')
         this.fields = fields
@@ -45,25 +45,26 @@ export class Bridge {
         if (error && typeof error.message === 'string' && this.schema.errorFromServerMapper) {
             return this.schema.errorFromServerMapper(name, error)
         }
-        if (error && Object.keys(error).some(e=>e.match(new RegExp(`^${name}\\.`)))) return true
+        if (error && Object.keys(error).some(e => e.match(new RegExp(`^${name}\\.`)))) return true
         return error && error[name];
     }
 
-    getErrorMessage(name: string, error: ErrorInterface):  string | undefined {
+    getErrorMessage(name: string, error: ErrorInterface): string | undefined {
         if (error && typeof error.message === 'string' && this.schema.errorFromServerMapper) {
             return this.schema.errorFromServerMapper(name, error)
         }
         return error && error[name];
     }
 
-    getAncestors=(field:string): string[]=>{
-        const lastDot=field.lastIndexOf('.')
-        if (lastDot>=0){
-            const parent=field.substring(0,lastDot)
-            return [...this.getAncestors(parent),parent]
+    getAncestors = (field: string): string[] => {
+        const lastDot = field.lastIndexOf('.')
+        if (lastDot >= 0) {
+            const parent = field.substring(0, lastDot)
+            return [...this.getAncestors(parent), parent]
         }
         return []
     }
+
     // All error messages from error.
     getErrorMessages(error: ErrorInterface): string[] {
         //for errors coming from server
@@ -80,7 +81,7 @@ export class Bridge {
             return [error.message.replace('GraphQL error:', '')]
         }
         //for errors generates here
-        if (error){
+        if (error) {
             return Object.keys(error).map(field => error[field])
         }
         return []
@@ -127,7 +128,7 @@ export class Bridge {
             let item = {}
             if (field.isTable) {
                 const schema = Schema.getInstance(field.type)
-                schema.clean(item,this.fields)
+                schema.clean(item, this.fields)
             }
 
             return item
@@ -172,7 +173,7 @@ export class Bridge {
             const validatorIsAllowed = this.findValidator('isAllowed', field)
             let allowedValues: any[] | undefined = undefined
             if (validatorIsAllowed) allowedValues = validatorIsAllowed.param
-            const required = !!this.findValidator('required', field)
+            const required = !!(this.findValidator('required', field) || this.findValidator('noEmpty', field))
             let uniforms = field.form, component = field.form.component
             let placeholder = field.form && field.form.props && field.form.props.placeholder
             if (props.placeholder === false || props.placeholder === null) {
@@ -223,14 +224,14 @@ export class Bridge {
     getValidator(): (model: any) => void {
         return (model: any) => {
             let enter = false
-            const errors = this.schema.validate(model,this.fields)
+            const errors = this.schema.validate(model, this.fields)
             if (errors.length) {
                 const error = {}
                 errors.forEach((e) => {
-                        if (this.fields.includes(Schema.cleanKey(e.path))) {
-                            enter = true
-                            error[e.path] = e.message
-                        }
+                    if (this.fields.includes(Schema.cleanKey(e.path))) {
+                        enter = true
+                        error[e.path] = e.message
+                    }
                 })
                 if (enter) throw {...error}
 

@@ -11,6 +11,7 @@ import {ErrorFromServerMapper} from "mandarina/src/Schema/Schema";
 import Mandarina from "../Mandarina";
 import {deepClone} from "mandarina/build/Operations/Mutate";
 import {flatten} from "flat";
+import graphqlFields = require("graphql-fields");
 
 // import {flatten, unflatten} from "flat";
 
@@ -120,6 +121,7 @@ export class Table {
                     // }
                     this.schema.validateMutation(action, deepClone(args), user && user.roles);
                     await this.callHook(this.name, <HookName>`before${capitalizedAction}`, _, args, context, info);
+
                     /*
                     HACK https://github.com/prisma/prisma/issues/4327
                      */
@@ -147,12 +149,25 @@ export class Table {
                     context.result = result
                     await this.callHook(this.name, <HookName>`after${capitalizedAction}`, _, args, context, info);
                     //this.validatePermissions('read', roles, fieldsList(info));
+
                 }
                 if (type === 'query') {
-                    const graphqlFields = require('graphql-fields');
-                    console.log(flatten(graphqlFields(info)))
+
                     await this.callHook(this.name, 'beforeQuery', _, args, context, info);
-                    //this.validatePermissions('read', roles, fieldsList(info));
+
+                    console.log('subOperationName', subOperationName)
+                    const obj = graphqlFields(info)
+                    let flatFields: string[]
+                    //todo do somethig better validating what kind of query im running connection or query
+                    if (obj.edges && obj.edges.node) {
+                        flatFields = Object.keys(flatten(obj.edges.node))
+                    } else {
+                        flatFields = Object.keys(flatten(obj))
+                    }
+                    flatFields = flatFields.filter(f => !f.match(/\.?__typename$/))
+                    if (!obj.aggregate || !obj.aggregate.count) {
+                        this.schema.validateQuery(flatFields, user && user.roles || []);
+                    }
                     result = await prismaMethod(args, info);
                     // console.log(graphqlFields(info))
                     context.result = result
@@ -189,7 +204,7 @@ export class Table {
      * @param context
      * @param info
      */
-    private async callHook(schemaName: string, name: HookName, _: any, args: any, context: any, info: any) {
+    async callHook(schemaName: string, name: HookName, _: any, args: any, context: any, info: any) {
         console.log('--------------------')
         console.log(schemaName, name, args)
         console.log('--------------------')
@@ -235,7 +250,7 @@ export class Table {
             }
         } catch (e) {
             console.error(`Error executing hook: "${name}" in Table: ${schemaName}"`)
-            console.error(e)
+            throw e
         }
 
     }

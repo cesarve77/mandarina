@@ -54,6 +54,7 @@ var MissingIDTableError_1 = require("mandarina/build/Errors/MissingIDTableError"
 var Mandarina_1 = require("../Mandarina");
 var Mutate_1 = require("mandarina/build/Operations/Mutate");
 var flat_1 = require("flat");
+var graphqlFields = require("graphql-fields");
 // import {flatten, unflatten} from "flat";
 /**
  *
@@ -119,7 +120,7 @@ var Table = /** @class */ (function () {
             result[operationName] = function (_, args, context, info) {
                 if (args === void 0) { args = {}; }
                 return __awaiter(_this, void 0, void 0, function () {
-                    var user, time, bm, subOperationName, action, prismaMethod, result, capitalizedAction, graphqlFields;
+                    var user, time, bm, subOperationName, action, prismaMethod, result, capitalizedAction, obj, flatFields;
                     return __generator(this, function (_a) {
                         switch (_a.label) {
                             case 0: return [4 /*yield*/, Mandarina_1.default.config.getUser(context)
@@ -190,14 +191,25 @@ var Table = /** @class */ (function () {
                                 _a.label = 6;
                             case 6:
                                 if (!(type === 'query')) return [3 /*break*/, 10];
-                                graphqlFields = require('graphql-fields');
-                                console.log(flat_1.flatten(graphqlFields(info)));
                                 return [4 /*yield*/, this.callHook(this.name, 'beforeQuery', _, args, context, info)];
                             case 7:
                                 _a.sent();
+                                console.log('subOperationName', subOperationName);
+                                obj = graphqlFields(info);
+                                flatFields = void 0;
+                                //todo do somethig better validating what kind of query im running connection or query
+                                if (obj.edges && obj.edges.node) {
+                                    flatFields = Object.keys(flat_1.flatten(obj.edges.node));
+                                }
+                                else {
+                                    flatFields = Object.keys(flat_1.flatten(obj));
+                                }
+                                flatFields = flatFields.filter(function (f) { return !f.match(/\.?__typename$/); });
+                                if (!obj.aggregate || !obj.aggregate.count) {
+                                    this.schema.validateQuery(flatFields, user && user.roles || []);
+                                }
                                 return [4 /*yield*/, prismaMethod(args, info)];
                             case 8:
-                                //this.validatePermissions('read', roles, fieldsList(info));
                                 result = _a.sent();
                                 // console.log(graphqlFields(info))
                                 context.result = result;
@@ -314,8 +326,7 @@ var Table = /** @class */ (function () {
                     case 19:
                         e_1 = _c.sent();
                         console.error("Error executing hook: \"" + name + "\" in Table: " + schemaName + "\"");
-                        console.error(e_1);
-                        return [3 /*break*/, 20];
+                        throw e_1;
                     case 20: return [2 /*return*/];
                 }
             });

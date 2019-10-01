@@ -429,8 +429,8 @@ export const getSubSchemaMutations = (model: Model, schema: Schema, mutationType
                     obj[key] = null
                 }
                 let result: { create?: any[], update?: any[], set?: any[] } = {}
-                if (value.length === 0 && mutationType === 'update') result.set = []
-                value.forEach((item: any) => {
+                if (value && value.length === 0 && mutationType === 'update') result.set = []
+                value && value.forEach((item: any) => {
                     if (item && item.id && Object.keys(item).length === 1) {
                         result['connect'] = result['connect'] || []
                         result['connect'].push(getSubSchemaMutations(item, schema, mutationType))

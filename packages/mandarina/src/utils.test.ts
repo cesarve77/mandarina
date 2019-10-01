@@ -1,4 +1,4 @@
-import { getParentsDot} from "./utils";
+import {generateRandomAlpha, generateRandomNumber, getParentsDot} from "./utils";
 
 const fields = [
     'loggedAt',
@@ -102,7 +102,20 @@ const fields = [
     'inspections.familyStatus'
 ]
 describe('util ', () => {
+    test('generateRandomNumber',()=>{
+        const r=generateRandomNumber(5,11)
+        console.log('r',r)
+        expect(r).toBeGreaterThanOrEqual(5)
+        expect(r).toBeLessThanOrEqual(11)
 
+    })
+    test('generateRandomAlpha',()=>{
+        const r=generateRandomAlpha(16)
+        console.log('r',r)
+        expect(r.length).toBe(16)
+
+
+    })
     test("getParentsDot", () => {
         let parents=getParentsDot(fields)
         expect(parents).toMatchObject([ 'loggedAt',

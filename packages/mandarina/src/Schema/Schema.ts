@@ -10,7 +10,6 @@ import {getDecendentsDot, insertParents} from "../utils";
 import * as React from "react";
 import {flatten} from "flat";
 
-
 /**
  * Schema is the base of all components in Mandarina
  *
@@ -160,12 +159,12 @@ export class Schema {
     }
 
     validate(model: Model, fields: string[]): ErrorValidator[] {
-        fields=insertParents(fields)
+        fields = insertParents(fields)
         this.clean(model, fields)
         return this._validate(model, fields);
     }
 
-    getSchemaPermission(roles: string[], action: Action) {
+    getSchemaPermission(roles: string[]=[], action: Action) {
         if (!this.permissions) return true
         for (const role in roles) {
             if (!this.permissions[action]) return true
@@ -175,16 +174,19 @@ export class Schema {
         return false
     }
 
-    getFieldPermission(field: string, roles: string[], action: Action) {
-        const parentPath = field.split('.').shift() as string
+    getFieldPermission(field: string, roles: string[]=[], action: Action) {
+        const lastDot=field.lastIndexOf('.')
+        const parentPath = field.substring(0,lastDot)
         const def = this.getPathDefinition(field)
-        let parentDef: FieldDefinition | undefined
+        let parentRoles:string[]=[]
         if (parentPath) {
-            parentDef = this.getPathDefinition(parentPath)
+            const parentDef = this.getPathDefinition(parentPath)
+            parentRoles = parentDef.permissions[action] || ['everybody']
+        }else{
+            parentRoles = this.permissions[action] || ['everybody']
         }
-        const parentRoles = parentDef && parentDef.permissions[action]
         const fieldRoles = def.permissions[action]
-        const lappedRoles = parentRoles || fieldRoles
+        const lappedRoles = fieldRoles || parentRoles
         for (const role of roles) {
             this.fieldsPermissions[field] = this.fieldsPermissions[field] || {}
             this.fieldsPermissions[field][role] = this.fieldsPermissions[field][role] || {}
@@ -193,8 +195,10 @@ export class Schema {
                     (lappedRoles.includes('everybody') || lappedRoles.includes(role)) &&
                     !lappedRoles.includes('nobody'))
             }
+
             if (this.fieldsPermissions[field][role][action]) return true;
         }
+
         return false
     }
 
@@ -258,31 +262,39 @@ export class Schema {
                 fieldDefinition.isTable = true
                 fieldDefinition.type = definition.type[0]
                 fieldDefinition.defaultValue = definition.defaultValue || {};
-                fieldDefinition.validators.forEach(({tableValidator,arrayValidator,validatorName})=>{if (!tableValidator && !arrayValidator){
-                    throw new Error(`Field "${key}" in schema "${this.name}" only accept validator of type Table or Array and has validator "${validatorName}"`)
-                }})
+                fieldDefinition.validators.forEach(({tableValidator, arrayValidator, validatorName}) => {
+                    if (!tableValidator && !arrayValidator) {
+                        throw new Error(`Field "${key}" in schema "${this.name}" only accept validator of type Table or Array and has validator "${validatorName}"`)
+                    }
+                })
             } else {
                 fieldDefinition.type = definition.type[0] as Native
                 fieldDefinition.defaultValue = definition.defaultValue || null;
-                fieldDefinition.validators.forEach(({tableValidator,validatorName})=>{if (tableValidator){
-                    throw new Error(`Field "${key}" in schema "${this.name}" only accept validator of type array or scalar and has validator "${validatorName}"`)
-                }})
+                fieldDefinition.validators.forEach(({tableValidator, validatorName}) => {
+                    if (tableValidator) {
+                        throw new Error(`Field "${key}" in schema "${this.name}" only accept validator of type array or scalar and has validator "${validatorName}"`)
+                    }
+                })
             }
 
         } else if ((typeof definition.type === 'string')) {
             fieldDefinition.isTable = true
             fieldDefinition.type = definition.type as string
             fieldDefinition.defaultValue = definition.defaultValue || {};
-            fieldDefinition.validators.forEach(({tableValidator,validatorName})=>{if (!tableValidator){
-                throw new Error(`Field "${key}" in schema "${this.name}" only accept validator of type Table and has validator "${validatorName}"`)
-            }})
+            fieldDefinition.validators.forEach(({tableValidator, validatorName}) => {
+                if (!tableValidator) {
+                    throw new Error(`Field "${key}" in schema "${this.name}" only accept validator of type Table and has validator "${validatorName}"`)
+                }
+            })
         } else {
             fieldDefinition.type = definition.type
             fieldDefinition.defaultValue = definition.defaultValue === 0 ? 0 : definition.defaultValue || null;
 
-            fieldDefinition.validators.forEach(({tableValidator,arrayValidator,validatorName})=>{if (tableValidator ||arrayValidator){
-                throw new Error(`Field "${key}" in schema "${this.name}" only accept validator of type scalar and has validator "${validatorName}"`)
-            }})
+            fieldDefinition.validators.forEach(({tableValidator, arrayValidator, validatorName}) => {
+                if (tableValidator || arrayValidator) {
+                    throw new Error(`Field "${key}" in schema "${this.name}" only accept validator of type scalar and has validator "${validatorName}"`)
+                }
+            })
         }
 
 
@@ -309,6 +321,16 @@ export class Schema {
             fieldDefinition.label = inflection.transform(key, ['underscore', 'humanize']);
         }
         return fieldDefinition;
+    }
+
+    validateQuery=(fields: any, roles: string[])=> {
+        return
+        for (const field of fields) {
+            console.log('field',field,roles)
+            if (!this.getFieldPermission(field, roles, 'read')) {
+                throw new Error(`401, You are not allowed to read "${field}" on ${this.name}`)
+            }
+        }
     }
 
     validateMutation(action: Action, mutation: any, roles?: null | string[]) {
@@ -374,10 +396,10 @@ export class Schema {
 
             if (!definition.isTable && typeof model === 'object' && model !== undefined && model !== null) {
                 model[key] = forceType(model[key], definition.type);
-                model[key] = model[key] === undefined ||  model[key] === null ? definition.defaultValue : model[key]
+                model[key] = model[key] === undefined || model[key] === null ? definition.defaultValue : model[key]
 
             } else if (definition.isTable && !definition.isArray && typeof model === 'object' && model !== undefined && model !== null) {
-                if (model[key]===null || model[key]===undefined) {
+                if (model[key] === null || model[key] === undefined) {
                     model[key] = definition.defaultValue;
                 }
                 const schema = Schema.getInstance(definition.type)
@@ -388,7 +410,7 @@ export class Schema {
                 model[key] = forceType(model[key], Array)
                 if (definition.isTable) {
                     const schema = Schema.getInstance(definition.type)
-                    model[key] = model[key].map((value: any) => {
+                    model[key] =model[key] &&  model[key].map((value: any) => {
                         schema._clean(value, getDecendentsDot(fields, key))
                         return value
                     });
