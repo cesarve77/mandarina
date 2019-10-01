@@ -15,7 +15,7 @@ import {OnFilterChange, Where} from "./ListFilter";
 import {CellComponent, FilterMethod, Overwrite} from "mandarina/build/Schema/Schema";
 import Dropdown from "antd/lib/dropdown";
 import Empty from "antd/lib/empty";
-import Icon  from "antd/lib/icon";
+import Icon from "antd/lib/icon";
 import Menu from "antd/lib/menu";
 import {getDefaultFilterMethod} from "./ListFilters";
 import {ReactComponentLike} from "prop-types";
@@ -199,6 +199,7 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
 
     componentDidMount(): void {
         const {height, width} = this.props;
+        console.log('height, width', height, width)
         if (height && width) return;
         this.resize();
         window.addEventListener('resize', this.onResize);
@@ -213,8 +214,10 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
 
     resize = () => {
         let container = this.container.current && this.container.current.parentNode && this.container.current.parentNode.parentElement;
-        while (container && container.clientHeight === 0) {
+        let deep = 0
+        while (container && container.clientHeight === 0 && deep < 100) {
             container = container.parentElement
+            deep++
         }
         if (container) {
             if (!this.props.height && this.state.height !== container.clientHeight) {
@@ -223,13 +226,16 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
             if (!this.props.width && this.state.width !== container.clientWidth) {
                 this.setState({width: container.clientWidth})
             }
-
+            const {overLoad = 0} = this.props;
+            this.firstLoad=Math.max(this.firstLoad,Math.ceil(container.clientWidth / (this.props.estimatedRowHeight || estimatedRowHeightDefault)) + 1 + overLoad)
         }
+
     }
     onResizeTimeoutId: number;
     onResize = () => {
         this.onResizeTimeoutId && window.clearTimeout(this.onResizeTimeoutId);
         this.onResizeTimeoutId = window.setTimeout(this.resize, 200)
+
     }
 
 
@@ -466,6 +472,7 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
             hiddenColumnMenu.push(<Menu.Item key={'mandarina_oHiddenColumn'} disabled>No
                 hidden columns</Menu.Item>)
         }
+        console.log('this.firstLoad',this.firstLoad)
         return (
             <Find schema={schema} where={whereAndFilter} skip={0} first={this.firstLoad + overLoad}
                   sort={sort}
@@ -602,7 +609,6 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
                                     }}
                                 >
                                     {Cell}
-
                                 </Grid>}
                             </div>
                         </>
