@@ -2,12 +2,10 @@ import {Schema} from "mandarina";
 import {Table} from "./Table";
 import * as fs from 'fs'
 import * as path from 'path'
-import Mandarina from "mandarina";
 
 describe('Table', () => {
 
     const prismaDir = path.join(__dirname + '../../../src/test/prisma')
-    Mandarina.configure({prismaDir: prismaDir, getUser: () =>null})
     const schema = new Schema({
         id: {type: String},
         name: {
@@ -30,8 +28,7 @@ describe('Table', () => {
 
 
     test("saveFiles ", () => {
-        const table2 = new Table(schema2, {name: 'Table2'})
-        Mandarina.saveFiles()
+        const table2 = new Table(schema2)
         const filePath = path.join(prismaDir, 'datamodel/table2.graphql')
         const fileContent = fs.readFileSync(filePath, 'utf8')
         expect(fileContent).toBe('# Type for Table2\ntype Table2 {\n\t# name\n\tname: String!\n\tid: ID! @unique\n}');
@@ -49,7 +46,7 @@ describe('Table', () => {
             label: 'card on user',
             validators: ['required']
         }
-    }, {name: 'User'}),{name: 'User'})
+    }, {name: 'User'}))
 
     // @ts-ignore
     const cardTable = new Table(new Schema({
@@ -65,7 +62,7 @@ describe('Table', () => {
             label: 'user on card',
             validators: ['required']
         }
-    }), {name: 'Card'})
+    }))
 
     test("getFields ", () => {
         expect(userTable.getFields()).toMatchObject(["name", "card.number", "card.id", "id"])
@@ -94,5 +91,3 @@ describe('Table', () => {
 
     });
 
-
-})
