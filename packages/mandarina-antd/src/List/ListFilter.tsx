@@ -48,7 +48,6 @@ export const ListFilter = React.memo(({onFilterChange, field, filter, schema}: L
                           onFilterChange(field, filter)
                       }}
                       onValidate={(model: any, error: any, callback: (error: any) => void) => {
-
                           return callback(null);
                       }}
                       model={{filter}}
@@ -58,7 +57,7 @@ export const ListFilter = React.memo(({onFilterChange, field, filter, schema}: L
         )
     },
     (prevProps, nextProps) => {
-        return prevProps.field === nextProps.field && prevProps.onFilterChange === nextProps.onFilterChange && prevProps.schema === nextProps.schema;
+        return prevProps.filter===nextProps.filter &&  prevProps.field === nextProps.field && prevProps.onFilterChange === nextProps.onFilterChange && prevProps.schema === nextProps.schema;
     }
 )
 
