@@ -7,10 +7,10 @@ import Dropdown from "antd/lib/dropdown";
 import Input from "antd/lib/input";
 import InputNumber from "antd/lib/input-number";
 import Menu from "antd/lib/menu";
-import Switch from "antd/lib/switch";
 import React, {useState} from "react";
 import {Integer, Schema} from "mandarina";
 import {forceType} from "mandarina/build/Schema/utils";
+import {Checkbox} from "antd";
 
 export const AllOperators: { [subfix: string]: { description: string, symbol: string } } = {
     "": {description: "equals", symbol: "="},
@@ -57,7 +57,7 @@ export const getDefaultFilterMethod = (field: string, schema: Schema): Where => 
         //todo forzar el tipo de verdad para que si escriben un string donde va un numero no mande el query
         const search = filter.filter
         const original = path[last]
-        if (search === 0 || search) {
+        if (search === 0 || search || search===false ) {
             const where = {}
             path[last] += filter.operator
             const value = forceType(search, fieldDefinition.type as Native)
@@ -175,11 +175,25 @@ export const getDefaultComponent = (field: string, fieldDefinition: FieldDefinit
                 )
             case  (type === Boolean):
                 return (
-                    <Switch checked={!!value.filter}
-                            onChange={(value) => value ? onChange({
-                                operator: selected,
-                                filter: !!value
-                            }) : onChange(null)}/>
+                    <Checkbox checked={value.filter === true}
+                              indeterminate={value.filter !== true && value.filter !== false}
+                              onClick={() => {
+                                  console.log('value', value)
+                                  if (value.filter === true) {
+                                      onChange({
+                                          operator: selected,
+                                          filter: false
+                                      })
+                                  } else if (value.filter === false) {
+                                      onChange(null)
+                                  } else {
+                                      onChange({
+                                          operator: selected,
+                                          filter: true
+                                      })
+                                  }
+                              }}
+                    />
                 )
             default:
                 return <Input addonBefore={operator} value={value.filter} style={{width: '100%'}}
