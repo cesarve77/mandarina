@@ -8,7 +8,7 @@ import {
     getGraphQLOperation,
     getSubSchemas,
     resetDir,
-    saveDockerComposeYaml,
+    //saveDockerComposeYaml,
     saveFile,
     savePrismaYaml
 } from "./genFilesUtils";
@@ -46,7 +46,7 @@ export const genFile = () => {
     const database = config.prisma.database || 'default'
     const stage = config.prisma.stage || 'default'
     savePrismaYaml(models, config.dir.prisma, `${config.prisma.host}:${config.prisma.port}/${database}/${stage}`, config.secret)
-    saveDockerComposeYaml(config.dir.prisma, config.prisma.port)
+    //saveDockerComposeYaml(config.dir.prisma, config.prisma.port)
 
     processedSubSchemas=[]
     for (const schemaName in CustomAction.instances) {
