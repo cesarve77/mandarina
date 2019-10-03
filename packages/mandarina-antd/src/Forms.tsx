@@ -55,6 +55,7 @@ export interface AutoFormProps {
     onSubmit?: (model: object) => Promise<void> | void
     placeholder?: boolean
     innerRef?: React.Ref<HTMLFormElement>
+    style?: any //todo encontrar el correcto
 }
 
 
@@ -119,6 +120,7 @@ const Form = ({
                   onSubmitFailure,
                   onChangeModel,
                   overwrite,
+                  style,
                   ...mutationProps
               }: FormProps) => {
     const bridge = new Bridge(schema, fields,overwrite)
@@ -149,7 +151,7 @@ const Form = ({
                         autoField={AutoField}
                         onSubmitSuccess={onSubmitSuccess}
                         onSubmitFailure={onSubmitFailure}
-
+                        style={style}
                     >
 
                         {children && typeof children !== "function" && children}
