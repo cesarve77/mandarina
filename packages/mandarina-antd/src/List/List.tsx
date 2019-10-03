@@ -121,8 +121,8 @@ export class List extends React.Component<ListProps, { columns: ColumnProps<any>
 
         if (definition.list.hidden) return
 
-
         return {
+            // fixed: index===0 ? 'left' :undefined,
             dataIndex: field,
             key: field,
             title: definition.label ? definition.label : "",
@@ -240,6 +240,7 @@ export class List extends React.Component<ListProps, { columns: ColumnProps<any>
                             <div style={{textAlign: 'right'}}>
                                 Total {count}
                                 <TableAntD
+                                    scroll={{x:'100%'}}
                                     pagination={{
                                         pageSize: 5000, //todo
                                         total: count,
