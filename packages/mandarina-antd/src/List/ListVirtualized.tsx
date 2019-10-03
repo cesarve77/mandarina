@@ -649,7 +649,7 @@ const Cell = React.memo(({columnIndex, rowIndex, data: {data, columns, query, re
 }, areEqual);
 
 
-const getParentCellComponent = (field: string, schema: Schema) => {
+export const getParentCellComponent = (field: string, schema: Schema) => {
     let from = 0;
     do {
         from = field.indexOf('.', from + 1);

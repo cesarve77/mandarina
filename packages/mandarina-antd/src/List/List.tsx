@@ -1,12 +1,10 @@
-import TableAntD from 'antd/lib/table';
+import TableAntD, {ColumnProps} from 'antd/lib/table';
 import {Find, Schema} from 'mandarina';
 import * as React from "react";
 import {FieldDefinition, Overwrite} from 'mandarina/build/Schema/Schema'
 import {OnFilterChange, Where} from "./ListFilter";
-import {getDecendentsDot, getParentsDot} from 'mandarina/build/utils'
-import {ColumnProps} from 'antd/lib/table';
-import {isEmpty,merge} from "lodash";
-import {DefaultCellComponent} from "./ListVirtualized";
+import {isEmpty, merge} from "lodash";
+import {DefaultCellComponent, getParentCellComponent} from "./ListVirtualized";
 import {FindQueryProps} from "mandarina/build/Operations/Find";
 import {deepClone} from "mandarina/build/Operations/Mutate";
 import {Result} from "antd";
@@ -87,65 +85,56 @@ export class List extends React.Component<ListProps, { columns: ColumnProps<any>
 
     getColumns(fields: string[], path = "") {
         const columns: ColumnProps<any>[] = []
-        const parents = getParentsDot(fields)
-        parents.forEach((parent, index) => {
-            const decedents = getDecendentsDot(fields, parent)
-            const field = path ? `${path}.${parent}` : parent
-            const column = this.getColumnDefinition(field, decedents, index)
-            if (column) {
+        fields.forEach((field, index) => {
+            const column = this.getColumnDefinition(field, index)
+            if (column && !columns.some((c) => !!(c && c.dataIndex === column.dataIndex))) {
                 columns.push(column)
-                //definitions[field]=definition
             }
         })
         return columns
 
     }
 
-    getColumnDefinition = (parent: string, decedents: string[], index: number): ColumnProps<any> | undefined => {
-
-        // getColumnDefinition = (field: string): ColumnProps | undefined => {
-        //     const fieldDefinition = this.props.schema.getPathDefinition(field)
-        //
-        //     return {
-        //         field,
-        //         loadingElement: fieldDefinition.list.loadingElement,
-        //         CellComponent: fieldDefinition.list.CellComponent,
-        //         title: fieldDefinition.label ? fieldDefinition.label : "",
-        //         width: fieldDefinition.list.width || estimatedColumnWidthDefault
-        //     }
-        // }
-        const overwrite = this.props.overwrite && this.props.overwrite[parent]
-        const fieldDefinition = overwrite ? merge(deepClone(this.props.schema.getPathDefinition(parent)), overwrite) : this.props.schema.getPathDefinition(parent)
-        if (!fieldDefinition || isEmpty(fieldDefinition)) {
-            throw new Error(`Field "${parent}" not found`)
+    getColumnDefinition = (field: string, index: number): ColumnProps<any> | undefined => {
+        const parentPath = getParentCellComponent(field, this.props.schema);
+        if (parentPath) {
+            field = parentPath
         }
-        if (fieldDefinition.list.hidden) return
-        const defaultWidth = window.innerWidth / this.props.fields.length
-        let width: number | undefined
-        if (index !== this.props.fields.length - 1) {
-            width = defaultWidth
-        }
+        const overwrite = this.props.overwrite && this.props.overwrite[field];
 
-        const children = decedents.length ? this.getColumns(decedents, parent) : undefined
-        const dataIndex = !decedents.length ? parent : undefined
-        const onFilterChange = !decedents.length ? this.onFilterChange : undefined
+        let definition: FieldDefinition
+        if (!this.props.schema.hasPath(field) && field.indexOf('.') < 0 && overwrite) {
+            definition = merge({
+                list: {
+                    noFilter: true,
+                    noSort: true
+                }
+            }, deepClone(this.props.schema.applyDefinitionsDefaults({type: String}, field)), overwrite)
+        } else {
+            definition = this.props.schema.getPathDefinition(field);
+            if (overwrite) {
+                definition = merge(deepClone(definition), overwrite)
+
+            }
+        }
+        if (!definition.list) throw new Error(`You need to provide overwrite full definition for "${field}"`)
+
+        if (definition.list.hidden) return
+
+
         return {
-            dataIndex,
-            key: parent,
-            width,
-            children,
-            title: fieldDefinition.label ? fieldDefinition.label : "",
+            dataIndex: field,
+            key: field,
+            title: definition.label ? definition.label : "",
             render: (value: any, row: any, index: any) => {
-
-                const CellComponent = fieldDefinition.list.CellComponent || DefaultCellComponent
-                if (!dataIndex) return null
+                const CellComponent = definition.list.CellComponent || DefaultCellComponent
                 return <CellComponent columnIndex={0} rowIndex={0} data={[row]}
-                                      field={dataIndex} {...fieldDefinition.list.props} />
+                                      field={field} {...definition.list.props} />
             },
             onHeaderCell: (column: ColumnProps<any>) => ({
-                field: parent,
-                fieldDefinition,
-                onFilterChange,
+                field: field,
+                fieldDefinition: definition,
+                onFilterChange: this.onFilterChange,
                 //width: column.width,
                 onResize: this.handleResize(index),
             })
@@ -227,8 +216,9 @@ export class List extends React.Component<ListProps, { columns: ColumnProps<any>
         });
     };
     firstLoad: boolean = true
+
     render() {
-        const {schema, first,fields, where, ...findBaseProps} = this.props
+        const {schema, first, fields, where, ...findBaseProps} = this.props
         const {columns} = this.state
         return (
             <div className="list-wrapper" style={{width: '100%'}} ref={this.me}>
