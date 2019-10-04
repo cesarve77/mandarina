@@ -10,7 +10,8 @@ import Menu from "antd/lib/menu";
 import React, {useState} from "react";
 import {Integer, Schema} from "mandarina";
 import {forceType} from "mandarina/build/Schema/utils";
-import {Checkbox} from "antd";
+import Select from "antd/lib/select";
+const { Option } = Select;
 
 export const AllOperators: { [subfix: string]: { description: string, symbol: string } } = {
     "": {description: "equals", symbol: "="},
@@ -174,25 +175,20 @@ export const getDefaultComponent = (field: string, fieldDefinition: FieldDefinit
             </span>
                 )
             case  (type === Boolean):
+
+                const selectValue=value.filter===false ? 'false' : value.filter ? 'true' : undefined
                 return (
-                    <Checkbox checked={value.filter === true}
-                              indeterminate={value.filter !== true && value.filter !== false}
-                              onClick={() => {
-                                  if (value.filter === true) {
-                                      onChange({
-                                          operator: selected,
-                                          filter: false
-                                      })
-                                  } else if (value.filter === false) {
-                                      onChange(null)
-                                  } else {
-                                      onChange({
-                                          operator: selected,
-                                          filter: true
-                                      })
-                                  }
-                              }}
-                    />
+                    <Select value={selectValue} allowClear onChange={(value:any)=>{
+                        if (!value) return onChange(null)
+                        onChange({
+                            operator: selected,
+                            filter: value === 'true'
+                        })
+                    }}>
+                        <Option value={'true'}>Yes</Option>
+                        <Option value={'false'}>No</Option>
+
+            </Select>
                 )
             default:
                 return <Input addonBefore={operator} value={value.filter} style={{width: '100%'}}
