@@ -72,7 +72,7 @@ const List = ({
                 )
             )}
 
-            <ListAddField name={`${name}.$`} initialCount={initialCount} size='large' block >
+            <ListAddField name={`${name}.$`} initialCount={initialCount} size='small' block >
                 Add {label}
             </ListAddField>
         </div>;
