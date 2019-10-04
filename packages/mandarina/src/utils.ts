@@ -32,10 +32,13 @@ export const insertParents = (keys: string[]) => {
 export const ensureId = (fields: string[]) => {
     const result: string[] = []
     fields.forEach((field) => {
-        const dot = field.lastIndexOf('.')
-        if (dot > 0) {
-            const fieldId = field.substr(0, dot) + '.id'
-            if (!fields.includes(fieldId) && !result.includes(fieldId)) {
+        let dot=1
+        let parent=field
+        while (dot > 0) {
+            dot = parent.lastIndexOf('.')
+            parent=parent.substr(0, dot)
+            const fieldId = parent + '.id'
+            if (dot>0 && !fields.includes(fieldId) && !result.includes(fieldId)) {
                 result.push(fieldId)
             }
         }
