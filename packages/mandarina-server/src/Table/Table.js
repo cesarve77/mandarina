@@ -120,7 +120,7 @@ var Table = /** @class */ (function () {
             result[operationName] = function (_, args, context, info) {
                 if (args === void 0) { args = {}; }
                 return __awaiter(_this, void 0, void 0, function () {
-                    var user, time, bm, subOperationName, action, prismaMethod, result, capitalizedAction, obj, flatFields;
+                    var user, subOperationName, action, prismaMethod, result, capitalizedAction, obj, flatFields;
                     return __generator(this, function (_a) {
                         switch (_a.label) {
                             case 0: return [4 /*yield*/, Mandarina_1.default.config.getUser(context)
@@ -128,17 +128,10 @@ var Table = /** @class */ (function () {
                                 // console.log('operationName', operationName)
                                 // console.log('args')
                                 // console.dir(args, {depth: null})
+                                //const user = await Mandarina.config.getUser(context);
                             ];
                             case 1:
                                 user = _a.sent();
-                                time = new Date().getTime();
-                                bm = function (description) {
-                                    if (description) {
-                                        console.log(description, new Date().getTime() - time);
-                                    }
-                                    time = new Date().getTime();
-                                };
-                                bm();
                                 subOperationName = operationName.substr(0, 6);
                                 action = (['create', 'update', 'delete'].includes(subOperationName) ? subOperationName : 'read');
                                 prismaMethod = context.prisma[type][operationName];
@@ -194,7 +187,6 @@ var Table = /** @class */ (function () {
                                 return [4 /*yield*/, this.callHook(this.name, 'beforeQuery', _, args, context, info)];
                             case 7:
                                 _a.sent();
-                                console.log('subOperationName', subOperationName);
                                 obj = graphqlFields(info);
                                 flatFields = void 0;
                                 //todo do somethig better validating what kind of query im running connection or query
@@ -253,81 +245,76 @@ var Table = /** @class */ (function () {
             return __generator(this, function (_c) {
                 switch (_c.label) {
                     case 0:
-                        console.log('--------------------');
-                        console.log(schemaName, name, args);
-                        console.log('--------------------');
-                        _c.label = 1;
-                    case 1:
-                        _c.trys.push([1, 19, , 20]);
+                        _c.trys.push([0, 18, , 19]);
                         hookHandler = this.options.hooks && this.options.hooks[name];
-                        if (!hookHandler) return [3 /*break*/, 18];
+                        if (!hookHandler) return [3 /*break*/, 17];
                         data = args.data;
                         fields = Object.keys(data);
                         schema = mandarina_1.Schema.getInstance(schemaName);
                         _i = 0, fields_1 = fields;
-                        _c.label = 2;
-                    case 2:
-                        if (!(_i < fields_1.length)) return [3 /*break*/, 16];
+                        _c.label = 1;
+                    case 1:
+                        if (!(_i < fields_1.length)) return [3 /*break*/, 15];
                         field = fields_1[_i];
                         def = schema.getPathDefinition(field);
                         inline = !!(def.table && def.table.relation && def.table.relation.link === 'INLINE');
-                        if (!def.isTable) return [3 /*break*/, 15];
+                        if (!def.isTable) return [3 /*break*/, 14];
                         operations = Object.keys(data[field]);
                         _a = 0, operations_1 = operations;
-                        _c.label = 3;
-                    case 3:
-                        if (!(_a < operations_1.length)) return [3 /*break*/, 15];
+                        _c.label = 2;
+                    case 2:
+                        if (!(_a < operations_1.length)) return [3 /*break*/, 14];
                         operation = operations_1[_a];
                         hookName = "before" + utils_1.capitalize(operation);
                         args2 = data[field][operation];
                         if (!Table.instances[def.type])
-                            return [3 /*break*/, 14];
+                            return [3 /*break*/, 13];
                         table = Table.getInstance(def.type);
-                        if (!Array.isArray(args2)) return [3 /*break*/, 10];
+                        if (!Array.isArray(args2)) return [3 /*break*/, 9];
                         _b = 0, args2_1 = args2;
-                        _c.label = 4;
-                    case 4:
-                        if (!(_b < args2_1.length)) return [3 /*break*/, 9];
+                        _c.label = 3;
+                    case 3:
+                        if (!(_b < args2_1.length)) return [3 /*break*/, 8];
                         arg2 = args2_1[_b];
-                        if (!inline) return [3 /*break*/, 6];
+                        if (!inline) return [3 /*break*/, 5];
                         return [4 /*yield*/, table.callHook(def.type, hookName, _, { data: arg2 }, context, info)];
-                    case 5:
+                    case 4:
                         _c.sent();
-                        return [3 /*break*/, 8];
-                    case 6: return [4 /*yield*/, table.callHook(def.type, hookName, _, arg2, context, info)];
+                        return [3 /*break*/, 7];
+                    case 5: return [4 /*yield*/, table.callHook(def.type, hookName, _, arg2, context, info)];
+                    case 6:
+                        _c.sent();
+                        _c.label = 7;
                     case 7:
-                        _c.sent();
-                        _c.label = 8;
-                    case 8:
                         _b++;
-                        return [3 /*break*/, 4];
-                    case 9: return [3 /*break*/, 14];
-                    case 10:
-                        if (!inline) return [3 /*break*/, 12];
-                        return [4 /*yield*/, table.callHook(def.type, hookName, _, { data: args2 }, context, info)];
-                    case 11:
-                        _c.sent();
-                        return [3 /*break*/, 14];
-                    case 12: return [4 /*yield*/, table.callHook(def.type, hookName, _, args2, context, info)];
-                    case 13:
-                        _c.sent();
-                        _c.label = 14;
-                    case 14:
-                        _a++;
                         return [3 /*break*/, 3];
-                    case 15:
-                        _i++;
-                        return [3 /*break*/, 2];
-                    case 16: return [4 /*yield*/, hookHandler(_, args, context, info)];
-                    case 17:
+                    case 8: return [3 /*break*/, 13];
+                    case 9:
+                        if (!inline) return [3 /*break*/, 11];
+                        return [4 /*yield*/, table.callHook(def.type, hookName, _, { data: args2 }, context, info)];
+                    case 10:
                         _c.sent();
-                        _c.label = 18;
-                    case 18: return [3 /*break*/, 20];
-                    case 19:
+                        return [3 /*break*/, 13];
+                    case 11: return [4 /*yield*/, table.callHook(def.type, hookName, _, args2, context, info)];
+                    case 12:
+                        _c.sent();
+                        _c.label = 13;
+                    case 13:
+                        _a++;
+                        return [3 /*break*/, 2];
+                    case 14:
+                        _i++;
+                        return [3 /*break*/, 1];
+                    case 15: return [4 /*yield*/, hookHandler(_, args, context, info)];
+                    case 16:
+                        _c.sent();
+                        _c.label = 17;
+                    case 17: return [3 /*break*/, 19];
+                    case 18:
                         e_1 = _c.sent();
                         console.error("Error executing hook: \"" + name + "\" in Table: " + schemaName + "\"");
                         throw e_1;
-                    case 20: return [2 /*return*/];
+                    case 19: return [2 /*return*/];
                 }
             });
         });

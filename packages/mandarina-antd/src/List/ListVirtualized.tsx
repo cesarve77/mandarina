@@ -199,7 +199,6 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
 
     componentDidMount(): void {
         const {height, width} = this.props;
-        console.log('height, width', height, width)
         if (height && width) return;
         this.resize();
         window.addEventListener('resize', this.onResize);
@@ -472,7 +471,6 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
             hiddenColumnMenu.push(<Menu.Item key={'mandarina_oHiddenColumn'} disabled>No
                 hidden columns</Menu.Item>)
         }
-        console.log('this.firstLoad',this.firstLoad)
         return (
             <Find schema={schema} where={whereAndFilter} skip={0} first={this.firstLoad + overLoad}
                   sort={sort}

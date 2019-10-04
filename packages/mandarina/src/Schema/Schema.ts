@@ -326,7 +326,6 @@ export class Schema {
     validateQuery=(fields: any, roles: string[])=> {
         return
         for (const field of fields) {
-            console.log('field',field,roles)
             if (!this.getFieldPermission(field, roles, 'read')) {
                 throw new Error(`401, You are not allowed to read "${field}" on ${this.name}`)
             }

@@ -93,7 +93,6 @@ const fields = [
 describe('util ', () => {
     test('ensureId',()=>{
         const result=ensureId(fields)
-        console.log(result)
         expect(result).toMatchObject( [ 'loggedAt',
             'reviewedAt',
             'parents',
@@ -198,14 +197,12 @@ describe('util ', () => {
     })
     test('generateRandomNumber',()=>{
         const r=generateRandomNumber(5,11)
-        console.log('r',r)
         expect(r).toBeGreaterThanOrEqual(5)
         expect(r).toBeLessThanOrEqual(11)
 
     })
     test('generateRandomAlpha',()=>{
         const r=generateRandomAlpha(16)
-        console.log('r',r)
         expect(r.length).toBe(16)
 
 

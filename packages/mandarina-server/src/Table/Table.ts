@@ -97,14 +97,6 @@ export class Table {
                 // console.log('operationName', operationName)
                 // console.log('args')
                 // console.dir(args, {depth: null})
-                let time = new Date().getTime()
-                const bm = (description?: string) => {
-                    if (description) {
-                        console.log(description, new Date().getTime() - time)
-                    }
-                    time = new Date().getTime()
-                }
-                bm()
                 //const user = await Mandarina.config.getUser(context);
                 const subOperationName: ActionType | string = operationName.substr(0, 6)
                 const action: ActionType = <ActionType>(['create', 'update', 'delete'].includes(subOperationName) ? subOperationName : 'read')
@@ -155,7 +147,6 @@ export class Table {
 
                     await this.callHook(this.name, 'beforeQuery', _, args, context, info);
 
-                    console.log('subOperationName', subOperationName)
                     const obj = graphqlFields(info)
                     let flatFields: string[]
                     //todo do somethig better validating what kind of query im running connection or query
@@ -205,9 +196,6 @@ export class Table {
      * @param info
      */
     async callHook(schemaName: string, name: HookName, _: any, args: any, context: any, info: any) {
-        console.log('--------------------')
-        console.log(schemaName, name, args)
-        console.log('--------------------')
         try {
             const hookHandler = this.options.hooks && this.options.hooks[name];
             if (hookHandler) {

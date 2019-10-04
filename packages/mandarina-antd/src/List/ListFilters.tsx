@@ -178,7 +178,6 @@ export const getDefaultComponent = (field: string, fieldDefinition: FieldDefinit
                     <Checkbox checked={value.filter === true}
                               indeterminate={value.filter !== true && value.filter !== false}
                               onClick={() => {
-                                  console.log('value', value)
                                   if (value.filter === true) {
                                       onChange({
                                           operator: selected,

@@ -116,7 +116,6 @@ export class FindBase extends PureComponent<FindProps & FindBaseProps, FindBaseS
         } else {
             queryString = `query ($where: ${names.input.where[type]} ) { ${names.query[type]}  (where: $where) ${defaultQuery} }`
         }
-        console.log('queryString',queryString)
         const QUERY = gql(queryString)
         // save a rendered query history in the instance and in the class
         // for update cache queries on mutations

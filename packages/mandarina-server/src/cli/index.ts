@@ -22,10 +22,10 @@ switch (cmd) {
         watch()
         break;
     case undefined:
-        console.log(`You need to pass a command at first argument`)
+        console.info(`You need to pass a command at first argument`)
         break
     default:
-        console.log(`command ${cmd} not found, available commands: "create","gen-files","deploy","watch`)
+        console.info(`command ${cmd} not found, available commands: "create","gen-files","deploy","watch`)
 }
 
 /*

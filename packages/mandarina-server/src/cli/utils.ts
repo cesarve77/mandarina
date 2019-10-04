@@ -91,21 +91,21 @@ export const loadSchemas = (dir: ConfigDirInterface) => {
     schemas.forEach((schema) => {
         const content: string = fs.readFileSync(schema, 'utf8');
         if (true || content.match(/new *Schema/)) {
-            console.log('loading schema: ', schema)
+            console.info('loading schema: ', schema)
             require(schema)
         }
     })
     tables.forEach((table) => {
         const content: string = fs.readFileSync(table, 'utf8');
         if (true || content.match(/new *Table/)) {
-            console.log('loading table: ', table)
+            console.info('loading table: ', table)
             require(table)
         }
     })
     actions.forEach((action) => {
         const content: string = fs.readFileSync(action, 'utf8');
         if (true || content.match(/new *Table/)) {
-            console.log('loading action: ', action)
+            console.info('loading action: ', action)
             require(action)
         }
     })

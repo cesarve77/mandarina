@@ -172,7 +172,7 @@ export const saveFile = (dir: string, fileName: string, content: string, fileTyp
     const prismaDir = path.join(process.cwd(), dir)
     const fileAbs = `${prismaDir}/datamodel/${fileName}.${fileType}.graphql`;
     fs.writeFileSync(fileAbs, content);
-    console.log(`saving ${fileType}: ${fileName}`)
+    console.info(`saving ${fileType}: ${fileName}`)
 }
 
 
