@@ -91,6 +91,7 @@ const Table = ({query, where, mode, labeler = defaultLabeler, ...props}) => {
                                         notFoundContent={loading ? <Spin size="small"/> : null}
                                         mode={mode}
                                         allowedValues={allowedValues}
+                                        wrapperStyle={{marginBottom: '0'}}
                     />
                 }}
             </Query>

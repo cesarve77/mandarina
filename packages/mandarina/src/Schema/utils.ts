@@ -90,7 +90,7 @@ export const get = (obj: any={}, paths: string[]): any[] => {
                 }
 
             })
-        } else if (val) {
+        } else if (val===0 || val===false || val) {
             if (paths.length === 0) {
                 result.push(val)
                 return result
