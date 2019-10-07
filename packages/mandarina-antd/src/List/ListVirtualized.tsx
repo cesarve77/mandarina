@@ -117,7 +117,7 @@ export interface ColumnProps {
     noSort: boolean
 }
 
-const estimatedColumnWidthDefault = 250;
+const estimatedColumnWidthDefault = 175;
 const estimatedRowHeightDefault = 60;
 export type Filters = { [field: string]: Where }
 export type Sort = { [field: string]: 1 | -1 }

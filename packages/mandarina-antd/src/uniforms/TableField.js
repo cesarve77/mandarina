@@ -56,40 +56,28 @@ const Table = ({query, where, mode, labeler = defaultLabeler, ...props}) => {
                     const allowedValues = docs.map(({id}) => id)
                     const transform = getTransform(docs, labeler)
                     let mode = props.mode,
-                        value = props.field.type === String ? props.value : props.value && props.value.id || ''
-                    let onChange = value => {
+                        value
 
-                        if (props.field.type === String) {
-                            return props.onChange(value);
+                    let onChange = value => props.onChange({id: value})
 
-                        } else {
-                            return props.onChange({id: value});
+                    if (props.field.isArray) {
+                        mode = props.mode || "multiple"
+                        value = props.value && props.value.map(({id}) => id)
 
+                        onChange = values => {
+                             props.onChange(values && values.map(id => ({id})));
                         }
-
-                    }
-                    if (props.fieldType === Array) {
-                        mode = mode || "multiple"
-                        value = props.value || []
-                        onChange = (values) => {
-                            if (props.field.type === String) {
-                                return props.onChange(values)
-
-                            } else {
-                                return props.onChange(values.map(id => ({id})))
-
-                            }
-
-                        }
+                    }else{
+                        value = props.value && props.value.id
                     }
                     return <SelectField {...props}
+                                        mode={mode}
                                         transform={transform}
                                         placeholder={props.loading ? '.... ... .. .' : props.placeholder}
                                         disabled={loading || props.disabled}
                                         onChange={onChange}
                                         value={value}
                                         notFoundContent={loading ? <Spin size="small"/> : null}
-                                        mode={mode}
                                         allowedValues={allowedValues}
                                         wrapperStyle={{marginBottom: '0'}}
                     />
