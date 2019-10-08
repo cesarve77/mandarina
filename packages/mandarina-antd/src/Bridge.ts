@@ -120,9 +120,7 @@ export class Bridge {
                 if (validator.validatorName === 'minCount') minCount = validator.param
             })
             const item = field.defaultValue
-
             const items = Math.max(minCount, initialCount)
-
             return new Array(items).fill(item)
         } else if (type === Object) {
             let item = {}
@@ -130,7 +128,6 @@ export class Bridge {
                 const schema = Schema.getInstance(field.type)
                 schema.clean(item, this.fields)
             }
-
             return item
         }
 

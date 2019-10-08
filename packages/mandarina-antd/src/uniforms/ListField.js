@@ -1,31 +1,30 @@
-import Icon           from 'antd/lib/icon';
-import React          from 'react';
-import Tooltip        from 'antd/lib/tooltip';
-import connectField   from 'uniforms/connectField';
+import Icon from 'antd/lib/icon';
+import React, {Children} from 'react';
+import Tooltip from 'antd/lib/tooltip';
+import connectField from 'uniforms/connectField';
 import filterDOMProps from 'uniforms/filterDOMProps';
-import joinName       from 'uniforms/joinName';
-import {Children}     from 'react';
-import ListAddField  from 'uniforms-antd/ListAddField';
+import joinName from 'uniforms/joinName';
+import ListAddField from 'uniforms-antd/ListAddField';
 import ListItemField from './ListItemField';
 
 
 const List = ({
-    children,
-    error,
-    errorMessage,
-    info,
-    initialCount,
-    itemProps,
-    label,
-    labelCol,
-    name,
-    showInlineError,
-    value,
-    wrapperCol,
-    fields,
-    ...props,
-}) => {
-    return <div {...filterDOMProps(props)}>
+                  children,
+                  error,
+                  errorMessage,
+                  info,
+                  initialCount,
+                  itemProps,
+                  label,
+                  labelCol,
+                  name,
+                  showInlineError,
+                  value,
+                  wrapperCol,
+                  fields,
+                  ...props,
+              }) => {
+        return <div {...filterDOMProps(props)}>
             {!!label && (
                 <div>
                     {label}
@@ -33,7 +32,7 @@ const List = ({
                         <span>
                             &nbsp;
                             <Tooltip title={info}>
-                                <Icon type="question-circle-o" />
+                                <Icon type="question-circle-o"/>
                             </Tooltip>
                         </span>
                     )}
@@ -72,9 +71,13 @@ const List = ({
                 )
             )}
 
-            <ListAddField name={`${name}.$`} initialCount={initialCount} size='small' block >
+            <ListAddField name={`${name}.$`} initialCount={initialCount} size='large' className={'add-button'}
+                          type={'primary'}
+                          shape={'round'}
+                          style={{}}>
                 Add {label}
             </ListAddField>
+            <div style={{clear: 'both'}}></div>
         </div>;
     }
 ;
