@@ -168,6 +168,6 @@ export interface ErrorValidator {
 
 
 export interface Validation {
-    (this: { modal: any }, value: any, param: any): boolean
+    (this: { model: any }, value: any, param: any): boolean
 }
 
