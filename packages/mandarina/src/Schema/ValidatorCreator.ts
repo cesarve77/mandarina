@@ -86,7 +86,7 @@ export class ValidatorCreator {
                 if (Array.isArray(definition.type)) {
                     this.type = definition.type[0]
                 } else {
-                    this.type = definition.type as  Native | string
+                    this.type = definition.type as Native | string
                 }
 
                 this.value = value
@@ -101,7 +101,12 @@ export class ValidatorCreator {
                     return {
                         key: this.key,
                         label: this.label,
-                        message: compileMessage({label: this.label, template, param: Validator.param, value: this.value }),
+                        message: compileMessage({
+                            label: this.label,
+                            template,
+                            param: Validator.param,
+                            value: this.value
+                        }),
                         value: this.value,
                         validatorName: name,
                         path: this.path,
@@ -163,6 +168,6 @@ export interface ErrorValidator {
 
 
 export interface Validation {
-    (value: any, param: any): boolean
+    (this: { modal: any }, value: any, param: any): boolean
 }
 

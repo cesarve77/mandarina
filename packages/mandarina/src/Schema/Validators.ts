@@ -51,6 +51,8 @@ export const isEmail = new ValidatorCreator((value) => !exists(value) || /^(([^<
 
 export const isTopLevelDomain = new ValidatorCreator((value) => !exists(value) || /^(\w+\.\w{2,63})$/.test(value), 'isTopLevelDomain', "{{label}} has an invalid format")
 
+export const isDomain = new ValidatorCreator((value) => !exists(value) || /^(\w+\.)?(\w+\.\w{2,63})$/.test(value), 'isDomain', "{{label}} has an invalid format")
+
 export const isUrl = new ValidatorCreator((value) => !exists(value) || /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/.test(value), 'isUrl', "{{label}} has an invalid format")
 
 
