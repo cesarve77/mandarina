@@ -54,7 +54,7 @@ export const forceType = (value: any, type: Native): any => {
 
     // If an array is what you want, I'll give you an array
     if (type === Array) {
-        if (value!==0 && value)   return [value];
+        if (value !== 0 && value) return [value];
         return []
     }
 
@@ -63,34 +63,38 @@ export const forceType = (value: any, type: Native): any => {
 }
 
 
-export const isRequired = (field: FieldDefinition): boolean =>hasValidator(field.validators,'required') ||  hasValidator(field.validators,'noEmpty')
+export const isRequired = (field: FieldDefinition): boolean => hasValidator(field.validators, 'required') || hasValidator(field.validators, 'noEmpty')
 
-export const hasValidator = (validators: Validator[],name?: string): boolean => {
+export const hasValidator = (validators: Validator[], name?: string): boolean => {
     if (!name) return false
     const filtered = validators.filter(({validatorName}) => validatorName === name)
     return !!filtered.length
 }
 
 
-export const get = (obj: any={}, paths: string[]): any[] => {
+export const get = (obj: any = {}, paths: string[]): any[] => {
 
     const result: any[] = []
-    const len=paths.length
-    for (let i=0;i<len;i++){
-        const path=paths[i]
-         paths=paths.slice(i + 1)
+    const len = paths.length
+    for (let i = 0; i < len; i++) {
+        const path = paths[i]
+        paths = paths.slice(i + 1)
+        if (obj === null) {
+            result.push(null)
+            return result
+        }
         const val = obj[path]
 
         if (Array.isArray(val)) {
             val.forEach((val) => {
-                if (paths.length===0){
+                if (paths.length === 0) {
                     result.push(val)
-                }else{
+                } else {
                     result.push(...get(val, paths))
                 }
 
             })
-        } else if (val===0 || val===false || val) {
+        } else if (val === 0 || val === false || val) {
             if (paths.length === 0) {
                 result.push(val)
                 return result
@@ -104,7 +108,6 @@ export const get = (obj: any={}, paths: string[]): any[] => {
 
     return result
 }
-
 
 
 /**

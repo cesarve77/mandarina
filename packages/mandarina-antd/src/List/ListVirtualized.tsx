@@ -31,6 +31,7 @@ import {deepClone} from "mandarina/build/Operations/Mutate";
 import {equalityFn} from "./utils";
 import Query from "react-apollo/Query";
 import {Result} from "antd";
+import {FindProps} from "mandarina/build/Operations/Find";
 
 export interface OnHideColumn {
     (field: string, index: number): void//todo variables format
@@ -51,7 +52,7 @@ export interface ControlledListProps {
 }
 
 
-export interface ListProps extends ControlledListProps {
+export interface ListProps extends ControlledListProps, Omit<FindProps, 'schema' | 'where' | 'skip' | 'first' | 'sort' | 'fields'> {
     schema: Schema
     fields: string[]
     pageSize?: number
@@ -147,6 +148,8 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
     hasNextPage: boolean = false;
     variables: { where?: any, first?: number, after?: string };
     refetch: Refetch;
+    startPolling: (pollInterval: number) => void;
+    stopPolling: () => void;
     estimatedColumnWidth: number;
     firstLoad: number;
     overscanRowStartIndex: number = 0;
@@ -226,7 +229,7 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
                 this.setState({width: container.clientWidth})
             }
             const {overLoad = 0} = this.props;
-            this.firstLoad=Math.max(this.firstLoad,Math.ceil(container.clientWidth / (this.props.estimatedRowHeight || estimatedRowHeightDefault)) + 1 + overLoad)
+            this.firstLoad = Math.max(this.firstLoad, Math.ceil(container.clientWidth / (this.props.estimatedRowHeight || estimatedRowHeightDefault)) + 1 + overLoad)
         }
 
     }
@@ -437,7 +440,7 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
 
 
     render() {
-        const {schema, where, estimatedRowHeight, overscanRowCount = 2, overLoad = 0, header} = this.props; //todo rest props
+        const {schema, where, estimatedRowHeight, overscanRowCount = 2, overLoad = 0, header, ...rest} = this.props; //todo rest props
 
         const {fields, width, height, filters, sort, overwrite} = this.state;
         const columns = this.calcColumns(fields, overwrite);
@@ -475,19 +478,25 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
             <Find schema={schema} where={whereAndFilter} skip={0} first={this.firstLoad + overLoad}
                   sort={sort}
                   fields={fields}
-                  notifyOnNetworkStatusChange>
-                {({data = [], query, variables, error, refetch, loading, count, client}) => {
+                  notifyOnNetworkStatusChange
+                  {...rest}
+            >
+                {({data = [], query, variables, error, refetch, loading, count, client, startPolling, stopPolling}) => {
 
                     let dataCollection = data;
                     if (this.data.length === 0 && data && !loading) {
                         this.data = Array(count).fill(undefined)
                     }
-
+                    if (!loading && count>this.data.length){//when your are polling or refetching and the count change
+                        this.data=[...this.data,...Array(count-this.data.length).fill(undefined)]
+                    }
                     if (dataCollection.length && !loading) {
                         this.data.splice(variables.skip, dataCollection.length, ...dataCollection);
                     }
 
                     this.refetch = refetch;
+                    this.startPolling = startPolling;
+                    this.stopPolling = stopPolling;
                     this.variables = variables;
                     const tHeadHeight = this.tHead.current && this.tHead.current.offsetHeight || 0;
                     const itemData = createItemData({...this.data}, columns, refetch, query, variables);
