@@ -52,7 +52,7 @@ export interface ControlledListProps {
 }
 
 
-export interface ListProps extends ControlledListProps, Omit<FindProps, 'schema' | 'where' | 'skip' | 'first' | 'sort' | 'fields'> {
+export interface ListProps extends ControlledListProps, Omit<FindProps, 'children' | 'schema' | 'where' | 'skip' | 'first' | 'sort' | 'fields'> {
     schema: Schema
     fields: string[]
     pageSize?: number
@@ -242,7 +242,11 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
 
 
     onScrollTimeoutId: number;
-    onScroll = ({scrollLeft, ...rest}: GridOnScrollProps) => {
+    refresh = (full: boolean = true) => {
+        if (full) this.data = []
+        return this.onScroll({})
+    }
+    onScroll = ({scrollLeft}: GridOnScrollProps) => new Promise((resolve, reject) => {
         if (this.tHead.current) {
             this.tHead.current.scrollLeft = scrollLeft
         }
@@ -250,7 +254,10 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
         this.onScrollTimeoutId && window.clearTimeout(this.onScrollTimeoutId);
         this.onScrollTimeoutId = window.setTimeout(() => {
             //If all visible are loaded, then not refetch
-            if (this.data.slice(this.visibleRowStartIndex, this.visibleRowStopIndex).every((val) => val !== undefined)) return;
+            if (this.data.slice(this.visibleRowStartIndex, this.visibleRowStopIndex).every((val) => val !== undefined)) {
+                resolve(false)
+                return;
+            }
 
             //TODO: maybe normalized the edgeds for try to do the sames queries, and get the data from the cache
             //TODO: maybe if we are in gap, then just query for that data
@@ -261,10 +268,11 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
                     skip: this.overscanRowStartIndex,
                     first: this.overscanRowStopIndex - this.overscanRowStartIndex + 1 + overLoad,
                 }
-            ).catch(console.error) //todo
+            )
+                .then(resolve)
+                .catch(reject) //todo
         }, 100)
-    };
-
+    })
     getColumnDefinition = (field: string): ColumnProps | null => {
         //detect if parent has a CellComponent
         const parentPath = getParentCellComponent(field, this.props.schema);
@@ -487,8 +495,8 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
                     if (this.data.length === 0 && data && !loading) {
                         this.data = Array(count).fill(undefined)
                     }
-                    if (!loading && count>this.data.length){//when your are polling or refetching and the count change
-                        this.data=[...this.data,...Array(count-this.data.length).fill(undefined)]
+                    if (!loading && count > this.data.length) {//when your are polling or refetching and the count change
+                        this.data = [...this.data, ...Array(count - this.data.length).fill(undefined)]
                     }
                     if (dataCollection.length && !loading) {
                         this.data.splice(variables.skip, dataCollection.length, ...dataCollection);

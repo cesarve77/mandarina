@@ -15,17 +15,20 @@ import {buildQueryFromFields} from "mandarina/build/Operations/utils";
 import {refetchQueries} from "mandarina/build/Operations/Mutate";
 import Button from "antd/lib/button";
 import {ButtonProps} from "antd/lib/button";
+import {capitalize} from "mandarina/build/Schema/utils";
 
 
 export interface ActionButtonProps extends Omit<ButtonProps, 'onError'>, Omit<MutationProps, 'children' | 'mutation'> {
-    actionName: string,
-    result: string,
+    actionName: string
+    result: string
+    schema?:Schema
     resultFields?: string[]
-    refetchSchemas?: string[],
-    data?: any,
+    refetchSchemas?: string[]
+    data?: any
     innerRef?: LegacyRef<Button>
     onSuccess?: (data?: any) => void
 }
+
 
 class ActionButton extends React.PureComponent<WithApolloClient<ActionButtonProps>> {
     schemaName: string
@@ -44,6 +47,7 @@ class ActionButton extends React.PureComponent<WithApolloClient<ActionButtonProp
         const {
             result,
             data,
+            schema,
             actionName,
             onSuccess,
             refetchQueries = this.refetchQueries,
@@ -66,9 +70,14 @@ class ActionButton extends React.PureComponent<WithApolloClient<ActionButtonProp
         if (resultFields) {
             queryFromFields = buildQueryFromFields(resultFields, false)
         }
+        let dataString='',dataString2=''
+        if (schema){
+            dataString=`($data: ${capitalize(schema.name)}Input!)`
+            dataString2=`(data: $data)`
+        }
         const gqlString = `
-            mutation ${actionName} {
-                ${actionName}
+            mutation ${actionName} ${dataString}{
+                ${actionName} ${dataString2}
                     ${queryFromFields}
             }
         `;
