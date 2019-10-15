@@ -52,7 +52,7 @@ const Table = ({query, where, mode, labeler = defaultLabeler, ...props}) => {
             <Query query={QUERY} variables={{where}}>
                 {({loading, error, data, variables, refetch}) => {
                     if (error) throw error
-                    const docs = loading ? [] : data[queryName]
+                    const docs = loading || ! data || !Array.isArray(data[queryName]) ? [] : data[queryName]
                     const allowedValues = docs.map(({id}) => id)
                     const transform = getTransform(docs, labeler)
                     let mode = props.mode,

@@ -26,7 +26,7 @@ export class CustomAction {
         CustomAction.instances = CustomAction.instances || {};
         if (schema instanceof Schema) {
             this.schema = schema
-            this.name = this.schema.name;
+            this.name = actionOptions.name || this.schema.name;
         } else {
             this.name = schema;
         }
@@ -78,6 +78,7 @@ export class CustomAction {
 }
 
 export interface ActionOptions {
+    name?: string,
     actions: ActionInterface
     errorFromServerMapper?: ErrorFromServerMapper
 }

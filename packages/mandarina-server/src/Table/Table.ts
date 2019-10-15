@@ -197,9 +197,13 @@ export class Table {
      */
     async callHook(schemaName: string, name: HookName, _: any, args: any, context: any, info: any) {
         try {
+            console.log('name',name)
+            let prefix=''
+            if (name.indexOf('before')===0) prefix='before'
+            if (name.indexOf('after')===0) prefix='after'
             const hookHandler = this.options.hooks && this.options.hooks[name];
-            if (hookHandler) {
-                let data: any = args.data
+            let data: any = args.data
+            if (data && prefix) {
                 const fields = Object.keys(data)
                 const schema = Schema.getInstance(schemaName)
                 for (const field of fields) {
@@ -207,11 +211,17 @@ export class Table {
                     const inline = !!(def.table && def.table.relation && def.table.relation.link === 'INLINE')
                     if (def.isTable) {
                         const operations = Object.keys(data[field])
+                        if (!Table.instances[def.type]) {
+                            console.warn(`No table for ${def.type} no neasted hooks applied`)
+                            console.log('data[field]',data[field])
+                            continue
+                        }
+                        const table = Table.getInstance(def.type)
                         for (const operation of operations) {
-                            const hookName = `before${capitalize(operation)}` as HookName
+                            const hookName = `${prefix}${capitalize(operation)}` as HookName
+                            console.log('hookName',hookName)
                             const args2 = data[field][operation]
-                            if (!Table.instances[def.type]) continue
-                            const table = Table.getInstance(def.type)
+                            console.log('def.type',def.type)
                             if (Array.isArray(args2)) {
                                 for (const arg2 of args2) {
                                     if (inline) {
@@ -233,7 +243,8 @@ export class Table {
 
                     }
                 }
-
+            }
+            if (hookHandler) {
                 await hookHandler(_, args, context, info);
             }
         } catch (e) {

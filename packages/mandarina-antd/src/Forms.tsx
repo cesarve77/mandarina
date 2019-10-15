@@ -123,16 +123,16 @@ const Form = ({
                   style,
                   ...mutationProps
               }: FormProps) => {
-    const bridge = new Bridge(schema, fields,overwrite)
+    const bridge = new Bridge(schema, fields, overwrite)
     const isDelete = Component === Delete
     const AllFields = isDelete ? [] : fields
     return (
         <Component id={id} schema={schema} fields={AllFields} {...mutationProps}>
-            {({mutate, doc = model, loading,called, ...rest}) => {
+            {({mutate, doc = model, loading, called, ...rest}) => {
                 doc && schema.clean(doc, AllFields)
                 return (
                     <AutoForm
-                        key={id && doc  && 'key'} //insurance rerender when is a update and doc arrive
+                        key={id && doc && 'key'} //insurance rerender when is a update and doc arrive
                         schema={bridge}
                         model={doc}
                         onSubmit={(model: object) => {
@@ -156,7 +156,7 @@ const Form = ({
                     >
 
                         {children && typeof children !== "function" && children}
-                        {children && typeof children === "function" && children({doc, loading,called, ...rest})}
+                        {children && typeof children === "function" && children({doc, loading, called, ...rest})}
                         {!children && (
                             <>
                                 <AutoFields autoField={AutoField} fields={fields}/>
