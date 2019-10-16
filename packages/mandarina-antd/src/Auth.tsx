@@ -12,8 +12,9 @@ export interface AuthElementsProps {
     denied?: ReactNode
     Error?: ElementType<{ error: Error }>
     userRoles: string[]
-    innerRef?: React.Ref<HTMLFormElement>
+    innerRef?: React.Ref<any>
 }
+
 
 
 const AuthAntD = ({Component,innerRef, schema, denied = null, userRoles = [], action, fields, Error, ...props}:

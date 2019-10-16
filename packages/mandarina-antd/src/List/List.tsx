@@ -19,7 +19,7 @@ export interface ListProps extends FindQueryProps {
     pageSize?: number
     first?: number
     where?: any
-    ref?: React.Ref<HTMLFormElement>
+    ref?: React.Ref<List>
 
 }
 

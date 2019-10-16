@@ -65,7 +65,7 @@ export interface ListProps extends ControlledListProps, Omit<FindProps, 'childre
     overLoad?: number
 
     header?: ReactComponentLike | HeaderDefaultProps
-    ref?: React.Ref<HTMLFormElement>
+    ref?: React.Ref<ListVirtualized>
 
 }
 
@@ -335,6 +335,7 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
         })
     };
     onHideOrShowColumn = (field: string, index: number, show: boolean) => {
+        console.log('onHideOrShowColumn',field,index,show)
         // @ts-ignore
         this.gridRef.current && this.gridRef.current.resetAfterColumnIndex(index, false);
 
@@ -353,6 +354,7 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
     };
     onHideColumn: OnHideColumn = (field: string, index: number) => {
         const {fields, overwrite} = this.state;
+        //check if is the last column, if is the the last you con not hidden
         const showingColumns = this.calcColumns(fields, overwrite).reduce((mem, col) => mem + (!!col ? 1 : 0), 0)
         if (showingColumns === 1) return
         this.onHideOrShowColumn(field, index, false)
