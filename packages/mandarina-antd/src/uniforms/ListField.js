@@ -63,6 +63,7 @@ const List = ({
                             label={null}
                             labelCol={labelCol}
                             name={joinName(name, index)}
+                            data-id={joinName(name, index)}
                             wrapperCol={wrapperCol}
                             fields={fields}
                             {...itemProps}
@@ -74,6 +75,7 @@ const List = ({
             <ListAddField name={`${name}.$`} initialCount={initialCount} size='large' className={'add-button'}
                           type={'primary'}
                           shape={'round'}
+                          data-id={name}
                           style={{}}>
                 Add {label}
             </ListAddField>

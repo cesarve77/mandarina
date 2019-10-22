@@ -86,9 +86,10 @@ export class Table {
 
     getDefaultActions(type: operationType) {
 
-        const result = {};
         // OperationName for query is user or users, for mutation are createUser, updateUser ....
         const operationNames: string[] = Object.values(this.schema.names[type]);
+        const result:{[resolverName: string]:(_: any, args: any, context: Context, info: any)=>void } = {};
+
         operationNames.forEach((operationName: string) => {
             if (!this.shouldHasManyUpdate()) return
             result[operationName] = async (_: any, args: any = {}, context: Context, info: any) => {

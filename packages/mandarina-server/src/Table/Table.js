@@ -241,14 +241,20 @@ var Table = /** @class */ (function () {
      */
     Table.prototype.callHook = function (schemaName, name, _, args, context, info) {
         return __awaiter(this, void 0, void 0, function () {
-            var hookHandler, data, fields, schema, _i, fields_1, field, def, inline, operations, _a, operations_1, operation, hookName, args2, table, _b, args2_1, arg2, e_1;
+            var prefix, hookHandler, data, fields, schema, _i, fields_1, field, def, inline, operations, table, _a, operations_1, operation, hookName, args2, _b, args2_1, arg2, e_1;
             return __generator(this, function (_c) {
                 switch (_c.label) {
                     case 0:
                         _c.trys.push([0, 18, , 19]);
+                        console.log('name', name);
+                        prefix = '';
+                        if (name.indexOf('before') === 0)
+                            prefix = 'before';
+                        if (name.indexOf('after') === 0)
+                            prefix = 'after';
                         hookHandler = this.options.hooks && this.options.hooks[name];
-                        if (!hookHandler) return [3 /*break*/, 17];
                         data = args.data;
+                        if (!(data && prefix)) return [3 /*break*/, 15];
                         fields = Object.keys(data);
                         schema = mandarina_1.Schema.getInstance(schemaName);
                         _i = 0, fields_1 = fields;
@@ -260,16 +266,21 @@ var Table = /** @class */ (function () {
                         inline = !!(def.table && def.table.relation && def.table.relation.link === 'INLINE');
                         if (!def.isTable) return [3 /*break*/, 14];
                         operations = Object.keys(data[field]);
+                        if (!Table.instances[def.type]) {
+                            console.warn("No table for " + def.type + " no neasted hooks applied");
+                            console.log('data[field]', data[field]);
+                            return [3 /*break*/, 14];
+                        }
+                        table = Table.getInstance(def.type);
                         _a = 0, operations_1 = operations;
                         _c.label = 2;
                     case 2:
                         if (!(_a < operations_1.length)) return [3 /*break*/, 14];
                         operation = operations_1[_a];
-                        hookName = "before" + utils_1.capitalize(operation);
+                        hookName = "" + prefix + utils_1.capitalize(operation);
+                        console.log('hookName', hookName);
                         args2 = data[field][operation];
-                        if (!Table.instances[def.type])
-                            return [3 /*break*/, 13];
-                        table = Table.getInstance(def.type);
+                        console.log('def.type', def.type);
                         if (!Array.isArray(args2)) return [3 /*break*/, 9];
                         _b = 0, args2_1 = args2;
                         _c.label = 3;
@@ -305,7 +316,9 @@ var Table = /** @class */ (function () {
                     case 14:
                         _i++;
                         return [3 /*break*/, 1];
-                    case 15: return [4 /*yield*/, hookHandler(_, args, context, info)];
+                    case 15:
+                        if (!hookHandler) return [3 /*break*/, 17];
+                        return [4 /*yield*/, hookHandler(_, args, context, info)];
                     case 16:
                         _c.sent();
                         _c.label = 17;
