@@ -58,14 +58,14 @@ var FindBase = /** @class */ (function (_super) {
     FindBase.prototype.render = function () {
         var _a;
         var _this = this;
-        var _b = this.props, fields = _b.fields, schema = _b.schema, after = _b.after, first = _b.first, type = _b.type, where = _b.where, skip = _b.skip, sort = _b.sort, children = _b.children, pollInterval = _b.pollInterval, notifyOnNetworkStatusChange = _b.notifyOnNetworkStatusChange, fetchPolicy = _b.fetchPolicy, errorPolicy = _b.errorPolicy, ssr = _b.ssr, displayName = _b.displayName, onCompleted = _b.onCompleted, onError = _b.onError, context = _b.context, partialRefetch = _b.partialRefetch, props = __rest(_b, ["fields", "schema", "after", "first", "type", "where", "skip", "sort", "children", "pollInterval", "notifyOnNetworkStatusChange", "fetchPolicy", "errorPolicy", "ssr", "displayName", "onCompleted", "onError", "context", "partialRefetch"]);
+        var _b = this.props, fields = _b.fields, schema = _b.schema, after = _b.after, first = _b.first, type = _b.type, where = _b.where, skip = _b.skip, sort = _b.sort, children = _b.children, pollInterval = _b.pollInterval, notifyOnNetworkStatusChange = _b.notifyOnNetworkStatusChange, fetchPolicy = _b.fetchPolicy, errorPolicy = _b.errorPolicy, ssr = _b.ssr, displayName = _b.displayName, onCompleted = _b.onCompleted, onError = _b.onError, context = _b.context, partialRefetch = _b.partialRefetch, having = _b.having, props = __rest(_b, ["fields", "schema", "after", "first", "type", "where", "skip", "sort", "children", "pollInterval", "notifyOnNetworkStatusChange", "fetchPolicy", "errorPolicy", "ssr", "displayName", "onCompleted", "onError", "context", "partialRefetch", "having"]);
         var orderBy;
         if (sort) {
             var field = Object.keys(sort)[0];
             orderBy = field + (sort[field] > 0 ? '_ASC' : '_DESC');
         }
         var names = schema.names;
-        var defaultQuery = this.buildQueryFromFields(fields.filter(function (field) { return _this.props.schema.hasPath(field); }));
+        var defaultQuery = utils_1.insertHaving(this.buildQueryFromFields(fields.filter(function (field) { return _this.props.schema.hasPath(field); })), having);
         var queryString;
         if (type === 'connection') {
             queryString = "query ($where: " + names.input.where[type] + ", $after: String, $first: Int, $skip: Int, $orderBy: " + names.orderBy + ") \n            { " + names.query[type] + " (where: $where, after: $after, first: $first, skip: $skip, orderBy: $orderBy) {\n                pageInfo {\n                  hasNextPage\n                  hasPreviousPage\n                  startCursor\n                  endCursor\n                }\n                edges {\n                  node  " + defaultQuery + "\n                }\n              }\n              totalCount: " + names.query[type] + " (where: $where) {\n                aggregate {\n                  count\n                }\n              }    \n            }";

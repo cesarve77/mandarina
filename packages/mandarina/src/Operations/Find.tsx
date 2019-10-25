@@ -2,7 +2,7 @@ import React, {PureComponent} from 'react'
 import {Schema} from '..'
 import gql from "graphql-tag";
 import {Query, QueryProps, QueryResult} from "react-apollo";
-import {buildQueryFromFields} from "./utils";
+import {buildQueryFromFields, insertHaving} from "./utils";
 import {pull} from 'lodash'
 
 export type FindQueryResult = Pick<QueryResult, 'data' | 'loading' | 'error' | 'variables' | 'networkStatus' | 'refetch' | 'fetchMore' | 'startPolling' | 'stopPolling' | 'subscribeToMore' | 'updateQuery' | 'client'>
@@ -27,6 +27,9 @@ export interface FindChildren {
 
 export type FindQueryProps = Pick<QueryProps, 'pollInterval' | 'notifyOnNetworkStatusChange' | 'fetchPolicy' | 'errorPolicy' | 'ssr' | 'displayName' | 'onCompleted' | 'onError' | 'context' | 'partialRefetch'>
 
+export type Having = {
+    [field: string]: any
+}
 
 export interface FindProps extends FindQueryProps {
     children?: FindChildren
@@ -37,6 +40,7 @@ export interface FindProps extends FindQueryProps {
     where?: object
     after?: string
     first?: number
+    having?: Having
     //todo: crear un parametro para hacer el refrescamiento de los quieres **1
 }
 
@@ -82,6 +86,7 @@ export class FindBase extends PureComponent<FindProps & FindBaseProps, FindBaseS
             onError,
             context,
             partialRefetch,
+            having,
             ...props
         } = this.props;
 
@@ -91,7 +96,7 @@ export class FindBase extends PureComponent<FindProps & FindBaseProps, FindBaseS
             orderBy = field + (sort[field] > 0 ? '_ASC' : '_DESC')
         }
         const {names} = schema
-        const defaultQuery = this.buildQueryFromFields(fields.filter(field=>this.props.schema.hasPath(field)))
+        const defaultQuery = insertHaving(this.buildQueryFromFields(fields.filter(field => this.props.schema.hasPath(field))), having)
         let queryString: string
         if (type === 'connection') {
             queryString = `query ($where: ${names.input.where[type]}, $after: String, $first: Int, $skip: Int, $orderBy: ${names.orderBy}) 
@@ -112,10 +117,10 @@ export class FindBase extends PureComponent<FindProps & FindBaseProps, FindBaseS
                 }
               }    
             }`
-
         } else {
             queryString = `query ($where: ${names.input.where[type]} ) { ${names.query[type]}  (where: $where) ${defaultQuery} }`
         }
+        console.log('queryString',queryString)
         const QUERY = gql(queryString)
         // save a rendered query history in the instance and in the class
         // for update cache queries on mutations
@@ -161,7 +166,7 @@ export class FindBase extends PureComponent<FindProps & FindBaseProps, FindBaseS
                         } else {
                             data = data && data[names.query[type]]
                         }
-                    }else{
+                    } else {
                         console.error(error)
                     }
                     if (!children) return null

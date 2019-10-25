@@ -1,6 +1,7 @@
 import {unflatten} from "flat";
 import {ensureId} from "../utils";
-
+import {Having} from "./Find";
+import stringifyObject from  'stringify-object'
 /**
  * get grqphql string from a list of field in dot notation
  * @param  keys - list of fields in dot notation
@@ -16,4 +17,36 @@ export const buildQueryFromFields = (keys: string[], sureId = true) => {
     const fieldsFlat = fields.reduce((obj, key) => Object.assign(obj, {[key]: {}}), {})
     const obj = unflatten(fieldsFlat)
     return JSON.stringify(obj).replace(/\{\}|\"|\:|null/g, '')
+}
+
+
+export const insertHaving = (qs: string, having?: Having) => {
+    if (!having) return qs
+    qs=qs.substring(1,qs.length-1)
+    const inserts: string[] = []
+    const parents = []
+    const havingParents = Object.keys(having)
+    for (let i = 0; i < qs.length; i++) {
+        const c = qs[i]
+        if (c === '{') {
+            const sub = qs.substring(0, i)
+            const regEx = (/(\w+$)/)
+            // @ts-ignore
+            const lastWord = regEx.exec(sub)[0]
+            parents.push(lastWord)
+            const path = parents.join('.')
+            if (havingParents.includes(path)) {
+                inserts[i] = path
+            }
+        }
+        if (c === '}') {
+            parents.pop()
+        }
+    }
+    let result = qs
+    for (let i = inserts.length; i > 0; i--) {
+        if (!inserts[i]) continue
+        result = `${qs.slice(0, i)}(where:${stringifyObject(having[inserts[i]],{indent:'',singleQuotes:false})})${qs.slice(i)}`
+    }
+    return `{${result}}`
 }

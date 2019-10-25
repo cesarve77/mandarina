@@ -7,8 +7,10 @@
   },
   "dependencies": {
     "@types/lodash.get": "^4.4.4",
+    "@types/stringify-object": "^3.2.0",
     "docusaurus": "^1.5.1",
-    "markdown-it-include": "^1.1.0"
+    "markdown-it-include": "^1.1.0",
+    "stringify-object": "^3.3.0"
   },
   "scripts": {
     "publish-docs": "GIT_USER=cesarve77 cd website && docusaurus-publish",

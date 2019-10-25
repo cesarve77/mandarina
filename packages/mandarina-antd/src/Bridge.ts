@@ -107,11 +107,14 @@ export class Bridge {
         return def.type
     }
 
+
     // Field's initial value.
     getInitialValue(name: string, props: object = {}) {
-
         const field = this.getField(name);
         const type = this.getType(name);
+        if (type === Array && typeof field.type === 'string') {
+            return  field.defaultValue || []
+        }
         if (type === Array) {
             const validators: Validator[] = field.validators
             let minCount = 0
@@ -163,7 +166,6 @@ export class Bridge {
 
     // Field's props.
     getProps(name: string, props: { placeholder?: boolean | null } = {}): FieldProps {
-
         if (!this.fieldProps[name]) {
             const field = this.getField(name)
             const transform = field.form && field.form.props && field.form.props.transform

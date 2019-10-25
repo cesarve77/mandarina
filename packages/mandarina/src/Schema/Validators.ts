@@ -2,9 +2,9 @@ import {ValidatorCreator} from "./ValidatorCreator";
 
 const exists = (value: any) => value === 0 || value
 
-const noEmpty = (value: any) => {
+export const noEmpty = (value: any) => {
     if (value && value.id) return true
-    return typeof value === 'object' && Object.keys(value).length > (value.hasOwnProperty('id') ? 1 : 0)
+    return typeof value === 'object' && Object.keys(value).length > (value.hasOwnProperty('id') ? 1 : 0) && Object.keys(value).filter(k => value[k] !== null && value[k] !== undefined).length > 0
 }
 
 export const required = new ValidatorCreator(exists, 'required', '{{label}} is required')

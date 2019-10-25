@@ -1,6 +1,6 @@
 {
   "exclude": [
-    "**/*.test.ts*",
+    "**/*.tests?.ts*",
     "build",
     "src/test/**",
     "src/uniforms/**",

@@ -2,7 +2,7 @@
 import {get, mapValues} from 'lodash';
 import * as inflection from "inflection";
 import {ErrorValidator, Validator, ValidatorCreator} from "./ValidatorCreator";
-import {isDate, isInteger, isNumber, isString, required} from "./Validators";
+import {isDate, isInteger, isNumber, isString} from "./Validators";
 import {capitalize, forceType, hasValidator, pluralize, singularize} from "./utils";
 import {UniqueSchemaError} from '../Errors/UniqueSchemaError';
 import {SchemaInstanceNotFound} from '../Errors/SchemaInstanceNotFound';
@@ -231,7 +231,7 @@ export class Schema {
         const isDateValidator = isDate.getValidatorWithParam();
         const isIntegerValidator = isInteger.getValidatorWithParam();
         const isStringValidator = isString.getValidatorWithParam();
-        const isRequired = required.getValidatorWithParam();
+        // const isRequired = required.getValidatorWithParam();
 
         if (definition.type === Number && (!hasValidator(fieldDefinition.validators, isNumberValidator.validatorName))) {
             fieldDefinition.validators.unshift(isNumberValidator);
@@ -249,9 +249,9 @@ export class Schema {
             fieldDefinition.validators.unshift(isStringValidator);
         }
 
-        if (Array.isArray(definition.type) && typeof definition.type[0] !== 'string' && (!hasValidator(fieldDefinition.validators, isRequired.validatorName))) {
-            fieldDefinition.validators.unshift(isRequired);
-        }
+        // if (Array.isArray(definition.type) && typeof definition.type[0] !== 'string' && (!hasValidator(fieldDefinition.validators, isRequired.validatorName))) {
+        //     fieldDefinition.validators.unshift(isRequired);
+        // }
 
         // set default -> default values
         fieldDefinition.isArray = false
@@ -261,7 +261,7 @@ export class Schema {
             if (typeof definition.type[0] === 'string') {
                 fieldDefinition.isTable = true
                 fieldDefinition.type = definition.type[0]
-                fieldDefinition.defaultValue = definition.defaultValue || {};
+                fieldDefinition.defaultValue = definition.defaultValue || [];
                 fieldDefinition.validators.forEach(({tableValidator, arrayValidator, validatorName}) => {
                     if (!tableValidator && !arrayValidator) {
                         throw new Error(`Field "${key}" in schema "${this.name}" only accept validator of type Table or Array and has validator "${validatorName}"`)
