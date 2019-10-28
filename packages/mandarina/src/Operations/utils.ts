@@ -1,7 +1,8 @@
 import {unflatten} from "flat";
 import {ensureId} from "../utils";
 import {Having} from "./Find";
-import stringifyObject from  'stringify-object'
+import stringifyObject from 'stringify-object'
+
 /**
  * get grqphql string from a list of field in dot notation
  * @param  keys - list of fields in dot notation
@@ -22,7 +23,7 @@ export const buildQueryFromFields = (keys: string[], sureId = true) => {
 
 export const insertHaving = (qs: string, having?: Having) => {
     if (!having) return qs
-    qs=qs.substring(1,qs.length-1)
+    qs = qs.substring(1, qs.length - 1)
     const inserts: string[] = []
     const parents = []
     const havingParents = Object.keys(having)
@@ -46,7 +47,10 @@ export const insertHaving = (qs: string, having?: Having) => {
     let result = qs
     for (let i = inserts.length; i > 0; i--) {
         if (!inserts[i]) continue
-        result = `${qs.slice(0, i)}(where:${stringifyObject(having[inserts[i]],{indent:'',singleQuotes:false})})${qs.slice(i)}`
+        result = `${qs.slice(0, i)}(where:${stringifyObject(having[inserts[i]], {
+            indent: '',
+            singleQuotes: false
+        })})${qs.slice(i)}`
     }
     return `{${result}}`
 }
