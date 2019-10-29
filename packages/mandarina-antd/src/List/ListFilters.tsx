@@ -121,7 +121,6 @@ export const getDefaultComponent = (field: string, fieldDefinition: FieldDefinit
         );
         const operator = (availableOperators.length > 1) ? (
             <Dropdown
-                overlayStyle={{width:'5px'}}
                 overlay={options}
             >
                 <a className="ant-dropdown-link">
