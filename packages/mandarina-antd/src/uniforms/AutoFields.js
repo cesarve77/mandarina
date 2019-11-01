@@ -37,7 +37,6 @@ class AutoFields extends Component {
     }
 
     render() {
-
         let {autoField, element, fields,omitFields=[], loading, ...props} = this.props;
         const fieldList=fields || this.fields
         if (this.groupNames.length > 1) return (
@@ -54,7 +53,7 @@ class AutoFields extends Component {
                 </Row>
             ))
         )
-        const filteredField=fieldList.filter(field => omitFields.indexOf(field) === -1)
+        const filteredField=fieldList.filter(field =>!omitFields.includes(field))
         const parents=getParentsDot(filteredField)
         return createElement(
             element,

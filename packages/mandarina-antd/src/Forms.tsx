@@ -52,7 +52,7 @@ export interface AutoFormProps {
     onSubmitFailure?: (e?: any) => void
     onSubmitSuccess?: (res?: any) => void
     onChangeModel?: (model: Model) => void
-    onSubmit?: (model: object) => Promise<void> | void
+    onSubmit?: (model: Model) => Promise<void> | void
     placeholder?: boolean
     innerRef?: React.Ref<HTMLFormElement>
     style?: any //todo encontrar el correcto
@@ -135,7 +135,8 @@ const Form = ({
                         key={id && doc && 'key'} //insurance rerender when is a update and doc arrive
                         schema={bridge}
                         model={doc}
-                        onSubmit={(model: object) => {
+                        onSubmit={(model: any) => {
+                            schema.clean(model,AllFields)// fill null all missing keys
                             onSubmit && onSubmit(model)
                             return mutate(model)
                         }}

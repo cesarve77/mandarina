@@ -149,7 +149,6 @@ export class Mutate extends PureComponent<WithApolloClient<MutateProps & { type:
     mutate(model: Model, mutationFn: MutationFn): Promise<void | FetchResult<Model>> {
         const {schema, where, type, optimisticResponse} = this.props
         const cleaned = deepClone(model)
-        schema.clean(cleaned, this.props.fields)// fill null all missing keys
         const data = this.getSubSchemaMutations(cleaned, schema)
         const mutation: MutationBaseOptions = {variables: {}}
         if (type !== 'delete') {

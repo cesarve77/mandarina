@@ -89,7 +89,7 @@ class ActionForm extends PureComponent<WithApolloClient<ActionFormProps>> {
                 {(mutation: MutationFn, {loading, error, ...restMutation}: MutationResult) => {
                     return (
                         <AutoForm disabled={loading}
-                                  onSubmit={(data: object) => {
+                                  onSubmit={(data: any) => {
                                       onSubmit && onSubmit(data)
                                       this.setState({changed: false})
                                       return mutation({variables: {data}});
