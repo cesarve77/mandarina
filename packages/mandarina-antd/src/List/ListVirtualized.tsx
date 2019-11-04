@@ -631,8 +631,9 @@ const Cell = React.memo(({columnIndex, rowIndex, data: {data, columns, query, re
     const CellComponent = columns[columnIndex].CellComponent || DefaultCellComponent;
     const loadingElement = columns[columnIndex].loadingElement || defaultLoadingElement;
     const props = columns[columnIndex].props || {};
+    const className=field.replace('.', '-')
     return (
-        <div className={'mandarina-list-cell ' + field.replace('.', '-')}
+        <div className={`mandarina-list-row-${rowIndex % 2!==0 ? 'even' : 'odd'} mandarina-list-cell ${className}`}
              style={style}>
             {!data[rowIndex] && loadingElement}
             {data[rowIndex] &&
