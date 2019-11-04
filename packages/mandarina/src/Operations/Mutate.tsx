@@ -149,6 +149,7 @@ export class Mutate extends PureComponent<WithApolloClient<MutateProps & { type:
     mutate(model: Model, mutationFn: MutationFn): Promise<void | FetchResult<Model>> {
         const {schema, where, type, optimisticResponse} = this.props
         const cleaned = deepClone(model)
+        //schema.clean(cleaned, this.props.fields)// fill null all missing keys
         const data = this.getSubSchemaMutations(cleaned, schema)
         const mutation: MutationBaseOptions = {variables: {}}
         if (type !== 'delete') {
@@ -393,8 +394,6 @@ export const refetchQueries = (mutationResult: FetchResult, client: ApolloClient
     const refetchQueries: { query: DocumentNode, variables?: OperationVariables }[] = []
     const {single = '', plural = '', connection = ''} = (schema && schema.names.query) || {}
     // @ts-ignore
-    window.client = client
-    // @ts-ignore
     client.cache.watches.forEach(({query, variables}) => {
         const queryName = query.definitions[0].selectionSet.selections[0].name.value
         const names: string[] = []
@@ -410,6 +409,7 @@ export const refetchQueries = (mutationResult: FetchResult, client: ApolloClient
             refetchQueries.push({query, variables})
         }
     })
+    console.log('refetchQueries',refetchQueries)
     return refetchQueries
 }
 

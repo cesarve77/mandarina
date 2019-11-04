@@ -162,7 +162,7 @@ const Form = ({
                             <>
                                 <AutoFields autoField={AutoField} fields={fields}/>
                                 <ErrorsField style={{marginBottom: '15px'}}/>
-                                {!autosave && <SubmitField size='large' loading={loading}/>}
+                                {!autosave && <SubmitField value={'Save'} size='large' loading={loading}/>}
                             </>)
                         }
                     </AutoForm>

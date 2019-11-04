@@ -45,12 +45,13 @@ export const insertHaving = (qs: string, having?: Having) => {
         }
     }
     let result = qs
-    for (let i = inserts.length; i > 0; i--) {
+    for (let i = inserts.length-1; i >= 0; i--) {
         if (!inserts[i]) continue
-        result = `${qs.slice(0, i)}(where:${stringifyObject(having[inserts[i]], {
+        result = `${result.slice(0, i)}(where:${stringifyObject(having[inserts[i]], {
             indent: '',
             singleQuotes: false
-        })})${qs.slice(i)}`
+        })})${result.slice(i)}`
+
     }
-    return `{${result}}`
+    return `{${result}}`.replace(/\n|\t/g,'')
 }
