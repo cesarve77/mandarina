@@ -226,7 +226,7 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
                 this.setState({width: container.clientWidth})
             }
             const {overLoad = 0} = this.props;
-            this.firstLoad = Math.max(this.firstLoad, Math.ceil(container.clientWidth / (this.props.estimatedRowHeight || estimatedRowHeightDefault)) + 1 + overLoad)
+            this.firstLoad = Math.max(this.firstLoad, Math.ceil(container.clientHeight / (this.props.estimatedRowHeight || estimatedRowHeightDefault)) + 1 + overLoad)
         }
 
     }

@@ -5,14 +5,14 @@ import {FieldDefinition, Overwrite} from 'mandarina/build/Schema/Schema'
 import {OnFilterChange, Where} from "./ListFilter";
 import {isEmpty, merge} from "lodash";
 import {DefaultCellComponent, getParentCellComponent} from "./ListVirtualized";
-import {FindQueryProps} from "mandarina/build/Operations/Find";
+import {FindProps} from "mandarina/build/Operations/Find";
 import {deepClone} from "mandarina/build/Operations/Mutate";
 import {Result} from "antd";
 //import ListHeader from "./ListHeader";
 export type onResize = (e: any, {size}: { size: { width: number } }) => void
 
 
-export interface ListProps extends FindQueryProps {
+export interface ListProps extends FindProps {
     schema: Schema
     fields: string[]
     overwrite?: Overwrite
@@ -240,7 +240,7 @@ export class List extends React.Component<ListProps, { columns: ColumnProps<any>
                             <div style={{textAlign: 'right'}}>
                                 Total {count}
                                 <TableAntD
-                                    scroll={{x:'100%'}}
+                                    scroll={{x: '100%'}}
                                     pagination={{
                                         pageSize: 5000, //todo
                                         total: count,
