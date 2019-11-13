@@ -8,7 +8,7 @@ import {SchemaInstanceNotFound} from "mandarina/build/Errors/SchemaInstanceNotFo
 import {capitalize} from 'mandarina/build/Schema/utils';
 import {MissingIdTableError} from "mandarina/build/Errors/MissingIDTableError";
 import {ErrorFromServerMapper} from "mandarina/src/Schema/Schema";
-import Mandarina from "../Mandarina";
+import Mandarina, {UserType} from "../Mandarina";
 import {deepClone} from "mandarina/build/Operations/Mutate";
 import {flatten} from "flat";
 import graphqlFields = require("graphql-fields");
@@ -325,7 +325,8 @@ export type Filter = {
 }
 
 export interface TableShapeOptions extends TableSchemaOptions {
-    errorFromServerMapper?: ErrorFromServerMapper
+    errorFromServerMapper?: ErrorFromServerMapper,
+    where?: (user:UserType)=>any
 }
 
 

@@ -161,10 +161,12 @@ export class Schema {
     validate(model: Model, fields: string[]): ErrorValidator[] {
         fields = insertParents(fields)
         this.clean(model, fields)
+        console.log('model', model)
+
         return this._validate(model, fields);
     }
 
-    getSchemaPermission(roles: string[]=[], action: Action) {
+    getSchemaPermission(roles: string[] = [], action: Action) {
         if (!this.permissions) return true
         for (const role in roles) {
             if (!this.permissions[action]) return true
@@ -174,15 +176,15 @@ export class Schema {
         return false
     }
 
-    getFieldPermission(field: string, roles: string[]=[], action: Action) {
-        const lastDot=field.lastIndexOf('.')
-        const parentPath = field.substring(0,lastDot)
+    getFieldPermission(field: string, roles: string[] = [], action: Action) {
+        const lastDot = field.lastIndexOf('.')
+        const parentPath = field.substring(0, lastDot)
         const def = this.getPathDefinition(field)
-        let parentRoles:string[]=[]
+        let parentRoles: string[] = []
         if (parentPath) {
             const parentDef = this.getPathDefinition(parentPath)
             parentRoles = parentDef.permissions[action] || ['everybody']
-        }else{
+        } else {
             parentRoles = this.permissions[action] || ['everybody']
         }
         const fieldRoles = def.permissions[action]
@@ -323,7 +325,7 @@ export class Schema {
         return fieldDefinition;
     }
 
-    validateQuery=(fields: any, roles: string[])=> {
+    validateQuery = (fields: any, roles: string[]) => {
         return
         for (const field of fields) {
             if (!this.getFieldPermission(field, roles, 'read')) {
@@ -409,7 +411,7 @@ export class Schema {
                 model[key] = forceType(model[key], Array)
                 if (definition.isTable) {
                     const schema = Schema.getInstance(definition.type)
-                    model[key] =model[key] &&  model[key].map((value: any) => {
+                    model[key] = model[key] && model[key].map((value: any) => {
                         schema._clean(value, getDecendentsDot(fields, key))
                         return value
                     });
@@ -472,12 +474,31 @@ export class Schema {
                     continue
                 }
                 if (
+                    definition.isTable &&
+                    !validator.tableValidator
+                ) {
+                    continue
+                }
+
+                if (
+                    definition.isArray &&
+                    !validator.arrayValidator
+                ) {
+                    continue
+                }
+                if (
                     definition.isArray &&
                     validator.arrayValidator &&
                     key.match(/\.\d+$/)  //if is a scalar like user.0
                 ) {
                     continue
                 }
+                console.log('{key: last, path: key, definition, value}', validator.validatorName, validator.arrayValidator, {
+                    key: last,
+                    path: key,
+                    definition,
+                    value
+                })
                 const instance = new validator({key: last, path: key, definition, value});
                 const error = instance.validate(model);
 

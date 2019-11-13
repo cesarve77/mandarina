@@ -73,6 +73,7 @@ var FindBase = /** @class */ (function (_super) {
         else {
             queryString = "query ($where: " + names.input.where[type] + " ) { " + names.query[type] + "  (where: $where) " + defaultQuery + " }";
         }
+        //console.log('queryString',queryString)
         var QUERY = graphql_tag_1.default(queryString);
         // save a rendered query history in the instance and in the class
         // for update cache queries on mutations

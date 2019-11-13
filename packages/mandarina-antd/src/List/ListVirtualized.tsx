@@ -225,7 +225,7 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
             if (!this.props.width && this.state.width !== container.clientWidth) {
                 this.setState({width: container.clientWidth})
             }
-            const {overLoad = 0} = this.props;
+            const {overLoad = 1} = this.props;
             this.firstLoad = Math.max(this.firstLoad, Math.ceil(container.clientHeight / (this.props.estimatedRowHeight || estimatedRowHeightDefault)) + 1 + overLoad)
         }
 
@@ -259,7 +259,7 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
             //TODO: maybe normalized the edgeds for try to do the sames queries, and get the data from the cache
             //TODO: maybe if we are in gap, then just query for that data
 
-            const {overLoad = 0} = this.props;
+            const {overLoad = 1} = this.props;
             this.refetch(
                 {
                     skip: this.overscanRowStartIndex,
@@ -447,7 +447,7 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
 
 
     render() {
-        const {schema, where, estimatedRowHeight, overscanRowCount = 2, overLoad = 0, header, ...rest} = this.props; //todo rest props
+        const {schema, where, estimatedRowHeight, overscanRowCount = 2, overLoad = 1, header, ...rest} = this.props; //todo rest props
 
         const {fields, width, height, filters, sort, overwrite} = this.state;
         const columns = this.calcColumns(fields, overwrite);

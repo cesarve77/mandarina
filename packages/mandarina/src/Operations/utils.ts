@@ -45,13 +45,17 @@ export const insertHaving = (qs: string, having?: Having) => {
         }
     }
     let result = qs
-    for (let i = inserts.length-1; i >= 0; i--) {
+    for (let i = inserts.length - 1; i >= 0; i--) {
         if (!inserts[i]) continue
-        result = `${result.slice(0, i)}(where:${stringifyObject(having[inserts[i]], {
-            indent: '',
-            singleQuotes: false
-        })})${result.slice(i)}`
+        const variables = Object.keys(having[inserts[i]])
+        let txt = variables.map(v => {
+            return `${v}:${stringifyObject(having[inserts[i]][v], {
+                indent: '',
+                singleQuotes: false
+            })}`
+        }).join(',')
+        result = `${result.slice(0, i)}(${txt})${result.slice(i)}`
 
     }
-    return `{${result}}`.replace(/\n|\t/g,'')
+    return `{${result}}`.replace(/\n|\t/g, '')
 }

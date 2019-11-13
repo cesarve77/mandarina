@@ -14,7 +14,7 @@ import {DeleteForm} from './Forms'
 import {UpdateForm} from './Forms'
 import {List} from './List/List'
 import {ListVirtualized} from './List/ListVirtualized'
-
+import {ApolloProvider, getDataFromTree} from "react-apollo";
 
 export {
     AuthCreateForm,
@@ -36,5 +36,8 @@ export {
     DeleteForm,
     CreateForm,
     UpdateForm,
+    ApolloProvider,
+    getDataFromTree
+
 }
 
