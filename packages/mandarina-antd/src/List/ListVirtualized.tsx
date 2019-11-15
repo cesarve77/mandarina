@@ -29,6 +29,7 @@ import {equalityFn} from "./utils";
 import Query from "react-apollo/Query";
 import {Result} from "antd";
 import {FindProps} from "mandarina/build/Operations/Find";
+import {canUseDOM} from "../utils";
 
 export interface OnHideColumn {
     (field: string, index: number): void//todo variables format
@@ -60,6 +61,7 @@ export interface ListProps extends ControlledListProps, Omit<FindProps, 'childre
     estimatedRowHeight?: number
     overscanRowCount?: number
     overLoad?: number
+    ssrFirstLoad?: 50
 
     header?: ReactComponentLike | HeaderDefaultProps
     ref?: React.Ref<ListVirtualized>
@@ -117,6 +119,8 @@ export interface ColumnProps {
 
 const estimatedColumnWidthDefault = 175;
 const estimatedRowHeightDefault = 60;
+const ssrFirstLoadDefault = 50;
+
 export type Filters = { [field: string]: Where }
 export type Sort = { [field: string]: 1 | -1 }
 
@@ -162,12 +166,14 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
             filters = {},
             overwrite,
             sort,
+            ssrFirstLoad=ssrFirstLoadDefault,
         } = props;
+
         //const definitions: Partial<FieldDefinitions> = {}
         this.state = {fields, overwrite, height: this.props.height || 0, width: this.props.width || 0, filters, sort};
         this.tHead = React.createRef();
         this.container = React.createRef();
-        this.firstLoad = Math.ceil((this.props.height || window.innerHeight) / estimatedRowHeight);
+        this.firstLoad = !canUseDOM ? ssrFirstLoad : Math.ceil((this.props.height || window.innerHeight) / estimatedRowHeight);
         this.overscanRowStopIndex = this.firstLoad
 
     }
