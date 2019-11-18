@@ -1,6 +1,6 @@
 {
   "name": "mandarina-antd",
-  "version": "0.8.9",
+  "version": "0.8.10",
   "description": "Antd styling for mandarina",
   "main": "build/index.js",
   "types": "build/index.d.ts",
@@ -14,6 +14,7 @@
     "@types/react-dom": "16.8.5"
   },
   "dependencies": {
+    "@types/react-sortable-hoc": "^0.7.1",
     "@types/graphql": "14.5.0",
     "@types/memoize-one": "^4.1.1",
     "array-move": "latest",

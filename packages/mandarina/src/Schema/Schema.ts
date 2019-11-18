@@ -8,6 +8,7 @@ import {UniqueSchemaError} from '../Errors/UniqueSchemaError';
 import {SchemaInstanceNotFound} from '../Errors/SchemaInstanceNotFound';
 import {getDecendentsDot, insertParents} from "../utils";
 import * as React from "react";
+import {ReactNode} from "react";
 import {flatten} from "flat";
 
 /**
@@ -552,7 +553,7 @@ type Where = any
 
 export type FilterMethod = (filter: any) => Where
 
-export type FilterComponent = ((props: any) => JSX.Element) | null
+export type FilterComponent = React.ComponentType<{ name: 'filter', label: false, col: false, defaultValue: '' }>
 
 
 export interface CellComponentProps {
@@ -587,7 +588,7 @@ export interface UserFieldDefinitionCommon {
         filterMethod?: FilterMethod
         filterComponent?: FilterComponent
         CellComponent?: CellComponent
-        loadingElement?: JSX.Element
+        loadingElement?: ReactNode
         noFilter?: boolean
         width?: number
         props?: any
@@ -656,7 +657,7 @@ export interface FieldDefinitionCommon extends UserFieldDefinitionCommon {
         filterMethod?: FilterMethod
         filterComponent?: FilterComponent
         CellComponent?: CellComponent
-        loadingElement?: JSX.Element
+        loadingElement?: ReactNode
         noFilter?: boolean
         width?: number
         props?: any
@@ -701,7 +702,7 @@ export interface OverwriteDefinition {
         filterMethod?: FilterMethod
         filterComponent?: FilterComponent
         CellComponent?: CellComponent
-        loadingElement?: JSX.Element
+        loadingElement?: ReactNode
         noFilter?: boolean
         width?: number
         props?: any

@@ -30,6 +30,7 @@ import Query from "react-apollo/Query";
 import {Result} from "antd";
 import {FindProps} from "mandarina/build/Operations/Find";
 import {canUseDOM} from "../utils";
+import Spin from "antd/lib/spin";
 
 export interface OnHideColumn {
     (field: string, index: number): void//todo variables format
@@ -61,7 +62,6 @@ export interface ListProps extends ControlledListProps, Omit<FindProps, 'childre
     estimatedRowHeight?: number
     overscanRowCount?: number
     overLoad?: number
-    ssrFirstLoad?: 50
 
     header?: ReactComponentLike | HeaderDefaultProps
     ref?: React.Ref<ListVirtualized>
@@ -119,7 +119,6 @@ export interface ColumnProps {
 
 const estimatedColumnWidthDefault = 175;
 const estimatedRowHeightDefault = 60;
-const ssrFirstLoadDefault = 50;
 
 export type Filters = { [field: string]: Where }
 export type Sort = { [field: string]: 1 | -1 }
@@ -166,14 +165,13 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
             filters = {},
             overwrite,
             sort,
-            ssrFirstLoad=ssrFirstLoadDefault,
         } = props;
 
         //const definitions: Partial<FieldDefinitions> = {}
         this.state = {fields, overwrite, height: this.props.height || 0, width: this.props.width || 0, filters, sort};
         this.tHead = React.createRef();
         this.container = React.createRef();
-        this.firstLoad = !canUseDOM ? ssrFirstLoad : Math.ceil((this.props.height || window.innerHeight) / estimatedRowHeight);
+        this.firstLoad = canUseDOM ? Math.ceil((this.props.height || window.innerHeight) / estimatedRowHeight) : 0
         this.overscanRowStopIndex = this.firstLoad
 
     }
@@ -453,6 +451,7 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
 
 
     render() {
+        if (!canUseDOM) return
         const {schema, where, estimatedRowHeight, overscanRowCount = 2, overLoad = 1, header, ...rest} = this.props; //todo rest props
 
         const {fields, width, height, filters, sort, overwrite} = this.state;
@@ -472,6 +471,7 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
         } else if (allFilters.length > 0) {
             whereAndFilter = {AND: allFilters}
         }
+        if (!canUseDOM) return <div style={{ width: '100%', textAlign: 'center'}}><Spin/></div>
         return (
             <Find schema={schema} where={whereAndFilter} skip={0} first={this.firstLoad + overLoad}
                   sort={sort}
@@ -637,9 +637,9 @@ const Cell = React.memo(({columnIndex, rowIndex, data: {data, columns, query, re
     const CellComponent = columns[columnIndex].CellComponent || DefaultCellComponent;
     const loadingElement = columns[columnIndex].loadingElement || defaultLoadingElement;
     const props = columns[columnIndex].props || {};
-    const className=field.replace('.', '-')
+    const className = field.replace('.', '-')
     return (
-        <div className={`mandarina-list-row-${rowIndex % 2!==0 ? 'even' : 'odd'} mandarina-list-cell ${className}`}
+        <div className={`mandarina-list-row-${rowIndex % 2 !== 0 ? 'even' : 'odd'} mandarina-list-cell ${className}`}
              style={style}>
             {!data[rowIndex] && loadingElement}
             {data[rowIndex] &&
