@@ -30,7 +30,6 @@ import Query from "react-apollo/Query";
 import {Result} from "antd";
 import {FindProps} from "mandarina/build/Operations/Find";
 import {canUseDOM} from "../utils";
-import Spin from "antd/lib/spin";
 
 export interface OnHideColumn {
     (field: string, index: number): void//todo variables format
@@ -470,158 +469,154 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
         } else if (allFilters.length > 0) {
             whereAndFilter = {AND: allFilters}
         }
-        if (!canUseDOM) return <div id={`list-${schema.name}`}>
-            <div style={{width: '100%', textAlign: 'center'}}><Spin/></div>
-        </div>
+        if (!canUseDOM) return null
         return (
-            <div id={`list-${schema.name}`}>
-                <Find schema={schema} where={whereAndFilter} skip={0} first={this.firstLoad + overLoad}
-                      sort={sort}
-                      fields={fields}
-                      notifyOnNetworkStatusChange
-                      {...rest}
-                >
-                    {({data = [], query, variables, error, refetch, loading, count, client, startPolling, stopPolling}) => {
+            <Find schema={schema} where={whereAndFilter} skip={0} first={this.firstLoad + overLoad}
+                  sort={sort}
+                  fields={fields}
+                  notifyOnNetworkStatusChange
+                  {...rest}
+            >
+                {({data = [], query, variables, error, refetch, loading, count, client, startPolling, stopPolling}) => {
 
-                        let dataCollection = data;
-                        if (this.data.length === 0 && data && !loading) {
-                            this.data = Array(count).fill(undefined)
-                        }
-                        if (!loading && count > this.data.length) {//when your are polling or refetching and the count change
-                            this.data = [...this.data, ...Array(count - this.data.length).fill(undefined)]
-                        }
-                        if (dataCollection.length && !loading) {
-                            this.data.splice(variables.skip, dataCollection.length, ...dataCollection);
-                        }
+                    let dataCollection = data;
+                    if (this.data.length === 0 && data && !loading) {
+                        this.data = Array(count).fill(undefined)
+                    }
+                    if (!loading && count > this.data.length) {//when your are polling or refetching and the count change
+                        this.data = [...this.data, ...Array(count - this.data.length).fill(undefined)]
+                    }
+                    if (dataCollection.length && !loading) {
+                        this.data.splice(variables.skip, dataCollection.length, ...dataCollection);
+                    }
 
-                        this.refetch = refetch;
-                        this.startPolling = startPolling;
-                        this.stopPolling = stopPolling;
-                        this.variables = variables;
-                        const tHeadHeight = this.tHead.current && this.tHead.current.offsetHeight || 0;
-                        const itemData = createItemData({...this.data}, columns, refetch, query, variables);
+                    this.refetch = refetch;
+                    this.startPolling = startPolling;
+                    this.stopPolling = stopPolling;
+                    this.variables = variables;
+                    const tHeadHeight = this.tHead.current && this.tHead.current.offsetHeight || 0;
+                    const itemData = createItemData({...this.data}, columns, refetch, query, variables);
 
-                        let headerNode: ReactNode = null;
-                        if (typeof header === 'function') {
-                            const Header = header;
-                            headerNode =
-                                <Header count={count}
-                                        client={client}
-                                        {...itemData}
-                                        fields={fields}
-                                        sort={sort}
-                                        filters={filters}
-                                        overwrite={overwrite}
-                                        onFieldsChange={this.props.onFieldsChange}
-                                        onSortChange={this.props.onSortChange}
-                                        onOverwriteChange={this.props.onOverwriteChange}
-                                        onFilterChange={this.props.onFilterChange}
-                                        loading={loading}
-                                        schema={schema}
-                                        where={whereAndFilter}
+                    let headerNode: ReactNode = null;
+                    if (typeof header === 'function') {
+                        const Header = header;
+                        headerNode =
+                            <Header count={count}
+                                    client={client}
+                                    {...itemData}
+                                    fields={fields}
+                                    sort={sort}
+                                    filters={filters}
+                                    overwrite={overwrite}
+                                    onFieldsChange={this.props.onFieldsChange}
+                                    onSortChange={this.props.onSortChange}
+                                    onOverwriteChange={this.props.onOverwriteChange}
+                                    onFilterChange={this.props.onFilterChange}
+                                    loading={loading}
+                                    schema={schema}
+                                    where={whereAndFilter}
 
-                                />
-                        }
-                        if (typeof header === 'object' || !header) {
-                            headerNode =
-                                <HeaderDefault count={count}
-                                               client={client}
-                                               {...itemData}
-                                               fields={fields}
-                                               sort={sort}
-                                               filters={filters}
-                                               overwrite={overwrite}
-                                               onFieldsChange={this.props.onFieldsChange}
-                                               onSortChange={this.props.onSortChange}
-                                               onOverwriteChange={this.props.onOverwriteChange}
-                                               onFilterChange={this.props.onFilterChange}
-                                               loading={loading}
-                                               schema={schema}
-                                               where={whereAndFilter}
-                                               {...header}/>
-                        }
+                            />
+                    }
+                    if (typeof header === 'object' || !header) {
+                        headerNode =
+                            <HeaderDefault count={count}
+                                           client={client}
+                                           {...itemData}
+                                           fields={fields}
+                                           sort={sort}
+                                           filters={filters}
+                                           overwrite={overwrite}
+                                           onFieldsChange={this.props.onFieldsChange}
+                                           onSortChange={this.props.onSortChange}
+                                           onOverwriteChange={this.props.onOverwriteChange}
+                                           onFilterChange={this.props.onFilterChange}
+                                           loading={loading}
+                                           schema={schema}
+                                           where={whereAndFilter}
+                                           {...header}/>
+                    }
 
-                        return (
-                            <>
-                                {headerNode}
-                                <div className={'mandarina-list'} ref={this.container}
-                                     style={{
-                                         width,
-                                         height: height + tHeadHeight
-                                     }}>
-                                    <div ref={this.tHead} className='mandarina-list-thead'
-                                         style={{width, height: tHeadHeight ? tHeadHeight : 'auto'}}>
-                                        <SortableColumns
-                                            shouldCancelStart={(event) => {
-                                                // @ts-ignore
-                                                return event.target && event.target.classList && event.target.classList.contains('react-resizable-handle') || event.target.classList.contains('no-draggable') || ['INPUT', 'SELECT', 'TEXTAREA'].includes(event.target.tagName)
-                                            }}
-                                            axis={'x'}
-                                            lockAxis={'x'}
-                                            pressThreshold={10}
-                                            distance={10}
-                                            onSortEnd={this.onColumnOrderChange}
-                                            width={this.estimatedColumnWidth * columns.length}
-                                            height={tHeadHeight}>
-                                            {columns.map((column, index) =>
-                                                column ?
-                                                    <SortableColumn
-                                                        height={tHeadHeight}
-                                                        key={`item-${column.field}`}
-                                                        index={index}
-                                                        columnIndex={index}
-                                                        column={column}
-                                                        sort={sort}
-                                                        filters={filters}
-                                                        schema={schema}
-                                                        onResizeStop={this.onResizeStop}
-                                                        onSortChange={this.onSortChange}
-                                                        onFilterChange={this.onFilterChange}
-                                                        onHideColumn={this.onHideColumn}
-                                                    /> : <span key={index}></span>)}
-                                        </SortableColumns>
-                                    </div>
-                                    {error && <Result status={"500"} subTitle={error.message}/>}
-                                    {!error && !loading && !count && <Empty style={{margin: '40px'}}/>}
-                                    {height !== 0 &&
-                                    <Grid
-                                        ref={this.gridRef}
-                                        onScroll={this.onScroll}
-                                        height={height}
-                                        rowCount={count}
-                                        estimatedColumnWidth={this.estimatedColumnWidth}
-                                        estimatedRowHeight={estimatedRowHeight}
-                                        columnCount={columns.length}
-                                        columnWidth={getColumnWidth}
-                                        rowHeight={(index: number) => estimatedRowHeight || estimatedRowHeightDefault}
-                                        width={width}
-                                        itemData={itemData}
-                                        overscanRowCount={overscanRowCount}
-                                        onItemsRendered={({
-                                                              overscanRowStartIndex,
-                                                              overscanRowStopIndex,
-                                                              visibleRowStartIndex,
-                                                              visibleRowStopIndex,
-
-                                                          }: any) => {
-
-
-                                            this.overscanRowStartIndex = overscanRowStartIndex;
-                                            this.overscanRowStopIndex = overscanRowStopIndex;
-                                            this.visibleRowStartIndex = visibleRowStartIndex;
-                                            this.visibleRowStopIndex = visibleRowStopIndex
-
+                    return (
+                        <>
+                            {headerNode}
+                            <div className={'mandarina-list'} ref={this.container}
+                                 style={{
+                                     width,
+                                     height: height + tHeadHeight
+                                 }}>
+                                <div ref={this.tHead} className='mandarina-list-thead'
+                                     style={{width, height: tHeadHeight ? tHeadHeight : 'auto'}}>
+                                    <SortableColumns
+                                        shouldCancelStart={(event) => {
+                                            // @ts-ignore
+                                            return event.target && event.target.classList && event.target.classList.contains('react-resizable-handle') || event.target.classList.contains('no-draggable') || ['INPUT', 'SELECT', 'TEXTAREA'].includes(event.target.tagName)
                                         }}
-                                    >
-                                        {Cell}
-                                    </Grid>}
+                                        axis={'x'}
+                                        lockAxis={'x'}
+                                        pressThreshold={10}
+                                        distance={10}
+                                        onSortEnd={this.onColumnOrderChange}
+                                        width={this.estimatedColumnWidth * columns.length}
+                                        height={tHeadHeight}>
+                                        {columns.map((column, index) =>
+                                            column ?
+                                                <SortableColumn
+                                                    height={tHeadHeight}
+                                                    key={`item-${column.field}`}
+                                                    index={index}
+                                                    columnIndex={index}
+                                                    column={column}
+                                                    sort={sort}
+                                                    filters={filters}
+                                                    schema={schema}
+                                                    onResizeStop={this.onResizeStop}
+                                                    onSortChange={this.onSortChange}
+                                                    onFilterChange={this.onFilterChange}
+                                                    onHideColumn={this.onHideColumn}
+                                                /> : <span key={index}></span>)}
+                                    </SortableColumns>
                                 </div>
-                            </>
-                        )
-                    }}
+                                {error && <Result status={"500"} subTitle={error.message}/>}
+                                {!error && !loading && !count && <Empty style={{margin: '40px'}}/>}
+                                {height !== 0 &&
+                                <Grid
+                                    ref={this.gridRef}
+                                    onScroll={this.onScroll}
+                                    height={height}
+                                    rowCount={count}
+                                    estimatedColumnWidth={this.estimatedColumnWidth}
+                                    estimatedRowHeight={estimatedRowHeight}
+                                    columnCount={columns.length}
+                                    columnWidth={getColumnWidth}
+                                    rowHeight={(index: number) => estimatedRowHeight || estimatedRowHeightDefault}
+                                    width={width}
+                                    itemData={itemData}
+                                    overscanRowCount={overscanRowCount}
+                                    onItemsRendered={({
+                                                          overscanRowStartIndex,
+                                                          overscanRowStopIndex,
+                                                          visibleRowStartIndex,
+                                                          visibleRowStopIndex,
 
-                </Find>
-            </div>
+                                                      }: any) => {
+
+
+                                        this.overscanRowStartIndex = overscanRowStartIndex;
+                                        this.overscanRowStopIndex = overscanRowStopIndex;
+                                        this.visibleRowStartIndex = visibleRowStartIndex;
+                                        this.visibleRowStopIndex = visibleRowStopIndex
+
+                                    }}
+                                >
+                                    {Cell}
+                                </Grid>}
+                            </div>
+                        </>
+                    )
+                }}
+
+            </Find>
         );
     }
 }
