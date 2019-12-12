@@ -2,8 +2,8 @@ import TableAntD, {ColumnProps} from 'antd/lib/table';
 import {Find, Schema} from 'mandarina';
 import * as React from "react";
 import {FieldDefinition, Overwrite} from 'mandarina/build/Schema/Schema'
-import {OnFilterChange, Where} from "./ListFilter";
-import {isEmpty, merge} from "lodash";
+import {Where} from "./ListFilter";
+import {merge} from "lodash";
 import {DefaultCellComponent, getParentCellComponent} from "./ListVirtualized";
 import {FindProps} from "mandarina/build/Operations/Find";
 import {deepClone} from "mandarina/build/Operations/Mutate";
@@ -134,7 +134,7 @@ export class List extends React.Component<ListProps, { columns: ColumnProps<any>
             onHeaderCell: (column: ColumnProps<any>) => ({
                 field: field,
                 fieldDefinition: definition,
-                onFilterChange: this.onFilterChange,
+                // onFilterChange: this.onFilterChange,
                 //width: column.width,
                 onResize: this.handleResize(index),
             })
@@ -142,16 +142,6 @@ export class List extends React.Component<ListProps, { columns: ColumnProps<any>
     }
 
 
-    onScroll = () => {
-        if (this.refetching || !this.hasNextPage) return // || this.lastHeight === clientHeight) return
-        const rect = this.me.current && this.me.current.getBoundingClientRect()
-        if (!rect) return
-        const documentElement = document.documentElement && document.documentElement.clientHeight
-        const isAlmostShowed = rect.bottom < (window.innerHeight || documentElement || 6000)
-        if (isAlmostShowed) {
-            this.fetchMore()
-        }
-    }
     buildFetchMore = (fetchMore: (fetchMoreOptions: any) => Promise<any>, endCursor?: string) => {//FetchMoreQueryOptions<{ variables: { offset: any } }, any>) => void, data: any[]) => {
         const name = this.props.schema.names.query.connection
         this.fetchMore = () => {
@@ -187,22 +177,22 @@ export class List extends React.Component<ListProps, { columns: ColumnProps<any>
     filters: { [field: string]: Where } = {}
 
 
-    onFilterChange: OnFilterChange = (field, where) => {
-        if (where && !isEmpty(where)) {
-            this.filters[field] = where
-        } else {
-            delete this.filters[field]
-        }
-        const allFilters = Object.values(this.filters)
-        this.variables.where = this.variables.where || {}
-        if (this.props.where) {
-            this.variables.where = {AND: [this.props.where, ...allFilters]}
-        } else {
-            this.variables.where = {AND: allFilters}
-        }
-
-        this.refetch(this.variables)
-    }
+    // onFilterChange: OnFilterChange = (field, where) => {
+    //     if (where && !isEmpty(where)) {
+    //         this.filters[field] = where
+    //     } else {
+    //         delete this.filters[field]
+    //     }
+    //     const allFilters = Object.values(this.filters)
+    //     this.variables.where = this.variables.where || {}
+    //     if (this.props.where) {
+    //         this.variables.where = {AND: [this.props.where, ...allFilters]}
+    //     } else {
+    //         this.variables.where = {AND: allFilters}
+    //     }
+    //
+    //     this.refetch(this.variables)
+    // }
 
 
     handleResize = (index: number): onResize => (e, {size}) => {
@@ -211,7 +201,7 @@ export class List extends React.Component<ListProps, { columns: ColumnProps<any>
             nextColumns[index] = {
                 ...nextColumns[index],
                 width: size.width,
-            };
+            };``
             return {columns: nextColumns};
         });
     };
@@ -223,8 +213,7 @@ export class List extends React.Component<ListProps, { columns: ColumnProps<any>
         return (
             <div className="list-wrapper" style={{width: '100%'}} ref={this.me}>
                 <Find schema={schema} where={where} first={first} fields={fields}
-
-                      onCompleted={this.onScroll}
+                      ssr={false}
                       {...findBaseProps}
                 >
                     {({data = [], variables, refetch, loading, count, pageInfo, fetchMore, error}) => {
