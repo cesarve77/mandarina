@@ -494,7 +494,7 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
                     this.startPolling = startPolling;
                     this.stopPolling = stopPolling;
                     this.variables = variables;
-                    const tHeadHeight = this.tHead.current && this.tHead.current.offsetHeight || 0;
+                    const tHeadHeight = this.tHead.current && this.tHead.current.offsetHeight || 95;
                     const itemData = createItemData({...this.data}, columns, refetch, query, variables);
 
                     let headerNode: ReactNode = null;
