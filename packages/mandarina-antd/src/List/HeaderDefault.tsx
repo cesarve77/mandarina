@@ -30,6 +30,7 @@ export type Action = (props: HeaderActionButtonProps) => void | Promise<any>
 export type ContentFnc = (props: HeaderActionButtonProps) => ReactNode
 
 export interface HeaderDefaultProps {
+    leftButtons?: ReactNode
     counter?: boolean
     menuItems?: (({ action?: Action, content: ReactNode | ReactElement | ContentFnc }) | string)[]
 }
@@ -43,7 +44,7 @@ const getOption = (optionName: string) => {
     return false
 }
 
-const HeaderDefault = ({counter = true, menuItems = [], count, ...props}: HeaderDefaultProps & HeaderProps) => {
+const HeaderDefault = ({leftButtons,counter = true, menuItems = [], count, ...props}: HeaderDefaultProps & HeaderProps) => {
     const [loadingAction, setLoadingAction] = useState(false)
     const menu = menuItems.map((item, index) => {
         if (typeof item === 'string') {
@@ -81,7 +82,7 @@ const HeaderDefault = ({counter = true, menuItems = [], count, ...props}: Header
     return (
         <Row gutter={0}>
             <Col span={12}>
-                {counter && `Total: ${count === 0 || count ? count : '...'}`}
+                {counter && `Total: ${count === 0 || count ? count : '...'}`}{leftButtons}
             </Col>
             {!!menu.length && <Col span={12} style={{textAlign: 'right'}}>
                 <Dropdown placement="bottomLeft" overlay={<Menu>{menu}</Menu>}>

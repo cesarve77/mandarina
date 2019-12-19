@@ -47,6 +47,7 @@ export interface ControlledListProps {
     onFieldsChange?: (fields: string[]) => void
     onOverwriteChange?: (overwrite: Overwrite) => void
     onSortChange?: (sort: Sort) => void
+    leftButtons?: ReactNode
 }
 
 
@@ -450,7 +451,7 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
 
 
     render() {
-        const {schema, where, estimatedRowHeight, overscanRowCount = 2, overLoad = 1, header, ...rest} = this.props; //todo rest props
+        const {schema,leftButtons, where, estimatedRowHeight, overscanRowCount = 2, overLoad = 1, header, ...rest} = this.props; //todo rest props
 
         const {fields, width, height, filters, sort, overwrite} = this.state;
         const columns = this.calcColumns(fields, overwrite);
@@ -514,6 +515,7 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
                                     onFilterChange={this.props.onFilterChange}
                                     loading={loading}
                                     schema={schema}
+                                    leftButtons={leftButtons}
                                     where={whereAndFilter}
 
                             />
