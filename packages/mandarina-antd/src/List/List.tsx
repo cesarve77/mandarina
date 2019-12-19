@@ -79,7 +79,7 @@ export class List extends React.Component<ListProps, { columns: ColumnProps<any>
 
 
     static defaultProps = {
-        first: 10,
+        first: 10000,
         pageSize: 10000,
     }
 

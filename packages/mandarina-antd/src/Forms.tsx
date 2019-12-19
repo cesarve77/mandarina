@@ -56,6 +56,7 @@ export interface AutoFormProps {
     placeholder?: boolean
     innerRef?: React.Ref<HTMLFormElement>
     style?: any //todo encontrar el correcto
+    validate: 'onChange' | 'onChangeAfterSubmit' | 'onSubmit'
 }
 
 
@@ -121,6 +122,7 @@ const Form = ({
                   onChangeModel,
                   overwrite,
                   style,
+                  validate,
                   ...mutationProps
               }: FormProps) => {
     const bridge = new Bridge(schema, fields, overwrite)
@@ -154,6 +156,7 @@ const Form = ({
                         onSubmitSuccess={onSubmitSuccess}
                         onSubmitFailure={onSubmitFailure}
                         style={style}
+                        validate={validate}
                     >
 
                         {children && typeof children !== "function" && children}
