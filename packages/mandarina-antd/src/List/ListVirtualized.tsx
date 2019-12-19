@@ -536,6 +536,7 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
                                            loading={loading}
                                            schema={schema}
                                            where={whereAndFilter}
+                                           leftButtons={leftButtons}
                                            {...header}/>
                     }
 
