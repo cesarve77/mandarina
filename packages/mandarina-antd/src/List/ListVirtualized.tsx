@@ -255,7 +255,7 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
         this.onScrollTimeoutId && window.clearTimeout(this.onScrollTimeoutId);
         this.onScrollTimeoutId = window.setTimeout(() => {
             //If all visible are loaded, then not refetch
-            if (this.data.slice(this.visibleRowStartIndex, this.visibleRowStopIndex).every((val) => val !== undefined)) {
+            if (this.data.length && this.data.slice(this.visibleRowStartIndex, this.visibleRowStopIndex).every((val) => val !== undefined)) {
                 resolve(false)
                 return;
             }
