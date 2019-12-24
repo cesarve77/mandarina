@@ -56,7 +56,7 @@ export interface AutoFormProps {
     placeholder?: boolean
     innerRef?: React.Ref<HTMLFormElement>
     style?: any //todo encontrar el correcto
-    validate: 'onChange' | 'onChangeAfterSubmit' | 'onSubmit'
+    validate?: 'onChange' | 'onChangeAfterSubmit' | 'onSubmit'
 }
 
 
