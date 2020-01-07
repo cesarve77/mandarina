@@ -4,6 +4,7 @@ import {Validator} from "mandarina/build/Schema/ValidatorCreator";
 import * as React from "react";
 import {merge} from "lodash";
 import {deepClone} from "mandarina/build/Operations/Mutate";
+import {getDecendentsDot} from "mandarina/build/utils";
 
 export interface ErrorInterface {
     [field: string]: string
@@ -113,7 +114,18 @@ export class Bridge {
         const field = this.getField(name);
         const type = this.getType(name);
         if (type === Array && typeof field.type === 'string') {
-            return  field.defaultValue || []
+            const validators: Validator[] = field.validators
+            let minCount = 0
+            const initialCount = field.form && field.form.props && field.form.props.initialCount || 0
+            validators.forEach((validator) => {
+                if (validator.validatorName === 'minCount') minCount = validator.param
+            })
+
+            const item = {}
+            const schema = Schema.getInstance(field.type)
+            schema.clean(item, getDecendentsDot(this.fields, name))
+            const items = Math.max(minCount, initialCount)
+            return new Array(items).fill(item)
         }
         if (type === Array) {
             const validators: Validator[] = field.validators
@@ -129,7 +141,7 @@ export class Bridge {
             let item = {}
             if (field.isTable) {
                 const schema = Schema.getInstance(field.type)
-                schema.clean(item, this.fields)
+                schema.clean(item, getDecendentsDot(this.fields, name))
             }
             return item
         }
@@ -165,14 +177,18 @@ export class Bridge {
     }
 
     // Field's props.
-    getProps(name: string, props: { placeholder?: boolean | null } = {}): FieldProps {
+    getProps(name: string, props: { placeholder?: boolean | null, validators?: string[] } = {}): FieldProps {
         if (!this.fieldProps[name]) {
             const field = this.getField(name)
             const transform = field.form && field.form.props && field.form.props.transform
             const validatorIsAllowed = this.findValidator('isAllowed', field)
             let allowedValues: any[] | undefined = undefined
             if (validatorIsAllowed) allowedValues = validatorIsAllowed.param
-            const required = !!(this.findValidator('required', field) || this.findValidator('noEmpty', field))
+            let localValidators: Validator[]=[]
+            if (props.validators){
+                localValidators=Schema.mapValidators(props.validators)
+            }
+            const required = !!(this.findValidator('required', field) || this.findValidator('noEmpty', field) ||  localValidators.some(v=>v.validatorName==='required'))
             let uniforms = field.form, component = field.form.component
             let placeholder = field.form && field.form.props && field.form.props.placeholder
             if (props.placeholder === false || props.placeholder === null) {

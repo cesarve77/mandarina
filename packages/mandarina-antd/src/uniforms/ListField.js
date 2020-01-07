@@ -22,7 +22,7 @@ const List = ({
                   value,
                   wrapperCol,
                   fields,
-                  ...props,
+                  ...props
               }) => {
         return <div {...filterDOMProps(props)}>
             {!!label && (
@@ -71,14 +71,16 @@ const List = ({
                     }
                 )
             )}
-
+            <div  style={{clear: 'both'}}>
             <ListAddField name={`${name}.$`} initialCount={initialCount} size='large' className={'add-button'}
                           type={'primary'}
                           shape={'round'}
                           data-id={`list-add-${name}`}
                           style={{}}>
                 Add {label}
+
             </ListAddField>
+            </div>
             <div style={{clear: 'both'}}></div>
         </div>;
     }

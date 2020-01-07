@@ -131,6 +131,7 @@ const Form = ({
     return (
         <Component id={id} schema={schema} fields={AllFields} {...mutationProps}>
             {({mutate, doc = model, loading, called, ...rest}) => {
+
                 doc && schema.clean(doc, AllFields)
                 return (
                     <AutoForm

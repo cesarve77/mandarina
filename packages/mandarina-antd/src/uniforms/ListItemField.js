@@ -6,7 +6,7 @@ import ListDelField from 'uniforms-antd/ListDelField';
 
 const ListItem = props => {
         return (
-            <div style={{width: '100%', clear: 'both'}}>
+            <div style={{width: '100%', clear: 'both', float: "none"}}>
                 <div
                     style={{
                         float: 'right',

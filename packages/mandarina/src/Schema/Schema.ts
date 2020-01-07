@@ -208,16 +208,7 @@ export class Schema {
         return {...this.shape[key]};
     }
 
-    applyDefinitionsDefaults(definition: UserFieldDefinition, key: string): FieldDefinition {
-        const fieldDefinition = <FieldDefinition>{};
-
-        if (!definition.validators) {
-            definition.validators = [];
-        }
-        //insert  type Validator on top
-
-        fieldDefinition.validators = definition.validators.map((validator: Validator | string | ValidatorFinder) => {
-
+    static mapValidators = (validators: (Validator | string | ValidatorFinder)[]) => validators.map((validator) => {
             if (typeof validator === 'string') { //is is a string i found the Validator constructor in the instances
                 return ValidatorCreator.getInstance(validator).getValidatorWithParam(true);
             } else if (typeof validator === 'object') {//if is a object is because the only property is the instance validatorName and the value is the param to pass to getValidatorWithParam
@@ -227,8 +218,13 @@ export class Schema {
             }
 
             return <Validator>validator;
-        });
+    })
 
+    applyDefinitionsDefaults(definition: UserFieldDefinition, key: string): FieldDefinition {
+        const fieldDefinition = <FieldDefinition>{};
+
+        //insert  type Validator on top
+        fieldDefinition.validators = Schema.mapValidators(definition.validators || [])
         const isNumberValidator = isNumber.getValidatorWithParam();
         const isDateValidator = isDate.getValidatorWithParam();
         const isIntegerValidator = isInteger.getValidatorWithParam();
@@ -374,13 +370,11 @@ export class Schema {
 
     /**
      * Mutate the model,with all keys  proper types and null for undefined
-     * TODO: Refactor to prevent mutation, fix it creating a new cloned model and returning it
      * @param model
      * @param fields
      * @param removeExtraKeys
      */
     protected _clean(model: Model | undefined | null, fields: string[], removeExtraKeys = true) {
-
         if (removeExtraKeys && model && typeof model === 'object') {
             Object.keys(model).forEach((key) => {
                 if (!this.keys.includes(key)) {
@@ -408,6 +402,8 @@ export class Schema {
                 return;
 
             } else if (definition.isArray && typeof model === 'object' && model !== undefined && model !== null) {
+
+
                 model[key] = forceType(model[key], Array)
                 if (definition.isTable) {
                     const schema = Schema.getInstance(definition.type)
@@ -453,6 +449,7 @@ export class Schema {
         });
         return def
     }
+
 
     private _validate(model: Model, fields?: string[]): ErrorValidator[] {
         let errors: ErrorValidator[] = [];
