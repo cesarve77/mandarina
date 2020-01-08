@@ -158,11 +158,9 @@ export class Schema {
         return this.filePath
     }
 
-    validate(model: Model, fields: string[]): ErrorValidator[] {
+    validate(model: Model, fields: string[],validators?:{[field: string]: Validator[]}): ErrorValidator[] {
         fields = insertParents(fields)
         this.clean(model, fields)
-        console.log('model', model)
-
         return this._validate(model, fields);
     }
 
@@ -455,8 +453,8 @@ export class Schema {
         let errors: ErrorValidator[] = [];
         const flatModel = flatten(model)
         const flatModelKeys = insertParents(Object.keys(flatModel))
-
         flatModelKeys.forEach(key => {
+
             const value = get(model, key)
             const cleanKey = Schema.cleanKey(key)
             if (fields && !fields.includes(cleanKey)) return
@@ -683,7 +681,7 @@ export interface OverwriteDefinition {
     type?: Native | string | Array<string> | Array<Native>,
     label?: Label
     description?: string
-    validators?: Array<Validator>
+    validators?: string[]
     defaultValue?: any
     form?: {
         initialCount?: number

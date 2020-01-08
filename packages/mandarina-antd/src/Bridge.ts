@@ -184,11 +184,7 @@ export class Bridge {
             const validatorIsAllowed = this.findValidator('isAllowed', field)
             let allowedValues: any[] | undefined = undefined
             if (validatorIsAllowed) allowedValues = validatorIsAllowed.param
-            let localValidators: Validator[]=[]
-            if (props.validators){
-                localValidators=Schema.mapValidators(props.validators)
-            }
-            const required = !!(this.findValidator('required', field) || this.findValidator('noEmpty', field) ||  localValidators.some(v=>v.validatorName==='required'))
+            const required = !!(this.findValidator('required', field) || this.findValidator('noEmpty', field))
             let uniforms = field.form, component = field.form.component
             let placeholder = field.form && field.form.props && field.form.props.placeholder
             if (props.placeholder === false || props.placeholder === null) {
@@ -200,6 +196,8 @@ export class Bridge {
                 if (validator.validatorName === 'minCount') minCount = validator.param
                 if (validator.validatorName === 'maxCount') maxCount = validator.param
             })
+
+
             this.fieldProps[name] = {
                 label: field.label ? field.label : "",
                 allowedValues,
