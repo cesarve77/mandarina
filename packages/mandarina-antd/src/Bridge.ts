@@ -1,5 +1,5 @@
 import {Schema} from "mandarina";
-import {FieldDefinition, Native, Overwrite} from "mandarina/build/Schema/Schema";
+import {FieldDefinition, Native, Overwrite, OverwriteDefinition} from "mandarina/build/Schema/Schema";
 import {Validator} from "mandarina/build/Schema/ValidatorCreator";
 import * as React from "react";
 import {merge} from "lodash";
@@ -163,28 +163,39 @@ export class Bridge {
         }
     }
 
-    findValidator(validatorName: string, field: string | FieldDefinition): undefined | Validator {
-        let def: FieldDefinition
+    findValidator(validatorName: string, field: string | FieldDefinition | OverwriteDefinition): undefined | Validator {
+        let def: FieldDefinition | OverwriteDefinition
+        let validators: Validator[] = []
         if (typeof field === 'string') {
             def = this.getField(field)
         } else {
             def = field
         }
-        for (const validator of def.validators) {
+
+        if (def.validators && def.validators.some(v => typeof v === 'string')) {
+            validators = Schema.mapValidators(def.validators)
+        } else {
+            validators = (def.validators || []) as Validator[]
+        }
+
+        for (const validator of validators) {
             if (validator.validatorName === validatorName) return validator
         }
         return
     }
 
     // Field's props.
-    getProps(name: string, props: { placeholder?: boolean | null, validators?: string[] } = {}): FieldProps {
+    getProps(name: string, props: { placeholder?: boolean | null } = {}): FieldProps {
         if (!this.fieldProps[name]) {
             const field = this.getField(name)
             const transform = field.form && field.form.props && field.form.props.transform
             const validatorIsAllowed = this.findValidator('isAllowed', field)
             let allowedValues: any[] | undefined = undefined
             if (validatorIsAllowed) allowedValues = validatorIsAllowed.param
-            const required = !!(this.findValidator('required', field) || this.findValidator('noEmpty', field))
+            const cleanName=Schema.cleanKey(name)
+            const required = !!(this.findValidator('required', field) || this.findValidator('noEmpty', field)
+                || (this.overwrite &&  this.overwrite[cleanName] && !!this.findValidator('required', this.overwrite[cleanName])))
+
             let uniforms = field.form, component = field.form.component
             let placeholder = field.form && field.form.props && field.form.props.placeholder
             if (props.placeholder === false || props.placeholder === null) {
@@ -237,7 +248,7 @@ export class Bridge {
     getValidator(): (model: any) => void {
         return (model: any) => {
             let enter = false
-            const errors = this.schema.validate(model, this.fields)
+            const errors = this.schema.validate(model, this.fields, this.overwrite)
             if (errors.length) {
                 const error = {}
                 errors.forEach((e) => {

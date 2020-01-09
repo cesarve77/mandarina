@@ -1,5 +1,4 @@
-// @ts-ignore
-import {get, mapValues} from 'lodash';
+import {get, mapValues, merge, cloneDeep} from 'lodash';
 import * as inflection from "inflection";
 import {ErrorValidator, Validator, ValidatorCreator} from "./ValidatorCreator";
 import {isDate, isInteger, isNumber, isString} from "./Validators";
@@ -9,6 +8,7 @@ import {SchemaInstanceNotFound} from '../Errors/SchemaInstanceNotFound';
 import {getDecendentsDot, insertParents} from "../utils";
 import * as React from "react";
 import {flatten} from "flat";
+
 
 /**
  * Schema is the base of all components in Mandarina
@@ -115,8 +115,8 @@ export class Schema {
         return !(!definition || Object.keys(definition).length === 0)
     }
 
-    getPathDefinition(field: string): FieldDefinition {
-        const definition = this._getPathDefinition(field)
+    getPathDefinition(field: string, overwrite?: OverwriteDefinition): FieldDefinition {
+        const definition = this._getPathDefinition(field, overwrite)
         if (!definition) {
             throw new Error(`Field "${field}" not found`)
         }
@@ -158,10 +158,10 @@ export class Schema {
         return this.filePath
     }
 
-    validate(model: Model, fields: string[],validators?:{[field: string]: Validator[]}): ErrorValidator[] {
+    validate(model: Model, fields: string[], overwrite?: Overwrite): ErrorValidator[] {
         fields = insertParents(fields)
         this.clean(model, fields)
-        return this._validate(model, fields);
+        return this._validate(model, fields, overwrite);
     }
 
     getSchemaPermission(roles: string[] = [], action: Action) {
@@ -425,11 +425,15 @@ export class Schema {
         })
     }
 
-    private _getPathDefinition(field: string): FieldDefinition {
+    private _getPathDefinition(field: string, overwrite?: OverwriteDefinition): FieldDefinition {
         if (!this.pathDefinitions[field]) {
             this.pathDefinitions[field] = this.generatePathDefinition(field);
         }
-        return this.pathDefinitions[field]
+        if (overwrite && overwrite.validators) {
+            overwrite.validators = Schema.mapValidators(overwrite.validators)
+        }
+        return overwrite ? merge(cloneDeep(this.pathDefinitions[field]), overwrite) : this.pathDefinitions[field]
+
     }
 
     private generatePathDefinition(key: string): FieldDefinition {
@@ -449,7 +453,7 @@ export class Schema {
     }
 
 
-    private _validate(model: Model, fields?: string[]): ErrorValidator[] {
+    private _validate(model: Model, fields?: string[], overwrite?: Overwrite): ErrorValidator[] {
         let errors: ErrorValidator[] = [];
         const flatModel = flatten(model)
         const flatModelKeys = insertParents(Object.keys(flatModel))
@@ -459,7 +463,7 @@ export class Schema {
             const cleanKey = Schema.cleanKey(key)
             if (fields && !fields.includes(cleanKey)) return
             const last = cleanKey.split('.').pop() as string
-            const definition = this.getPathDefinition(cleanKey);
+            const definition = this.getPathDefinition(cleanKey, overwrite && overwrite[cleanKey]);
             for (const validator of definition.validators) {
                 if (
                     definition.isTable &&
@@ -681,7 +685,7 @@ export interface OverwriteDefinition {
     type?: Native | string | Array<string> | Array<Native>,
     label?: Label
     description?: string
-    validators?: string[]
+    validators?: Array<Validator | string | ValidatorFinder>
     defaultValue?: any
     form?: {
         initialCount?: number
