@@ -708,7 +708,7 @@ export interface OverwriteDefinition {
     }
 }
 
-export type Label = string | false;
+export type Label = string | boolean;
 export type LabelResolver = (definition: UserFieldDefinition) => string;
 export type LabelOrResolver = Label | LabelResolver | undefined;
 
