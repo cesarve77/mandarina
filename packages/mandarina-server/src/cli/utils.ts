@@ -54,7 +54,11 @@ export interface ConfigInterface {
     }
     dir: ConfigDirInterface
     options?: {
-        auth?: boolean
+        auth?: {
+            enabled: boolean
+            extraRoles?: string[]
+        }
+
     }
     secret?: string
     customSettings: {

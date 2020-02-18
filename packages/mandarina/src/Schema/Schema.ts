@@ -1,4 +1,4 @@
-import {get, mapValues, merge, cloneDeep} from 'lodash';
+import {cloneDeep, get, mapValues, merge} from 'lodash';
 import * as inflection from "inflection";
 import {ErrorValidator, Validator, ValidatorCreator} from "./ValidatorCreator";
 import {isDate, isInteger, isNumber, isString} from "./Validators";
@@ -38,12 +38,7 @@ export class Schema {
     private filePath: string;
     private fieldsPermissions: {
         [field: string]: {
-            [role: string]: {
-                read: boolean
-                create: boolean
-                update: boolean
-                delete: boolean
-            }
+            [key in Action]: string[]
         }
     } = {}
 
@@ -60,6 +55,7 @@ export class Schema {
 
         this.errorFromServerMapper = errorFromServerMapper;
         this.permissions = permissions || {};
+        this.fieldsPermissions={}
         this.shape = mapValues(shape, (field, key) => this.applyDefinitionsDefaults(field, key));
         this.keys = Object.keys(this.shape);
         this.filePath = this.getFilePath()
@@ -165,9 +161,9 @@ export class Schema {
     }
 
     getSchemaPermission(roles: string[] = [], action: Action) {
-        if (!this.permissions) return true
-        for (const role in roles) {
-            if (!this.permissions[action]) return true
+        if (!this.permissions[action]) return true
+        const rolesWithEverybody = [...roles, 'everybody']
+        for (const role of rolesWithEverybody) {
             // @ts-ignore
             if (this.permissions[action].includes(role)) return true
         }
@@ -175,6 +171,10 @@ export class Schema {
     }
 
     getFieldPermission(field: string, roles: string[] = [], action: Action) {
+        const rolesWithEverybody = [...roles, 'everybody']
+        this.fieldsPermissions[field] = this.fieldsPermissions[field] || {}
+        this.fieldsPermissions[field][action] = this.fieldsPermissions[field][action] || ['everybody']
+        if (this.fieldsPermissions && this.fieldsPermissions[field] && this.fieldsPermissions[field][action] && this.fieldsPermissions[field][action].some(role=>rolesWithEverybody.includes(role))) return true
         const lastDot = field.lastIndexOf('.')
         const parentPath = field.substring(0, lastDot)
         const def = this.getPathDefinition(field)
@@ -187,16 +187,11 @@ export class Schema {
         }
         const fieldRoles = def.permissions[action]
         const lappedRoles = fieldRoles || parentRoles
-        for (const role of roles) {
-            this.fieldsPermissions[field] = this.fieldsPermissions[field] || {}
-            this.fieldsPermissions[field][role] = this.fieldsPermissions[field][role] || {}
-            if (this.fieldsPermissions[field][role][action] === undefined) {
-                this.fieldsPermissions[field][role][action] = !lappedRoles || (
-                    (lappedRoles.includes('everybody') || lappedRoles.includes(role)) &&
-                    !lappedRoles.includes('nobody'))
+        for (const role of rolesWithEverybody) {
+            if (!this.fieldsPermissions[field][action].includes(role) && lappedRoles.includes(role) && !lappedRoles.includes('nobody')){
+                this.fieldsPermissions[field][action].push(role)
+                return true
             }
-
-            if (this.fieldsPermissions[field][role][action]) return true;
         }
 
         return false
@@ -320,17 +315,21 @@ export class Schema {
     }
 
     validateQuery = (fields: any, roles: string[]) => {
-        return
         for (const field of fields) {
             if (!this.getFieldPermission(field, roles, 'read')) {
                 throw new Error(`401, You are not allowed to read "${field}" on ${this.name}`)
             }
         }
     }
+    validateConnection = (roles: string[]) => {
+        if (!this.getSchemaPermission(roles, 'read')) {
+            throw new Error(`401, You are not allowed to read on ${this.name}`)
+        }
+    }
 
     validateMutation(action: Action, mutation: any, roles?: null | string[]) {
         if (!roles) {
-            roles = ['everyone']
+            roles = ['everybody']
         }
         for (const m of mutation) {
             let data: any = m.data
@@ -492,12 +491,7 @@ export class Schema {
                 ) {
                     continue
                 }
-                console.log('{key: last, path: key, definition, value}', validator.validatorName, validator.arrayValidator, {
-                    key: last,
-                    path: key,
-                    definition,
-                    value
-                })
+
                 const instance = new validator({key: last, path: key, definition, value});
                 const error = instance.validate(model);
 
@@ -734,7 +728,7 @@ export interface Names {
     }
 }
 
-export type Permission = ('everyone' | 'nobody' | string)[]
+export type Permission = ('everybody' | 'nobody' | string)[]
 
 export interface Permissions {
     read?: Permission

@@ -55,6 +55,7 @@ var Mandarina_1 = require("../Mandarina");
 var Mutate_1 = require("mandarina/build/Operations/Mutate");
 var flat_1 = require("flat");
 var graphqlFields = require("graphql-fields");
+var language_1 = require("graphql/language");
 // import {flatten, unflatten} from "flat";
 /**
  *
@@ -111,16 +112,16 @@ var Table = /** @class */ (function () {
     };
     Table.prototype.getDefaultActions = function (type) {
         var _this = this;
-        var result = {};
         // OperationName for query is user or users, for mutation are createUser, updateUser ....
         var operationNames = Object.values(this.schema.names[type]);
+        var result = {};
         operationNames.forEach(function (operationName) {
             if (!_this.shouldHasManyUpdate())
                 return;
             result[operationName] = function (_, args, context, info) {
                 if (args === void 0) { args = {}; }
                 return __awaiter(_this, void 0, void 0, function () {
-                    var user, subOperationName, action, prismaMethod, result, capitalizedAction, obj, flatFields;
+                    var user, subOperationName, action, result, capitalizedAction, query, obj, flatFields, query;
                     return __generator(this, function (_a) {
                         switch (_a.label) {
                             case 0: return [4 /*yield*/, Mandarina_1.default.config.getUser(context)
@@ -134,12 +135,9 @@ var Table = /** @class */ (function () {
                                 user = _a.sent();
                                 subOperationName = operationName.substr(0, 6);
                                 action = (['create', 'update', 'delete'].includes(subOperationName) ? subOperationName : 'read');
-                                prismaMethod = context.prisma[type][operationName];
                                 capitalizedAction = utils_1.capitalize(action);
-                                // TODO: Review the hooks architecture for adding a way to execute hooks of nested operations
                                 return [4 /*yield*/, this.callHook(this.name, 'beforeValidate', _, args, context, info)];
                             case 2:
-                                // TODO: Review the hooks architecture for adding a way to execute hooks of nested operations
                                 _a.sent();
                                 if (!(type === 'mutation')) return [3 /*break*/, 6];
                                 // if (errors.length > 0) {
@@ -151,32 +149,10 @@ var Table = /** @class */ (function () {
                                 return [4 /*yield*/, this.callHook(this.name, "before" + capitalizedAction, _, args, context, info)];
                             case 3:
                                 _a.sent();
-                                return [4 /*yield*/, prismaMethod(args, info)];
+                                query = language_1.print(info.operation);
+                                return [4 /*yield*/, context.prisma.request(query, args)];
                             case 4:
-                                /*
-                                HACK https://github.com/prisma/prisma/issues/4327
-                                 */
-                                // if (`before${capitalizedAction}` === 'beforeUpdate' || `before${capitalizedAction}` === 'beforeCreate') {
-                                //     const flat = flatten(args.data)
-                                //     const where = args.where
-                                //     let run = false
-                                //     let withDeleteMany: any = {}
-                                //     let withoutDeleteMany: any = {}
-                                //     Object.keys(flat).forEach((key) => {
-                                //         if (key.match(/\.deleteMany\.0$/)) {
-                                //             run = true
-                                //             withDeleteMany[key] = flat[key]
-                                //         } else {
-                                //             withoutDeleteMany[key] = flat[key]
-                                //         }
-                                //     })
-                                //     if (run) {
-                                //         await prismaMethod({where, data: unflatten(withDeleteMany)}, info);
-                                //         args.data = unflatten(withoutDeleteMany)
-                                //     }
-                                // }
-                                result = _a.sent();
-                                //
+                                result = (_a.sent()).data[info.path.key];
                                 context.result = result;
                                 return [4 /*yield*/, this.callHook(this.name, "after" + capitalizedAction, _, args, context, info)];
                             case 5:
@@ -200,10 +176,11 @@ var Table = /** @class */ (function () {
                                 if (!obj.aggregate || !obj.aggregate.count) {
                                     this.schema.validateQuery(flatFields, user && user.roles || []);
                                 }
-                                return [4 /*yield*/, prismaMethod(args, info)];
+                                query = language_1.print(info.operation);
+                                console.log('query', query);
+                                return [4 /*yield*/, context.prisma.request(query, args)];
                             case 8:
-                                result = _a.sent();
-                                // console.log(graphqlFields(info))
+                                result = (_a.sent()).data[info.path.key];
                                 context.result = result;
                                 return [4 /*yield*/, this.callHook(this.name, 'afterQuery', _, args, context, info)];
                             case 9:
@@ -222,9 +199,6 @@ var Table = /** @class */ (function () {
             };
         });
         return result;
-    };
-    Table.prototype.register = function () {
-        // TODO: Do we need to implement this method?
     };
     /**
      * Go back a mutation object to the original object

@@ -1,22 +1,26 @@
 import Mandarina from "../Mandarina";
-import {ActionType, addToSet, getFields, getRoles} from "mandarina/build/Auth/Auth";
+import {ActionType, addToSet, getFields, getAllRoles} from "mandarina/build/Auth/Auth";
 import {Schema} from "mandarina";
+import {getConfig} from "../cli/utils.js";
 
 interface AuthInterface {
-    getRoles: () => Set<string>
+    getAllRoles: () => Set<string>
     resolvers: {
         AuthFields: (_: any, args: any, context: any, info: any) => Promise<string[] | undefined>
     }
 }
 
-
 export const actions = ['read', 'create', 'update', 'delete']
-
+const config = getConfig()
 export const Auth: AuthInterface = {
-    getRoles,
+    getAllRoles,
     resolvers: {
         AuthFields: async (_: any, {action, table, fields}: AuthArgs, context: any, info: any) => {
-            const allRoles = Auth.getRoles()
+            console.log('action,', action,)
+            console.log('table, ', table)
+            console.log('fields', fields)
+
+            const allRoles = Auth.getAllRoles()
             const user = await Mandarina.config.getUser(context)
 
             const userRoles: string[] = (user && user.roles) || []
@@ -24,14 +28,15 @@ export const Auth: AuthInterface = {
             const finalFields = new Set(getFields({userRoles, schema, action, fields}) || [])
             let tableRoles: Set<string> = new Set()
             let extraRoles: Set<string> = new Set()
-
+            const configExtraRoles = config.options && config.options.auth && config.options.auth.extraRoles || []
             userRoles.forEach((role) => {
                 if (allRoles.has(role)) {
                     tableRoles.add(role)
-                } else {
+                } else if (!configExtraRoles.includes(role)) {
                     extraRoles.add(role)
                 }
             })
+
             if (extraRoles.size === 0) return fields.filter(field => finalFields.has(field)) // for keep the order
 
             const alcFields = await context.prisma.query.authTables({
@@ -54,7 +59,7 @@ export const Auth: AuthInterface = {
             const userId = Table.config.getUserId(context)
 
             if (permissions && permissions[args.action]) {
-                if (permissions[args.action] === 'everyone') return table.schema.getFields()
+                if (permissions[args.action] === 'everybody') return table.schema.getFields()
                 if (permissions[args.action] === 'nobody') return null
                 if (permissions[args.action] === 'logged' && userId) return table.schema.getFields()
                 const permissionRoles = permissions[args.action].split('|')
@@ -86,7 +91,7 @@ export const Auth: AuthInterface = {
 }
 
 
-//export const staticPermissions = ['everyone', 'nobody', 'logged']
+//export const staticPermissions = ['everybody', 'nobody', 'logged']
 
 
 export interface AuthArgs {

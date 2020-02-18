@@ -52,7 +52,11 @@ class Auth extends Component<AuthPropsWithClient, { loading: boolean, fields: st
     render() {
         let {children, fields: hardCodeFields} = this.props;
         const {loading, fields: schemaFields, error} = this.state
+        console.log('hardCodeFields',hardCodeFields)
+        console.log('schemaFields',schemaFields)
+
         const fields = hardCodeFields.filter(field => schemaFields.includes(field))
+        console.log('fields-->',fields)
         return children({fields, loading, error})
     }
 }
@@ -76,12 +80,11 @@ export let authFields: {
 
 export const actions = ['read', 'create', 'update', 'delete']
 
-
-export const getRoles = () => {
+export const getAllRoles = () => {
     if (roles.size === 0) {
         const schemas = Object.values(Schema.instances)
         schemas.forEach((schema: Schema) => {
-            const fields = schema.getFields()
+            const fields = schema.keys
             fields.forEach(field => {
                 const permissions = schema.getPathDefinition(field).permissions
                 if (permissions.read) permissions.read.forEach(r => roles.add(r))
@@ -91,15 +94,23 @@ export const getRoles = () => {
             })
         })
     }
+
     return roles
 }
-export const getFields = (args: AuthArgs) => {
-    const allRoles = getRoles()
-    for (const userRole of args.userRoles) {
-        if (!allRoles.has(userRole)) return null;
-    }
 
-    if (!actions.includes(args.action)) throw new Error(`Action only can be one of ['read', 'create', 'update', 'delete'] now is: ${args.action} `)
+
+export const getFields = (args: AuthArgs) => {
+    const allRoles = getAllRoles()
+    const mandarina = require('../../../../../mandarina.json');
+    console.log('mandarina',mandarina)
+    for (const userRole of args.userRoles) {
+        if (!allRoles.has(userRole)) {
+            console.log('userRoleuserRoleuserRole',userRole)
+            return null;
+        }
+    }
+    console.log('allRoles',allRoles)
+    if (!actions.includes(args.action)) throw new Error(`Action only can be one of ['read', 'create', 'update', 'delete'] not: ${args.action} `)
     const finalFields: string[] = []
     args.fields.forEach(field => {
         if (!args.schema.hasPath(field)) {
@@ -119,7 +130,7 @@ export const getFields = (args: AuthArgs) => {
     const userId = Table.config.getUserId(context)
 
     if (permissions && permissions[args.action]) {
-        if (permissions[args.action] === 'everyone') return table.schema.getFields()
+        if (permissions[args.action] === 'everybody') return table.schema.getFields()
         if (permissions[args.action] === 'nobody') return null
         if (permissions[args.action] === 'logged' && userId) return table.schema.getFields()
         const permissionRoles = permissions[args.action].split('|')
@@ -146,7 +157,7 @@ export const getFields = (args: AuthArgs) => {
 }
 
 
-//export const staticPermissions = ['everyone', 'nobody', 'logged']
+//export const staticPermissions = ['everybody', 'nobody', 'logged']
 
 
 export interface AuthArgs {

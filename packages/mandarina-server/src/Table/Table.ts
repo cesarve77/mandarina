@@ -10,8 +10,9 @@ import {MissingIdTableError} from "mandarina/build/Errors/MissingIDTableError";
 import {ErrorFromServerMapper} from "mandarina/src/Schema/Schema";
 import Mandarina, {UserType} from "../Mandarina";
 import {deepClone} from "mandarina/build/Operations/Mutate";
-import {flatten} from "flat";
-import graphqlFields = require("graphql-fields");
+import {parseValue, print, Source, visit} from 'graphql/language'
+import {GraphQLResolveInfo} from "graphql";
+import stringifyObject from 'stringify-object'
 
 // import {flatten, unflatten} from "flat";
 
@@ -84,36 +85,41 @@ export class Table {
         return fields.length > 0
     }
 
+    //Insert where option in to the query
+    static dotConcat = (a: string | undefined, b: string) => a ? `${a}.${b}` : b;
+
     getDefaultActions(type: operationType) {
 
         // OperationName for query is user or users, for mutation are createUser, updateUser ....
         const operationNames: string[] = Object.values(this.schema.names[type]);
-        const result:{[resolverName: string]:(_: any, args: any, context: Context, info: any)=>void } = {};
+        const result: { [resolverName: string]: (_: any, args: any, context: Context, info: any) => void } = {};
 
         operationNames.forEach((operationName: string) => {
             if (!this.shouldHasManyUpdate()) return
-            result[operationName] = async (_: any, args: any = {}, context: Context, info: any) => {
+            result[operationName] = async (_: any, args: any = {}, context: Context, info: GraphQLResolveInfo) => {
                 const user = await Mandarina.config.getUser(context)
-                // console.log('*****************************************************')
+                console.log('***************************************************** user', user)
                 // console.log('operationName', operationName)
                 // console.log('args')
                 // console.dir(args, {depth: null})
                 //const user = await Mandarina.config.getUser(context);
                 const subOperationName: ActionType | string = operationName.substr(0, 6)
                 const action: ActionType = <ActionType>(['create', 'update', 'delete'].includes(subOperationName) ? subOperationName : 'read')
-                const prismaMethod = context.prisma[type][operationName];
+                //const prismaMethod = context.prisma[type][operationName];
                 let result: any
                 const capitalizedAction = capitalize(action)
-                // TODO: Review the hooks architecture for adding a way to execute hooks of nested operations
                 await this.callHook(this.name, 'beforeValidate', _, args, context, info);
+                const {query, queryString, fields} = this.insertWhereIntoInfo(info, user)
+
                 if (type === 'mutation') {
                     // if (errors.length > 0) {
                     //     await this.callHook('validationFailed', action, _, args, context, info);
                     // } else {
                     //     await this.callHook('afterValidate', action, _, args, context, info);
                     // }
+                    //VALIDATE IF USER CAN MUTATE THOSE FIELDS
                     this.schema.validateMutation(action, deepClone(args), user && user.roles);
-                    await this.callHook(this.name, <HookName>`before${capitalizedAction}`, _, args, context, info);
+                    await this.callHook(this.name, <HookName>`before${capitalizedAction}`, _, args, context, query);
 
                     /*
                     HACK https://github.com/prisma/prisma/issues/4327
@@ -133,35 +139,31 @@ export class Table {
                     //         }
                     //     })
                     //     if (run) {
-                    //         await prismaMethod({where, data: unflatten(withDeleteMany)}, info);
+                    //         await prismamethod({where, data: unflatten(withdeletemany)}, info);
                     //         args.data = unflatten(withoutDeleteMany)
                     //     }
                     // }
-                    result = await prismaMethod(args, info);
-                    //
+                    console.dir(JSON.parse(JSON.stringify(info)), {depth: 3})
+                    const data = (await context.prisma.request(queryString, args))
+                    if (data.error) console.error(data.error)
+                    result = data.data[info.path.key]
                     context.result = result
-                    await this.callHook(this.name, <HookName>`after${capitalizedAction}`, _, args, context, info);
-                    //this.validatePermissions('read', roles, fieldsList(info));
+                    await this.callHook(this.name, <HookName>`after${capitalizedAction}`, _, args, context, query);
+                    this.schema.validateQuery(fields, user && user.roles || []);
 
                 }
                 if (type === 'query') {
+                    await this.callHook(this.name, 'beforeQuery', _, args, context, query);
 
-                    await this.callHook(this.name, 'beforeQuery', _, args, context, info);
-
-                    const obj = graphqlFields(info)
-                    let flatFields: string[]
-                    //todo do somethig better validating what kind of query im running connection or query
-                    if (obj.edges && obj.edges.node) {
-                        flatFields = Object.keys(flatten(obj.edges.node))
+                    if (fields[0] !== 'aggregate') {
+                        this.schema.validateQuery(fields, user && user.roles || []);
                     } else {
-                        flatFields = Object.keys(flatten(obj))
+                        this.schema.validateConnection(user && user.roles || []);
                     }
-                    flatFields = flatFields.filter(f => !f.match(/\.?__typename$/))
-                    if (!obj.aggregate || !obj.aggregate.count) {
-                        this.schema.validateQuery(flatFields, user && user.roles || []);
-                    }
-                    result = await prismaMethod(args, info);
-                    // console.log(graphqlFields(info))
+                    //Validate if the roles is able to read those fields
+
+
+                    result = (await context.prisma.request(queryString, args)).data[info.path.key]
                     context.result = result
                     await this.callHook(this.name, 'afterQuery', _, args, context, info);
                 }
@@ -177,9 +179,63 @@ export class Table {
         return result;
     }
 
-    register() {
-        // TODO: Do we need to implement this method?
+    insertWhereIntoInfo = (info: GraphQLResolveInfo, user?: UserType | null) => {
+        const field: string[] = []
+        const fields = new Set<string>()
+        const query = visit(info.operation, {
+            enter: (node, key, parent, path, ancestors) => {
+                if (node.kind === 'Field' && node.name.value !== '__typename') {
+                    field.push(node.name.value)
+                    const internalField = field.slice(1).join('.')
+                    let table: Table | undefined
+                    if (internalField) {
+                        fields.add(internalField)
+                        const def = this.schema.getPathDefinition(internalField)
+                        if (def.isTable && def.isArray) {
+                            table = Table.instances[def.type]
+                        }
+                    } else {
+                        table = this
+
+                    }
+                    if (table && table.options.where) {
+                        const where = table.options.where(user)
+                        if (!where) return
+                        const clone = deepClone(node)
+                        const originalWhereObj = clone.arguments ? clone.arguments.find((a: any) => a.name.value === 'where') : null
+                        let originalWhereString = ''
+                        if (originalWhereObj) {
+                            originalWhereString = print(originalWhereObj.value)
+                        }
+                        const newWhereString = stringifyObject(where, {singleQuotes: false})
+                        let finalWhereString = originalWhereString ? `{AND:[${originalWhereString},${newWhereString}]}` : newWhereString
+                        if (originalWhereObj) {
+                            console.dir(JSON.parse(JSON.stringify(clone.arguments)), {depth: 3})
+                            originalWhereObj.value = parseValue(new Source(finalWhereString))
+                        } else {
+                            clone.arguments.push({
+                                kind: 'Argument',
+                                name:
+                                    {kind: 'Name', value: 'where'},
+                                value: parseValue(new Source(finalWhereString))
+                            })
+                        }
+                        return clone
+                    }
+                }
+                return
+            },
+            leave(node) {
+                if (node.kind === 'Field' && node.name.value !== '__typename') {
+                    field.pop()
+                }
+                return
+            }
+
+        });
+        return {fields: Array.from(fields), query, queryString: print(query)}
     }
+
 
     /**
      * Go back a mutation object to the original object
@@ -196,14 +252,15 @@ export class Table {
      * @param context
      * @param info
      */
-    async callHook(schemaName: string, name: HookName, _: any, args: any, context: any, info: any) {
+    async callHook(schemaName: string, name: HookName, _: any, args: any, context: any, info: GraphQLResolveInfo) {
         try {
-            console.log('name',name)
-            let prefix=''
-            if (name.indexOf('before')===0) prefix='before'
-            if (name.indexOf('after')===0) prefix='after'
+            let prefix = ''
+            if (name.indexOf('before') === 0) prefix = 'before'
+            if (name.indexOf('after') === 0) prefix = 'after'
             const hookHandler = this.options.hooks && this.options.hooks[name];
             let data: any = args.data
+
+
             if (data && prefix) {
                 const fields = Object.keys(data)
                 const schema = Schema.getInstance(schemaName)
@@ -214,15 +271,12 @@ export class Table {
                         const operations = Object.keys(data[field])
                         if (!Table.instances[def.type]) {
                             console.warn(`No table for ${def.type} no neasted hooks applied`)
-                            console.log('data[field]',data[field])
                             continue
                         }
                         const table = Table.getInstance(def.type)
                         for (const operation of operations) {
                             const hookName = `${prefix}${capitalize(operation)}` as HookName
-                            console.log('hookName',hookName)
                             const args2 = data[field][operation]
-                            console.log('def.type',def.type)
                             if (Array.isArray(args2)) {
                                 for (const arg2 of args2) {
                                     if (inline) {
@@ -326,7 +380,7 @@ export type Filter = {
 
 export interface TableShapeOptions extends TableSchemaOptions {
     errorFromServerMapper?: ErrorFromServerMapper,
-    where?: (user:UserType)=>any
+    where?: (user?: UserType | null) => any
 }
 
 
@@ -337,7 +391,6 @@ type HookName =
     | 'beforeCreate'
     | 'beforeDelete'
     | 'beforeUpdate'
-    | 'beforeSave'
     | 'afterCreate'
     | 'afterDelete'
     | 'afterUpdate'
