@@ -13,6 +13,7 @@ import {deepClone} from "mandarina/build/Operations/Mutate";
 import {parseValue, print, Source, visit} from 'graphql/language'
 import {GraphQLResolveInfo} from "graphql";
 import stringifyObject from 'stringify-object'
+import { isEmpty } from "lodash";
 
 // import {flatten, unflatten} from "flat";
 
@@ -86,7 +87,7 @@ export class Table {
     }
 
     //Insert where option in to the query
-    static dotConcat = (a: string | undefined, b: string) => a ? `${a}.${b}` : b;
+    // static dotConcat = (a: string | undefined, b: string) => a ? `${a}.${b}` : b;
 
     getDefaultActions(type: operationType) {
 
@@ -98,27 +99,21 @@ export class Table {
             if (!this.shouldHasManyUpdate()) return
             result[operationName] = async (_: any, args: any = {}, context: Context, info: GraphQLResolveInfo) => {
                 const user = await Mandarina.config.getUser(context)
-                console.log('***************************************************** user', user)
-                // console.log('operationName', operationName)
-                // console.log('args')
-                // console.dir(args, {depth: null})
-                //const user = await Mandarina.config.getUser(context);
                 const subOperationName: ActionType | string = operationName.substr(0, 6)
                 const action: ActionType = <ActionType>(['create', 'update', 'delete'].includes(subOperationName) ? subOperationName : 'read')
-                //const prismaMethod = context.prisma[type][operationName];
                 let result: any
                 const capitalizedAction = capitalize(action)
                 await this.callHook(this.name, 'beforeValidate', _, args, context, info);
                 const {query, queryString, fields} = this.insertWhereIntoInfo(info, user)
-
                 if (type === 'mutation') {
                     // if (errors.length > 0) {
                     //     await this.callHook('validationFailed', action, _, args, context, info);
                     // } else {
                     //     await this.callHook('afterValidate', action, _, args, context, info);
                     // }
+
                     //VALIDATE IF USER CAN MUTATE THOSE FIELDS
-                    this.schema.validateMutation(action, deepClone(args), user && user.roles);
+                    this.schema.validateMutation(action, deepClone(args), user && user.roles || []);
                     await this.callHook(this.name, <HookName>`before${capitalizedAction}`, _, args, context, query);
 
                     /*
@@ -143,9 +138,8 @@ export class Table {
                     //         args.data = unflatten(withoutDeleteMany)
                     //     }
                     // }
-                    console.dir(JSON.parse(JSON.stringify(info)), {depth: 3})
                     const data = (await context.prisma.request(queryString, args))
-                    if (data.error) console.error(data.error)
+                    if (data.errors) console.error(data.errors)
                     result = data.data[info.path.key]
                     context.result = result
                     await this.callHook(this.name, <HookName>`after${capitalizedAction}`, _, args, context, query);
@@ -153,25 +147,21 @@ export class Table {
 
                 }
                 if (type === 'query') {
+                    console.log('info.fieldName',info.fieldName)
+                    // console.dir(JSON.parse(JSON.stringify(info)),{depth:1})
                     await this.callHook(this.name, 'beforeQuery', _, args, context, query);
-
-                    if (fields[0] !== 'aggregate') {
-                        this.schema.validateQuery(fields, user && user.roles || []);
-                    } else {
+                    if (!!info.fieldName.match(/Connection$/)) {
                         this.schema.validateConnection(user && user.roles || []);
+                    } else {
+                        this.schema.validateQuery(fields, user && user.roles || []);
                     }
                     //Validate if the roles is able to read those fields
-
-
-                    result = (await context.prisma.request(queryString, args)).data[info.path.key]
+                    const data = (await context.prisma.request(queryString, args))
+                    if (data.errors) console.error(data.errors)
+                    result = data.data[info.path.key]
                     context.result = result
                     await this.callHook(this.name, 'afterQuery', _, args, context, info);
                 }
-                // bm('done in ')
-                // console.log('result')
-                // console.dir(result)
-                //
-                // console.log('*****************************************************')
                 return result;
             }
         });
@@ -200,7 +190,7 @@ export class Table {
                     }
                     if (table && table.options.where) {
                         const where = table.options.where(user)
-                        if (!where) return
+                        if (!where || isEmpty(where)) return
                         const clone = deepClone(node)
                         const originalWhereObj = clone.arguments ? clone.arguments.find((a: any) => a.name.value === 'where') : null
                         let originalWhereString = ''
@@ -210,7 +200,6 @@ export class Table {
                         const newWhereString = stringifyObject(where, {singleQuotes: false})
                         let finalWhereString = originalWhereString ? `{AND:[${originalWhereString},${newWhereString}]}` : newWhereString
                         if (originalWhereObj) {
-                            console.dir(JSON.parse(JSON.stringify(clone.arguments)), {depth: 3})
                             originalWhereObj.value = parseValue(new Source(finalWhereString))
                         } else {
                             clone.arguments.push({

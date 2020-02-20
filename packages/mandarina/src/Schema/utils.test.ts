@@ -3,7 +3,7 @@ import {get} from "./utils";
 let time = new Date().getTime()
 
 function bm(description = '') {
-    description && console.log(description, new Date().getTime() - time)
+    description && console.info(description, new Date().getTime() - time)
     time = new Date().getTime()
 
 }

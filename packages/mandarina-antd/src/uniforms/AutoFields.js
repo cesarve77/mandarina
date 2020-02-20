@@ -62,9 +62,9 @@ class AutoFields extends Component {
                 .map(field => {
                     let fields = getDecendentsDot(filteredField, field)
                     if (fields.length > 0) {
-                        return createElement(autoField, {key: field, name: field, fields})
+                        return createElement(autoField, {key: field, name: field, fields,...props})
                     }
-                    return createElement(autoField, {key: field, name: field})
+                    return createElement(autoField, {key: field, name: field,...props})
                 })
         )
     }

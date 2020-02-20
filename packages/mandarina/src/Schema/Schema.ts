@@ -36,11 +36,6 @@ export class Schema {
     private pathDefinitions: { [key: string]: FieldDefinition } = {}
     private original: Model;
     private filePath: string;
-    private fieldsPermissions: {
-        [field: string]: {
-            [key in Action]: string[]
-        }
-    } = {}
 
     constructor(shape: UserSchemaShape, options: SchemaOptions) {
         const {name, errorFromServerMapper, permissions} = options;
@@ -55,7 +50,6 @@ export class Schema {
 
         this.errorFromServerMapper = errorFromServerMapper;
         this.permissions = permissions || {};
-        this.fieldsPermissions={}
         this.shape = mapValues(shape, (field, key) => this.applyDefinitionsDefaults(field, key));
         this.keys = Object.keys(this.shape);
         this.filePath = this.getFilePath()
@@ -170,31 +164,30 @@ export class Schema {
         return false
     }
 
-    getFieldPermission(field: string, roles: string[] = [], action: Action) {
-        const rolesWithEverybody = [...roles, 'everybody']
-        this.fieldsPermissions[field] = this.fieldsPermissions[field] || {}
-        this.fieldsPermissions[field][action] = this.fieldsPermissions[field][action] || ['everybody']
-        if (this.fieldsPermissions && this.fieldsPermissions[field] && this.fieldsPermissions[field][action] && this.fieldsPermissions[field][action].some(role=>rolesWithEverybody.includes(role))) return true
-        const lastDot = field.lastIndexOf('.')
-        const parentPath = field.substring(0, lastDot)
-        const def = this.getPathDefinition(field)
-        let parentRoles: string[] = []
-        if (parentPath) {
-            const parentDef = this.getPathDefinition(parentPath)
-            parentRoles = parentDef.permissions[action] || ['everybody']
-        } else {
-            parentRoles = this.permissions[action] || ['everybody']
-        }
-        const fieldRoles = def.permissions[action]
-        const lappedRoles = fieldRoles || parentRoles
-        for (const role of rolesWithEverybody) {
-            if (!this.fieldsPermissions[field][action].includes(role) && lappedRoles.includes(role) && !lappedRoles.includes('nobody')){
-                this.fieldsPermissions[field][action].push(role)
-                return true
-            }
-        }
+    getFieldPermission(field: string, action: Action, roles?: string[]) {
 
-        return false
+        const rolesWithEverybody = [...(roles || []), 'everybody']
+        // let parentPath = field
+        // let lastDot = parentPath.lastIndexOf('.')
+        // let parentRoles: string[] = []
+        // while (lastDot >= 0) {
+        //     parentPath = parentPath.substring(0, lastDot)
+        //     lastDot = parentPath.lastIndexOf('.')
+        //     console.log('parentPath', parentPath)
+        //     console.log('lastDot', lastDot)
+        //     if (parentPath) {
+        //         const parentDef = this.getPathDefinition(parentPath)
+        //         const parentPermissions = parentDef.permissions[action]
+        //         if (parentPermissions) parentRoles.concat(parentPermissions)
+        //     }
+        // }
+        const def = this.getPathDefinition(field)
+        if (def.isTable && action === 'read') return true //prove only final fields
+        const fieldRoles = def.permissions[action] || []
+        // const lappedRoles = [...fieldRoles, ...parentRoles]
+
+        return fieldRoles.some(role => rolesWithEverybody.includes(role))
+
     }
 
     _getKeyDefinition(key: string): FieldDefinition {
@@ -316,23 +309,25 @@ export class Schema {
 
     validateQuery = (fields: any, roles: string[]) => {
         for (const field of fields) {
-            if (!this.getFieldPermission(field, roles, 'read')) {
+            if (!this.getFieldPermission(field, 'read', roles)) {
                 throw new Error(`401, You are not allowed to read "${field}" on ${this.name}`)
             }
         }
     }
     validateConnection = (roles: string[]) => {
+        //TODO : think what to do with this
+        return true
         if (!this.getSchemaPermission(roles, 'read')) {
             throw new Error(`401, You are not allowed to read on ${this.name}`)
         }
     }
 
-    validateMutation(action: Action, mutation: any, roles?: null | string[]) {
-        if (!roles) {
-            roles = ['everybody']
-        }
+    validateMutation = (action: Action, mutation: any, roles?: string[]) => {
+
+        if (!Array.isArray(mutation)) mutation = [mutation]
         for (const m of mutation) {
-            let data: any = m.data
+            let data: any = m.data || m.create
+            if (!data) continue
             const fields = Object.keys(data)
             for (const field of fields) {
                 const def = this.getPathDefinition(field)
@@ -343,22 +338,25 @@ export class Schema {
                     const operations = Object.keys(data[field])
                     for (const operation of operations) {
 
-                        if (operation === 'set' || operation === 'connect') {
-                            const allowed = this.getFieldPermission(field, roles, 'update')
-                            if (!allowed) throw new Error(`401, You are not allowed to update "${field}" on ${this.name}`)
-                        }
-                        if (operation === 'set' || operation === 'connect') continue
+                        // if (operation === 'set' || operation === 'connect') {
+                        //
+                        //     const allowed = this.getFieldPermission(field, action, roles)
+                        //     console.log('schema', this.name, 'field', field, 'operation', operation,'roles',roles,'result,',allowed )
+                        //
+                        //     if (!allowed) throw new Error(`401, You are not allowed to update "${field}" on ${this.name}`)
+                        //     continue
+                        // }
                         let args2 = data[field][operation]
                         if (!Array.isArray(args2)) args2 = [args2]
                         for (let arg2 of args2) {
-                            if (inline) arg2 = {data: arg2}
-                            schema.validateMutation(operation as Action, arg2, roles)
+                            if (inline || operation !== 'update') arg2 = {data: arg2}
+                            schema.validateMutation(action, arg2, roles)
                         }
 
                     }
                 } else {
-                    const allowed = this.getFieldPermission(field, roles, action)
-                    if (!allowed) throw new Error(`401, You are not allowed to ${action} "${field}" on ${def.type}`)
+                    const allowed = this.getFieldPermission(field, action, roles)
+                    if (!allowed) throw new Error(`401, You are not allowed to ${action} "${field}" on ${this.name}`)
                 }
             }
 

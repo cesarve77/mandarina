@@ -1,13 +1,11 @@
-import {Component, ReactNode} from "react"
+import {ReactNode} from "react"
 import {Schema} from "..";
-import {withApollo, WithApolloClient} from "react-apollo";
-import gql from "graphql-tag";
-import {ApolloQueryResult} from "apollo-client";
 
 export type ActionType = 'create' | 'read' | 'update' | 'delete'
 
 export interface AuthChildrenProps {
     fields: string[],
+    readFields?: string[],
     error?: Error,
     loading: boolean
 }
@@ -20,140 +18,39 @@ export interface AuthProps {
     children: ({fields, error, loading}: AuthChildrenProps) => ReactNode
 }
 
-type AuthPropsWithClient = WithApolloClient<AuthProps>
 
-class Auth extends Component<AuthPropsWithClient, { loading: boolean, fields: string[], error?: Error }> {
-    constructor(props: AuthPropsWithClient) {
-        super(props)
-        let {action, schema, userRoles, fields} = props;
-        const finalFields = getFields({fields, action, schema, userRoles})
-        if (finalFields === null) {
-            this.state = {loading: true, fields: []}
-        } else {
-            this.state = {loading: false, fields: finalFields}
-        }
-    }
+const Auth = ({children, action, schema, userRoles, fields}: AuthProps) => {
 
-    componentDidMount(): void {
-        if (this.state.loading) {
-            let {action, schema} = this.props;
-            const QUERY = gql`query fields ($action: String!, $table:String!) {AuthFields(action: $action, table: $table) }`
-            this.props.client.query({
-                query: QUERY,
-                variables: {action, table: schema.name}
-            })
-                .then(({data: {fields}}: ApolloQueryResult<{ fields: string[] }>) => {
-                    this.setState({loading: false, fields})
-                })
-                .catch((error) => this.setState({loading: false, error}))
-        }
-    }
+    const finalFields = getFields({fields, action, schema, userRoles})
 
-    render() {
-        let {children, fields: hardCodeFields} = this.props;
-        const {loading, fields: schemaFields, error} = this.state
-        console.log('hardCodeFields',hardCodeFields)
-        console.log('schemaFields',schemaFields)
 
-        const fields = hardCodeFields.filter(field => schemaFields.includes(field))
-        console.log('fields-->',fields)
-        return children({fields, loading, error})
-    }
+    console.log('userRoles', userRoles)
+    console.log('fields', fields)
+    console.log('finalFields', finalFields)
+    return children({fields: finalFields,loading: false, error: undefined})
 }
 
 
-export default withApollo<AuthProps>(Auth)
+export default Auth
 
 
-export const addToSet = (into: any[], toBeAdded: any[]) => toBeAdded.forEach(item => !into.includes(item) && into.push(item))
 
-
-let roles = new Set<string>()
-export let authFields: {
-    [tableName: string]: {
-        [action in ActionType]: {
-            [role: string]: string[]
-        }
-    }
-} = {}
 
 
 export const actions = ['read', 'create', 'update', 'delete']
 
-export const getAllRoles = () => {
-    if (roles.size === 0) {
-        const schemas = Object.values(Schema.instances)
-        schemas.forEach((schema: Schema) => {
-            const fields = schema.keys
-            fields.forEach(field => {
-                const permissions = schema.getPathDefinition(field).permissions
-                if (permissions.read) permissions.read.forEach(r => roles.add(r))
-                if (permissions.update) permissions.update.forEach(r => roles.add(r))
-                if (permissions.create) permissions.create.forEach(r => roles.add(r))
-                if (permissions.delete) permissions.delete.forEach(r => roles.add(r))
-            })
-        })
-    }
-
-    return roles
-}
-
 
 export const getFields = (args: AuthArgs) => {
-    const allRoles = getAllRoles()
-    const mandarina = require('../../../../../mandarina.json');
-    console.log('mandarina',mandarina)
-    for (const userRole of args.userRoles) {
-        if (!allRoles.has(userRole)) {
-            console.log('userRoleuserRoleuserRole',userRole)
-            return null;
-        }
-    }
-    console.log('allRoles',allRoles)
     if (!actions.includes(args.action)) throw new Error(`Action only can be one of ['read', 'create', 'update', 'delete'] not: ${args.action} `)
     const finalFields: string[] = []
     args.fields.forEach(field => {
         if (!args.schema.hasPath(field)) {
             finalFields.push(field)
-        } else if (args.schema.getFieldPermission(field, args.userRoles, args.action)) {
+        } else if (args.schema.getFieldPermission(field, args.action, args.userRoles)) {
             finalFields.push(field)
         }
     })
     return finalFields
-
-    /*const staticRoles = roles.filter(permissionRoles.includes)
-    const dynamicRoles = roles.filter((field: string) => !permissionRoles.includes(field))
-
-
-    const table = Table.getInstance(args.table)
-    const permissions = table.options.permissions
-    const userId = Table.config.getUserId(context)
-
-    if (permissions && permissions[args.action]) {
-        if (permissions[args.action] === 'everybody') return table.schema.getFields()
-        if (permissions[args.action] === 'nobody') return null
-        if (permissions[args.action] === 'logged' && userId) return table.schema.getFields()
-        const permissionRoles = permissions[args.action].split('|')
-
-
-        const result: string[] = []
-        if (staticRoles.length) {
-
-        }
-        if (dynamicRoles.length) {
-            const response = await context.prisma.query.authTables({
-                where: {
-                    role_in: userRoles,
-                    table: args.table,
-                    action: args.action,
-                }
-            })
-            const fields = response && response.data && response.data.authTables
-            if (fields) return result.concat(fields)
-        }
-        return result.length ? result : null
-    }
-    return table.schema.getFields()*/
 }
 
 

@@ -409,14 +409,12 @@ export const refetchQueries = (mutationResult: FetchResult, client: ApolloClient
             refetchQueries.push({query, variables})
         }
     })
-    console.log('refetchQueries',refetchQueries)
     return refetchQueries
 }
 
 export const getSubSchemaMutations = (model: Model, schema: Schema, mutationType: MutationType) => {
     const obj: any = {}
     if (typeof model !== "object" || model === undefined || model === null) return model
-    console.log('model',model)
     Object.keys(model).forEach((key) => {
         const value = model[key]
         let definition = schema.getPathDefinition(key)
@@ -448,7 +446,6 @@ export const getSubSchemaMutations = (model: Model, schema: Schema, mutationType
                             result['set'] = result['set'] || []
                             result['set'].push({id: item.id})
                         } else {
-                            console.log('item',item)
                             item.id = generateUUID()
                             result['set'] = result['set'] || []
                             result['set'].push({id: item.id})

@@ -336,7 +336,6 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
         })
     };
     onHideOrShowColumn = (field: string, index: number, show: boolean) => {
-        console.log('onHideOrShowColumn', field, index, show)
         // @ts-ignore
         this.gridRef.current && this.gridRef.current.resetAfterColumnIndex(index, false);
 
