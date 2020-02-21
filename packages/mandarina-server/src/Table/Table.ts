@@ -13,7 +13,7 @@ import {deepClone} from "mandarina/build/Operations/Mutate";
 import {parseValue, print, Source, visit} from 'graphql/language'
 import {GraphQLResolveInfo} from "graphql";
 import stringifyObject from 'stringify-object'
-import { isEmpty } from "lodash";
+import {isEmpty} from "lodash";
 
 // import {flatten, unflatten} from "flat";
 
@@ -98,13 +98,14 @@ export class Table {
         operationNames.forEach((operationName: string) => {
             if (!this.shouldHasManyUpdate()) return
             result[operationName] = async (_: any, args: any = {}, context: Context, info: GraphQLResolveInfo) => {
+
                 const user = await Mandarina.config.getUser(context)
                 const subOperationName: ActionType | string = operationName.substr(0, 6)
                 const action: ActionType = <ActionType>(['create', 'update', 'delete'].includes(subOperationName) ? subOperationName : 'read')
                 let result: any
                 const capitalizedAction = capitalize(action)
                 await this.callHook(this.name, 'beforeValidate', _, args, context, info);
-                const {query, queryString, fields} = this.insertWhereIntoInfo(info, user)
+                let {query, queryString, fields} = this.insertWhereIntoInfo(info, user)
                 if (type === 'mutation') {
                     // if (errors.length > 0) {
                     //     await this.callHook('validationFailed', action, _, args, context, info);
@@ -147,7 +148,7 @@ export class Table {
 
                 }
                 if (type === 'query') {
-                    console.log('info.fieldName',info.fieldName)
+
                     // console.dir(JSON.parse(JSON.stringify(info)),{depth:1})
                     await this.callHook(this.name, 'beforeQuery', _, args, context, query);
                     if (!!info.fieldName.match(/Connection$/)) {
@@ -156,9 +157,18 @@ export class Table {
                         this.schema.validateQuery(fields, user && user.roles || []);
                     }
                     //Validate if the roles is able to read those fields
+
+                    if (type==='query' && operationName===this.schema.names.query.single){
+                        queryString=queryString.replace(operationName,this.schema.names.query.plural)
+                        queryString=queryString.replace(new RegExp(`${this.schema.names.input.where.single}!?`),this.schema.names.input.where.plural +'!')
+                    }
                     const data = (await context.prisma.request(queryString, args))
                     if (data.errors) console.error(data.errors)
                     result = data.data[info.path.key]
+                    if (type==='query' && operationName===this.schema.names.query.single){
+                        result = data.data[this.schema.names.query.plural]
+                        result=result && result.length===1 ? result[0] : null
+                    }
                     context.result = result
                     await this.callHook(this.name, 'afterQuery', _, args, context, info);
                 }
@@ -172,6 +182,7 @@ export class Table {
     insertWhereIntoInfo = (info: GraphQLResolveInfo, user?: UserType | null) => {
         const field: string[] = []
         const fields = new Set<string>()
+        let required = false
         const query = visit(info.operation, {
             enter: (node, key, parent, path, ancestors) => {
                 if (node.kind === 'Field' && node.name.value !== '__typename') {
@@ -186,7 +197,6 @@ export class Table {
                         }
                     } else {
                         table = this
-
                     }
                     if (table && table.options.where) {
                         const where = table.options.where(user)
@@ -194,8 +204,9 @@ export class Table {
                         const clone = deepClone(node)
                         const originalWhereObj = clone.arguments ? clone.arguments.find((a: any) => a.name.value === 'where') : null
                         let originalWhereString = ''
-                        if (originalWhereObj) {
+                        if (originalWhereObj && table === this) {
                             originalWhereString = print(originalWhereObj.value)
+                            required = true
                         }
                         const newWhereString = stringifyObject(where, {singleQuotes: false})
                         let finalWhereString = originalWhereString ? `{AND:[${originalWhereString},${newWhereString}]}` : newWhereString
@@ -218,11 +229,13 @@ export class Table {
                 if (node.kind === 'Field' && node.name.value !== '__typename') {
                     field.pop()
                 }
-                return
+
             }
 
         });
-        return {fields: Array.from(fields), query, queryString: print(query)}
+        let queryString= print(query)
+        if (required) queryString=queryString.replace(/\$where: (\w*)Input,/,'$where: $1Input!,')
+        return {fields: Array.from(fields), query, queryString}
     }
 
 

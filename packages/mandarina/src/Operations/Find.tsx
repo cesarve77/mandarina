@@ -3,7 +3,6 @@ import {Schema} from '..'
 import gql from "graphql-tag";
 import {Query, QueryProps, QueryResult} from "react-apollo";
 import {buildQueryFromFields, insertHaving} from "./utils";
-import {pull} from 'lodash'
 
 export type FindQueryResult = Pick<QueryResult, 'data' | 'loading' | 'error' | 'variables' | 'networkStatus' | 'refetch' | 'fetchMore' | 'startPolling' | 'stopPolling' | 'subscribeToMore' | 'updateQuery' | 'client'>
 
@@ -54,21 +53,15 @@ export interface FindBaseState {
 
 export class FindBase extends PureComponent<FindProps & FindBaseProps, FindBaseState> {
     static defaultProps = {where: {}, first: 50}
-    static queries: object[]
     queryHistory: object[] = []
 
     buildQueryFromFields = (fields: string[]) => buildQueryFromFields(fields)
 
     constructor(props: FindProps & FindBaseProps) {
         super(props)
-        FindBase.queries = FindBase.queries || []
-        //todo: **1
+
     }
 
-    componentWillUnmount() {
-        if (!Array.isArray(FindBase.queries)) return
-        pull(FindBase.queries, ...this.queryHistory)
-    }
 
 
     render() {
@@ -89,7 +82,6 @@ export class FindBase extends PureComponent<FindProps & FindBaseProps, FindBaseS
             having,
             ...props
         } = this.props;
-
         let orderBy: undefined | string
         if (sort) {
             const field = Object.keys(sort)[0]
@@ -120,13 +112,11 @@ export class FindBase extends PureComponent<FindProps & FindBaseProps, FindBaseS
         } else {
             queryString = `query ($where: ${names.input.where[type]} ) { ${names.query[type]}  (where: $where) ${defaultQuery} }`
         }
-        //console.log('queryString',queryString)
         const QUERY = gql(queryString)
         // save a rendered query history in the instance and in the class
         // for update cache queries on mutations
         const query = {[names.input[type]]: where}
         this.queryHistory.push(query)
-        FindBase.queries.push(query) //save queries to update cache purposes
         const variables = {where, first, after, skip, orderBy}
         return (
             <Query

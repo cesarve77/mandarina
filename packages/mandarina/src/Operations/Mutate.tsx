@@ -289,7 +289,6 @@ export class Mutate extends PureComponent<WithApolloClient<MutateProps & { type:
             fetchPolicy,
         } = this.props;
 
-
         const {names} = schema
         this.query = buildQueryFromFields(fields)
         let queryString
@@ -375,7 +374,6 @@ export const Update = ({id, schema, children, fields, optimisticResponse, ...pro
             where = id
         }
     }
-
     return (
         <FindOne schema={schema} where={where} fields={fields} {...props}>
             {({data, ...findOneProps}) => {

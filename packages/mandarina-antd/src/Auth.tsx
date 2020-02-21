@@ -10,7 +10,7 @@ type ElemProps = CreateFormProps | UpdateFormProps | ListVirtualizedProps | List
 
 export interface AuthElementsProps {
     denied?: ReactNode
-    Error?: ElementType<{ error: Error }>
+    Error?: ElementType<{ error: string }>
     userRoles: string[]
     innerRef?: React.Ref<any>
 }
@@ -20,14 +20,15 @@ export interface AuthElementsProps {
 const AuthAntD = ({Component,innerRef, schema, denied = null, userRoles = [], action, fields, Error, ...props}:
                       { Component: ComponentType<ElemProps>, action: ActionType } & ElemProps & AuthElementsProps ) => {
     return (
-        <Auth schema={schema} action={action} userRoles={userRoles} fields={fields} >
-            {({fields, loading, error}: AuthChildrenProps) => {
+        // @ts-ignore
+        <Auth schema={schema} action={action} userRoles={userRoles} fields={fields}>
+            {({fields, loading, error,readFields}: AuthChildrenProps) => {
                 if (error && Error) return <Error error={error}/>
                 if (!loading && fields && fields.length === 0) return denied
                 return (
                     <>
                         {loading && <Spin spinning={loading} style={{width: '100%', height: '100%'}}/>}
-                        {!loading && fields && <Component  ref={innerRef} schema={schema} {...props} fields={fields}/>}
+                        {!loading && fields && <Component  ref={innerRef} schema={schema} {...props} fields={fields} readFields={readFields}/>}
                     </>
                 );
             }}

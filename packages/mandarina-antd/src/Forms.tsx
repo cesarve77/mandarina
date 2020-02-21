@@ -2,7 +2,7 @@ import React from 'react'
 import {Create, Schema, Update} from "mandarina";
 import AutoForm from "uniforms-antd/AutoForm"
 import SubmitField from "uniforms-antd/SubmitField";
-import {CreateProps, Delete, MutateResultProps, UpdateProps} from "mandarina/build/Operations/Mutate";
+import {CreateProps, Delete, MutateChildren, MutateResultProps, UpdateProps} from "mandarina/build/Operations/Mutate";
 import {OperationVariables} from "react-apollo";
 import {Bridge} from "./Bridge";
 import {Model, Overwrite} from "mandarina/build/Schema/Schema";
@@ -22,6 +22,7 @@ export interface CreateFormProps extends FormPropsOmitComponent {
 
 export interface UpdateFormProps extends FormPropsOmitComponent {
     id: string | any
+    readFields?: string[]
     ref?: React.Ref<HTMLFormElement>
 
 }
@@ -34,8 +35,11 @@ export interface DeleteFormProps extends FormPropsOmitComponent {
 
 export const CreateForm = React.forwardRef<HTMLFormElement, CreateFormProps>((props: CreateFormProps, ref) =>
     <Form Component={Create} {...props} innerRef={ref}/>)
-export const UpdateForm = React.forwardRef<HTMLFormElement, UpdateFormProps>((props: UpdateFormProps, ref) =>
-    <Form Component={Update} {...props} innerRef={ref}/>)
+export const UpdateForm = React.forwardRef<HTMLFormElement, UpdateFormProps>(({fields, readFields = fields, ...props}: UpdateFormProps, ref) => {
+    const Component = ({children, id, ...props}: Omit<FormProps, 'children'> & { children: MutateChildren }) =>
+        <Update  {...props} fields={readFields} id={id} children={children}/>
+    return <Form Component={Component} fields={fields} {...props} innerRef={ref}/>;
+})
 export const DeleteForm = React.forwardRef<HTMLFormElement, DeleteFormProps>((props: DeleteFormProps, ref) =>
     <Form Component={Delete} {...props} innerRef={ref}/>)
 
@@ -131,8 +135,6 @@ const Form = ({
     return (
         <Component id={id} schema={schema} fields={AllFields} {...mutationProps}>
             {({mutate, doc = model, loading, called, ...rest}) => {
-
-                doc && schema.clean(doc, AllFields)
                 return (
                     <AutoForm
                         key={id && doc && 'key'} //insurance rerender when is a update and doc arrive

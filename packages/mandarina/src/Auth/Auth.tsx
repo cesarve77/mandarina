@@ -1,12 +1,12 @@
-import {ReactNode} from "react"
 import {Schema} from "..";
+import {ReactNode} from "react";
 
 export type ActionType = 'create' | 'read' | 'update' | 'delete'
 
 export interface AuthChildrenProps {
     fields: string[],
     readFields?: string[],
-    error?: Error,
+    error?: string,
     loading: boolean
 }
 
@@ -15,7 +15,7 @@ export interface AuthProps {
     schema: Schema
     userRoles: string[]
     fields: string[]
-    children: ({fields, error, loading}: AuthChildrenProps) => ReactNode
+    children: (props: AuthChildrenProps) => ReactNode
 }
 
 
@@ -23,11 +23,11 @@ const Auth = ({children, action, schema, userRoles, fields}: AuthProps) => {
 
     const finalFields = getFields({fields, action, schema, userRoles})
 
-
-    console.log('userRoles', userRoles)
-    console.log('fields', fields)
-    console.log('finalFields', finalFields)
-    return children({fields: finalFields,loading: false, error: undefined})
+    const childrenProps: AuthChildrenProps = {fields: finalFields, loading: false, error: "", readFields: []}
+    if (action === 'update') {
+        childrenProps.readFields = getFields({fields, action: 'read', schema, userRoles})
+    }
+    return children(childrenProps)
 }
 
 
@@ -44,6 +44,7 @@ export const getFields = (args: AuthArgs) => {
     if (!actions.includes(args.action)) throw new Error(`Action only can be one of ['read', 'create', 'update', 'delete'] not: ${args.action} `)
     const finalFields: string[] = []
     args.fields.forEach(field => {
+        console.log('getFields',field)
         if (!args.schema.hasPath(field)) {
             finalFields.push(field)
         } else if (args.schema.getFieldPermission(field, args.action, args.userRoles)) {

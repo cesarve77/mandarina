@@ -183,6 +183,10 @@ export class Schema {
         // }
         const def = this.getPathDefinition(field)
         if (def.isTable && action === 'read') return true //prove only final fields
+        if (!def.permissions) {
+            console.error('getFieldPermission field ', field,)
+            console.error('getFieldPermission action', action,)
+        }
         const fieldRoles = def.permissions[action] || []
         // const lappedRoles = [...fieldRoles, ...parentRoles]
 
@@ -323,7 +327,6 @@ export class Schema {
     }
 
     validateMutation = (action: Action, mutation: any, roles?: string[]) => {
-
         if (!Array.isArray(mutation)) mutation = [mutation]
         for (const m of mutation) {
             let data: any = m.data || m.create
@@ -348,11 +351,17 @@ export class Schema {
                         // }
                         let args2 = data[field][operation]
                         if (!Array.isArray(args2)) args2 = [args2]
-                        for (let arg2 of args2) {
-                            if (inline || operation !== 'update') arg2 = {data: arg2}
-                            schema.validateMutation(action, arg2, roles)
+                        if (operation!=='upsert') {
+                            for (let arg2 of args2) {
+                                if (inline || operation !== 'update') arg2 = {data: arg2}
+                                schema.validateMutation(action, arg2, roles)
+                            }
+                        } else {
+                            for (let arg2 of args2) {
+                                schema.validateMutation('update', {data: arg2.update}, roles)
+                                schema.validateMutation('create', {data: arg2.create}, roles)
+                            }
                         }
-
                     }
                 } else {
                     const allowed = this.getFieldPermission(field, action, roles)
