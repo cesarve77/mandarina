@@ -1,6 +1,5 @@
 import {CustomAction} from './Action/CustomAction'
 import {Table} from './Table/Table'
-import {Auth} from './Auth/Auth'
 import Mandarina from './Mandarina'
 import {getConfig} from './cli/utils'
 
@@ -13,5 +12,4 @@ export {
     CustomAction,
     Action,
     Table,
-    Auth
 }
