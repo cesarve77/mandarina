@@ -1,12 +1,6 @@
 import {get} from "./utils";
 
-let time = new Date().getTime()
 
-function bm(description = '') {
-    description && console.info(description, new Date().getTime() - time)
-    time = new Date().getTime()
-
-}
 
 
 describe('Util', () => {
@@ -42,13 +36,11 @@ describe('Util', () => {
                 ]
             }
         }
-        bm()
         let result
         // let result = get(obj, 'a.b.c.d.e'.split('.'))
         // bm('getArrayValue')
         // expect(result).toMatchObject([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20])
         result = get(obj, 'tags.name'.split('.'))
-        bm('tags')
         expect(result).toMatchObject(['tag1','tag2'])
 
     });

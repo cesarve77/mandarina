@@ -145,3 +145,6 @@ export const singularize = (str: string): string => {
     lastWord = inflection.singularize(lastWord)
     return inflection.camelize([...resultSplit, lastWord].join('_'), true)
 }
+
+
+

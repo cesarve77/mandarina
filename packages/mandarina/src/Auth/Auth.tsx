@@ -44,7 +44,6 @@ export const getFields = (args: AuthArgs) => {
     if (!actions.includes(args.action)) throw new Error(`Action only can be one of ['read', 'create', 'update', 'delete'] not: ${args.action} `)
     const finalFields: string[] = []
     args.fields.forEach(field => {
-        console.log('getFields',field)
         if (!args.schema.hasPath(field)) {
             finalFields.push(field)
         } else if (args.schema.getFieldPermission(field, args.action, args.userRoles)) {

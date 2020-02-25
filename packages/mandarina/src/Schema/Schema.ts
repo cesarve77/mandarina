@@ -341,14 +341,11 @@ export class Schema {
                     const operations = Object.keys(data[field])
                     for (const operation of operations) {
 
-                        // if (operation === 'set' || operation === 'connect') {
-                        //
-                        //     const allowed = this.getFieldPermission(field, action, roles)
-                        //     console.log('schema', this.name, 'field', field, 'operation', operation,'roles',roles,'result,',allowed )
-                        //
-                        //     if (!allowed) throw new Error(`401, You are not allowed to update "${field}" on ${this.name}`)
-                        //     continue
-                        // }
+                        if (operation === 'set' || operation === 'connect') {
+                            const allowed = this.getFieldPermission(field, 'update', roles)
+                            if (!allowed) throw new Error(`401, You are not allowed to ${operation} "${field}" on ${this.name}`)
+                            continue
+                        }
                         let args2 = data[field][operation]
                         if (!Array.isArray(args2)) args2 = [args2]
                         if (operation!=='upsert') {

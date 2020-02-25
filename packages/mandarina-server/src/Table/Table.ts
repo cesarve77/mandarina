@@ -93,29 +93,45 @@ export class Table {
 
         // OperationName for query is user or users, for mutation are createUser, updateUser ....
         const operationNames: string[] = Object.values(this.schema.names[type]);
-        const result: { [resolverName: string]: (_: any, args: any, context: Context, info: any) => void } = {};
+        const resultResolvers: { [resolverName: string]: (_: any, args: any, context: Context, info: any) => void } = {};
+
 
         operationNames.forEach((operationName: string) => {
             if (!this.shouldHasManyUpdate()) return
-            result[operationName] = async (_: any, args: any = {}, context: Context, info: GraphQLResolveInfo) => {
 
+            resultResolvers[operationName] = async (_: any, args: any = {}, context: Context, info: GraphQLResolveInfo) => {
+                bm()
+                console.log('argsargsargs1',deepClone(args))
                 const user = await Mandarina.config.getUser(context)
                 const subOperationName: ActionType | string = operationName.substr(0, 6)
                 const action: ActionType = <ActionType>(['create', 'update', 'delete'].includes(subOperationName) ? subOperationName : 'read')
                 let result: any
                 const capitalizedAction = capitalize(action)
                 await this.callHook(this.name, 'beforeValidate', _, args, context, info);
-                let {query, queryString, fields} = this.insertWhereIntoInfo(info, user)
+                const isSingleMutation = operationName === this.schema.names.mutation.update || operationName === this.schema.names.mutation.create
+                let {query, queryString, fields} = this.insertWhereIntoInfo(info, user, isSingleMutation)
                 if (type === 'mutation') {
                     // if (errors.length > 0) {
                     //     await this.callHook('validationFailed', action, _, args, context, info);
                     // } else {
                     //     await this.callHook('afterValidate', action, _, args, context, info);
                     // }
+                    if (isSingleMutation) {
+                        const where = this.options.where && this.options.where(user)
+                        if (where) {
+                            let finalWhere = args.where ? {AND: [args.where, where]} : where
+                            const exists = (await context.prisma.exists[this.name](finalWhere))
+                            if (!exists) {
+                                return null
+                            }
 
+
+                        }
+                    }
                     //VALIDATE IF USER CAN MUTATE THOSE FIELDS
                     this.schema.validateMutation(action, deepClone(args), user && user.roles || []);
                     await this.callHook(this.name, <HookName>`before${capitalizedAction}`, _, args, context, query);
+                    console.log('argsargsargs2',args)
 
                     /*
                     HACK https://github.com/prisma/prisma/issues/4327
@@ -139,8 +155,14 @@ export class Table {
                     //         args.data = unflatten(withoutDeleteMany)
                     //     }
                     // }
+                    console.log('queryString', queryString)
                     const data = (await context.prisma.request(queryString, args))
-                    if (data.errors) console.error(data.errors)
+                    if (data.errors){
+                        console.log('args',args)
+                        console.log('queryString',queryString)
+                        console.log('data',data)
+                        console.error(data.errors)
+                    }
                     result = data.data[info.path.key]
                     context.result = result
                     await this.callHook(this.name, <HookName>`after${capitalizedAction}`, _, args, context, query);
@@ -158,28 +180,35 @@ export class Table {
                     }
                     //Validate if the roles is able to read those fields
 
-                    if (type==='query' && operationName===this.schema.names.query.single){
+                    if (operationName===this.schema.names.query.single){
                         queryString=queryString.replace(operationName,this.schema.names.query.plural)
                         queryString=queryString.replace(new RegExp(`${this.schema.names.input.where.single}!?`),this.schema.names.input.where.plural +'!')
                     }
                     const data = (await context.prisma.request(queryString, args))
-                    if (data.errors) console.error(data.errors)
+                    if (data.errors){
+                        console.log('args',args)
+                        console.log('queryString',queryString)
+                        console.log('data',data)
+                        console.error(data.errors)
+                    }
                     result = data.data[info.path.key]
-                    if (type==='query' && operationName===this.schema.names.query.single){
+                    if (operationName===this.schema.names.query.single){
                         result = data.data[this.schema.names.query.plural]
                         result=result && result.length===1 ? result[0] : null
                     }
                     context.result = result
                     await this.callHook(this.name, 'afterQuery', _, args, context, info);
                 }
+                bm(`${operationName} ${type}`,result)
+
                 return result;
             }
         });
 
-        return result;
+        return resultResolvers;
     }
 
-    insertWhereIntoInfo = (info: GraphQLResolveInfo, user?: UserType | null) => {
+    insertWhereIntoInfo = (info: GraphQLResolveInfo, user?: UserType | null, isSingleMutation = false) => {
         const field: string[] = []
         const fields = new Set<string>()
         let required = false
@@ -198,7 +227,7 @@ export class Table {
                     } else {
                         table = this
                     }
-                    if (table && table.options.where) {
+                    if (table && table.options.where && (!isSingleMutation && table === this)) {
                         const where = table.options.where(user)
                         if (!where || isEmpty(where)) return
                         const clone = deepClone(node)
@@ -399,5 +428,10 @@ type HookName =
     | 'beforeQuery'
     | 'afterQuery'
 
+let time = new Date().getTime()
 
+export function bm(description = '',...args:any) {
+    description && console.info(description,...args, new Date().getTime() - time)
+    time = new Date().getTime()
 
+}
