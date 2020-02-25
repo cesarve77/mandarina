@@ -53,9 +53,9 @@ var utils_1 = require("mandarina/build/Schema/utils");
 var MissingIDTableError_1 = require("mandarina/build/Errors/MissingIDTableError");
 var Mandarina_1 = require("../Mandarina");
 var Mutate_1 = require("mandarina/build/Operations/Mutate");
-var flat_1 = require("flat");
-var graphqlFields = require("graphql-fields");
 var language_1 = require("graphql/language");
+var stringify_object_1 = require("stringify-object");
+var lodash_1 = require("lodash");
 // import {flatten, unflatten} from "flat";
 /**
  *
@@ -66,6 +66,67 @@ var language_1 = require("graphql/language");
  */
 var Table = /** @class */ (function () {
     function Table(schema, tableOptions) {
+        var _this = this;
+        this.insertWhereIntoInfo = function (info, user, isSingleMutation) {
+            if (isSingleMutation === void 0) { isSingleMutation = false; }
+            var field = [];
+            var fields = new Set();
+            var required = false;
+            var query = language_1.visit(info.operation, {
+                enter: function (node, key, parent, path, ancestors) {
+                    if (node.kind === 'Field' && node.name.value !== '__typename') {
+                        field.push(node.name.value);
+                        var internalField = field.slice(1).join('.');
+                        var table = void 0;
+                        if (internalField) {
+                            fields.add(internalField);
+                            var def = _this.schema.getPathDefinition(internalField);
+                            if (def.isTable && def.isArray) {
+                                table = Table.instances[def.type];
+                            }
+                        }
+                        else {
+                            table = _this;
+                        }
+                        if (table && table.options.where && (!isSingleMutation && table === _this)) {
+                            var where = table.options.where(user);
+                            if (!where || lodash_1.isEmpty(where))
+                                return;
+                            var clone = Mutate_1.deepClone(node);
+                            var originalWhereObj = clone.arguments ? clone.arguments.find(function (a) { return a.name.value === 'where'; }) : null;
+                            var originalWhereString = '';
+                            if (originalWhereObj && table === _this) {
+                                originalWhereString = language_1.print(originalWhereObj.value);
+                                required = true;
+                            }
+                            var newWhereString = stringify_object_1.default(where, { singleQuotes: false });
+                            var finalWhereString = originalWhereString ? "{AND:[" + originalWhereString + "," + newWhereString + "]}" : newWhereString;
+                            if (originalWhereObj) {
+                                originalWhereObj.value = language_1.parseValue(new language_1.Source(finalWhereString));
+                            }
+                            else {
+                                clone.arguments.push({
+                                    kind: 'Argument',
+                                    name: { kind: 'Name', value: 'where' },
+                                    value: language_1.parseValue(new language_1.Source(finalWhereString))
+                                });
+                            }
+                            return clone;
+                        }
+                    }
+                    return;
+                },
+                leave: function (node) {
+                    if (node.kind === 'Field' && node.name.value !== '__typename') {
+                        field.pop();
+                    }
+                }
+            });
+            var queryString = language_1.print(query);
+            if (required)
+                queryString = queryString.replace(/\$where: (\w*)Input,/, '$where: $1Input!,');
+            return { fields: Array.from(fields), query: query, queryString: queryString };
+        };
         Table.instances = Table.instances || {};
         this.schema = schema;
         this.name = this.schema.name;
@@ -110,95 +171,140 @@ var Table = /** @class */ (function () {
         var fields = this.schema.getFields().filter(function (f) { return f !== 'createdAt' && f !== 'createdAt'; });
         return fields.length > 0;
     };
+    //Insert where option in to the query
+    // static dotConcat = (a: string | undefined, b: string) => a ? `${a}.${b}` : b;
     Table.prototype.getDefaultActions = function (type) {
         var _this = this;
         // OperationName for query is user or users, for mutation are createUser, updateUser ....
         var operationNames = Object.values(this.schema.names[type]);
-        var result = {};
+        var resultResolvers = {};
         operationNames.forEach(function (operationName) {
             if (!_this.shouldHasManyUpdate())
                 return;
-            result[operationName] = function (_, args, context, info) {
+            resultResolvers[operationName] = function (_, args, context, info) {
                 if (args === void 0) { args = {}; }
                 return __awaiter(_this, void 0, void 0, function () {
-                    var user, subOperationName, action, result, capitalizedAction, query, obj, flatFields, query;
-                    return __generator(this, function (_a) {
-                        switch (_a.label) {
-                            case 0: return [4 /*yield*/, Mandarina_1.default.config.getUser(context)
-                                // console.log('*****************************************************')
-                                // console.log('operationName', operationName)
-                                // console.log('args')
-                                // console.dir(args, {depth: null})
-                                //const user = await Mandarina.config.getUser(context);
-                            ];
+                    var user, subOperationName, action, result, capitalizedAction, isSingleMutation, _a, query, queryString, fields, where, finalWhere, exists, data, data;
+                    return __generator(this, function (_b) {
+                        switch (_b.label) {
+                            case 0:
+                                bm();
+                                console.log('argsargsargs1', Mutate_1.deepClone(args));
+                                return [4 /*yield*/, Mandarina_1.default.config.getUser(context)];
                             case 1:
-                                user = _a.sent();
+                                user = _b.sent();
                                 subOperationName = operationName.substr(0, 6);
                                 action = (['create', 'update', 'delete'].includes(subOperationName) ? subOperationName : 'read');
                                 capitalizedAction = utils_1.capitalize(action);
                                 return [4 /*yield*/, this.callHook(this.name, 'beforeValidate', _, args, context, info)];
                             case 2:
-                                _a.sent();
-                                if (!(type === 'mutation')) return [3 /*break*/, 6];
-                                // if (errors.length > 0) {
-                                //     await this.callHook('validationFailed', action, _, args, context, info);
-                                // } else {
-                                //     await this.callHook('afterValidate', action, _, args, context, info);
-                                // }
-                                this.schema.validateMutation(action, Mutate_1.deepClone(args), user && user.roles);
-                                return [4 /*yield*/, this.callHook(this.name, "before" + capitalizedAction, _, args, context, info)];
+                                _b.sent();
+                                isSingleMutation = operationName === this.schema.names.mutation.update || operationName === this.schema.names.mutation.create;
+                                _a = this.insertWhereIntoInfo(info, user, isSingleMutation), query = _a.query, queryString = _a.queryString, fields = _a.fields;
+                                if (!(type === 'mutation')) return [3 /*break*/, 8];
+                                if (!isSingleMutation) return [3 /*break*/, 4];
+                                where = this.options.where && this.options.where(user);
+                                if (!where) return [3 /*break*/, 4];
+                                finalWhere = args.where ? { AND: [args.where, where] } : where;
+                                return [4 /*yield*/, context.prisma.exists[this.name](finalWhere)];
                             case 3:
-                                _a.sent();
-                                query = language_1.print(info.operation);
-                                return [4 /*yield*/, context.prisma.request(query, args)];
+                                exists = (_b.sent());
+                                if (!exists) {
+                                    return [2 /*return*/, null];
+                                }
+                                _b.label = 4;
                             case 4:
-                                result = (_a.sent()).data[info.path.key];
-                                context.result = result;
-                                return [4 /*yield*/, this.callHook(this.name, "after" + capitalizedAction, _, args, context, info)];
+                                //VALIDATE IF USER CAN MUTATE THOSE FIELDS
+                                this.schema.validateMutation(action, Mutate_1.deepClone(args), user && user.roles || []);
+                                return [4 /*yield*/, this.callHook(this.name, "before" + capitalizedAction, _, args, context, query)];
                             case 5:
-                                _a.sent();
-                                _a.label = 6;
+                                _b.sent();
+                                console.log('argsargsargs2', args);
+                                /*
+                                HACK https://github.com/prisma/prisma/issues/4327
+                                 */
+                                // if (`before${capitalizedAction}` === 'beforeUpdate' || `before${capitalizedAction}` === 'beforeCreate') {
+                                //     const flat = flatten(args.data)
+                                //     const where = args.where
+                                //     let run = false
+                                //     let withDeleteMany: any = {}
+                                //     let withoutDeleteMany: any = {}
+                                //     Object.keys(flat).forEach((key) => {
+                                //         if (key.match(/\.deleteMany\.0$/)) {
+                                //             run = true
+                                //             withDeleteMany[key] = flat[key]
+                                //         } else {
+                                //             withoutDeleteMany[key] = flat[key]
+                                //         }
+                                //     })
+                                //     if (run) {
+                                //         await prismamethod({where, data: unflatten(withdeletemany)}, info);
+                                //         args.data = unflatten(withoutDeleteMany)
+                                //     }
+                                // }
+                                console.log('queryString', queryString);
+                                return [4 /*yield*/, context.prisma.request(queryString, args)];
                             case 6:
-                                if (!(type === 'query')) return [3 /*break*/, 10];
-                                return [4 /*yield*/, this.callHook(this.name, 'beforeQuery', _, args, context, info)];
+                                data = (_b.sent());
+                                if (data.errors) {
+                                    console.log('args', args);
+                                    console.log('queryString', queryString);
+                                    console.log('data', data);
+                                    console.error(data.errors);
+                                }
+                                result = data.data[info.path.key];
+                                context.result = result;
+                                return [4 /*yield*/, this.callHook(this.name, "after" + capitalizedAction, _, args, context, query)];
                             case 7:
-                                _a.sent();
-                                obj = graphqlFields(info);
-                                flatFields = void 0;
-                                //todo do somethig better validating what kind of query im running connection or query
-                                if (obj.edges && obj.edges.node) {
-                                    flatFields = Object.keys(flat_1.flatten(obj.edges.node));
+                                _b.sent();
+                                this.schema.validateQuery(fields, user && user.roles || []);
+                                _b.label = 8;
+                            case 8:
+                                if (!(type === 'query')) return [3 /*break*/, 12];
+                                // console.dir(JSON.parse(JSON.stringify(info)),{depth:1})
+                                return [4 /*yield*/, this.callHook(this.name, 'beforeQuery', _, args, context, query)];
+                            case 9:
+                                // console.dir(JSON.parse(JSON.stringify(info)),{depth:1})
+                                _b.sent();
+                                if (!!info.fieldName.match(/Connection$/)) {
+                                    this.schema.validateConnection(user && user.roles || []);
                                 }
                                 else {
-                                    flatFields = Object.keys(flat_1.flatten(obj));
+                                    this.schema.validateQuery(fields, user && user.roles || []);
                                 }
-                                flatFields = flatFields.filter(function (f) { return !f.match(/\.?__typename$/); });
-                                if (!obj.aggregate || !obj.aggregate.count) {
-                                    this.schema.validateQuery(flatFields, user && user.roles || []);
+                                //Validate if the roles is able to read those fields
+                                if (operationName === this.schema.names.query.single) {
+                                    queryString = queryString.replace(operationName, this.schema.names.query.plural);
+                                    queryString = queryString.replace(new RegExp(this.schema.names.input.where.single + "!?"), this.schema.names.input.where.plural + '!');
                                 }
-                                query = language_1.print(info.operation);
-                                console.log('query', query);
-                                return [4 /*yield*/, context.prisma.request(query, args)];
-                            case 8:
-                                result = (_a.sent()).data[info.path.key];
+                                return [4 /*yield*/, context.prisma.request(queryString, args)];
+                            case 10:
+                                data = (_b.sent());
+                                if (data.errors) {
+                                    console.log('args', args);
+                                    console.log('queryString', queryString);
+                                    console.log('data', data);
+                                    console.error(data.errors);
+                                }
+                                result = data.data[info.path.key];
+                                if (operationName === this.schema.names.query.single) {
+                                    result = data.data[this.schema.names.query.plural];
+                                    result = result && result.length === 1 ? result[0] : null;
+                                }
                                 context.result = result;
                                 return [4 /*yield*/, this.callHook(this.name, 'afterQuery', _, args, context, info)];
-                            case 9:
-                                _a.sent();
-                                _a.label = 10;
-                            case 10: 
-                            // bm('done in ')
-                            // console.log('result')
-                            // console.dir(result)
-                            //
-                            // console.log('*****************************************************')
-                            return [2 /*return*/, result];
+                            case 11:
+                                _b.sent();
+                                _b.label = 12;
+                            case 12:
+                                bm(operationName + " " + type, result);
+                                return [2 /*return*/, result];
                         }
                     });
                 });
             };
         });
-        return result;
+        return resultResolvers;
     };
     /**
      * Go back a mutation object to the original object
@@ -220,7 +326,6 @@ var Table = /** @class */ (function () {
                 switch (_c.label) {
                     case 0:
                         _c.trys.push([0, 18, , 19]);
-                        console.log('name', name);
                         prefix = '';
                         if (name.indexOf('before') === 0)
                             prefix = 'before';
@@ -242,7 +347,6 @@ var Table = /** @class */ (function () {
                         operations = Object.keys(data[field]);
                         if (!Table.instances[def.type]) {
                             console.warn("No table for " + def.type + " no neasted hooks applied");
-                            console.log('data[field]', data[field]);
                             return [3 /*break*/, 14];
                         }
                         table = Table.getInstance(def.type);
@@ -252,9 +356,7 @@ var Table = /** @class */ (function () {
                         if (!(_a < operations_1.length)) return [3 /*break*/, 14];
                         operation = operations_1[_a];
                         hookName = "" + prefix + utils_1.capitalize(operation);
-                        console.log('hookName', hookName);
                         args2 = data[field][operation];
-                        console.log('def.type', def.type);
                         if (!Array.isArray(args2)) return [3 /*break*/, 9];
                         _b = 0, args2_1 = args2;
                         _c.label = 3;
@@ -309,3 +411,14 @@ var Table = /** @class */ (function () {
     return Table;
 }());
 exports.Table = Table;
+var time = new Date().getTime();
+function bm(description) {
+    if (description === void 0) { description = ''; }
+    var args = [];
+    for (var _i = 1; _i < arguments.length; _i++) {
+        args[_i - 1] = arguments[_i];
+    }
+    description && console.info.apply(console, [description].concat(args, [new Date().getTime() - time]));
+    time = new Date().getTime();
+}
+exports.bm = bm;

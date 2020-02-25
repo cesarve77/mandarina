@@ -101,7 +101,6 @@ export class Table {
 
             resultResolvers[operationName] = async (_: any, args: any = {}, context: Context, info: GraphQLResolveInfo) => {
                 bm()
-                console.log('argsargsargs1',deepClone(args))
                 const user = await Mandarina.config.getUser(context)
                 const subOperationName: ActionType | string = operationName.substr(0, 6)
                 const action: ActionType = <ActionType>(['create', 'update', 'delete'].includes(subOperationName) ? subOperationName : 'read')
@@ -131,7 +130,6 @@ export class Table {
                     //VALIDATE IF USER CAN MUTATE THOSE FIELDS
                     this.schema.validateMutation(action, deepClone(args), user && user.roles || []);
                     await this.callHook(this.name, <HookName>`before${capitalizedAction}`, _, args, context, query);
-                    console.log('argsargsargs2',args)
 
                     /*
                     HACK https://github.com/prisma/prisma/issues/4327
@@ -155,12 +153,8 @@ export class Table {
                     //         args.data = unflatten(withoutDeleteMany)
                     //     }
                     // }
-                    console.log('queryString', queryString)
                     const data = (await context.prisma.request(queryString, args))
                     if (data.errors){
-                        console.log('args',args)
-                        console.log('queryString',queryString)
-                        console.log('data',data)
                         console.error(data.errors)
                     }
                     result = data.data[info.path.key]
@@ -186,9 +180,6 @@ export class Table {
                     }
                     const data = (await context.prisma.request(queryString, args))
                     if (data.errors){
-                        console.log('args',args)
-                        console.log('queryString',queryString)
-                        console.log('data',data)
                         console.error(data.errors)
                     }
                     result = data.data[info.path.key]
