@@ -92,7 +92,7 @@ const getAvailableOperator = (type: Native): string[] => {
             return [""]
     }
 }
-export const getDefaultComponent = (field: string, fieldDefinition: FieldDefinitionNative): FilterComponent => {
+export const getDefaultComponent = ( fieldDefinition: FieldDefinitionNative): FilterComponent => {
     const availableOperators = getAvailableOperator(fieldDefinition.type as Native)
     const Filter = ({
                         value = {

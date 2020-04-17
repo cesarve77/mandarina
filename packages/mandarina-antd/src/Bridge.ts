@@ -91,10 +91,11 @@ export class Bridge {
 
     // Field's definition (`field` prop).
     getField(name: string): FieldDefinition {
-        const overwrite = this.overwrite && this.overwrite[name]
-        if (!this.fieldDefinitions[name]) this.fieldDefinitions[name] = overwrite ? merge(deepClone(this.schema.getPathDefinition(name)), overwrite) : this.schema.getPathDefinition(name)
-        if (!this.fieldDefinitions[name] || !this.fieldDefinitions[name].type) throw new Error(`No field named "${name}" in schema ${this.schema.name}`)
-        return this.fieldDefinitions[name]
+        const field=Schema.cleanKey(name)
+        const overwrite = this.overwrite && this.overwrite[field]
+        if (!this.fieldDefinitions[field]) this.fieldDefinitions[field] = overwrite ? merge(deepClone(this.schema.getPathDefinition(field)), overwrite) : this.schema.getPathDefinition(field)
+        if (!this.fieldDefinitions[field] || !this.fieldDefinitions[field].type) throw new Error(`No field named "${field}" in schema ${this.schema.name}`)
+        return this.fieldDefinitions[field]
     }
 
     getType(name: string): Native {

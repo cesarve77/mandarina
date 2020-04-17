@@ -30,7 +30,7 @@
     "merge-graphql-schemas": "^1.5.8",
     "prisma-binding": "^2.3.10",
     "react-apollo": "^2.5.5",
-    "typescript": "^3.5.3",
+    "typescript": "3.5.3",
     "unfetch": "^4.1.0"
   },
   "repository": {

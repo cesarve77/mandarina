@@ -190,7 +190,7 @@ export class Table {
                     context.result = result
                     await this.callHook(this.name, 'afterQuery', _, args, context, info);
                 }
-                bm(`${operationName} ${type}`,result)
+                bm(`${operationName} ${type} over ${this.name}`)
 
                 return result;
             }
@@ -326,6 +326,7 @@ export class Table {
             }
         } catch (e) {
             console.error(`Error executing hook: "${name}" in Table: ${schemaName}"`)
+            console.error(e)
             throw e
         }
 

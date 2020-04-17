@@ -108,7 +108,7 @@ export class Schema {
     getPathDefinition(field: string, overwrite?: OverwriteDefinition): FieldDefinition {
         const definition = this._getPathDefinition(field, overwrite)
         if (!definition) {
-            throw new Error(`Field "${field}" not found`)
+            throw new Error(`Field "${field}" not found in ${this.name}`)
         }
         return definition
     }
@@ -181,15 +181,15 @@ export class Schema {
         //         if (parentPermissions) parentRoles.concat(parentPermissions)
         //     }
         // }
+
         const def = this.getPathDefinition(field)
+
         if (def.isTable && action === 'read') return true //prove only final fields
         if (!def.permissions) {
-            console.error('getFieldPermission field ', field,)
-            console.error('getFieldPermission action', action,)
+            console.error('!def.permissions getFieldPermission field2 ', this.name, field, action)
         }
         const fieldRoles = def.permissions[action] || []
         // const lappedRoles = [...fieldRoles, ...parentRoles]
-
         return fieldRoles.some(role => rolesWithEverybody.includes(role))
 
     }
@@ -314,6 +314,7 @@ export class Schema {
     validateQuery = (fields: any, roles: string[]) => {
         for (const field of fields) {
             if (!this.getFieldPermission(field, 'read', roles)) {
+                console.log(this.name, this.getPathDefinition(field))
                 throw new Error(`401, You are not allowed to read "${field}" on ${this.name}`)
             }
         }
@@ -342,8 +343,8 @@ export class Schema {
                     for (const operation of operations) {
 
                         if (operation === 'set' || operation === 'connect') {
-                            const allowed = this.getFieldPermission(field, 'update', roles)
-                            if (!allowed) throw new Error(`401, You are not allowed to ${operation} "${field}" on ${this.name}`)
+                            const allowed = schema.getFieldPermission('id', action, roles)
+                            if (!allowed) throw new Error(`401, You are not allowed to ${operation} "${field}.id" on ${this.name}`)
                             continue
                         }
                         let args2 = data[field][operation]
@@ -362,7 +363,7 @@ export class Schema {
                     }
                 } else {
                     const allowed = this.getFieldPermission(field, action, roles)
-                    if (!allowed) throw new Error(`401, You are not allowed to ${action} "${field}" on ${this.name}`)
+                    if (!allowed) throw new Error(`401, You are not allowed to ${action} "${field}" on ${this.name}.`)
                 }
             }
 
@@ -440,10 +441,12 @@ export class Schema {
     }
 
     private generatePathDefinition(key: string): FieldDefinition {
+
         const paths = key.split('.')
         let schema: Schema = this;
 
         let def: FieldDefinition = schema._getKeyDefinition(paths[0])
+
         paths.forEach((path) => {
             if (!path.match(/\$|^\d+$/)) { //example user.0
                 def = schema._getKeyDefinition(path)
@@ -452,6 +455,7 @@ export class Schema {
                 }
             }
         });
+
         return def
     }
 
@@ -461,7 +465,6 @@ export class Schema {
         const flatModel = flatten(model)
         const flatModelKeys = insertParents(Object.keys(flatModel))
         flatModelKeys.forEach(key => {
-
             const value = get(model, key)
             const cleanKey = Schema.cleanKey(key)
             if (fields && !fields.includes(cleanKey)) return
@@ -498,6 +501,7 @@ export class Schema {
 
                 const instance = new validator({key: last, path: key, definition, value});
                 const error = instance.validate(model);
+                //console.log('validator', key, validator.validatorName, error)
 
                 if (error) {
                     errors.push(error);

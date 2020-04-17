@@ -5,8 +5,8 @@ export type ActionType = 'create' | 'read' | 'update' | 'delete'
 
 export interface AuthChildrenProps {
     fields: string[],
-    readFields?: string[],
-    error?: string,
+    readFields: string[],
+    error: string,
     loading: boolean
 }
 
@@ -15,7 +15,7 @@ export interface AuthProps {
     schema: Schema
     userRoles: string[]
     fields: string[]
-    children: (props: AuthChildrenProps) => ReactNode
+    children: (props: any) => ReactNode
 }
 
 

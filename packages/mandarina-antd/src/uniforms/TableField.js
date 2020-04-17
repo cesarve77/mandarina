@@ -5,6 +5,7 @@ import SelectField from "uniforms-antd/SelectField";
 import {Spin} from "antd";
 import {Schema} from 'mandarina'
 import connectField from "uniforms/connectField";
+import {isEmpty} from "lodash";
 
 const defaultLabeler = (doc) => {
     const clone = {...doc}
@@ -20,6 +21,7 @@ const getTransform = (docs, labeler) => {
     docs.forEach((doc) => {
         mapper[doc.id] = labeler(doc)
     })
+
     return (id) => mapper[id] && mapper[id].toString()
 }
 
@@ -57,19 +59,21 @@ const Table = ({query, where, mode, labeler = defaultLabeler, ...props}) => {
                     const transform = getTransform(docs, labeler)
                     let mode = props.mode,
                         value
-
+                    console.log('value,2222',value)
                     let onChange = value => props.onChange({id: value})
 
                     if (props.field.isArray) {
                         mode = props.mode || "multiple"
                         value = props.value && props.value.map(({id}) => id)
-
+                        console.log('value,33333',value)
                         onChange = values => {
                              props.onChange(values && values.map(id => ({id})));
                         }
                     }else{
                         value = props.value && props.value.id
+                        if (isEmpty(value)) value=null
                     }
+
                     return <SelectField {...props}
                                         mode={mode}
                                         transform={transform}
@@ -79,7 +83,6 @@ const Table = ({query, where, mode, labeler = defaultLabeler, ...props}) => {
                                         value={value}
                                         notFoundContent={loading ? <Spin size="small"/> : null}
                                         allowedValues={allowedValues}
-                                        wrapperStyle={{marginBottom: '0'}}
                     />
                 }}
             </Query>

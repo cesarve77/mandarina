@@ -487,6 +487,8 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
                         this.data = [...this.data, ...Array(count - this.data.length).fill(undefined)]
                     }
                     if (dataCollection.length && !loading) {
+                        // @ts-ignore
+                        //this.gridRef.current &&  this.gridRef.current.resetAfterRowIndex(variables.skip)
                         this.data.splice(variables.skip, dataCollection.length, ...dataCollection);
                     }
 
