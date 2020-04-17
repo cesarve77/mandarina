@@ -1,4 +1,4 @@
-import React from 'react'
+import React, {ReactElement} from 'react'
 import {Create, Schema, Update} from "mandarina";
 import AutoForm from "uniforms-antd/AutoForm"
 import SubmitField from "uniforms-antd/SubmitField";
@@ -12,7 +12,7 @@ const AutoFields: any = require("./uniforms/AutoFields").default
 const AutoField: any = require("./uniforms/AutoField").default
 export type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>
 
-type Component = (props: CreateProps | UpdateProps) => JSX.Element
+type Component = (props: CreateProps | UpdateProps) => ReactElement
 
 type FormPropsOmitComponent = Omit<FormProps, 'Component'>
 
@@ -37,6 +37,7 @@ export const CreateForm = React.forwardRef<HTMLFormElement, CreateFormProps>((pr
     <Form Component={Create} {...props} innerRef={ref}/>)
 export const UpdateForm = React.forwardRef<HTMLFormElement, UpdateFormProps>(({fields, readFields = fields, ...props}: UpdateFormProps, ref) => {
     const Component = ({children, id, ...props}: Omit<FormProps, 'children'> & { children: MutateChildren }) =>
+        // @ts-ignore
         <Update  {...props} fields={readFields} id={id} children={children}/>
     return <Form Component={Component} fields={fields} {...props} innerRef={ref}/>;
 })
@@ -75,7 +76,7 @@ interface FormProps<TData = any, TVariables = OperationVariables> extends Mutate
 }
 
 export interface ChildFunc {
-    (props: any): JSX.Element
+    (props: any): ReactElement
 }
 
 

@@ -1,4 +1,4 @@
-import React, {PureComponent} from "react"
+import React, {PureComponent, ReactElement} from "react"
 import {Schema} from '..'
 import gql from "graphql-tag";
 import {Mutation, MutationFn, MutationProps, MutationResult, withApollo, WithApolloClient} from "react-apollo";
@@ -61,7 +61,7 @@ export interface MutateChildrenParams extends FormChildrenParams {
 }
 
 export interface MutateChildren {
-    (mutateChildrenParams: MutateChildrenParams): React.ReactNode
+    (mutateChildrenParams: MutateChildrenParams): ReactElement
 }
 
 
@@ -347,7 +347,7 @@ export class Mutate extends PureComponent<WithApolloClient<MutateProps & { type:
 
 const MutateWithApollo = withApollo(Mutate);
 
-export const Delete = ({id, schema, optimisticResponse, ...props}: DeleteProps): JSX.Element => {
+export const Delete = ({id, schema, optimisticResponse, ...props}: DeleteProps): ReactElement => {
     let where: any = undefined
     if (id) {
         if (typeof id === 'string') {
@@ -362,12 +362,12 @@ export const Delete = ({id, schema, optimisticResponse, ...props}: DeleteProps):
                           optimisticResponse={optimisticResponse}  {...props}/>
     );
 }
-export const Create = ({schema, optimisticResponse, ...props}: CreateProps): JSX.Element => (
+export const Create = ({schema, optimisticResponse, ...props}: CreateProps): ReactElement => (
     <MutateWithApollo type='create' schema={schema} optimisticResponse={optimisticResponse}  {...props}/>
 )
 
 
-export const Update = ({id, schema, children, fields, optimisticResponse, ...props}: UpdateProps): JSX.Element => {
+export const Update = ({id, schema, children, fields, optimisticResponse, ...props}: UpdateProps): ReactElement => {
     let where: any = undefined
     if (id) {
         if (typeof id === 'string') {

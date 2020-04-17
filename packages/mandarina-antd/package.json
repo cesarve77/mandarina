@@ -1,6 +1,6 @@
 {
   "name": "mandarina-antd",
-  "version": "0.9.2",
+  "version": "0.9.3",
   "description": "Antd styling for mandarina",
   "main": "build/index.js",
   "types": "build/index.d.ts",
@@ -25,7 +25,7 @@
     "react-window": "^1.8.4",
     "uniforms": "^1.31.1",
     "uniforms-antd": "^1.31.1",
-    "typescript": "^3.6.3"
+    "typescript": "^3.8.3"
   },
   "devDependencies": {
     "@babel/cli": "^7.4.4",

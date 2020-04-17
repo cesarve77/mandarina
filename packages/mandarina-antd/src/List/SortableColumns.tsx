@@ -1,4 +1,4 @@
-import React, {SyntheticEvent} from "react"
+import React, {ReactElement, SyntheticEvent} from "react"
 import HideColumn from "./HideColumn";
 import SortButton, {OnSortChange} from "./SortButton";
 import ListFilter, {OnFilterChange} from "./ListFilter";
@@ -24,7 +24,7 @@ interface SortableColumnInterface {
 
 
 interface SortableColumnsInterface {
-    children: JSX.Element[]
+    children: ReactElement[]
     width: number
     height: number
 }

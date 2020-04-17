@@ -1,5 +1,5 @@
 import {Find, Schema} from 'mandarina';
-import React, {ReactNode} from "react";
+import React, {ReactElement, ReactNode} from "react";
 import memoizeOne from "memoize-one"
 // import {isEqual} from 'lodash';
 import {isEmpty, isEqual, merge, set} from 'lodash'
@@ -112,7 +112,7 @@ export interface ColumnProps {
     width: number
     CellComponent?: CellComponent
     props?: any
-    loadingElement?: JSX.Element
+    loadingElement?: ReactElement
     filter: boolean
     noSort: boolean
 }
