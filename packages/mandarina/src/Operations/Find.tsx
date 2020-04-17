@@ -162,6 +162,7 @@ export class FindBase extends PureComponent<FindProps & FindBaseProps, FindBaseS
                     if (!children) return null
                     return children({
                         schema,
+                        //@ts-ignore
                         query: QUERY,
                         data,
                         loading,
