@@ -298,13 +298,17 @@ export class Table {
                         const table = Table.getInstance(def.type)
                         for (const operation of operations) {
                             const hookName = `${prefix}${capitalize(operation)}` as HookName
+
                             const args2 = data[field][operation]
+
                             if (Array.isArray(args2)) {
                                 for (const arg2 of args2) {
                                     if (inline) {
+
                                         await table.callHook(def.type, hookName, _, {data: arg2}, context, info)
                                     } else {
-                                        await table.callHook(def.type, hookName, _, arg2, context, info)
+                                        console.log('NO inline')
+                                        await table.callHook(def.type, hookName, _, {data: args2}, context, info)
                                     }
 
                                 }
@@ -312,7 +316,8 @@ export class Table {
                                 if (inline) {
                                     await table.callHook(def.type, hookName, _, {data: args2}, context, info)
                                 } else {
-                                    await table.callHook(def.type, hookName, _, args2, context, info)
+                                    console.log('NO inline')
+                                    await table.callHook(def.type, hookName, _, {data: args2}, context, info)
                                 }
                             }
 

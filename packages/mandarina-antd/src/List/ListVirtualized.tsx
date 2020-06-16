@@ -51,7 +51,15 @@ export interface ControlledListProps {
 }
 
 
-export interface ListProps extends ControlledListProps, Omit<FindProps, 'children' | 'schema' | 'where' | 'skip' | 'first' | 'sort' | 'fields'> {
+type  MouseEvent = (props: { data: any, rowIndex: number, columnIndex: number, field: string }) => void;
+
+interface MouseEvents {
+    onClick?: MouseEvent
+    onMouseEnter?: MouseEvent
+    onMouseLeave?: MouseEvent
+}
+
+export interface ListProps extends MouseEvents, ControlledListProps, Omit<FindProps, 'children' | 'schema' | 'where' | 'skip' | 'first' | 'sort' | 'fields'> {
     schema: Schema
     fields: string[]
     pageSize?: number
@@ -65,6 +73,7 @@ export interface ListProps extends ControlledListProps, Omit<FindProps, 'childre
 
     header?: ReactComponentLike | HeaderDefaultProps
     ref?: React.Ref<ListVirtualized>
+
 
 }
 
@@ -134,8 +143,8 @@ interface ListState {
 
 export type Refetch = (refetchOptions: any) => Promise<any>
 
-const createItemData = memoizeOne((data: any, columns: (ColumnProps | null)[], refetch: Refetch, query: Query, variables: any) => ({
-    data, columns, refetch, query, variables
+const createItemData = memoizeOne((data: any, columns: (ColumnProps | null)[], refetch: Refetch, query: Query, variables: any, onClick?: MouseEvent, onMouseEnter?: MouseEvent, onMouseLeave?: MouseEvent) => ({
+    data, columns, refetch, query, variables, onClick, onMouseEnter, onMouseLeave
 }));
 
 
@@ -450,8 +459,7 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
 
 
     render() {
-        const {schema,leftButtons, where, estimatedRowHeight, overscanRowCount = 2, overLoad = 1, header, ...rest} = this.props; //todo rest props
-
+        const {schema, leftButtons, where, estimatedRowHeight, overscanRowCount = 2, overLoad = 1, header, onClick, onMouseEnter, onMouseLeave, ...rest} = this.props; //todo rest props
         const {fields, width, height, filters, sort, overwrite} = this.state;
         const columns = this.calcColumns(fields, overwrite);
         const getColumnWidth = (index: number) => {
@@ -497,7 +505,7 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
                     this.stopPolling = stopPolling;
                     this.variables = variables;
                     const tHeadHeight = this.tHead.current && this.tHead.current.offsetHeight || 95;
-                    const itemData = createItemData({...this.data}, columns, refetch, query, variables);
+                    const itemData = createItemData({...this.data}, columns, refetch, query, variables, onClick, onMouseEnter, onMouseLeave);
 
                     let headerNode: ReactNode = null;
                     if (typeof header === 'function') {
@@ -633,15 +641,20 @@ export const DefaultCellComponent: CellComponent = React.memo(({columnIndex, row
     , areEqual);
 const defaultLoadingElement = '...';
 
-const Cell = React.memo(({columnIndex, rowIndex, data: {data, columns, query, refetch, variables}, style}: ListChildComponentProps & GridChildComponentProps & { data: { variables: any, query: DocumentNode, refetch: RefetchQueriesProviderFn, data: any, columns: ColumnProps[] } }) => {
+const Cell = React.memo(({columnIndex, rowIndex, data: {data, columns, query, refetch, variables, onClick, onMouseEnter, onMouseLeave}, style}: ListChildComponentProps & GridChildComponentProps & { data: MouseEvents & { variables: any, query: DocumentNode, refetch: RefetchQueriesProviderFn, data: any, columns: ColumnProps[] } }) => {
     if (!columns[columnIndex]) return null;
     const field = columns[columnIndex].field;
     const CellComponent = columns[columnIndex].CellComponent || DefaultCellComponent;
     const loadingElement = columns[columnIndex].loadingElement || defaultLoadingElement;
     const props = columns[columnIndex].props || {};
     const className = field.replace('.', '-')
+    const id=data && data[rowIndex] && data[rowIndex].id || ''
+    if (!data[rowIndex]) console.log('dsalkdjlsa',data)
     return (
-        <div className={`mandarina-list-row-${rowIndex % 2 !== 0 ? 'even' : 'odd'} mandarina-list-cell ${className}`}
+        <div className={`mandarina-list-row-${rowIndex % 2 !== 0 ? 'even' : 'odd'} mandarina-list-cell ${className} ${id}`}
+             onClick={() => onClick && onClick({data, rowIndex, field, columnIndex})}
+             onMouseEnter={() => onMouseEnter && onMouseEnter({data, rowIndex, field, columnIndex})}
+             onMouseLeave={() => onMouseLeave && onMouseLeave({data, rowIndex, field, columnIndex})}
              style={style}>
             {!data[rowIndex] && loadingElement}
             {data[rowIndex] &&
