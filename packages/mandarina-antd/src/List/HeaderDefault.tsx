@@ -3,11 +3,10 @@ import Query from "react-apollo/Query";
 import {ApolloClient} from "apollo-client";
 import {ColumnProps, ControlledListProps, Refetch} from "./ListVirtualized";
 import {Schema} from "mandarina";
-import Button from "antd/lib/button";
 import Col from "antd/lib/col";
-import Dropdown from "antd/lib/dropdown";
 import Menu from "antd/lib/menu";
 import Row from "antd/lib/row";
+import {Spin} from "antd";
 
 export interface HeaderProps extends ControlledListProps {
     count: number
@@ -85,9 +84,10 @@ const HeaderDefault = ({leftButtons,counter = true, menuItems = [], count, ...pr
                 {counter && `Total: ${count === 0 || count ? count : '...'}`}{leftButtons}
             </Col>
             {!!menu.length && <Col span={12} style={{textAlign: 'right'}}>
-                <Dropdown placement="bottomLeft" overlay={<Menu>{menu}</Menu>}>
-                    <Button shape="circle" icon={'setting'} loading={loadingAction}/>
-                </Dropdown>
+                <Spin spinning={loadingAction} >
+                    <Menu className={'mandarina-list-menu-btn'} mode={'horizontal'}>{menu}</Menu>
+                </Spin>
+
 
             </Col>}
         </Row>

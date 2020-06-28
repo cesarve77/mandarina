@@ -108,7 +108,6 @@ class ActionForm extends PureComponent<WithApolloClient<ActionFormProps>> {
 
                             {children && Array.isArray(children) && children}
                             {children && !Array.isArray(children) && (typeof children !== "function") && children}
-
                             {children && !Array.isArray(children) && (typeof children === "function") && children({loading})}
                             {!children && (
                                 <>
