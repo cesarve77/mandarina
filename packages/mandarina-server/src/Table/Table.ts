@@ -85,20 +85,14 @@ export class Table {
         const fields = this.schema.getFields().filter(f => f !== 'createdAt' && f !== 'createdAt')
         return fields.length > 0
     }
-
     //Insert where option in to the query
     // static dotConcat = (a: string | undefined, b: string) => a ? `${a}.${b}` : b;
-
     getDefaultActions(type: operationType) {
-
         // OperationName for query is user or users, for mutation are createUser, updateUser ....
         const operationNames: string[] = Object.values(this.schema.names[type]);
         const resultResolvers: { [resolverName: string]: (_: any, args: any, context: Context, info: any) => void } = {};
-
-
         operationNames.forEach((operationName: string) => {
             if (!this.shouldHasManyUpdate()) return
-
             resultResolvers[operationName] = async (_: any, args: any = {}, context: Context, info: GraphQLResolveInfo) => {
                 bm()
                 const user = await Mandarina.config.getUser(context)
@@ -130,7 +124,6 @@ export class Table {
                     //VALIDATE IF USER CAN MUTATE THOSE FIELDS
                     this.schema.validateMutation(action, deepClone(args), user && user.roles || []);
                     await this.callHook(this.name, <HookName>`before${capitalizedAction}`, _, args, context, query);
-
                     /*
                     HACK https://github.com/prisma/prisma/issues/4327
                      */
@@ -164,7 +157,6 @@ export class Table {
 
                 }
                 if (type === 'query') {
-
                     // console.dir(JSON.parse(JSON.stringify(info)),{depth:1})
                     await this.callHook(this.name, 'beforeQuery', _, args, context, query);
                     if (!!info.fieldName.match(/Connection$/)) {
@@ -173,7 +165,6 @@ export class Table {
                         this.schema.validateQuery(fields, user && user.roles || []);
                     }
                     //Validate if the roles is able to read those fields
-
                     if (operationName===this.schema.names.query.single){
                         queryString=queryString.replace(operationName,this.schema.names.query.plural)
                         queryString=queryString.replace(new RegExp(`${this.schema.names.input.where.single}!?`),this.schema.names.input.where.plural +'!')
@@ -191,11 +182,9 @@ export class Table {
                     await this.callHook(this.name, 'afterQuery', _, args, context, info);
                 }
                 bm(`${operationName} ${type} over ${this.name}`)
-
                 return result;
             }
         });
-
         return resultResolvers;
     }
 

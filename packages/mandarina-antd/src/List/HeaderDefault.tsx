@@ -80,10 +80,10 @@ const HeaderDefault = ({leftButtons,counter = true, menuItems = [], count, ...pr
     })
     return (
         <Row gutter={0}>
-            <Col span={12}>
+            <Col span={4}>
                 {counter && `Total: ${count === 0 || count ? count : '...'}`}{leftButtons}
             </Col>
-            {!!menu.length && <Col span={12} style={{textAlign: 'right'}}>
+            {!!menu.length && <Col span={20} style={{textAlign: 'right'}}>
                 <Spin spinning={loadingAction} >
                     <Menu className={'mandarina-list-menu-btn'} mode={'horizontal'}>{menu}</Menu>
                 </Spin>
