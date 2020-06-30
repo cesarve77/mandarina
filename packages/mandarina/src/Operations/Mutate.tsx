@@ -381,8 +381,8 @@ export const Update = ({id, schema, children, fields, optimisticResponse, ...pro
         <FindOne schema={schema} where={where} fields={fields} {...props}>
             {({data, ...findOneProps}) => {
                 return (
-                    <MutateWithApollo where={where} type='update' schema={schema} doc={data}
-                                      optimisticResponse={optimisticResponse} {...findOneProps} >
+                    <MutateWithApollo where={where} type='update' doc={data}
+                                     {...findOneProps}  schema={schema}  optimisticResponse={optimisticResponse} >
                         {children}
                     </MutateWithApollo>
                 );
