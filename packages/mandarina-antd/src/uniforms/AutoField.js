@@ -77,15 +77,12 @@ class CustomAuto extends BaseField {
         const mergeProps={...this.props, ...props.field.form.props}
 
         if (mergeProps.col === false) return createElement(props.component, mergeProps)
-        let col=typeof mergeProps.col !== 'object'? {span: mergeProps.col} : mergeProps.col ? {...mergeProps.col} : 24
+        let col=typeof mergeProps.col !== 'object'? {span: mergeProps.col} : mergeProps.col ? {...mergeProps.col} : {span: 24}
 
         return (
-            <>
                 <Col  {...col} data-id={mergeProps.name}>
                     {createElement(props.component, mergeProps)}
                 </Col>
-                <div style={{clear: 'both'}}/>
-            </>
         )
     }
 
