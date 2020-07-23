@@ -84,7 +84,7 @@ AutoFields.defaultProps = {
     element: 'div',
 };
 
-filterDOMProps.register('col')
+filterDOMProps.register('col', 'props')
 
 export default AutoFields
 

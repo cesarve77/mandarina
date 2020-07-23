@@ -303,7 +303,6 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
             definition = this.props.schema.getPathDefinition(field);
             if (overwrite) {
                 definition = merge(deepClone(definition), overwrite)
-
             }
         }
         if (!definition.list) throw new Error(`You need to provide overwrite full definition for "${field}"`)
@@ -432,7 +431,7 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
     };
 
     getAllFilters = memoizeOne(
-        (filters: Filters) => {
+        (filters: Filters, overwrite?: Overwrite) => {
             const allFilters: Where[] = [];
             for (const field in filters) {
                 const fieldDefinition = this.props.schema.getPathDefinition(field);
@@ -468,7 +467,7 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
             return columns[index].width;
         };
         this.estimatedColumnWidth = columns.reduce((mem, c) => c ? c.width + mem : mem, 0) / columns.length;
-        const allFilters = this.getAllFilters(filters);
+        const allFilters = this.getAllFilters(filters,overwrite);
         let whereAndFilter: { AND?: Where[] } | undefined;
         if (where && !isEmpty(where) && allFilters.length > 0) {
             whereAndFilter = {AND: [where, ...allFilters]}
@@ -649,7 +648,6 @@ const Cell = React.memo(({columnIndex, rowIndex, data: {data, columns, query, re
     const props = columns[columnIndex].props || {};
     const className = field.replace('.', '-')
     const id=data && data[rowIndex] && data[rowIndex].id || ''
-    if (!data[rowIndex]) console.log('dsalkdjlsa',data)
     return (
         <div className={`mandarina-list-row-${rowIndex % 2 !== 0 ? 'even' : 'odd'} mandarina-list-cell ${className} ${id}`}
              onClick={() => onClick && onClick({data, rowIndex, field, columnIndex})}

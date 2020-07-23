@@ -13,7 +13,7 @@ export interface AuthChildrenProps {
 export interface AuthProps {
     action: ActionType
     schema: Schema
-    userRoles: string[]
+    userRoles?: string[]
     fields: string[]
     children: (props: any) => ReactNode
 }
@@ -61,7 +61,7 @@ export interface AuthArgs {
     fields: string[]
     schema: Schema,
     action: ActionType,
-    userRoles: string[]
+    userRoles?: string[]
 }
 
 

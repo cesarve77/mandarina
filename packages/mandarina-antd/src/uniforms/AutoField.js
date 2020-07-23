@@ -25,9 +25,7 @@ class CustomAuto extends BaseField {
         return this.context.uniforms.name;
     }
 
-
     render() {
-
         const props = this.getFieldProps(undefined, {ensureValue: false});
         if (props.component === undefined) {
             if (props.allowedValues) {//todo
@@ -67,25 +65,20 @@ class CustomAuto extends BaseField {
                         props.component = BoolField;
                         break;
                 }
-
                 invariant(props.component, 'Unsupported field type in: %s', props.name);
-
             }
         }
         //this.props  properties applied directly on AutoField
         //props has a field property with values in the schema
         const mergeProps={...this.props, ...props.field.form.props}
-
         if (mergeProps.col === false) return createElement(props.component, mergeProps)
-        let col=typeof mergeProps.col !== 'object'? {span: mergeProps.col} : mergeProps.col ? {...mergeProps.col} : {span: 24}
-
+        let col=typeof mergeProps.col !== 'object'? {span: mergeProps.col || 24 } : mergeProps.col ? {...mergeProps.col} : {span: 24}
         return (
                 <Col  {...col} data-id={mergeProps.name}>
                     {createElement(props.component, mergeProps)}
                 </Col>
         )
     }
-
 };
 
 export default CustomAuto
