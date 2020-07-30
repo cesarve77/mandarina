@@ -415,7 +415,7 @@ export class Schema {
                         return value
                     });
                 } else {
-                    model[key] = model[key].map((value: any) => forceType(value, definition.type));
+                    model[key] = model[key] && model[key].map((value: any) => forceType(value, definition.type));
                 }
                 return;
             }

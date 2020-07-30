@@ -168,6 +168,7 @@ export const getDefaultComponent = ( fieldDefinition: FieldDefinitionNative): Fi
                   {operator}
                 </span>
                       <DatePicker value={value.filter}
+                                  placeholder={""}
                                   onChange={(date) => date ? onChange({
                                       operator: selected,
                                       filter: date

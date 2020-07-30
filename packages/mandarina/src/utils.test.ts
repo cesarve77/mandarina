@@ -202,8 +202,10 @@ describe('util ', () => {
 
     })
     test('generateRandomAlpha',()=>{
-        const r=generateRandomAlpha(16)
+        let r=generateRandomAlpha(16)
         expect(r.length).toBe(16)
+         r=generateRandomAlpha(3)
+        expect(r.length).toBe(3)
 
 
     })
