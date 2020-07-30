@@ -12,7 +12,7 @@ import {
     VariableSizeGrid as Grid
 } from 'react-window';
 import {OnFilterChange, Where} from "./ListFilter";
-import {CellComponent, FilterMethod, Overwrite} from "mandarina/build/Schema/Schema";
+import {CellComponent, FilterComponent, FilterMethod, Overwrite} from "mandarina/build/Schema/Schema";
 import Empty from "antd/lib/empty";
 import {getDefaultFilterMethod} from "./ListFilters";
 import {ReactComponentLike} from "prop-types";
@@ -115,16 +115,6 @@ export interface Edge {
 }
 
 
-export interface ColumnProps {
-    field: string
-    title: ReactNode
-    width: number
-    CellComponent?: CellComponent
-    props?: any
-    loadingElement?: ReactElement
-    filter: boolean
-    noSort: boolean
-}
 
 const estimatedColumnWidthDefault = 175;
 const estimatedRowHeightDefault = 60;
@@ -143,10 +133,24 @@ interface ListState {
 
 export type Refetch = (refetchOptions: any) => Promise<any>
 
-const createItemData = memoizeOne((data: any, columns: (ColumnProps | null)[], refetch: Refetch, query: Query, variables: any, onClick?: MouseEvent, onMouseEnter?: MouseEvent, onMouseLeave?: MouseEvent) => ({
+const createItemData = memoizeOne((data: any, columns: (ColumnDef | null)[], refetch: Refetch, query: Query, variables: any, onClick?: MouseEvent, onMouseEnter?: MouseEvent, onMouseLeave?: MouseEvent) => ({
     data, columns, refetch, query, variables, onClick, onMouseEnter, onMouseLeave
 }));
 
+export interface ColumnDef {
+    field: string
+    title: ReactNode
+    width: number
+    CellComponent?: CellComponent
+    FilterComponent: FilterComponent
+    filterMethod: FilterMethod
+    props?: any
+    loadingElement?: ReactElement
+    filter: boolean
+    noSort: boolean
+}
+
+type ColumnsDef = { [field: string]: ColumnDef | null }
 
 export class ListVirtualized extends React.Component<ListProps, ListState> {
     gridRef = React.createRef();
@@ -252,6 +256,11 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
 
 
     onScrollTimeoutId: number;
+    /**
+     * used as method for ref , ref.current.fresh()
+     * do not remove
+     * @param full
+     */
     refresh = (full: boolean = true) => {
         if (full) this.data = []
         return this.onScroll({})
@@ -283,41 +292,51 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
                 .catch(reject) //todo
         }, 100)
     })
-    getColumnDefinition = (field: string): ColumnProps | null => {
-        //detect if parent has a CellComponent
-        const parentPath = getParentCellComponent(field, this.props.schema);
-        if (parentPath) {
-            field = parentPath
-        }
-        const overwrite = this.state.overwrite && this.state.overwrite[field];
+    columnsDefinition: ColumnsDef = {}
 
-        let definition
-        if (!this.props.schema.hasPath(field) && field.indexOf('.') < 0 && overwrite) {
-            definition = merge({
-                list: {
-                    noFilter: true,
-                    noSort: true
+    getColumnDefinition = (field: string): ColumnDef | null => {
+        if (this.columnsDefinition[field]!==null && !this.columnsDefinition[field]) {
+            //detect if parent has a CellComponent
+            const parentPath = getParentCellComponent(field, this.props.schema);
+            if (parentPath) {
+                field = parentPath
+            }
+            const overwrite = this.state.overwrite && this.state.overwrite[field];
+
+            let definition
+            if (!this.props.schema.hasPath(field) && field.indexOf('.') < 0 && overwrite) {
+                definition = merge({
+                    list: {
+                        noFilter: true,
+                        noSort: true
+                    }
+                }, deepClone(this.props.schema.applyDefinitionsDefaults({type: String}, field)), overwrite)
+            } else {
+                definition = this.props.schema.getPathDefinition(field);
+                if (overwrite) {
+                    definition = merge(deepClone(definition), overwrite)
                 }
-            }, deepClone(this.props.schema.applyDefinitionsDefaults({type: String}, field)), overwrite)
-        } else {
-            definition = this.props.schema.getPathDefinition(field);
-            if (overwrite) {
-                definition = merge(deepClone(definition), overwrite)
+            }
+            if (!definition.list) throw new Error(`You need to provide overwrite full definition for "${field}"`)
+
+            if (definition.list.hidden) {
+                this.columnsDefinition[field] = null
+            } else {
+                this.columnsDefinition[field] = {
+                    field,
+                    loadingElement: definition.list.loadingElement,
+                    CellComponent: definition.list.CellComponent,
+                    FilterComponent: definition.list.FilterComponent || getDefaultFilterMethod(field, this.props.schema),
+                    filterMethod: definition.list.filterMethod || getDefaultFilterMethod(field, this.props.schema),
+                    title: definition.label ? definition.label : "",
+                    width: definition.list.width || estimatedColumnWidthDefault,
+                    filter: !definition.list.noFilter,
+                    noSort: !!(definition.isTable || definition.isArray || field.indexOf('.') > 0 || definition.list.noSort),
+                    props: definition.list.props || {},
+                }
             }
         }
-        if (!definition.list) throw new Error(`You need to provide overwrite full definition for "${field}"`)
-
-        if (definition.list.hidden) return null;
-        return {
-            field,
-            loadingElement: definition.list.loadingElement,
-            CellComponent: definition.list.CellComponent,
-            title: definition.label ? definition.label : "",
-            width: definition.list.width || estimatedColumnWidthDefault,
-            filter: !definition.list.noFilter,
-            noSort: !!(definition.isTable || definition.isArray || field.indexOf('.') > 0 || definition.list.noSort),
-            props: definition.list.props || {},
-        }
+        return this.columnsDefinition[field]
     };
 
 
@@ -426,16 +445,15 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
             this.setState({sort})
 
         }
-
-
     };
 
     getAllFilters = memoizeOne(
         (filters: Filters, overwrite?: Overwrite) => {
             const allFilters: Where[] = [];
             for (const field in filters) {
-                const fieldDefinition = this.props.schema.getPathDefinition(field);
-                const filterMethod: FilterMethod = fieldDefinition.list.filterMethod || getDefaultFilterMethod(field, this.props.schema);
+                const fieldDefinition = this.getColumnDefinition(field);
+                if (!fieldDefinition) continue
+                const filterMethod: FilterMethod = fieldDefinition.filterMethod
                 const filter = filters[field];
                 allFilters.push(filterMethod(filter))
             }
@@ -444,7 +462,7 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
         , equalityFn);
 
     calcColumns = memoizeOne((fields: string[], overwrite?: Overwrite) => {
-        const columns: (ColumnProps | null)[] = [];
+        const columns: (ColumnDef | null)[] = [];
         fields.forEach((field) => {
             const column = this.getColumnDefinition(field);
             if (column && !columns.some((c) => !!(c && c.field === column.field))) {
@@ -640,17 +658,18 @@ export const DefaultCellComponent: CellComponent = React.memo(({columnIndex, row
     , areEqual);
 const defaultLoadingElement = '...';
 
-const Cell = React.memo(({columnIndex, rowIndex, data: {data, columns, query, refetch, variables, onClick, onMouseEnter, onMouseLeave}, style}: ListChildComponentProps & GridChildComponentProps & { data: MouseEvents & { variables: any, query: DocumentNode, refetch: RefetchQueriesProviderFn, data: any, columns: ColumnProps[] } }) => {
+const Cell = React.memo(({columnIndex, rowIndex, data: {data, columns, query, refetch, variables, onClick, onMouseEnter, onMouseLeave}, style}: ListChildComponentProps & GridChildComponentProps & { data: MouseEvents & { variables: any, query: DocumentNode, refetch: RefetchQueriesProviderFn, data: any, columns: ColumnDef[] } }) => {
     if (!columns[columnIndex]) return null;
     const field = columns[columnIndex].field;
     const CellComponent = columns[columnIndex].CellComponent || DefaultCellComponent;
     const loadingElement = columns[columnIndex].loadingElement || defaultLoadingElement;
     const props = columns[columnIndex].props || {};
     const className = field.replace('.', '-')
-    const id=data && data[rowIndex] && data[rowIndex].id || ''
+    const id = data && data[rowIndex] && data[rowIndex].id || ''
     return (
-        <div className={`mandarina-list-row-${rowIndex % 2 !== 0 ? 'even' : 'odd'} mandarina-list-cell ${className} ${id}`}
-             onClick={() => onClick && onClick({data, rowIndex, field, columnIndex})}
+        <div
+            className={`mandarina-list-row-${rowIndex % 2 !== 0 ? 'even' : 'odd'} mandarina-list-cell ${className} ${id}`}
+            onClick={() => onClick && onClick({data, rowIndex, field, columnIndex})}
              onMouseEnter={() => onMouseEnter && onMouseEnter({data, rowIndex, field, columnIndex})}
              onMouseLeave={() => onMouseLeave && onMouseLeave({data, rowIndex, field, columnIndex})}
              style={style}>
