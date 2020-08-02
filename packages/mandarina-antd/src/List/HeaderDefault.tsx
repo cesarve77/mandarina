@@ -1,7 +1,7 @@
 import React, {ReactElement, ReactNode, useState} from "react"
 import Query from "react-apollo/Query";
 import {ApolloClient} from "apollo-client";
-import {ColumnProps, ControlledListProps, Refetch} from "./ListVirtualized";
+import {ColumnDef, ControlledListProps, Refetch} from "./ListVirtualized";
 import {Schema} from "mandarina";
 import Col from "antd/lib/col";
 import Menu from "antd/lib/menu";
@@ -11,7 +11,7 @@ import {Spin} from "antd";
 export interface HeaderProps extends ControlledListProps {
     count: number
     data: any
-    columns: (ColumnProps | null)[]
+    columns: (ColumnDef | null)[]
     refetch: Refetch
     query: Query<any>
     variables: any

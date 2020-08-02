@@ -70,7 +70,7 @@ export interface ListProps extends MouseEvents, ControlledListProps, Omit<FindPr
     estimatedRowHeight?: number
     overscanRowCount?: number
     overLoad?: number
-
+    onDataChange?: (data: any[]) => void,
     header?: ReactComponentLike | HeaderDefaultProps
     ref?: React.Ref<ListVirtualized>
 
@@ -262,6 +262,7 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
      * @param full
      */
     refresh = (full: boolean = true) => {
+        console.log('refreshing')
         if (full) this.data = []
         return this.onScroll({})
     }
@@ -273,7 +274,7 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
         this.onScrollTimeoutId && window.clearTimeout(this.onScrollTimeoutId);
         this.onScrollTimeoutId = window.setTimeout(() => {
             //If all visible are loaded, then not refetch
-            if (this.data.length && this.data.slice(this.visibleRowStartIndex, this.visibleRowStopIndex).every((val) => val !== undefined)) {
+            if (this.data.length && [...this.data].slice(this.visibleRowStartIndex, this.visibleRowStopIndex).every((val) => val !== undefined)) {
                 resolve(false)
                 return;
             }
@@ -476,7 +477,7 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
 
 
     render() {
-        const {schema, leftButtons, where, estimatedRowHeight, overscanRowCount = 2, overLoad = 1, header, onClick, onMouseEnter, onMouseLeave, ...rest} = this.props; //todo rest props
+        const {onDataChange, schema, leftButtons, where, estimatedRowHeight, overscanRowCount = 2, overLoad = 1, header, onClick, onMouseEnter, onMouseLeave, ...rest} = this.props; //todo rest props
         const {fields, width, height, filters, sort, overwrite} = this.state;
         const columns = this.calcColumns(fields, overwrite);
         const getColumnWidth = (index: number) => {
@@ -485,7 +486,7 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
             return columns[index].width;
         };
         this.estimatedColumnWidth = columns.reduce((mem, c) => c ? c.width + mem : mem, 0) / columns.length;
-        const allFilters = this.getAllFilters(filters,overwrite);
+        const allFilters = this.getAllFilters(filters, overwrite);
         let whereAndFilter: { AND?: Where[] } | undefined;
         if (where && !isEmpty(where) && allFilters.length > 0) {
             whereAndFilter = {AND: [where, ...allFilters]}
@@ -502,10 +503,9 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
                   notifyOnNetworkStatusChange
                   {...rest}
             >
-                {({data = [], query, variables, error, refetch, loading, count, client, startPolling, stopPolling}) => {
-
+                {({data = [], query, variables, error, refetch, loading, count, client, startPolling, stopPolling, networkStatus}) => {
                     let dataCollection = data;
-                    if (this.data.length === 0 && data && !loading) {
+                    if (this.data.length === 0 && data.length>0  && !loading) {
                         this.data = Array(count).fill(undefined)
                     }
                     if (!loading && count > this.data.length) {//when your are polling or refetching and the count change
@@ -516,14 +516,13 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
                         //this.gridRef.current &&  this.gridRef.current.resetAfterRowIndex(variables.skip)
                         this.data.splice(variables.skip, dataCollection.length, ...dataCollection);
                     }
-
+                    !loading && onDataChange && onDataChange(this.data)
                     this.refetch = refetch;
                     this.startPolling = startPolling;
                     this.stopPolling = stopPolling;
                     this.variables = variables;
                     const tHeadHeight = this.tHead.current && this.tHead.current.offsetHeight || 95;
-                    const itemData = createItemData({...this.data}, columns, refetch, query, variables, onClick, onMouseEnter, onMouseLeave);
-
+                    const itemData = createItemData([...this.data], columns, refetch, query, variables, onClick, onMouseEnter, onMouseLeave);
                     let headerNode: ReactNode = null;
                     if (typeof header === 'function') {
                         const Header = header;

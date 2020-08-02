@@ -566,7 +566,7 @@ export interface CellComponentProps {
     [rest: string]: any
 }
 
-export type CellComponent = React.ComponentType<CellComponentProps> //React.ComponentClass<CellComponentProps> | React.ComponentType<CellComponentProps> | React.FunctionComponent<CellComponentProps> | ReactNode
+export type CellComponent = React.ComponentType<CellComponentProps & any> //React.ComponentClass<CellComponentProps> | React.ComponentType<CellComponentProps> | React.FunctionComponent<CellComponentProps> | ReactNode
 
 export interface UserFieldDefinitionCommon {
     label?: LabelOrResolver

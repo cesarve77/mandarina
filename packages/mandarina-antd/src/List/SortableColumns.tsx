@@ -3,14 +3,14 @@ import HideColumn from "./HideColumn";
 import SortButton, {OnSortChange} from "./SortButton";
 import ListFilter, {OnFilterChange} from "./ListFilter";
 import {SortableContainer, SortableElement} from 'react-sortable-hoc';
-import {ColumnProps, OnHideColumn, OnResizeStop, Sort} from "./ListVirtualized";
+import {ColumnDef, OnHideColumn, OnResizeStop, Sort} from "./ListVirtualized";
 import {Schema} from "mandarina";
 // @ts-ignore
 import {ResizableBox, ResizeCallbackData} from 'react-resizable';
 
 
 interface SortableColumnInterface {
-    column: ColumnProps
+    column: ColumnDef
     sort?: Sort
     filters: any
     schema: Schema
