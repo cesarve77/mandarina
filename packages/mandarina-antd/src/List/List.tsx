@@ -1,6 +1,7 @@
 import TableAntD, {ColumnProps} from 'antd/lib/table';
 import {Find, Schema} from 'mandarina';
 import * as React from "react";
+import {ComponentType} from "react";
 import {FieldDefinition, Overwrite} from 'mandarina/build/Schema/Schema'
 import {Where} from "./ListFilter";
 import {merge} from "lodash";
@@ -20,6 +21,7 @@ export interface ListProps extends FindProps {
     first?: number
     where?: any
     ref?: React.Ref<List>
+    Dimmer?: ComponentType
 
 }
 
@@ -208,10 +210,11 @@ export class List extends React.Component<ListProps, { columns: ColumnProps<any>
     firstLoad: boolean = true
 
     render() {
-        const {schema, first, fields, where, ...findBaseProps} = this.props
+        const {schema, first, fields, where, Dimmer, ...findBaseProps} = this.props
         const {columns} = this.state
         return (
             <div className="list-wrapper" style={{width: '100%'}} ref={this.me}>
+
                 <Find schema={schema} where={where} first={first} fields={fields}
                       {...findBaseProps}
                 >
@@ -227,22 +230,25 @@ export class List extends React.Component<ListProps, { columns: ColumnProps<any>
                         return (
                             <div style={{textAlign: 'right'}}>
                                 Total {count}
-                                <TableAntD
-                                    scroll={{x: '100%'}}
-                                    pagination={{
-                                        pageSize: 5000, //todo
-                                        total: count,
-                                        simple: true,
-                                        hideOnSinglePage: true,
-                                    }}
-                                    rowKey={(record: any) => record.id}
+                                <div style={{position: 'relative'}}>
+                                    {Dimmer && <Dimmer/>}
+                                    <TableAntD
+                                        scroll={{x: '100%'}}
+                                        pagination={{
+                                            pageSize: 5000, //todo
+                                            total: count,
+                                            simple: true,
+                                            hideOnSinglePage: true,
+                                        }}
+                                        rowKey={(record: any) => record.id}
 
-                                    bordered
-                                    //components={components}
-                                    columns={columns}
-                                    loading={this.firstLoad}
-                                    dataSource={dataSource}
-                                />
+                                        bordered
+                                        //components={components}
+                                        columns={columns}
+                                        loading={this.firstLoad}
+                                        dataSource={dataSource}
+                                    />
+                                </div>
                             </div>
                         )
                     }}
