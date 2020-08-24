@@ -167,7 +167,7 @@ const Form = ({
                     >
 
                         {children && typeof children !== "function" && children}
-                        {children && typeof children === "function" && children({doc, loading, called, ...rest})}
+                        {children && typeof children === "function" && children({doc, loading, called, ...rest, fields})}
                         {!children && (
                             <>
                                 <AutoFields autoField={AutoField} fields={fields}/>

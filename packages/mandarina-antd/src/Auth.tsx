@@ -17,11 +17,11 @@ export interface AuthElementsProps {
 
 
 
-const AuthAntD = ({Component,innerRef, schema, denied = null, userRoles = [], action, fields, Error, ...props}:
+const AuthAntD = ({Component,innerRef, schema, denied = null, userRoles = [], action, fields: fieldsOri, Error, ...props}:
                       { Component: ComponentType<ElemProps>, action: ActionType } & ElemProps & AuthElementsProps ) => {
     return (
         // @ts-ignore
-        <Auth schema={schema} action={action} userRoles={userRoles} fields={fields}>
+        <Auth schema={schema} action={action} userRoles={userRoles} fields={fieldsOri}>
             {({fields, loading, error,readFields}: AuthChildrenProps) => {
                 if (error && Error) return <Error error={error}/>
                 if (!loading && fields && fields.length === 0) return denied

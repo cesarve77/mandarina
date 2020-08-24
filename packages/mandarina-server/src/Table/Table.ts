@@ -109,13 +109,13 @@ export class Table {
                     // } else {
                     //     await this.callHook('afterValidate', action, _, args, context, info);
                     // }
-                    if (isSingleMutation) {
+                    if (isSingleMutation && (action==='update' || action==='delete')) {
                         const where = this.options.where && this.options.where(user)
                         if (where) {
                             let finalWhere = args.where ? {AND: [args.where, where]} : where
                             const exists = (await context.prisma.exists[this.name](finalWhere))
                             if (!exists) {
-                                return null
+                                throw new Error(`${action} on ${this.schema.name} not found for ${JSON.stringify(where)}` )
                             }
 
 
@@ -182,6 +182,7 @@ export class Table {
                     await this.callHook(this.name, 'afterQuery', _, args, context, info);
                 }
                 bm(`${operationName} ${type} over ${this.name}`)
+                console.log('result1',result)
                 return result;
             }
         });
