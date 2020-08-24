@@ -55,9 +55,13 @@ export const SortableColumn = SortableElement(({columnIndex, column: {title, fie
     }
 )
 
-export const SortableColumns = SortableContainer(({children, width, height}: SortableColumnsInterface) => {
+export const SortableColumns = SortableContainer(({children,height,empty, tHead,grid}: SortableColumnsInterface & any) => {
     return <div className={' mandarina-list-thead-row'}
-                style={{width, height}}>
+                onWheel = {(e) =>{
+                    tHead.current.scrollLeft = tHead.current.scrollLeft + e.deltaX
+                    !empty && grid.current.scrollTo({scrollLeft: tHead.current.scrollLeft})
+                }}
+                style={{height}}>
         {children}
     </div>
 });

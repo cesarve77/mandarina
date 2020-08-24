@@ -31,7 +31,7 @@ export type ContentFnc = (props: HeaderActionButtonProps) => ReactNode
 export interface HeaderDefaultProps {
     leftButtons?: ReactNode
     counter?: boolean
-    menuItems?: (({ action?: Action, content: ReactNode | ReactElement | ContentFnc }) | string)[]
+    menuItems?: (({props: any, action?: Action, content: ReactNode | ReactElement | ContentFnc }) | string)[]
 }
 
 
@@ -68,7 +68,7 @@ const HeaderDefault = ({leftButtons,counter = true, menuItems = [], count, ...pr
         }
         // @ts-ignore
         if (React.isValidElement(content) && content.type.name !== 'SubMenu' && content.type.name !== "Menu") {
-            return <Menu.Item key={index} onClick={onClick}>{content}</Menu.Item>
+            return <Menu.Item {...item.props} key={index} onClick={onClick}>{content}</Menu.Item>
         }
 
         if (typeof content === 'function') {
@@ -85,10 +85,8 @@ const HeaderDefault = ({leftButtons,counter = true, menuItems = [], count, ...pr
             </Col>
             {!!menu.length && <Col xs={19} sm={20} md={21} lg={22} xl={22} xxl={23}  style={{textAlign: 'right'}}>
                 <Spin spinning={loadingAction} >
-                    <Menu theme={'dark'} className={'mandarina-list-menu-btn'} mode={'horizontal'}>{menu}</Menu>
+                    <Menu className={'mandarina-list-menu-btn'} mode={'horizontal'}>{menu}</Menu>
                 </Spin>
-
-
             </Col>}
         </Row>
     )

@@ -56,6 +56,7 @@ export interface AutoFormProps {
     onChange?: (key: string, value: any) => void
     onSubmitFailure?: (e?: any) => void
     onSubmitSuccess?: (res?: any) => void
+    onValidate?: (model: any, error: Error, callback: ()=>void) => void
     onChangeModel?: (model: Model) => void
     onSubmit?: (model: Model) => Promise<void> | void
     placeholder?: boolean
@@ -123,6 +124,7 @@ const Form = ({
                   modelTransform,
                   label,
                   onSubmitSuccess,
+                  onValidate,
                   onSubmitFailure,
                   onChangeModel,
                   overwrite,
@@ -159,6 +161,7 @@ const Form = ({
                         autoField={AutoField}
                         onSubmitSuccess={onSubmitSuccess}
                         onSubmitFailure={onSubmitFailure}
+                        onValidate={onValidate}
                         style={style}
                         validate={validate}
                     >

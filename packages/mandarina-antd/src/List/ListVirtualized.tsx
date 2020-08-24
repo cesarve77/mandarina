@@ -268,6 +268,7 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
     }
     onScroll = ({scrollLeft}: GridOnScrollProps) => new Promise((resolve, reject) => {
         if (this.tHead.current) {
+
             this.tHead.current.scrollLeft = scrollLeft
         }
         //this.setState({row: this.visibleRowStartIndex})
@@ -576,7 +577,10 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
                                 <div ref={this.tHead} className='mandarina-list-thead'
                                      style={{width, height: tHeadHeight ? tHeadHeight : 'auto'}}>
                                     <SortableColumns
-                                        shouldCancelStart={(event) => {
+                                        tHead={this.tHead}
+                                        grid={this.gridRef}
+                                        empty={!error && !loading && !count }
+                                        shouldCancelStart={(event: any) => {
                                             // @ts-ignore
                                             return event.target && event.target.classList && event.target.classList.contains('react-resizable-handle') || event.target.classList.contains('no-draggable') || ['INPUT', 'SELECT', 'TEXTAREA'].includes(event.target.tagName)
                                         }}
