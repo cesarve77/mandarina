@@ -150,7 +150,6 @@ export interface ColumnDef {
     noSort: boolean
 }
 
-type ColumnsDef = { [field: string]: ColumnDef | null }
 
 export class ListVirtualized extends React.Component<ListProps, ListState> {
     gridRef = React.createRef();
@@ -194,8 +193,9 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
         if (props.onFieldsChange && !isEqual(props.fields, state.fields)) {
             result.fields = props.fields || props.schema.getFields()
         }
+
         if ((props.onOverwriteChange) && !isEqual(props.overwrite, state.overwrite)) {
-            result.overwrite = props.overwrite
+            result.overwrite = {...props.overwrite}
         }
         if (props.onSortChange && !isEqual(props.sort, state.sort)) {
             result.sort = props.sort
@@ -268,7 +268,6 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
     }
     onScroll = ({scrollLeft}: GridOnScrollProps) => new Promise((resolve, reject) => {
         if (this.tHead.current) {
-
             this.tHead.current.scrollLeft = scrollLeft
         }
         //this.setState({row: this.visibleRowStartIndex})
@@ -294,10 +293,8 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
                 .catch(reject) //todo
         }, 100)
     })
-    columnsDefinition: ColumnsDef = {}
 
     getColumnDefinition = (field: string): ColumnDef | null => {
-        if (this.columnsDefinition[field]!==null && !this.columnsDefinition[field]) {
             //detect if parent has a CellComponent
             const parentPath = getParentCellComponent(field, this.props.schema);
             if (parentPath) {
@@ -322,9 +319,9 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
             if (!definition.list) throw new Error(`You need to provide overwrite full definition for "${field}"`)
 
             if (definition.list.hidden) {
-                this.columnsDefinition[field] = null
+                return null
             } else {
-                this.columnsDefinition[field] = {
+                return  {
                     field,
                     loadingElement: definition.list.loadingElement,
                     CellComponent: definition.list.CellComponent,
@@ -336,10 +333,8 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
                     noSort: !!(definition.isTable || definition.isArray || field.indexOf('.') > 0 || definition.list.noSort),
                     props: definition.list.props || {},
                 }
-            }
         }
-        return this.columnsDefinition[field]
-    };
+    }
 
 
     onFilterChange: OnFilterChange = (field, filter) => {
@@ -394,6 +389,7 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
     onResizeStop: OnResizeStop = (field, width, index) => {
         // @ts-ignore
         this.gridRef.current && this.gridRef.current.resetAfterColumnIndex(index, false);
+
         this.setState(({overwrite}) => {
             const newOverwrite = deepClone(overwrite) || {};
             set(newOverwrite, [field, 'list', 'width'], width);

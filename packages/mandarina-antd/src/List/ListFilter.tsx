@@ -5,6 +5,7 @@ import {Bridge} from "../Bridge";
 import {getDefaultComponent} from "./ListFilters";
 import {FieldDefinition, FilterComponent} from "mandarina/build/Schema/Schema";
 import {deepClone} from "mandarina/build/Operations/Mutate";
+import HiddenField from "uniforms-antd/HiddenField";
 
 export const uuid = () => 'i' + (Date.now() - 1540000000000 + Math.random()).toString(36)
 
@@ -37,6 +38,7 @@ export const ListFilter = React.memo(({onFilterChange, field, filter, schema}: L
         fieldDefinition.validators = fieldDefinition.validators.filter(({validatorName, arrayValidator, tableValidator}) => validatorName !== 'required' && !arrayValidator && !tableValidator)
         const filterSchema = new Schema({
             filter: fieldDefinition,
+            internal: {type: String}
         }, {
             name
         })
@@ -45,6 +47,7 @@ export const ListFilter = React.memo(({onFilterChange, field, filter, schema}: L
             <AutoForm schema={bridge} autosave autosaveDelay={400}
                 // onChangeModel={(model: any) => console.log(model)}
                       onSubmit={({filter}: { filter: any }) => {
+                          if (filter) filter.internal = true //this is for avoid rerender, if the filter does not have internal, is because is a external change as clear filters.
                           onFilterChange(field, filter)
                       }}
                       onValidate={(model: any, error: any, callback: (error: any) => void) => {
@@ -52,12 +55,13 @@ export const ListFilter = React.memo(({onFilterChange, field, filter, schema}: L
                       }}
                       model={{filter}}
             >
+                <HiddenField name={'internal'}/>
                 <FieldComponent name='filter' label={false} col={false} defaultValue={''}/>
             </AutoForm>
         )
     },
     (prevProps, nextProps) => {
-        return prevProps.filter===nextProps.filter &&  prevProps.field === nextProps.field && prevProps.onFilterChange === nextProps.onFilterChange && prevProps.schema === nextProps.schema;
+        return nextProps.filter && nextProps.filter.internal && prevProps.field === nextProps.field && prevProps.onFilterChange === nextProps.onFilterChange && prevProps.schema === nextProps.schema;
     }
 )
 
