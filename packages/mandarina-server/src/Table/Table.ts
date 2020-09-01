@@ -102,7 +102,7 @@ export class Table {
                 const capitalizedAction = capitalize(action)
                 await this.callHook(this.name, 'beforeValidate', _, args, context, info);
                 const isSingleMutation = operationName === this.schema.names.mutation.update || operationName === this.schema.names.mutation.create
-                let {query, queryString, fields} = this.insertWhereIntoInfo(info, user, isSingleMutation)
+                let {query, queryString, fields} = this.insertWhereIntoInfo(info, user, isSingleMutation, action, operationName)
                 if (type === 'mutation') {
                     // if (errors.length > 0) {
                     //     await this.callHook('validationFailed', action, _, args, context, info);
@@ -110,7 +110,7 @@ export class Table {
                     //     await this.callHook('afterValidate', action, _, args, context, info);
                     // }
                     if (isSingleMutation && (action==='update' || action==='delete')) {
-                        const where = this.options.where && this.options.where(user)
+                        const where = this.options.where && this.options.where(user,  action, operationName)
                         if (where) {
                             let finalWhere = args.where ? {AND: [args.where, where]} : where
                             const exists = (await context.prisma.exists[this.name](finalWhere))
@@ -182,14 +182,13 @@ export class Table {
                     await this.callHook(this.name, 'afterQuery', _, args, context, info);
                 }
                 bm(`${operationName} ${type} over ${this.name}`)
-                console.log('result1',result)
                 return result;
             }
         });
         return resultResolvers;
     }
 
-    insertWhereIntoInfo = (info: GraphQLResolveInfo, user?: UserType | null, isSingleMutation = false) => {
+    insertWhereIntoInfo = (info: GraphQLResolveInfo, user: UserType | null| undefined, isSingleMutation = false, action: ActionType, operationName: string) => {
         const field: string[] = []
         const fields = new Set<string>()
         let required = false
@@ -209,7 +208,7 @@ export class Table {
                         table = this
                     }
                     if (table && table.options.where && (!isSingleMutation && table === this)) {
-                        const where = table.options.where(user)
+                        const where = table.options.where(user, action, operationName)
                         if (!where || isEmpty(where)) return
                         const clone = deepClone(node)
                         const originalWhereObj = clone.arguments ? clone.arguments.find((a: any) => a.name.value === 'where') : null
@@ -394,7 +393,7 @@ export type Filter = {
 
 export interface TableShapeOptions extends TableSchemaOptions {
     errorFromServerMapper?: ErrorFromServerMapper,
-    where?: (user?: UserType | null) => any
+    where?: (user: UserType | null | undefined, action: ActionType, operationName: string) => any
 }
 
 
