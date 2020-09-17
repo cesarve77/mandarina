@@ -21,13 +21,13 @@ export const minNumberExclusive = new ValidatorCreator((value, param) => value >
 
 export const extraKey = new ValidatorCreator((value, param = true) => !param, 'extraKey', 'Extra key {{value}} found at {{label}}')
 
-export const minString = new ValidatorCreator((value, param = true) => value.length >= param, 'minString', '{{label}} must be at least {{param}} characters')
+export const minString = new ValidatorCreator((value, param = true) =>  !exists(value) || value.length >= param, 'minString', '{{label}} must be at least {{param}} characters')
 
-export const maxString = new ValidatorCreator((value, param = true) => value.length <= param, 'maxString', '{{label}} cannot exceed {{param}} characters')
+export const maxString = new ValidatorCreator((value, param = true) => !exists(value) || value.length <= param, 'maxString', '{{label}} cannot exceed {{param}} characters')
 
-export const minDate = new ValidatorCreator((value, param = true) => value.getTime() <= param.getTime(), 'minDate', '{{label}} must be on or after {{param}}')
+export const minDate = new ValidatorCreator((value, param = true) => !exists(value) || value.getTime() <= param.getTime(), 'minDate', '{{label}} must be on or after {{param}}')
 
-export const maxDate = new ValidatorCreator((value, param = true) => value.getTime() >= param.getTime(), 'maxDate', '{{label}} cannot be after {{param}}')
+export const maxDate = new ValidatorCreator((value, param = true) =>  !exists(value) ||value.getTime() >= param.getTime(), 'maxDate', '{{label}} cannot be after {{param}}')
 
 export const minCount = new ValidatorCreator((value, param) => Array.isArray(value) && value.length >= param, 'minCount', '{{label}} must specify at least {{param}} values', true)
 
