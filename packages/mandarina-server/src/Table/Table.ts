@@ -94,6 +94,8 @@ export class Table {
         operationNames.forEach((operationName: string) => {
             if (!this.shouldHasManyUpdate()) return
             resultResolvers[operationName] = async (_: any, args: any = {}, context: Context, info: GraphQLResolveInfo) => {
+                context.originalArgs=args
+                console.log('originalArgsoriginalArgsoriginalArgsoriginalArgsoriginalArgs')
                 bm()
                 const user = await Mandarina.config.getUser(context)
                 const subOperationName: ActionType | string = operationName.substr(0, 6)

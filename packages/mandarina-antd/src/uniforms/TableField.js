@@ -59,13 +59,11 @@ const Table = ({query, where, mode, labeler = defaultLabeler, ...props}) => {
                     const transform = getTransform(docs, labeler)
                     let mode = props.mode,
                         value
-                    console.log('value,2222',value)
                     let onChange = value => props.onChange({id: value})
 
                     if (props.field.isArray) {
                         mode = props.mode || "multiple"
                         value = props.value && props.value.map(({id}) => id)
-                        console.log('value,33333',value)
                         onChange = values => {
                              props.onChange(values && values.map(id => ({id})));
                         }

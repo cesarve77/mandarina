@@ -49,7 +49,18 @@ export const ensureId = (fields: string[]) => {
 
 export const generateRandomNumber = (min = 0, max = 1) => Math.floor(Math.random() * (max - min + 1) + min)
 
-export const generateRandomAlpha = (n: number = 3) => generateRandomNumber(Math.pow(36, n - 1), Math.pow(36, n)).toString(36)
+export const generateRandomAlpha = (n: number = 3) =>{
+    const to=Math.floor(n/8)
+    const rest= n % 8
+    let result=''
+    for (let i=1;i<=to;i++){
+        result+=generateRandomNumber(Math.pow(36, 7), Math.pow(36, 8)).toString(36)
+    }
+    if (rest>0){
+        result+= generateRandomNumber(Math.pow(36, rest-1), Math.pow(36, rest)).toString(36)
+    }
+    return result
+}
 
 export const generateUUID = (gap: number = 33853318889500) =>
     (new Date().getTime() + gap).toString(36) + generateRandomAlpha(16)

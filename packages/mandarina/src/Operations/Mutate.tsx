@@ -447,11 +447,18 @@ export const getSubSchemaMutations = (model: Model, schema: Schema, mutationType
                             result['set'] = result['set'] || []
                             result['set'].push({id: item.id})
                         } else {
-                            item.id = generateUUID()
-                            result['set'] = result['set'] || []
-                            result['set'].push({id: item.id})
-                            result['create'] = result['create'] || []
-                            result['create'].push(getSubSchemaMutations(item, schema, 'create'))
+                            if (item.id) {
+                                result['set'] = result['set'] || []
+                                result['set'].push({id: item.id})
+                                result['connect'] = result['connect'] || []
+                                result['connect'].push(getSubSchemaMutations(item, schema, 'create'))
+                            } else {
+                                item.id = generateUUID()
+                                result['set'] = result['set'] || []
+                                result['set'].push({id: item.id})
+                                result['create'] = result['create'] || []
+                                result['create'].push(getSubSchemaMutations(item, schema, 'create'))
+                            }
                         }
                     } else {
                         item.id = generateUUID()
