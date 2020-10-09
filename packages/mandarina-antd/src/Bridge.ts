@@ -133,7 +133,6 @@ export class Bridge {
             const validators: Validator[] = field.validators
             let minCount = 0
             const initialCount = field.form && field.form.props && field.form.props.initialCount || 0
-            console.log('getInitialValue initialCount',initialCount)
             validators.forEach((validator) => {
                 if (validator.validatorName === 'minCount') minCount = validator.param
             })

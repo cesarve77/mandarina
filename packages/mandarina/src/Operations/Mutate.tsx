@@ -426,7 +426,7 @@ export const getSubSchemaMutations = (model: Model, schema: Schema, mutationType
                 if (!Array.isArray(value)) {
                     obj[key] = null
                 }
-                let result: { create?: any[], update?: any[], set?: any[] } = {}
+                let result: { create?: any[], update?: any[], set?: any[], connect?: any[] } = {}
                 if (value && value.length === 0 && mutationType === 'update') result.set = []
                 value && value.forEach((item: any) => {
                     if (item && item.id && Object.keys(item).length === 1) {
@@ -471,9 +471,8 @@ export const getSubSchemaMutations = (model: Model, schema: Schema, mutationType
                     }
 
                 })
-                if (result && result.create && !result.update) {
+                if ((result && result.create && !result.update) || (result && result.connect && !result.update)) {
                     delete result.set
-
                 }
                 obj[key] = result
             } else {

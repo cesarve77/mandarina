@@ -45,7 +45,6 @@ export const ListFilter = React.memo(({onFilterChange, field, filter, schema}: L
         const bridge = new Bridge(filterSchema, filterSchema.getFields())
         return FieldComponent && (
             <AutoForm schema={bridge} autosave autosaveDelay={400}
-                // onChangeModel={(model: any) => console.log(model)}
                       onSubmit={({filter}: { filter: any }) => {
                           if (filter) filter.internal = true //this is for avoid rerender, if the filter does not have internal, is because is a external change as clear filters.
                           onFilterChange(field, filter)

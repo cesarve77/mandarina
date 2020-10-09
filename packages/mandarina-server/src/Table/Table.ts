@@ -95,7 +95,6 @@ export class Table {
             if (!this.shouldHasManyUpdate()) return
             resultResolvers[operationName] = async (_: any, args: any = {}, context: Context, info: GraphQLResolveInfo) => {
                 context.originalArgs=args
-                console.log('originalArgsoriginalArgsoriginalArgsoriginalArgsoriginalArgs')
                 bm()
                 const user = await Mandarina.config.getUser(context)
                 const subOperationName: ActionType | string = operationName.substr(0, 6)
@@ -304,7 +303,6 @@ export class Table {
                                 if (inline) {
                                     await table.callHook(def.type, hookName, _, args2.data ? args2 : {data: args2}, context, info)
                                 } else {
-                                    console.log('NO inline')
                                     await table.callHook(def.type, hookName, _, args2.data ? args2 : {data: args2}, context, info)
                                 }
                             }
