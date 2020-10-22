@@ -16,21 +16,29 @@ const ListItem = props => {
                         width: '20px'
                     }}
                 >
-                    <ListDelField className="top aligned" name={props.name} type="danger"/>
+                    { props.showListDelField && <ListDelField className="top aligned" name={props.name} type="danger"/>}
                 </div>
-
                 <div style={{marginBottom: '4px', overflow: 'hidden'}}>
                     <div style={{borderBottom: '1px solid #adadad', height: '20px', marginTop: '-4px'}}/>
                 </div>
-
                 <div style={{width: '100%', clear: 'both'}}>
                     {props.children ? (
-                        Children.map(props.children, child =>
-                            React.cloneElement(child, {
-                                name: joinName(props.name, child.props.name),
-                                label: null
-                            })
-                        )
+                        typeof props.children === 'function' ?
+                            Children.map( props.children(props), child =>
+                                React.cloneElement(child, {
+                                    index: props.index,
+                                    name: joinName(props.name, child.props.name),
+                                    label: null
+                                })
+                            )
+                            :
+                            Children.map(props.children, child =>
+                                React.cloneElement(child, {
+                                    index: props.index,
+                                    name: joinName(props.name, child.props.name),
+                                    label: null
+                                })
+                            )
                     ) : (
                         <AutoField {...props} />
                     )}

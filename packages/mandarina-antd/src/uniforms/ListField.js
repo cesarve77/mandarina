@@ -22,6 +22,7 @@ const List = ({
                   value,
                   wrapperCol,
                   fields,
+                  showAddField = true,
                   ...props
               }) => {
         return <div {...filterDOMProps(props)}>
@@ -50,6 +51,7 @@ const List = ({
                     Children.map(children, child =>
                         React.cloneElement(child, {
                             key: index,
+                            index,
                             label: null,
                             name: joinName(name, child.props.name && child.props.name.replace('$', index)),
                         })
@@ -60,6 +62,7 @@ const List = ({
 
                         return <ListItemField
                             key={index}
+                            index={index}
                             label={null}
                             labelCol={labelCol}
                             name={joinName(name, index)}
@@ -71,16 +74,16 @@ const List = ({
                     }
                 )
             )}
-            <div  style={{clear: 'both'}}>
-            <ListAddField name={`${name}.$`} initialCount={initialCount} size='large' className={'add-button'}
-                          type={'primary'}
-                          shape={'round'}
-                          data-id={`list-add-${name}`}
-                          style={{}}>
-                Add {label}
+            {showAddField && <div style={{clear: 'both'}}>
+                <ListAddField name={`${name}.$`} initialCount={initialCount} size='large' className={'add-button'}
+                              type={'primary'}
+                              shape={'round'}
+                              data-id={`list-add-${name}`}
+                              style={{}}>
+                    Add {label}
 
-            </ListAddField>
-            </div>
+                </ListAddField>
+            </div>}
             <div style={{clear: 'both'}}></div>
         </div>;
     }
