@@ -179,7 +179,7 @@ export const getDefaultComponent = ( fieldDefinition: FieldDefinitionNative): Fi
 
                 const selectValue=value.filter===false ? 'false' : value.filter ? 'true' : undefined
                 return (
-                    <Select value={selectValue} allowClear onChange={(value:any)=>{
+                    <Select value={selectValue} allowClear style={{width: '100%'}} onChange={(value:any)=>{
                         if (!value) return onChange(null)
                         onChange({
                             operator: selected,

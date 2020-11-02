@@ -188,6 +188,16 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
 
     }
 
+    getSnapshotBeforeUpdate(prevProps: ListProps, prevState: ListState) {
+        for (let i = 0; i < prevState.fields.length; i++) {
+            if (prevState.fields[i] !== this.state.fields[i]) {
+                // @ts-ignore
+                this.gridRef.current && this.gridRef.current.resetAfterColumnIndex(i, false);
+                return
+            }
+        }
+    }
+
     static getDerivedStateFromProps(props: ListProps, state: ListState) {
         const result: Partial<ListState> = {};
         if (props.onFieldsChange && !isEqual(props.fields, state.fields)) {
@@ -404,6 +414,7 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
 
     };
     onColumnOrderChange = ({oldIndex, newIndex}: SortEnd) => {
+        console.log('onColumnOrderChange111')
         // @ts-ignore
         this.gridRef.current && this.gridRef.current.resetAfterColumnIndex(oldIndex, false);
         // @ts-ignore

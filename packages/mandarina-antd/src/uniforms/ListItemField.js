@@ -4,7 +4,7 @@ import joinName from 'uniforms/joinName';
 import AutoField from './AutoField';
 import ListDelField from 'uniforms-antd/ListDelField';
 
-const ListItem = props => {
+const ListItem = ({children,showListDelField=true, name, index,...props}) => {
         return (
             <div style={{width: '100%', clear: 'both', float: "none"}}>
                 <div
@@ -16,31 +16,31 @@ const ListItem = props => {
                         width: '20px'
                     }}
                 >
-                    { props.showListDelField && <ListDelField className="top aligned" name={props.name} type="danger"/>}
+                    { showListDelField && <ListDelField className="top aligned" name={name} type="danger"/>}
                 </div>
                 <div style={{marginBottom: '4px', overflow: 'hidden'}}>
                     <div style={{borderBottom: '1px solid #adadad', height: '20px', marginTop: '-4px'}}/>
                 </div>
                 <div style={{width: '100%', clear: 'both'}}>
-                    {props.children ? (
-                        typeof props.children === 'function' ?
-                            Children.map( props.children(props), child =>
+                    {children ? (
+                        typeof children === 'function' ?
+                            Children.map( children({children,showListDelField, name, index,...props}), child =>
                                 React.cloneElement(child, {
-                                    index: props.index,
-                                    name: joinName(props.name, child.props.name),
+                                    index: index,
+                                    name: joinName(name, child.name),
                                     label: null
                                 })
                             )
                             :
-                            Children.map(props.children, child =>
+                            Children.map(children, child =>
                                 React.cloneElement(child, {
-                                    index: props.index,
-                                    name: joinName(props.name, child.props.name),
+                                    index: index,
+                                    name: joinName(name, child.name),
                                     label: null
                                 })
                             )
                     ) : (
-                        <AutoField {...props} />
+                        <AutoField {...{children, showListDelField, name, index, ...props}} />
                     )}
                 </div>
             </div>);
