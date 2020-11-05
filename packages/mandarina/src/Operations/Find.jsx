@@ -39,22 +39,14 @@ var react_1 = require("react");
 var graphql_tag_1 = require("graphql-tag");
 var react_apollo_1 = require("react-apollo");
 var utils_1 = require("./utils");
-var lodash_1 = require("lodash");
 var FindBase = /** @class */ (function (_super) {
     __extends(FindBase, _super);
     function FindBase(props) {
         var _this = _super.call(this, props) || this;
         _this.queryHistory = [];
         _this.buildQueryFromFields = function (fields) { return utils_1.buildQueryFromFields(fields); };
-        FindBase.queries = FindBase.queries || [];
         return _this;
-        //todo: **1
     }
-    FindBase.prototype.componentWillUnmount = function () {
-        if (!Array.isArray(FindBase.queries))
-            return;
-        lodash_1.pull.apply(void 0, [FindBase.queries].concat(this.queryHistory));
-    };
     FindBase.prototype.render = function () {
         var _a;
         var _this = this;
@@ -73,13 +65,11 @@ var FindBase = /** @class */ (function (_super) {
         else {
             queryString = "query ($where: " + names.input.where[type] + " ) { " + names.query[type] + "  (where: $where) " + defaultQuery + " }";
         }
-        //console.log('queryString',queryString)
         var QUERY = graphql_tag_1.default(queryString);
         // save a rendered query history in the instance and in the class
         // for update cache queries on mutations
         var query = (_a = {}, _a[names.input[type]] = where, _a);
         this.queryHistory.push(query);
-        FindBase.queries.push(query); //save queries to update cache purposes
         var variables = { where: where, first: first, after: after, skip: skip, orderBy: orderBy };
         return (<react_apollo_1.Query query={QUERY} variables={variables} pollInterval={pollInterval} notifyOnNetworkStatusChange={notifyOnNetworkStatusChange} fetchPolicy={fetchPolicy} errorPolicy={errorPolicy} ssr={ssr} displayName={displayName} onCompleted={onCompleted} onError={onError} context={context} partialRefetch={partialRefetch}>
                 {function (_a) {
@@ -100,7 +90,9 @@ var FindBase = /** @class */ (function (_super) {
             }
             if (!children)
                 return null;
-            return children(__assign({ schema: schema, query: QUERY, data: data,
+            return children(__assign({ schema: schema, 
+                //@ts-ignore
+                query: QUERY, data: data,
                 loading: loading,
                 error: error,
                 variables: variables,

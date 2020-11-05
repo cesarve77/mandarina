@@ -193,9 +193,9 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
             if (prevState.fields[i] !== this.state.fields[i]) {
                 // @ts-ignore
                 this.gridRef.current && this.gridRef.current.resetAfterColumnIndex(i, false);
-                return
             }
         }
+        return null
     }
 
     static getDerivedStateFromProps(props: ListProps, state: ListState) {
