@@ -189,10 +189,19 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
     }
 
     getSnapshotBeforeUpdate(prevProps: ListProps, prevState: ListState) {
-        for (let i = 0; i < prevState.fields.length; i++) {
-            if (prevState.fields[i] !== this.state.fields[i]) {
+        if (this.props.onFieldsChange && (this.props.onOverwriteChange)) {
+            if (!isEqual(this.state.overwrite, prevState.overwrite)) {
+                console.log('getSnapshotBeforeUpdate')
                 // @ts-ignore
-                this.gridRef.current && this.gridRef.current.resetAfterColumnIndex(i, false);
+                this.gridRef.current && this.gridRef.current.resetAfterColumnIndex(0, false);
+                return null
+            }
+            for (let i = 0; i < prevState.fields.length; i++) {
+                if (prevState.fields[i] !== this.state.fields[i]) {
+                    // @ts-ignore
+                    this.gridRef.current && this.gridRef.current.resetAfterColumnIndex(i, false);
+                    return null
+                }
             }
         }
         return null
@@ -229,13 +238,10 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
         if (height && width) return;
         this.resize();
         window.addEventListener('resize', this.onResize);
-
-
     }
 
     componentWillUnmount(): void {
         window.removeEventListener('resize', this.onResize);
-
     }
 
     resize = () => {
