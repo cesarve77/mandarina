@@ -183,7 +183,7 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
         this.state = {fields, overwrite, height: this.props.height || 0, width: this.props.width || 0, filters, sort};
         this.tHead = React.createRef();
         this.container = React.createRef();
-        this.firstLoad = canUseDOM ? Math.ceil((this.props.height || window.innerHeight) / estimatedRowHeight) : 0
+        this.firstLoad = Math.max(this.props.first || 0, canUseDOM ? Math.ceil((this.props.height || window.innerHeight) / estimatedRowHeight) : 0)
         this.overscanRowStopIndex = this.firstLoad
 
     }
@@ -191,7 +191,6 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
     getSnapshotBeforeUpdate(prevProps: ListProps, prevState: ListState) {
         if (this.props.onFieldsChange && (this.props.onOverwriteChange)) {
             if (!isEqual(this.state.overwrite, prevState.overwrite)) {
-                console.log('getSnapshotBeforeUpdate')
                 // @ts-ignore
                 this.gridRef.current && this.gridRef.current.resetAfterColumnIndex(0, false);
                 return null
@@ -259,7 +258,8 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
                 this.setState({width: container.clientWidth})
             }
             const {overLoad = 1} = this.props;
-            this.firstLoad = Math.max(this.firstLoad, Math.ceil(container.clientHeight / (this.props.estimatedRowHeight || estimatedRowHeightDefault)) + 1 + overLoad)
+
+            this.firstLoad = Math.max(this.props.first || 0, Math.max(this.firstLoad, Math.ceil(container.clientHeight / (this.props.estimatedRowHeight || estimatedRowHeightDefault)) + 1 + overLoad))
         }
 
     }
@@ -420,7 +420,6 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
 
     };
     onColumnOrderChange = ({oldIndex, newIndex}: SortEnd) => {
-        console.log('onColumnOrderChange111')
         // @ts-ignore
         this.gridRef.current && this.gridRef.current.resetAfterColumnIndex(oldIndex, false);
         // @ts-ignore
@@ -672,6 +671,7 @@ export const DefaultCellComponent: CellComponent = React.memo(({columnIndex, row
         return <>{children.map((child, i) => <span key={i}>{child}<br/></span>)}</>
     }
     , areEqual);
+
 const defaultLoadingElement = '...';
 
 const Cell = React.memo(({columnIndex, rowIndex, data: {data, columns, query, refetch, variables, onClick, onMouseEnter, onMouseLeave}, style}: ListChildComponentProps & GridChildComponentProps & { data: MouseEvents & { variables: any, query: DocumentNode, refetch: RefetchQueriesProviderFn, data: any, columns: ColumnDef[] } }) => {

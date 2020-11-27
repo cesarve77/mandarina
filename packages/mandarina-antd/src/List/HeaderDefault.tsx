@@ -68,7 +68,9 @@ const HeaderDefault = ({leftButtons,counter = true, menuItems = [], count, ...pr
         }
         // @ts-ignore
         if (React.isValidElement(content) && content.type.name !== 'SubMenu' && content.type.name !== "Menu") {
-            return <Menu.Item {...item.props} key={index} onClick={onClick}>{content}</Menu.Item>
+            let {disabled, ...props} = item.props || {}
+            if (typeof disabled === 'function') disabled = disabled(count)
+            return <Menu.Item {...props} disabled={disabled} key={index} onClick={onClick}>{content}</Menu.Item>
         }
 
         if (typeof content === 'function') {
