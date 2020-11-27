@@ -589,6 +589,7 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
                                 <div ref={this.tHead} className='mandarina-list-thead'
                                      style={{width, height: tHeadHeight ? tHeadHeight : 'auto'}}>
                                     <SortableColumns
+                                        useWindowAsScrollContainer
                                         tHead={this.tHead}
                                         grid={this.gridRef}
                                         empty={!error && !loading && !count }
