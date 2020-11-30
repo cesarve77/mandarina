@@ -61,11 +61,8 @@ export const ListFilter = React.memo(({onFilterChange, field, filter, schema}: L
         )
     },
     (prevProps, nextProps) => {
-        return  nextProps.filter && nextProps.filter.internal &&
-            (!(prevProps.filter && !prevProps.filter.internal)&& (nextProps.filter && nextProps.filter.internal)) &&
-        prevProps.field === nextProps.field &&
-        prevProps.onFilterChange === nextProps.onFilterChange &&
-        prevProps.schema === nextProps.schema;
+            return ((!!prevProps && !!nextProps) || ((prevProps.filter && prevProps.filter.filter) === (nextProps.filter && nextProps.filter.filter))) &&
+            (nextProps.filter && nextProps.filter.internal && prevProps.field === nextProps.field && prevProps.onFilterChange === nextProps.onFilterChange && prevProps.schema === nextProps.schema)
     }
 )
 

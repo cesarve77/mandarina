@@ -23,16 +23,17 @@ const List = ({
                   wrapperCol,
                   fields,
                   showAddField = true,
+                  addLabel,
                   ...props
               }) => {
-        return <div {...filterDOMProps(props)}>
-            {!!label && (
-                <div>
-                    {label}
-                    {!!info && (
-                        <span>
+    return <div {...filterDOMProps(props)}>
+        {!!label && (
+            <div>
+                {label}
+                {!!info && (
+                    <span>
                             &nbsp;
-                            <Tooltip title={info}>
+                        <Tooltip title={info}>
                                 <Icon type="question-circle-o"/>
                             </Tooltip>
                         </span>
@@ -80,11 +81,10 @@ const List = ({
                               shape={'round'}
                               data-id={`list-add-${name}`}
                               style={{}}>
-                    Add {label}
-
+                    {addLabel ? addLabel : `Add ${label}`}
                 </ListAddField>
             </div>}
-            <div style={{clear: 'both'}}></div>
+            <div style={{clear: 'both'}}/>
         </div>;
     }
 ;
