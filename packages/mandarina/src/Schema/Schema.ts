@@ -307,7 +307,7 @@ export class Schema {
         }
 
         if (typeof fieldDefinition.label !== 'string') {
-            fieldDefinition.label = inflection.transform(key, ['underscore', 'humanize']);
+            fieldDefinition.label = inflection.transform(key, ['underscore', 'humanize','titleize'])
         }
         return fieldDefinition;
     }
