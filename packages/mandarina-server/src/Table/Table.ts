@@ -282,7 +282,7 @@ export class Table {
                     if (def.isTable) {
                         const operations = Object.keys(data[field])
                         if (!Table.instances[def.type]) {
-                            console.warn(`No table for ${def.type} no neasted hooks applied`)
+                            //console.warn(`No table for ${def.type} no neasted hooks applied`)
                             continue
                         }
                         const table = Table.getInstance(def.type)

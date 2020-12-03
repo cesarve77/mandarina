@@ -58,7 +58,7 @@ export const getDefaultFilterMethod = (field: string, schema: Schema): Where => 
         //todo forzar el tipo de verdad para que si escriben un string donde va un numero no mande el query
         const search = filter.filter
         const original = path[last]
-        if (search === 0 || search || search===false ) {
+        if (search !==undefined ) {
             const where = {}
             path[last] += filter.operator
             const value = forceType(search, fieldDefinition.type as Native)
@@ -141,7 +141,7 @@ export const getDefaultComponent = ( fieldDefinition: FieldDefinitionNative): Fi
                 </span>
                <InputNumber value={value.filter}
                             style={{width: '100%'}}
-                            onChange={(value) => value !== 0 && value ? onChange({
+                            onChange={(value) => (value=== 0 || value) ? onChange({
                                 operator: selected,
                                 filter: value
                             }) : onChange(null)}/>
@@ -155,7 +155,7 @@ export const getDefaultComponent = ( fieldDefinition: FieldDefinitionNative): Fi
                 </span>
                <InputNumber value={value.filter}
                             style={{width: '100%'}}
-                            onChange={(value) => value !== 0 && value ? onChange({
+                            onChange={(value) => (value=== 0 || value) ? onChange({
                                 operator: selected,
                                 filter: value
                             }) : onChange(null)}/>
@@ -176,7 +176,6 @@ export const getDefaultComponent = ( fieldDefinition: FieldDefinitionNative): Fi
             </span>
                 )
             case  (type === Boolean):
-
                 const selectValue=value.filter===false ? 'false' : value.filter ? 'true' : undefined
                 return (
                     <Select value={selectValue} allowClear style={{width: '100%'}} onChange={(value:any)=>{
