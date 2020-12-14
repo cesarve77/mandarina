@@ -54,7 +54,7 @@ export const insertHaving = (qs: string, having?: Having) => {
                 singleQuotes: false
             })}`
         }).join(',')
-        result = `${result.slice(0, i)}(${txt})${result.slice(i)}`
+        result = `${result.slice(0, i)}(${txt.replace(/("|\(|\))/g,"\$1")})${result.slice(i)}`
 
     }
     return `{${result}}`.replace(/\n|\t/g, '')
