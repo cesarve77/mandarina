@@ -257,9 +257,7 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
             if (!this.props.width && this.state.width !== container.clientWidth) {
                 this.setState({width: container.clientWidth})
             }
-            const {overLoad = 1} = this.props;
-
-            this.firstLoad = Math.max(this.props.first || 0, Math.max(this.firstLoad, Math.ceil(container.clientHeight / (this.props.estimatedRowHeight || estimatedRowHeightDefault)) + 1 + overLoad))
+            this.firstLoad = Math.max(this.props.first || 0, Math.ceil(container.clientHeight / (this.props.estimatedRowHeight || estimatedRowHeightDefault)))
         }
 
     }
@@ -294,19 +292,26 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
                 resolve(false)
                 return;
             }
+            //estan todos en el mismo ciclo
+            const skip = this.overscanRowStartIndex - (this.overscanRowStartIndex % this.firstLoad)
 
-            //TODO: maybe normalized the edgeds for try to do the sames queries, and get the data from the cache
-            //TODO: maybe if we are in gap, then just query for that data
+            if (!this.data[this.overscanRowStartIndex] && !this.data[this.overscanRowStopIndex]) {
+                this.refetch({
+                    skip,
+                    first: this.overscanRowStopIndex <= this.firstLoad ? this.firstLoad : 2 * this.firstLoad
+                })
+                    .then(resolve)
+                    .catch(reject)
+            } else if (!this.data[this.overscanRowStartIndex]) {
+                this.refetch({skip, first: this.firstLoad})
+                    .then(resolve)
+                    .catch(reject)
+            } else if (!this.data[this.overscanRowStopIndex]) {
+                this.refetch({skip: skip + this.firstLoad, first: this.firstLoad})
+                    .then(resolve)
+                    .catch(reject)
 
-            const {overLoad = 1} = this.props;
-            this.refetch(
-                {
-                    skip: this.overscanRowStartIndex,
-                    first: this.overscanRowStopIndex - this.overscanRowStartIndex + 1 + overLoad,
-                }
-            )
-                .then(resolve)
-                .catch(reject) //todo
+            }
         }, 100)
     })
 
@@ -510,21 +515,35 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
         }
         if (!canUseDOM) return null
         return (
-            <Find schema={schema} where={whereAndFilter} skip={0} first={this.firstLoad + overLoad}
+            <Find schema={schema} where={whereAndFilter} skip={0} first={this.firstLoad}
                   sort={sort}
                   fields={fields}
                   notifyOnNetworkStatusChange
                   {...rest}
             >
-                {({data = [], query, variables, error, refetch, loading, count, client, startPolling, stopPolling, networkStatus}) => {
+                {({
+                      data = [],
+                      query,
+                      variables,
+                      error,
+                      refetch,
+                      loading,
+                      count,
+                      client,
+                      startPolling,
+                      stopPolling,
+                      networkStatus
+                  }) => {
                     let dataCollection = data;
-                    if (this.data.length === 0 && data.length>0  && !loading) {
+                    if (this.data.length === 0 && data.length > 0 && !loading) {
                         this.data = Array(count).fill(undefined)
                     }
                     if (!loading && count > this.data.length) {//when your are polling or refetching and the count change
                         this.data = [...this.data, ...Array(count - this.data.length).fill(undefined)]
                     }
                     if (dataCollection.length && !loading) {
+                        console.log('variables', variables.skip, dataCollection.length)
+
                         // @ts-ignore
                         //this.gridRef.current &&  this.gridRef.current.resetAfterRowIndex(variables.skip)
                         this.data.splice(variables.skip, dataCollection.length, ...dataCollection);
