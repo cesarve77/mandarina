@@ -3,6 +3,12 @@ import {Schema} from '..'
 import gql from "graphql-tag";
 import {Query, QueryProps, QueryResult} from "react-apollo";
 import {buildQueryFromFields, insertHaving} from "./utils";
+import Observer from "../Observer";
+
+export const  canUseDOM = !!(
+    (typeof window !== 'undefined' &&
+        window.document && window.document.createElement)
+);
 
 export type FindQueryResult = Pick<QueryResult, 'data' | 'loading' | 'error' | 'variables' | 'networkStatus' | 'refetch' | 'fetchMore' | 'startPolling' | 'stopPolling' | 'subscribeToMore' | 'updateQuery' | 'client'>
 
@@ -160,9 +166,8 @@ export class FindBase extends PureComponent<FindProps & FindBaseProps, FindBaseS
                         console.error(error)
                     }
                     if (!children) return null
-                    return children({
+                    const childrenResult=children({
                         schema,
-                        //@ts-ignore
                         query: QUERY,
                         data,
                         loading,
@@ -182,6 +187,12 @@ export class FindBase extends PureComponent<FindProps & FindBaseProps, FindBaseS
                         ...props,
 
                     })
+                    if (pollInterval && canUseDOM){
+                        const observerProps ={refetch,pollInterval,startPolling,stopPolling}
+                        return <Observer {...observerProps} variables={variables}>{childrenResult}</Observer>
+                    }else{
+                        return childrenResult
+                    }
                 }}
             </Query>
         )

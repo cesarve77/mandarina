@@ -29,7 +29,6 @@ import {equalityFn} from "./utils";
 import Query from "react-apollo/Query";
 import {Result} from "antd";
 import {FindProps} from "mandarina/build/Operations/Find";
-import {canUseDOM} from "../utils";
 
 export interface OnHideColumn {
     (field: string, index: number): void//todo variables format
@@ -172,7 +171,6 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
     constructor(props: ListProps) {
         super(props);
         const {
-            estimatedRowHeight = estimatedRowHeightDefault,
             fields = props.schema.getFields(),
             filters = {},
             overwrite,
@@ -183,7 +181,8 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
         this.state = {fields, overwrite, height: this.props.height || 0, width: this.props.width || 0, filters, sort};
         this.tHead = React.createRef();
         this.container = React.createRef();
-        this.firstLoad = Math.max(this.props.first || 0, canUseDOM ? Math.ceil((this.props.height || window.innerHeight) / estimatedRowHeight) : 0)
+        // this.firstLoad = Math.max(this.props.first || 0, canUseDOM ? Math.ceil((this.props.height || window.innerHeight) / estimatedRowHeight) : 0)
+        this.firstLoad = this.props.first || 50
         this.overscanRowStopIndex = this.firstLoad
 
     }
@@ -257,7 +256,6 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
             if (!this.props.width && this.state.width !== container.clientWidth) {
                 this.setState({width: container.clientWidth})
             }
-            this.firstLoad = Math.max(this.props.first || 0, Math.ceil(container.clientHeight / (this.props.estimatedRowHeight || estimatedRowHeightDefault)))
         }
 
     }
@@ -294,7 +292,7 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
             }
             //estan todos en el mismo ciclo
             const skip = this.overscanRowStartIndex - (this.overscanRowStartIndex % this.firstLoad)
-
+            this.props.pollInterval && this.stopPolling && this.stopPolling();
             if (!this.data[this.overscanRowStartIndex] && !this.data[this.overscanRowStopIndex]) {
                 this.refetch({
                     skip,
@@ -302,6 +300,7 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
                 })
                     .then(resolve)
                     .catch(reject)
+
             } else if (!this.data[this.overscanRowStartIndex]) {
                 this.refetch({skip, first: this.firstLoad})
                     .then(resolve)
@@ -312,6 +311,7 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
                     .catch(reject)
 
             }
+            this.props.pollInterval && this.startPolling && this.startPolling(this.props.pollInterval);
         }, 100)
     })
 
@@ -513,7 +513,6 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
         } else if (allFilters.length > 0) {
             whereAndFilter = {AND: allFilters}
         }
-        if (!canUseDOM) return null
         return (
             <Find schema={schema} where={whereAndFilter} skip={0} first={this.firstLoad}
                   sort={sort}
@@ -542,8 +541,6 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
                         this.data = [...this.data, ...Array(count - this.data.length).fill(undefined)]
                     }
                     if (dataCollection.length && !loading) {
-                        console.log('variables', variables.skip, dataCollection.length)
-
                         // @ts-ignore
                         //this.gridRef.current &&  this.gridRef.current.resetAfterRowIndex(variables.skip)
                         this.data.splice(variables.skip, dataCollection.length, ...dataCollection);
@@ -553,7 +550,7 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
                     this.startPolling = startPolling;
                     this.stopPolling = stopPolling;
                     this.variables = variables;
-                    const tHeadHeight = this.tHead.current && this.tHead.current.offsetHeight || 95;
+                    let tHeadHeight = this.tHead.current && this.tHead.current.offsetHeight || 95;
                     const itemData = createItemData([...this.data], columns, refetch, query, variables, onClick, onMouseEnter, onMouseLeave);
                     let headerNode: ReactNode = null;
                     if (typeof header === 'function') {

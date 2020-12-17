@@ -3,6 +3,9 @@ declare module 'node-yaml'
 declare module 'browser-or-node' {
     export function isBrowser(): boolean
 }
+declare module 'activity-detector' {
+    export default  any
+}
 
 interface FlatObj {
     [key: string]: any
