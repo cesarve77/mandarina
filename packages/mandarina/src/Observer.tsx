@@ -84,7 +84,7 @@ export function useActive(ref: RefObject<Element>, name = '') {
 }
 
 export function useIntersection(ref: RefObject<Element>, name = '') {
-    const [visible, setVisible] = useState(false);
+    const [visible, setVisible] = useState(true);
     useEffect(() => {
         if (!ref.current) return
         const callback: IntersectionObserverCallback = (entries) => {
