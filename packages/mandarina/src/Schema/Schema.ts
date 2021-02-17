@@ -580,7 +580,7 @@ export interface UserFieldDefinitionCommon {
             placeholder?: string
             col?: false | number | any
             initialCount?: number
-            transform?: (allowedValues: string[]) => string[]
+            transform?: (allowedValues: string) => string
             [rest: string]: any
         }
     }
