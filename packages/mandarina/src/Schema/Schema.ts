@@ -580,7 +580,7 @@ export interface UserFieldDefinitionCommon {
             placeholder?: string
             col?: false | number | any
             initialCount?: number
-            transform?: (allowedValues: string[]) => string[]
+            transform?: (value: any) => any
             [rest: string]: any
         }
     }
@@ -649,7 +649,7 @@ export interface FieldDefinitionCommon extends UserFieldDefinitionCommon {
             placeholder?: string
             col?: false | number | any
             initialCount?: number
-            transform?: (allowedValues: string[]) => string[]
+            transform?: (value: any) => any
             [rest: string]: any
         }
     }
@@ -689,10 +689,10 @@ export interface OverwriteDefinition {
     label?: Label
     description?: string
     validators?: Array<Validator | string | ValidatorFinder>
-    defaultValue?: any
+    defaultValue?: (value: any) => any
     form?: {
         initialCount?: number
-        transform?: (allowedValues: string[]) => string[]
+        transform?: (value: any) => any
         component?: React.Component
         placeholder?: string
         col?: false | number | any

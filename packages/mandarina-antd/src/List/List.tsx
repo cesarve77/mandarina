@@ -1,7 +1,7 @@
 import TableAntD, {ColumnProps} from 'antd/lib/table';
 import {Find, Schema} from 'mandarina';
 import * as React from "react";
-import {ComponentType} from "react";
+import {ComponentType, ReactNode} from "react";
 import {FieldDefinition, Overwrite} from 'mandarina/build/Schema/Schema'
 import {Where} from "./ListFilter";
 import {merge} from "lodash";
@@ -9,6 +9,7 @@ import {DefaultCellComponent, getParentCellComponent} from "./ListVirtualized";
 import {FindProps} from "mandarina/build/Operations/Find";
 import {deepClone} from "mandarina/build/Operations/Mutate";
 import {Result} from "antd";
+import {ReactComponentLike} from "prop-types";
 //import ListHeader from "./ListHeader";
 export type onResize = (e: any, {size}: { size: { width: number } }) => void
 
@@ -22,6 +23,7 @@ export interface ListProps extends FindProps {
     where?: any
     ref?: React.Ref<List>
     Dimmer?: ComponentType
+    header?: ReactComponentLike
 
 }
 
@@ -210,7 +212,7 @@ export class List extends React.Component<ListProps, { columns: ColumnProps<any>
     firstLoad: boolean = true
 
     render() {
-        const {schema, first, fields, where, Dimmer, ...findBaseProps} = this.props
+        const {schema, first, fields, header, where, Dimmer, ...findBaseProps} = this.props
         const {columns} = this.state
         return (
             <div className="list-wrapper" style={{width: '100%'}} ref={this.me}>
@@ -227,9 +229,17 @@ export class List extends React.Component<ListProps, { columns: ColumnProps<any>
                         const dataSource: any[] = loading && this.hasNextPage ? [...data as any[], ...new Array(first).fill({})] : data as any[]
                         if (!loading) this.firstLoad = false
                         //this.lastHeight = this.me && this.me.current && this.me.current.offsetHeight || 0// && this.me.current && this.me.current.clientHeight || document.body.clientHeight + scrollTop + 200
+                        let headerNode: ReactNode = null;
+                        if (typeof header === 'function') {
+                            const Header = header;
+                            headerNode = <Header count={count}/>
+                        }
+                        if (typeof header === 'object' || !header) {
+                            headerNode = <HeaderDefault count={count} {...header}  />
+                        }
                         return (
-                            <div style={{textAlign: 'right'}}>
-                                Total {count}
+                            <div>
+                                {headerNode}
                                 <div style={{position: 'relative'}}>
                                     {Dimmer && <Dimmer/>}
                                     <TableAntD
@@ -260,3 +270,4 @@ export class List extends React.Component<ListProps, { columns: ColumnProps<any>
 }
 
 
+const HeaderDefault = ({count}: { count: number }) => <div style={{textAlign: "right"}}>{count}</div>

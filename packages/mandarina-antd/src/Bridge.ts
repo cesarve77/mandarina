@@ -13,7 +13,7 @@ export interface ErrorInterface {
 export interface FieldProps {
     label: string
     allowedValues?: any[] | undefined
-    transform?: (allowedValues: string[]) => string[]
+    transform?: (value: any) => any
     component?: React.Component;
     required: boolean
     placeholder?: string
