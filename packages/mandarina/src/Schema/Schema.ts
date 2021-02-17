@@ -580,7 +580,7 @@ export interface UserFieldDefinitionCommon {
             placeholder?: string
             col?: false | number | any
             initialCount?: number
-            transform?: (allowedValues: string) => string
+            transform?: (value: any) => any
             [rest: string]: any
         }
     }
@@ -649,7 +649,7 @@ export interface FieldDefinitionCommon extends UserFieldDefinitionCommon {
             placeholder?: string
             col?: false | number | any
             initialCount?: number
-            transform?: (allowedValues: string[]) => string[]
+            transform?: (value: any) => string[]
             [rest: string]: any
         }
     }
@@ -692,7 +692,7 @@ export interface OverwriteDefinition {
     defaultValue?: any
     form?: {
         initialCount?: number
-        transform?: (allowedValues: string[]) => string[]
+        transform?: (value: any) => string[]
         component?: React.Component
         placeholder?: string
         col?: false | number | any
