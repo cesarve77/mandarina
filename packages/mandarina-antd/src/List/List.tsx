@@ -129,6 +129,7 @@ export class List extends React.Component<ListProps, { columns: ColumnProps<any>
             // fixed: index===0 ? 'left' :undefined,
             dataIndex: field,
             key: field,
+            width: definition.list.width,
             title: definition.label ? definition.label : "",
             render: (value: any, row: any, index: any) => {
                 const CellComponent = definition.list.CellComponent || DefaultCellComponent
@@ -270,4 +271,4 @@ export class List extends React.Component<ListProps, { columns: ColumnProps<any>
 }
 
 
-const HeaderDefault = ({count}: { count: number }) => <div style={{textAlign: "right"}}>{count}</div>
+const HeaderDefault = ({count,title=' total'}: { count: number, title?:string }) => <div style={{textAlign: "right"}}>{count} {title}</div>
