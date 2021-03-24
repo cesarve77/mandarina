@@ -69,6 +69,8 @@ export class List extends React.Component<ListProps, { columns: ColumnProps<any>
     hasNextPage: boolean = false
     refetching: boolean = false
     variables: { where?: any, first?: number, after?: string }
+    data?: any[]
+    loading: boolean
 
     constructor(props: ListProps) {
         super(props);
@@ -77,6 +79,8 @@ export class List extends React.Component<ListProps, { columns: ColumnProps<any>
         const columns = this.getColumns(fields)
         this.state = {columns}
         this.me = React.createRef();
+        this.loading=true
+        this.data=[]
         //this.definitions=definitions
 
     }
@@ -136,11 +140,11 @@ export class List extends React.Component<ListProps, { columns: ColumnProps<any>
                 return <CellComponent columnIndex={0} rowIndex={0} data={[row]}
                                       field={field} {...definition.list.props} />
             },
-            onHeaderCell: (column: ColumnProps<any>) => ({
+                onHeaderCell: (column: ColumnProps<any>) => ({
                 field: field,
                 fieldDefinition: definition,
                 // onFilterChange: this.onFilterChange,
-                //width: column.width,
+                width: column.width,
                 onResize: this.handleResize(index),
             })
         }
@@ -222,6 +226,7 @@ export class List extends React.Component<ListProps, { columns: ColumnProps<any>
                       {...findBaseProps}
                 >
                     {({data = [], variables, refetch, loading, count, pageInfo, fetchMore, error}) => {
+                        this.loading=loading
                         if (error) return <Result status={"500"} subTitle={error.message}/>
                         this.refetch = refetch
                         this.variables = variables
@@ -233,11 +238,12 @@ export class List extends React.Component<ListProps, { columns: ColumnProps<any>
                         let headerNode: ReactNode = null;
                         if (typeof header === 'function') {
                             const Header = header;
-                            headerNode = <Header count={count}/>
+                            headerNode = <Header data={dataSource}  count={count}/>
                         }
                         if (typeof header === 'object' || !header) {
-                            headerNode = <HeaderDefault count={count} {...header}  />
+                            headerNode = <HeaderDefault data={dataSource} count={count} {...header}  />
                         }
+                        this.data=dataSource
                         return (
                             <div>
                                 {headerNode}

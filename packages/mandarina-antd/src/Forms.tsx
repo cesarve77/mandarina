@@ -38,7 +38,7 @@ export const CreateForm = React.forwardRef<HTMLFormElement, CreateFormProps>((pr
 export const UpdateForm = React.forwardRef<HTMLFormElement, UpdateFormProps>(({fields, readFields = fields, ...props}: UpdateFormProps, ref) => {
     const Component = ({children, id, ...props}: Omit<FormProps, 'children'> & { children: MutateChildren }) =>
         // @ts-ignore
-        <Update  {...props} fields={readFields} id={id} children={children}/>
+        <Update {...props} fields={readFields} id={id} children={children}/>
     return <Form Component={Component} fields={fields} {...props} innerRef={ref}/>;
 })
 export const DeleteForm = React.forwardRef<HTMLFormElement, DeleteFormProps>((props: DeleteFormProps, ref) =>
@@ -134,9 +134,9 @@ const Form = ({
               }: FormProps) => {
     const bridge = new Bridge(schema, fields, overwrite)
     const isDelete = Component === Delete
-    const AllFields = isDelete ? [] : fields
+    const allFields = isDelete ? [] : fields
     return (
-        <Component id={id} schema={schema} fields={AllFields} {...mutationProps}>
+        <Component id={id} schema={schema} fields={allFields} {...mutationProps}>
             {({mutate, doc = model, loading, called, ...rest}) => {
                 return (
                     <AutoForm
@@ -144,7 +144,7 @@ const Form = ({
                         schema={bridge}
                         model={doc}
                         onSubmit={(model: any) => {
-                            schema.clean(model,AllFields)// fill null all missing keys
+                            schema.clean(model,allFields)// fill null all missing keys
                             onSubmit && onSubmit(model)
                             return mutate(model)
                         }}
