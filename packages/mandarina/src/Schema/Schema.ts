@@ -350,7 +350,7 @@ export class Schema {
                         }
                         let args2 = data[field][operation]
                         if (!Array.isArray(args2)) args2 = [args2]
-                        if (operation!=='upsert') {
+                        if (operation !== 'upsert') {
                             for (let arg2 of args2) {
                                 if (inline || operation !== 'update') arg2 = {data: arg2}
                                 schema.validateMutation(action, arg2, roles)
@@ -465,44 +465,59 @@ export class Schema {
         let errors: ErrorValidator[] = [];
         const flatModel = flatten(model)
         const flatModelKeys = insertParents(Object.keys(flatModel))
+        console.log('flatModelKeys', flatModelKeys)
         flatModelKeys.forEach(key => {
             const value = get(model, key)
             const cleanKey = Schema.cleanKey(key)
             if (fields && !fields.includes(cleanKey)) return
             const last = cleanKey.split('.').pop() as string
             const definition = this.getPathDefinition(cleanKey, overwrite && overwrite[cleanKey]);
+            if (key==='questions.0.correct.0'){
+                console.log('key', key)
+                console.log('cleanKey', cleanKey)
+                console.log('value', value)
+                console.log('definition', definition)
+                console.log('isScalar', definition)
+            }
+
             for (const validator of definition.validators) {
+                const isScalar=key.match(/\.\d+$/)
                 if (
-                    definition.isTable &&
-                    validator.tableValidator &&
-                    key.match(/\.\d+$/)  //if is a scalar like user.0
+                    definition.isTable && validator.tableValidator &&
+                    isScalar //if is a scalar like user.0
                 ) {
                     continue
                 }
                 if (
-                    definition.isTable &&
-                    !validator.tableValidator
+                    definition.isTable && !validator.tableValidator
                 ) {
+
                     continue
                 }
 
                 if (
-                    definition.isArray &&
-                    !validator.arrayValidator
+                    definition.isArray && validator.tableValidator
                 ) {
+
+                    continue
+                }
+                if (
+                    definition.isArray &&
+                    !validator.arrayValidator && !isScalar
+                ) {
+
                     continue
                 }
                 if (
                     definition.isArray &&
                     validator.arrayValidator &&
-                    key.match(/\.\d+$/)  //if is a scalar like user.0
+                    isScalar  //if is a scalar like user.0
                 ) {
                     continue
                 }
 
                 const instance = new validator({key: last, path: key, definition, value});
                 const error = instance.validate(model);
-                //console.log('validator', key, validator.validatorName, error)
 
                 if (error) {
                     errors.push(error);
