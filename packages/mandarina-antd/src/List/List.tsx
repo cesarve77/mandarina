@@ -10,6 +10,7 @@ import {FindProps} from "mandarina/build/Operations/Find";
 import {deepClone} from "mandarina/build/Operations/Mutate";
 import {Result} from "antd";
 import {ReactComponentLike} from "prop-types";
+import {TableProps} from "antd/lib/table/interface";
 //import ListHeader from "./ListHeader";
 export type onResize = (e: any, {size}: { size: { width: number } }) => void
 
@@ -24,6 +25,7 @@ export interface ListProps extends FindProps {
     ref?: React.Ref<List>
     Dimmer?: ComponentType
     header?: ReactComponentLike
+    tableProps?: TableProps<any>
 
 }
 
@@ -217,7 +219,7 @@ export class List extends React.Component<ListProps, { columns: ColumnProps<any>
     firstLoad: boolean = true
 
     render() {
-        const {schema, first, fields, header, where, Dimmer, ...findBaseProps} = this.props
+        const {schema, first, fields, header, where, Dimmer,tableProps, ...findBaseProps} = this.props
         const {columns} = this.state
         return (
             <div className="list-wrapper" style={{width: '100%'}} ref={this.me}>
@@ -264,6 +266,7 @@ export class List extends React.Component<ListProps, { columns: ColumnProps<any>
                                         columns={columns}
                                         loading={this.firstLoad}
                                         dataSource={dataSource}
+                                        {...tableProps}
                                     />
                                 </div>
                             </div>
