@@ -71,9 +71,6 @@ class CustomAuto extends BaseField {
         //this.props  properties applied directly on AutoField
         //props has a field property with values in the schema
         const mergeProps={...this.props, ...props.field.form.props}
-        console.log('props.field.form.props',props.field.form.props)
-        console.log('this.props',this.props)
-        console.log('mergeProps',mergeProps)
         if (mergeProps.col === false) return createElement(props.component, mergeProps)
         let col=typeof mergeProps.col !== 'object'? {span: mergeProps.col || 24 } : mergeProps.col ? {...mergeProps.col} : {span: 24}
         return (

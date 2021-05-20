@@ -200,15 +200,15 @@ export class Schema {
     }
 
     static mapValidators = (validators: (Validator | string | ValidatorFinder)[]) => validators.map((validator) => {
-            if (typeof validator === 'string') { //is is a string i found the Validator constructor in the instances
-                return ValidatorCreator.getInstance(validator).getValidatorWithParam(true);
-            } else if (typeof validator === 'object') {//if is a object is because the only property is the instance validatorName and the value is the param to pass to getValidatorWithParam
-                const name = Object.keys(validator)[0];
-                const param = validator[name];
-                return ValidatorCreator.getInstance(name).getValidatorWithParam(param);
-            }
+        if (typeof validator === 'string') { //is is a string i found the Validator constructor in the instances
+            return ValidatorCreator.getInstance(validator).getValidatorWithParam(true);
+        } else if (typeof validator === 'object') {//if is a object is because the only property is the instance validatorName and the value is the param to pass to getValidatorWithParam
+            const name = Object.keys(validator)[0];
+            const param = validator[name];
+            return ValidatorCreator.getInstance(name).getValidatorWithParam(param);
+        }
 
-            return <Validator>validator;
+        return <Validator>validator;
     })
 
     applyDefinitionsDefaults(definition: UserFieldDefinition, key: string): FieldDefinition {
@@ -307,7 +307,7 @@ export class Schema {
         }
 
         if (typeof fieldDefinition.label !== 'string') {
-            fieldDefinition.label = inflection.transform(key, ['underscore', 'humanize','titleize'])
+            fieldDefinition.label = inflection.transform(key, ['underscore', 'humanize', 'titleize'])
         }
         return fieldDefinition;
     }
@@ -472,7 +472,7 @@ export class Schema {
             if (fields && !fields.includes(cleanKey)) return
             const last = cleanKey.split('.').pop() as string
             const definition = this.getPathDefinition(cleanKey, overwrite && overwrite[cleanKey]);
-            if (key==='questions.0.correct.0'){
+            if (key === 'questions.0.correct.0') {
                 console.log('key', key)
                 console.log('cleanKey', cleanKey)
                 console.log('value', value)
@@ -481,7 +481,7 @@ export class Schema {
             }
 
             for (const validator of definition.validators) {
-                const isScalar=key.match(/\.\d+$/)
+                const isScalar = key.match(/\.\d+$/)
                 if (
                     definition.isTable && validator.tableValidator &&
                     isScalar //if is a scalar like user.0
@@ -606,7 +606,7 @@ export interface UserFieldDefinitionCommon {
         CellComponent?: CellComponent
         loadingElement?: ReactElement
         noFilter?: boolean
-        width?: number
+        width?: number | string
         props?: any
         noSort?: boolean
 
@@ -675,7 +675,7 @@ export interface FieldDefinitionCommon extends UserFieldDefinitionCommon {
         CellComponent?: CellComponent
         loadingElement?: ReactElement
         noFilter?: boolean
-        width?: number
+        width?: number | string
         props?: any
         noSort?: boolean
     }
@@ -720,7 +720,7 @@ export interface OverwriteDefinition {
         CellComponent?: CellComponent
         loadingElement?: ReactElement
         noFilter?: boolean
-        width?: number
+        width?: number | string
         props?: any
         noSort?: boolean
     }

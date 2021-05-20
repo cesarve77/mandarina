@@ -252,7 +252,7 @@ export class List extends React.Component<ListProps, { columns: ColumnProps<any>
                                 <div style={{position: 'relative'}}>
                                     {Dimmer && <Dimmer/>}
                                     <TableAntD
-                                        scroll={{x: '100%'}}
+                                        scroll={{x: 'auto'}}
                                         pagination={{
                                             pageSize: 5000, //todo
                                             total: count,
