@@ -139,7 +139,7 @@ export class List extends React.Component<ListProps, { columns: ColumnProps<any>
             title: definition.label ? definition.label : "",
             render: (value: any, row: any, index: any) => {
                 const CellComponent = definition.list.CellComponent || DefaultCellComponent
-                return <CellComponent columnIndex={0} rowIndex={0} data={[row]}
+                return <CellComponent columnIndex={0} rowIndex={index} data={this.data}
                                       field={field} {...definition.list.props} />
             },
                 onHeaderCell: (column: ColumnProps<any>) => ({
