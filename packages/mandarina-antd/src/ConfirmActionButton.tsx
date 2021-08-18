@@ -16,7 +16,7 @@ import {refetchQueries} from "mandarina/build/Operations/Mutate";
 import Button, {ButtonProps} from "antd/lib/button";
 import {capitalize} from "mandarina/build/Schema/utils";
 import {Modal} from "antd";
-import {ModalProps} from "antd/lib/modal";
+import {ModalFuncProps} from "antd/lib/modal/Modal";
 
 
 export interface ConfirmActionButtonProps extends Omit<ButtonProps, 'onError'>, Omit<MutationProps, 'children' | 'mutation'> {
@@ -28,7 +28,7 @@ export interface ConfirmActionButtonProps extends Omit<ButtonProps, 'onError'>, 
     data?: any
     innerRef?: LegacyRef<Button>
     onSuccess?: (data?: any) => void
-    modalProps: ModalProps
+    modalProps: ModalFuncProps
 }
 
 
