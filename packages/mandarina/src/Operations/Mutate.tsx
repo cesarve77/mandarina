@@ -10,7 +10,6 @@ import {FetchResult} from "react-apollo/Mutation";
 import {ApolloClient, OperationVariables} from "apollo-client";
 import {DocumentNode} from "graphql";
 import {cloneDeep as deepCloneLodash} from 'lodash'
-import {DataProxy} from "apollo-cache";
 import {generateUUID} from "../utils";
 
 export const deepClone = (obj: any): any => {
@@ -256,30 +255,12 @@ export class Mutate extends PureComponent<WithApolloClient<MutateProps & { type:
     refetchQueries = (mutationResult: FetchResult) => {
         return refetchQueries(mutationResult, this.props.client, this.props.refetchSchemas, this.props.schema)
     }
-    invalidateCache = (cache: DataProxy) => {
-        if (this.props.type === 'create') {
-            // Loop through all the data in our cache
-            // And delete any items that start with "this.props.schema.name"
-            // This empties the cache of all of our schema and
-            // forces a refetch of the data.
-
-            // @ts-ignore
-            // Object.keys(cache.data.data).forEach(key => {
-            //     const regExp = new RegExp(`^(\\$ROOT_QUERY\\.${this.props.schema.names.query.plural}|\\$ROOT_QUERY\\.${this.props.schema.names.query.connection})`)
-            //     if (key.match(regExp)){
-            //         console.log(this.name,'deletinf',key)
-            //         // @ts-ignore
-            //         cache.data.delete(key)
-            //     }
-            // })
-        }
-    }
 
     render() {
         const {
             type, children, schema, fields, loading: findLoading,
             variables,
-            update = this.invalidateCache,
+            update,
             ignoreResults,
             optimisticResponse,
             refetchQueries = this.refetchQueries,
