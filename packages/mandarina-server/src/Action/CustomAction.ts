@@ -3,6 +3,7 @@ import {TableInstanceNotFound} from "../Errors/TableInstanceNotFound";
 import {UniqueActionError} from "../Errors/UniqueActionError";
 
 import {Permission} from "mandarina/build/Schema/Schema";
+import Mandarina from "../Mandarina";
 
 
 
@@ -59,18 +60,17 @@ export class CustomAction {
         Object.keys(actions).forEach((action) => {
                 result[action] = async (_: any, args: any, context: any, info: any): Promise<any> => {
                     //todo: check permissions
-                    return await actions[action].action(_, args, context, info)
-                    // console.error('Actions permissions are not checked', this.permissions)
-                    // if (this.options.onBefore) {
-                    //     await this.options.onBefore(action, _, args, context, info)
-                    // }
-                    // const result = await actions[action].action(_, args, context, info)
-                    // if (this.options.onAfter) {
-                    //     this.options.onAfter(action, _, args, context, info)
-                    // }
-                    // return result
-                }
-                ;
+                    const user = await Mandarina.config.getUser(context)
+                    const roles=(user && user.roles ) || []
+                    if (roles.includes('nobody')){
+                        throw new Error('Action not allowed')
+                    }
+                    const permissions: string[]= actions[action].permission || []
+                    if (roles.includes('everybody') || permissions.some(permission=>roles.includes(permission))){
+                        return await actions[action].action(_, args, context, info)
+                    }
+                    throw new Error('Action not allowed for this user')
+                };
         });
 
         return result;

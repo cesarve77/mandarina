@@ -441,6 +441,27 @@ export class Schema {
 
     }
 
+    getChainedLabel(key: string) {
+        const paths = key.split('.')
+        let schema: Schema = this;
+        const labels: string[] = []
+        let def: FieldDefinition = schema._getKeyDefinition(paths[0])
+        paths.forEach((path) => {
+            if (!path.match(/\$|^\d+$/)) { //example user.0
+                def = schema._getKeyDefinition(path)
+                if (def.isTable) {
+                    schema = Schema.getInstance(def.type)
+                }
+                if (def.label) {
+                    labels.push(def.label)
+                }
+            } else {
+                labels.push(`(${path})`)
+            }
+        });
+        return labels.join(' -> ')
+    }
+
     private generatePathDefinition(key: string): FieldDefinition {
 
         const paths = key.split('.')
