@@ -68,6 +68,7 @@ export interface ConfigDirInterface {
     actions?: string[]
     generated: string
     prisma: string
+    prisma2: string
 }
 
 export const loadSchemas = (dir: ConfigDirInterface) => {

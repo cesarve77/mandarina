@@ -3,29 +3,35 @@ import {createProject} from "./createProject";
 import {watch} from "./watch";
 import {deploy} from "./deploy";
 import {genFile} from "./gen-files/genFiles";
+import {genFile as genPrisma2} from "./gen-files/prisma2";
+
+console.log('cesar')
 
 //@ts-ignore
 const [nodeDir, dir, cmd, ...args] = process.argv
 
 switch (cmd) {
-    case "create":
-        const project = args && args[0] || 'mandarina'
-        createProject(project)
-        break
-    case 'gen-files':
-        genFile()
-        break;
-    case 'deploy':
-        deploy()
-        break;
-    case 'watch':
-        watch()
-        break;
-    case undefined:
-        console.info(`You need to pass a command at first argument`)
-        break
-    default:
-        console.info(`command ${cmd} not found, available commands: "create","gen-files","deploy","watch`)
+  case "create":
+    const project = args && args[0] || 'mandarina'
+    createProject(project)
+    break
+  case 'gen-files':
+    genFile()
+    break;
+  case 'gen-prisma2':
+    genPrisma2()
+    break;
+  case 'deploy':
+    deploy()
+    break;
+  case 'watch':
+    watch()
+    break;
+  case undefined:
+    console.info(`You need to pass a command at first argument`)
+    break
+  default:
+    console.info(`command ${cmd} not found, available commands: "create","gen-files","deploy","watch`)
 }
 
 /*
