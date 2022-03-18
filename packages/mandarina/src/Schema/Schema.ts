@@ -213,7 +213,7 @@ export class Schema {
 
     applyDefinitionsDefaults(definition: UserFieldDefinition, key: string): FieldDefinition {
         const fieldDefinition = <FieldDefinition>{};
-
+        fieldDefinition.key=key
         //insert  type Validator on top
         fieldDefinition.validators = Schema.mapValidators(definition.validators || [])
         const isNumberValidator = isNumber.getValidatorWithParam();
@@ -672,6 +672,7 @@ export type FieldDefinition = FieldDefinitionNative | FieldDefinitionTable
 
 
 export interface FieldDefinitionCommon extends UserFieldDefinitionCommon {
+    key: string
     label: Label
     description?: string
     validators: Array<Validator>

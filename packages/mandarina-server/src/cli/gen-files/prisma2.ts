@@ -42,107 +42,146 @@ datasource db {
   const fileAbs = `${prismaDir}/schema.prisma`;
   fs.writeFileSync(fileAbs, prisma);
 }
+
+function getRelationName(parentDef: FieldDefinition) {
+  if (!parentDef.table.relation) return ''
+  if (typeof parentDef.table.relation === 'string') {
+    return parentDef.table.relation
+  }
+  return parentDef.table.relation.name || ''
+}
+
 const getPrisma2Model = (schema: Schema, parent?: Schema, parentName?: string) => {
-  let mainSchema: { [fieldName: string]: string } = prisma2Models[schema.name] || {}
-  let isParentInChild = false
-  if (!proccesed.includes(schema.name)) {
-    for (const key of schema.keys) {
-      if (key === 'id') {
-        c++
-        mainSchema.id = `String                 @id @default(cuid()) //${c}`;
-      } else {
-        const fieldDefinition = schema.getPathDefinition(key)
+  prisma2Models[schema.name] = prisma2Models[schema.name] || {}
+  let selfDef: FieldDefinition | null = null
+  for (const key of schema.keys) {
+    if (key === 'id') {
+      c++
+      prisma2Models[schema.name].id = `String                 @id @default(cuid()) //${c}`;
+    } else {
+      const fieldDefinition = schema.getPathDefinition(key)
+      let required = fieldDefinition.isArray || isRequired(fieldDefinition)
+      const fieldType = getGraphQLType(fieldDefinition, key, required);
+      const unique = fieldDefinition.table.unique ? '@unique' : ''
+      let defaultValue = ''
+      if (fieldDefinition.table.default !== undefined) {
+        const wrapper = (fieldDefinition.type === String) ? '"' : ''
+        defaultValue = `@default(${wrapper}${fieldDefinition.table.default}${wrapper})`
+      }
+      let relation: string = ''
+      if (fieldDefinition.isTable) {
 
-        let required = fieldDefinition.isArray || isRequired(fieldDefinition)
-        const unique = fieldDefinition.table.unique ? '@unique' : ''
-        let defaultValue = ''
-        if (fieldDefinition.table.default !== undefined) {
-          const wrapper = (fieldDefinition.type === String) ? '"' : ''
-          defaultValue = `@default(${wrapper}${fieldDefinition.table.default}${wrapper})`
+        const processedName = [schema.name, key].join('-')
+        let relationName = getRelationName(fieldDefinition)
+
+        if (parent && parentName) {
+          const parentDef = parent.getPathDefinition(parentName)
+          let parentRelationName = getRelationName(parentDef)
+          if (parent && fieldDefinition.type === parent.name && parentRelationName === relationName) { //child exists
+            selfDef = fieldDefinition
+          }
         }
-        const relations: string[] = []
-        let relation: string = ''
-        if (fieldDefinition.isTable) {
-          if (!fieldDefinition.isArray){
-            required=false
-          }
-          let relationName = fieldDefinition.table.relation ? typeof fieldDefinition.table.relation === 'string' ? fieldDefinition.table.relation : fieldDefinition.table?.relation?.name : ``
-
-          if (fieldDefinition.table?.relation && typeof fieldDefinition.table?.relation !== 'string' && fieldDefinition.table?.relation?.onDelete) {
-            //relations.push(`onDelete: Cascade`)
-          }
-
-          if (!parent || !parentName) {
+        if (!proccesed.includes(processedName)) {
+          proccesed.push(processedName)
+          if (!selfDef) {
             getPrisma2Model(Schema.getInstance(fieldDefinition.type), schema, key)
-          } else {
-            if (parent.name === fieldDefinition.type) {
-              isParentInChild = true
-              console.log('isParentInChild', key, parent.name, parentName)
-              getPrisma2Model(Schema.getInstance(fieldDefinition.type), schema, key)
-              // const parentDef=parent.getPathDefinition(parentName)
-              const idName = `${parent.names.query.single}Id`
-              mainSchema[idName] = `String //aqui`;
-              relations.push(`fields: [${idName}]`)
-            } else {
-              getPrisma2Model(Schema.getInstance(fieldDefinition.type), schema, key)
-            }
-          }
-
-          if (relationName) {
-            relations.push(`name: "${relationName}"`)
-          }
-          if (relations.length > 0) {
-            if (relations.length === 1 && relations[0].indexOf('name:')>=0){
-            }else{
-              relations.push(`references: [id]`)
-            }
-          }
-          if (relations.length > 0) {
-            relation = `@relation(${relations.join(', ')})`
           }
         }
-        let createdAt = '', updatedAt = ''//processMissingInfo
+      } else {
+
+        let createdAt = '', updatedAt = ''
         if ((fieldDefinition.table.createdAt === true || (fieldDefinition.table.createdAt !== false && key === 'createdAt'))) {
           createdAt = `@default(now())`
         }
         if ((fieldDefinition.table.updatedAt === true || (fieldDefinition.table.updatedAt !== false && key === 'updatedAt'))) {
           createdAt = `@default(now())`
         }
-        const fieldType = getGraphQLType(fieldDefinition, key, required );
         if (!fieldType) {
           throw new Error('no type')
         }
-        mainSchema[key] = `${fieldType} ${unique} ${createdAt} ${updatedAt} ${defaultValue} ${relation} //@relation(${relations.join(', ')})`;
-      }
-
-      proccesed.push(schema.name)
-    }
-
-  }else{
-    for (const key of schema.keys) {
-      const fieldDefinition = schema.getPathDefinition(key)
-      if (parent && parent.name === fieldDefinition.type) {
-        isParentInChild = true
+        prisma2Models[schema.name][key] = `${fieldType} ${unique} ${createdAt} ${updatedAt} ${defaultValue} ${relation} `;
       }
     }
-  }
+  }// end for
   if (parent && parentName) {
     const parentDef = parent.getPathDefinition(parentName)
+    let parentRelationName = getRelationName(parentDef)
+    const parentArray = parentDef.isArray
+    if (selfDef) {
+      let childRelationName = getRelationName(selfDef)
+      const childArray = selfDef.isArray
+      if (childRelationName !== parentRelationName) {
+        throw new Error(`${childRelationName}-parentRelationName`)
+      }
+      if (!parentArray && !childArray) { //1 - 1
+        const relation = getRelationName(parentDef) || `${[parent.name, `${selfDef.type}_${selfDef.key}`].join('_Exist_')}`
+        if (typeof parentDef.table?.relation !== 'string' && parentDef.table?.relation?.link) {
+          prisma2Models[parent.name][parentDef.key] = `${parentDef.type} @relation(fields: [${parentDef.key}Id], references: [id],name: "${relation}") // 1`
+          prisma2Models[parent.name][`${parentDef.key}Id`] = `String`
+          prisma2Models[schema.name][`${selfDef.key}`] = `${selfDef.type}? @relation(name: "${relation}") // 2`
+        } else {
+          prisma2Models[parent.name][parentDef.key] = `${parentDef.type}? @relation(name: "${relation}") // 3`
+          prisma2Models[schema.name][`${selfDef.key}`] = `${selfDef.type} @relation(fields: [${selfDef.key}Id], references: [id], name: "${relation}") // 4`
+          prisma2Models[schema.name][`${selfDef.key}Id`] = `String`
+        }
+      }
+      if (parentArray && !childArray) { // n - 1
+        const relation = getRelationName(parentDef) || `${[parent.name, `${schema.name}_${selfDef.key}`].join('_Exist_')}`
+        prisma2Models[parent.name][parentDef.key] = `${parentDef.type}[] @relation(name: "${relation}") //5 `
+        prisma2Models[schema.name][selfDef.key] = `${selfDef.type} @relation(fields: [${selfDef.key}Id], references: [id], name: "${relation}") // 6`
+        prisma2Models[schema.name][`${selfDef.key}Id`] = `String`
 
-    if (!isParentInChild) {
-      const relationName = parentDef.table.relation ? typeof parentDef.table.relation === 'string' ? parentDef.table.relation : parentDef.table?.relation?.name : ``
-      const name = !relationName ? `${parent.names.query.single}` : `${parent.names.query.single}For${capitalize(parentName)}`
-      const idName=`${name}Id`
-      mainSchema[name] = `${parent.name} @relation(fields: [${idName}], references: [id]${relationName ? `, name:"${relationName}"` : ''}) //isParentInChild`
-      mainSchema[idName] = `String`
+      }
+      if (!parentArray && childArray) {  // 1 - n
+        const relation = getRelationName(parentDef) || `${[parent.name, `${schema.name}_${selfDef.key}`].join('_Exist_')}`
+        prisma2Models[schema.name][selfDef.key] = `${selfDef.type}[] @relation(name: "${relation}") //7`
+        prisma2Models[parent.name][parentDef.key] = `${parentDef.type} @relation(fields: [${parentDef.key}Id], references: [id], name: "${relation}") //7.1`
+        prisma2Models[parent.name][`${parentDef.key}Id`] = `String`
+      }
+      if (parentArray && childArray) {  // n - n
+        const relation = getRelationName(parentDef) || `${[parent.name, `${schema.name}_${selfDef.key}`].join('_Exist_')}`
+        if (schema.name===parent.name){
+          prisma2Models[parent.name][parentDef.key] = `${parentDef.type}[] @relation(name: "${relation}", references: [id]) // 8 self1`
+          prisma2Models[schema.name][`${selfDef.key}2`] = `${selfDef.type}[] @relation(name: "${relation}", references: [id]) // 9 self2`
+        }else{
+          prisma2Models[parent.name][parentDef.key] = `${parentDef.type}[] @relation(name: "${relation}") // 8`
+          prisma2Models[schema.name][selfDef.key] = `${selfDef.type}[] @relation(name: "${relation}") // 9`
+        }
+
+      }
+    } else {
+      const parentRelationName= getRelationName(parentDef)
+
+      if (!parentArray) { //1 - 1
+        const relation =parentRelationName || `${[parent.name, `${schema.name}_${parentDef.key}`].join('_Exist_')}`
+        prisma2Models[parent.name][parentDef.key] = `${parentDef.type}? @relation(name: "${relation}") //10`
+        prisma2Models[schema.name][`${parentRelationName || parent.name}${parent.names.query.single}`] = `${parent.name} @relation(fields: [${parentRelationName ||parent.name}${parent.names.query.single}Id], references: [id], name: "${relation}") // 11`
+        prisma2Models[schema.name][`${parentRelationName || parent.name}${parent.names.query.single}Id`] = `String`
+
+      }
+      if (parentArray) { // n - 1
+        const name = parent.names.query.single
+        const relation =parentRelationName || `${[parent.name, `${schema.name}_${name}`].join('_Exist_')}`
+        prisma2Models[parent.name][parentDef.key] = `${parentDef.type}[] @relation(name: "${relation}") // 12 `
+        prisma2Models[schema.name][`${parentRelationName || parent.name}${capitalize(parentDef.key)}`] = `${parent.name} @relation(fields: [${parentRelationName || parent.name}${capitalize(parentDef.key)}Id], references: [id], name: "${relation}") // 13`
+        prisma2Models[schema.name][`${parentRelationName || parent.name}${capitalize(parentDef.key)}Id`] = `String`
+
+      }
     }
   }
-  prisma2Models[schema.name] = {...mainSchema,...prisma2Models[schema.name]}
 }
-
-
-export const getGraphQLType = (def: FieldDefinition, key: string, required: boolean): string => {
-  const optional=!def.isArray && !required ? '?' : ''
+//  if (typeof fieldDefinition.table?.relation !== 'string' && fieldDefinition.table?.relation?.link) {
+//               const nameId = `${key}Id`
+//               prisma2Models[schema.name][nameId] = `String //id with link`;
+//               relations.push(`fields: [${nameId}]`)
+//               relations.push(`references: [id]`)
+//             }
+//             if (relations.length > 0) {
+//               relation = `@relation(${relations.join(', ')})`
+//             }
+//             prisma2Models[schema.name][key] = `${fieldType} ${unique} ${defaultValue} ${relation} //deeping call=> ${fieldDefinition.type}`;
+const getGraphQLType = (def: FieldDefinition, key: string, required: boolean): string => {
+  const optional = !def.isArray && !required ? '?' : ''
   switch (true) {
     case (!def.isArray && !def.isTable && def.type.name === 'String'):
       return `String${optional}`;

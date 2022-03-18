@@ -20,7 +20,8 @@
     "publish": "npm whoami && cd packages/mandarina  && npm publish && cd ../mandarina-antd && npm publish && cd ../mandarina-server && npm publish  && cd .. && cd ..",
     "test-gen-files": "cd __TEST__ && node ../packages/mandarina-server/build/cli/index.js gen-files",
     "test-server": "cd __TEST__ && node ./app/server/server.js",
-    "test-prisma-deploy": "cd __TEST__/prisma && prisma deploy"
+    "test-prisma-deploy": "cd __TEST__/prisma && prisma deploy",
+    "gen-prisma2": "cd ../hss && yarn mandarina gen-prisma2"
   },
   "devDependencies": {
     "apollo-cache-inmemory": "^1.5.1",
