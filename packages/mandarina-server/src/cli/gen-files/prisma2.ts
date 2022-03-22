@@ -73,17 +73,18 @@ const getPrisma2Model = (schema: Schema, parent?: Schema, parentName?: string) =
 
         const processedName = [schema.name, key].join('-')
         let relationName = getRelationName(fieldDefinition)
-
+        let childExists=false
         if (parent && parentName) {
           const parentDef = parent.getPathDefinition(parentName)
           let parentRelationName = getRelationName(parentDef)
-          if (parent && fieldDefinition.type === parent.name && parentRelationName === relationName) { //child exists
+          if (parent && (fieldDefinition.type === parent.name ) && (parentRelationName === relationName)) { //child exists
             selfDef = fieldDefinition
+            childExists=true
           }
         }
         if (!proccesed.includes(processedName)) {
           proccesed.push(processedName)
-          if (!selfDef) {
+          if (!childExists) {
             getPrisma2Model(Schema.getInstance(fieldDefinition.type), schema, key)
           }
         }
@@ -108,6 +109,9 @@ const getPrisma2Model = (schema: Schema, parent?: Schema, parentName?: string) =
     let parentRelationName = getRelationName(parentDef)
     const parentArray = parentDef.isArray
     if (selfDef) {
+      if (selfDef.key==='visitStaff'){
+        console.log('visitStaff')
+      }
       let childRelationName = getRelationName(selfDef)
       const childArray = selfDef.isArray
       if (childRelationName !== parentRelationName) {
@@ -116,27 +120,34 @@ const getPrisma2Model = (schema: Schema, parent?: Schema, parentName?: string) =
       if (!parentArray && !childArray) { //1 - 1
         const relation = getRelationName(parentDef) || `${[parent.name, `${selfDef.type}_${selfDef.key}`].join('_Exist_')}`
         if (typeof parentDef.table?.relation !== 'string' && parentDef.table?.relation?.link) {
-          prisma2Models[parent.name][parentDef.key] = `${parentDef.type} @relation(fields: [${parentDef.key}Id], references: [id],name: "${relation}") // 1`
-          prisma2Models[parent.name][`${parentDef.key}Id`] = `String`
+          prisma2Models[parent.name][parentDef.key] = `${parentDef.type}? @relation(fields: [${parentDef.key}Id], references: [id],name: "${relation}") // 1`
+          prisma2Models[parent.name][`${parentDef.key}Id`] = `String?`
           prisma2Models[schema.name][`${selfDef.key}`] = `${selfDef.type}? @relation(name: "${relation}") // 2`
         } else {
-          prisma2Models[parent.name][parentDef.key] = `${parentDef.type}? @relation(name: "${relation}") // 3`
-          prisma2Models[schema.name][`${selfDef.key}`] = `${selfDef.type} @relation(fields: [${selfDef.key}Id], references: [id], name: "${relation}") // 4`
-          prisma2Models[schema.name][`${selfDef.key}Id`] = `String`
+          if (schema.name===parent.name){
+            prisma2Models[schema.name][`${relation}`] = `${parentDef.type}? @relation(name: "${relation}") // 3.1 `
+            prisma2Models[schema.name][`${selfDef.key}`] = `${selfDef.type}? @relation(fields: [${selfDef.key}Id], references: [id], name: "${relation}") // 4.1 ${parentDef.key} ${selfDef.key}`
+            prisma2Models[schema.name][`${selfDef.key}Id`] = `String?`
+          }else{
+            prisma2Models[parent.name][parentDef.key] = `${parentDef.type}? @relation(name: "${relation}") // 3`
+            prisma2Models[schema.name][`${selfDef.key}`] = `${selfDef.type}? @relation(fields: [${selfDef.key}Id], references: [id], name: "${relation}") // 4`
+            prisma2Models[schema.name][`${selfDef.key}Id`] = `String?`
+          }
+
         }
       }
       if (parentArray && !childArray) { // n - 1
         const relation = getRelationName(parentDef) || `${[parent.name, `${schema.name}_${selfDef.key}`].join('_Exist_')}`
         prisma2Models[parent.name][parentDef.key] = `${parentDef.type}[] @relation(name: "${relation}") //5 `
-        prisma2Models[schema.name][selfDef.key] = `${selfDef.type} @relation(fields: [${selfDef.key}Id], references: [id], name: "${relation}") // 6`
-        prisma2Models[schema.name][`${selfDef.key}Id`] = `String`
+        prisma2Models[schema.name][selfDef.key] = `${selfDef.type}? @relation(fields: [${selfDef.key}Id], references: [id], name: "${relation}") // 6`
+        prisma2Models[schema.name][`${selfDef.key}Id`] = `String?`
 
       }
       if (!parentArray && childArray) {  // 1 - n
         const relation = getRelationName(parentDef) || `${[parent.name, `${schema.name}_${selfDef.key}`].join('_Exist_')}`
         prisma2Models[schema.name][selfDef.key] = `${selfDef.type}[] @relation(name: "${relation}") //7`
-        prisma2Models[parent.name][parentDef.key] = `${parentDef.type} @relation(fields: [${parentDef.key}Id], references: [id], name: "${relation}") //7.1`
-        prisma2Models[parent.name][`${parentDef.key}Id`] = `String`
+        prisma2Models[parent.name][parentDef.key] = `${parentDef.type}? @relation(fields: [${parentDef.key}Id], references: [id], name: "${relation}") //7.1`
+        prisma2Models[parent.name][`${parentDef.key}Id`] = `String?`
       }
       if (parentArray && childArray) {  // n - n
         const relation = getRelationName(parentDef) || `${[parent.name, `${schema.name}_${selfDef.key}`].join('_Exist_')}`
@@ -152,19 +163,19 @@ const getPrisma2Model = (schema: Schema, parent?: Schema, parentName?: string) =
     } else {
       const parentRelationName= getRelationName(parentDef)
 
-      if (!parentArray) { //1 - 1
+      if (!parentArray) { //1 - n
         const relation =parentRelationName || `${[parent.name, `${schema.name}_${parentDef.key}`].join('_Exist_')}`
         prisma2Models[parent.name][parentDef.key] = `${parentDef.type}? @relation(name: "${relation}") //10`
-        prisma2Models[schema.name][`${parentRelationName || parent.name}${parent.names.query.single}`] = `${parent.name} @relation(fields: [${parentRelationName ||parent.name}${parent.names.query.single}Id], references: [id], name: "${relation}") // 11`
-        prisma2Models[schema.name][`${parentRelationName || parent.name}${parent.names.query.single}Id`] = `String`
+        prisma2Models[schema.name][`${parentRelationName || parent.name}${parent.names.query.single}`] = `${parent.name}? @relation(fields: [${parentRelationName ||parent.name}${parent.names.query.single}Id], references: [id], name: "${relation}") // 11`
+        prisma2Models[schema.name][`${parentRelationName || parent.name}${parent.names.query.single}Id`] = `String?`
 
       }
       if (parentArray) { // n - 1
         const name = parent.names.query.single
         const relation =parentRelationName || `${[parent.name, `${schema.name}_${name}`].join('_Exist_')}`
         prisma2Models[parent.name][parentDef.key] = `${parentDef.type}[] @relation(name: "${relation}") // 12 `
-        prisma2Models[schema.name][`${parentRelationName || parent.name}${capitalize(parentDef.key)}`] = `${parent.name} @relation(fields: [${parentRelationName || parent.name}${capitalize(parentDef.key)}Id], references: [id], name: "${relation}") // 13`
-        prisma2Models[schema.name][`${parentRelationName || parent.name}${capitalize(parentDef.key)}Id`] = `String`
+        prisma2Models[schema.name][`${parentRelationName || parent.name}${capitalize(parentDef.key)}`] = `${parent.name}? @relation(fields: [${parentRelationName || parent.name}${capitalize(parentDef.key)}Id], references: [id], name: "${relation}") // 13`
+        prisma2Models[schema.name][`${parentRelationName || parent.name}${capitalize(parentDef.key)}Id`] = `String?`
 
       }
     }
