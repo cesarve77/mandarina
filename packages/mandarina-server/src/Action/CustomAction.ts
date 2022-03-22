@@ -59,17 +59,21 @@ export class CustomAction {
 
         Object.keys(actions).forEach((action) => {
                 result[action] = async (_: any, args: any, context: any, info: any): Promise<any> => {
-                    //todo: check permissions
                     const user = await Mandarina.config.getUser(context)
                     const roles=(user && user.roles ) || []
                     if (roles.includes('nobody')){
                         throw new Error('Action not allowed')
                     }
                     const permissions: string[]= actions[action].permission || []
-                    if (roles.includes('everybody') || permissions.some(permission=>roles.includes(permission))){
-                        return await actions[action].action(_, args, context, info)
+                    if (permissions.includes('everybody') || permissions.some(permission=>roles.includes(permission))){
+                        console.log('***************111***************')
+                        console.warn(user && user.id,action)
+                        console.warn(user && user.roles,permissions)
+                        console.log('***************222***************')
+
+                        // return await actions[action].action(_, args, context, info)
                     }
-                    throw new Error('Action not allowed for this user')
+                    throw new Error(`Action "${action}" not allowed for this user`)
                 };
         });
 
