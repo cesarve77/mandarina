@@ -151,7 +151,7 @@ export class Table {
                     if (data.errors){
                         console.error(data.errors)
                     }
-                    result = data.data[info.path.key]
+                    result =Object.values(data.data)[0]
                     context.result = result
                     await this.callHook(this.name, <HookName>`after${capitalizedAction}`, _, args, context, query);
                     this.schema.validateQuery(fields, user && user.roles || []);
@@ -174,7 +174,7 @@ export class Table {
                     if (data.errors){
                         console.error(data.errors)
                     }
-                    result = data.data[info.path.key]
+                    result = Object.values(data.data)[0]
                     if (operationName===this.schema.names.query.single){
                         result = data.data[this.schema.names.query.plural]
                         result=result && result.length===1 ? result[0] : null
@@ -193,8 +193,18 @@ export class Table {
         const field: string[] = []
         const fields = new Set<string>()
         let required = false
+        const allowedVariables=info.fieldNodes[0]?.arguments?.map(({name:{value}})=>value) || []
+        console.log(allowedVariables)
         const query = visit(info.operation, {
             enter: (node, key, parent, path, ancestors) => {
+                if (node.kind==='VariableDefinition'){
+                    if (!allowedVariables.includes(node?.variable.name.value)){
+                        return null
+                    }
+                }
+                if (node.kind === 'Field' && ancestors.length===2 && node!==info.fieldNodes[0]){
+                    return null
+                }
                 if (node.kind === 'Field' && node.name.value !== '__typename') {
                     field.push(node.name.value)
                     const internalField = field.slice(1).join('.')
