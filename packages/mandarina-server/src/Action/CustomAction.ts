@@ -72,9 +72,9 @@ export class CustomAction {
                         console.warn(user && user.roles,permissions)
                         console.log('***************222***************')
                         //throw new Error(`Action "${action}" not allowed for this user`)
-
-                        return await actions[action].action(_, args, context, info)
                     }
+                    return await actions[action].action(_, args, context, info)
+
                 };
         });
 
