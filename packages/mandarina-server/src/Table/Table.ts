@@ -194,7 +194,7 @@ export class Table {
         const fields = new Set<string>()
         let required = false
         const allowedVariables=info.fieldNodes[0]?.arguments?.map(({name:{value}})=>value) || []
-        console.log(allowedVariables)
+
         const query = visit(info.operation, {
             enter: (node, key, parent, path, ancestors) => {
                 if (node.kind==='VariableDefinition'){
@@ -254,7 +254,9 @@ export class Table {
 
         });
         let queryString= print(query)
-        if (required) queryString=queryString.replace(/\$where: (\w*)Input,/,'$where: $1Input!,')
+        if (required) {
+            queryString=queryString.replace(/\$where: (\w*)Input(,| |\))/,'$where: $1Input!$2')
+        }
         return {fields: Array.from(fields), query, queryString}
     }
 
