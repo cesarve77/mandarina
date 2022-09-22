@@ -282,17 +282,14 @@ export class Table {
             if (name.indexOf('before') === 0) prefix = 'before'
             if (name.indexOf('after') === 0) prefix = 'after'
             const hookHandler = this.options.hooks && this.options.hooks[name];
-            let data: any = args.data
-
-
-            if (data && prefix) {
-                const fields = Object.keys(data)
+            if ( args.data && prefix) {
+                const fields = Object.keys( args.data)
                 const schema = Schema.getInstance(schemaName)
                 for (const field of fields) {
                     const def = schema.getPathDefinition(field)
                     const inline = !!(def.table && def.table.relation && def.table.relation.link === 'INLINE')
                     if (def.isTable) {
-                        const operations = Object.keys(data[field])
+                        const operations = Object.keys( args.data[field])
                         if (!Table.instances[def.type]) {
                             //console.warn(`No table for ${def.type} no neasted hooks applied`)
                             continue
@@ -300,7 +297,7 @@ export class Table {
                         const table = Table.getInstance(def.type)
                         for (const operation of operations) {
                             const hookName = `${prefix}${capitalize(operation)}` as HookName
-                            const args2 = data[field][operation]
+                            const args2 =  args.data[field][operation]
 
                             if (Array.isArray(args2)) {
                                 for (const arg2 of args2) {

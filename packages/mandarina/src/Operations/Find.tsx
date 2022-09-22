@@ -1,9 +1,10 @@
-import React, {PureComponent} from 'react'
+import React, {ComponentType, PureComponent} from 'react'
 import {Schema} from '..'
 import gql from "graphql-tag";
 import {Query, QueryProps, QueryResult} from "react-apollo";
 import {buildQueryFromFields, insertHaving} from "./utils";
 import Observer from "../Observer";
+import Auth, {ActionType, AuthChildrenProps, AuthElementsProps} from "../Auth/Auth";
 
 export const  canUseDOM = !!(
     (typeof window !== 'undefined' &&
@@ -205,3 +206,35 @@ export const FindOne = (props: FindProps) => <FindBase type='single' {...props}/
 
 export const Find = (props: FindProps) => <FindBase type='connection' {...props}/>
 
+
+export const AuthFindBase = ({Component,children, schema, denied = null, userRoles = [], action, fields: fieldsOri, Error, ...props}:
+                    { Component: ComponentType<FindProps | FindProps>, action: ActionType } & (FindProps) & FindBaseProps & AuthElementsProps) => {
+    console.log('fieldsOri',fieldsOri)
+    return (
+      // @ts-ignore
+      <Auth schema={schema} action={action} userRoles={userRoles} fields={fieldsOri}>
+          {({fields, loading, error,readFields}: AuthChildrenProps) => {
+              console.log('fieldsOri',fields)
+              if (error && Error) return <Error error={error}/>
+              if (!loading && fields && fields.length === 0) return denied
+              if (loading) {
+                  // @ts-ignore
+                  return children && children({
+                      error: null,
+                      data: null,
+                      loading: true,
+                  } as  QueryResult)
+              }
+              return (
+                <>
+                    {fields && <Component schema={schema} {...props} fields={fields} />}
+                </>
+              );
+          }}
+      </Auth>
+    )
+}
+
+export const AuthFindOne = (props: FindProps & AuthElementsProps) => <AuthFindBase type='single' Component={FindOne} action={'read'} {...props}/>
+
+export const AuthFind = (props: FindProps & AuthElementsProps) => <AuthFindBase type='connection' Component={Find}  action={'read'} {...props}/>

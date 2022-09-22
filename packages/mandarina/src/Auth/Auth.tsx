@@ -1,5 +1,5 @@
 import {Schema} from "..";
-import {ReactNode} from "react";
+import React, {ElementType, ReactNode} from "react";
 
 export type ActionType = 'create' | 'read' | 'update' | 'delete'
 
@@ -16,6 +16,12 @@ export interface AuthProps {
     userRoles?: string[]
     fields: string[]
     children: (props: any) => ReactNode
+}
+export interface AuthElementsProps {
+    denied?: ReactNode
+    Error?: ElementType<{ error: string }>
+    userRoles: string[]
+    innerRef?: React.Ref<any>
 }
 
 

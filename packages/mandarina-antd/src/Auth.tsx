@@ -1,19 +1,13 @@
-import React, {ComponentType, ElementType, ReactNode} from "react"
+import React, {ComponentType} from "react"
 import {Auth} from 'mandarina'
 import {CreateForm, CreateFormProps, UpdateForm, UpdateFormProps} from "./Forms";
 import Spin from "antd/lib/spin";
-import {ActionType, AuthChildrenProps} from "mandarina/build/Auth/Auth";
+import {ActionType, AuthChildrenProps, AuthElementsProps} from "mandarina/build/Auth/Auth";
 import {ListProps as ListVirtualizedProps, ListVirtualized} from "./List/ListVirtualized";
 import {List, ListProps} from "./List/List";
 
 type ElemProps = CreateFormProps | UpdateFormProps | ListVirtualizedProps | ListProps
 
-export interface AuthElementsProps {
-    denied?: ReactNode
-    Error?: ElementType<{ error: string }>
-    userRoles: string[]
-    innerRef?: React.Ref<any>
-}
 
 
 
