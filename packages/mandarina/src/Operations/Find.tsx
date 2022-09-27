@@ -208,13 +208,11 @@ export const Find = (props: FindProps) => <FindBase type='connection' {...props}
 
 
 export const AuthFindBase = ({Component,children, schema, denied = null, userRoles = [], action, fields: fieldsOri, Error, ...props}:
-                    { Component: ComponentType<FindProps | FindProps>, action: ActionType } & (FindProps) & FindBaseProps & AuthElementsProps) => {
-    console.log('fieldsOri',fieldsOri)
+                    { Component: ComponentType<FindProps | FindProps>, action: ActionType } & (FindProps) & AuthElementsProps) => {
     return (
       // @ts-ignore
       <Auth schema={schema} action={action} userRoles={userRoles} fields={fieldsOri}>
           {({fields, loading, error,readFields}: AuthChildrenProps) => {
-              console.log('fieldsOri',fields)
               if (error && Error) return <Error error={error}/>
               if (!loading && fields && fields.length === 0) return denied
               if (loading) {
@@ -227,7 +225,7 @@ export const AuthFindBase = ({Component,children, schema, denied = null, userRol
               }
               return (
                 <>
-                    {fields && <Component schema={schema} {...props} fields={fields} />}
+                    {fields && <Component schema={schema} {...props} children={children} fields={fields} />}
                 </>
               );
           }}
@@ -235,6 +233,6 @@ export const AuthFindBase = ({Component,children, schema, denied = null, userRol
     )
 }
 
-export const AuthFindOne = (props: FindProps & AuthElementsProps) => <AuthFindBase type='single' Component={FindOne} action={'read'} {...props}/>
+export const AuthFindOne = (props: FindProps & AuthElementsProps) => <AuthFindBase Component={FindOne} action={'read'} {...props}/>
 
-export const AuthFind = (props: FindProps & AuthElementsProps) => <AuthFindBase type='connection' Component={Find}  action={'read'} {...props}/>
+export const AuthFind = (props: FindProps & AuthElementsProps) => <AuthFindBase Component={Find} action={'read'} {...props}/>
