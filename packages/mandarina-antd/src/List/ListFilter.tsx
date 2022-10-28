@@ -48,7 +48,7 @@ export const ListFilter = React.memo(({onFilterChange, field, filter, schema}: L
             <AutoForm schema={bridge} autosave autosaveDelay={400}
                       style={{width: 'calc(100% - 4px)'}}
                       onSubmit={({filter}: { filter: any }) => {
-                          if (filter) filter.internal = true //this is for avoid rerender, if the filter does not have internal, is because is a external change as clear filters.
+                          if (filter) filter.internal = 'true' //this is for avoid rerender, if the filter does not have internal, is because is a external change as clear filters.
                           onFilterChange(field, filter)
                       }}
                       onValidate={(model: any, error: any, callback: (error: any) => void) => {
@@ -62,8 +62,7 @@ export const ListFilter = React.memo(({onFilterChange, field, filter, schema}: L
         )
     },
     (prevProps, nextProps) => {
-            return ((!!prevProps && !!nextProps) || ((prevProps.filter && prevProps.filter.filter) === (nextProps.filter && nextProps.filter.filter))) &&
-            (nextProps.filter && nextProps.filter.internal && prevProps.field === nextProps.field && prevProps.onFilterChange === nextProps.onFilterChange && prevProps.schema === nextProps.schema)
+            return !!nextProps.filter?.internal && nextProps.field === prevProps.field && nextProps.schema === prevProps.schema
     }
 )
 
