@@ -46,7 +46,8 @@ export const SortableColumn = SortableElement(({columnIndex, column: {title, fie
 
                 {filter && <ListFilter onFilterChange={onFilterChange}
                                        field={field}
-                                       filter={filters && filters[field]}
+                                       filters={filters}
+                                       filter={filters?.[field]}
                                        schema={schema}/>}
                 {<HideColumn onHide={() => onHideColumn(field, columnIndex)}/>}
 

@@ -9,8 +9,9 @@ import InputNumber from "antd/lib/input-number";
 import Menu from "antd/lib/menu";
 import React, {useState} from "react";
 import {Integer, Schema} from "mandarina";
-import {forceType} from "mandarina/build/Schema/utils";
+import {forceType, hasValidator} from "mandarina/build/Schema/utils";
 import Select from "antd/lib/select";
+import {Validator} from "mandarina/build/Schema/ValidatorCreator";
 const { Option } = Select;
 
 export const AllOperators: { [subfix: string]: { description: string, symbol: string } } = {
@@ -128,9 +129,9 @@ export const getDefaultComponent = ( fieldDefinition: FieldDefinitionNative): Fi
                 </a>
             </Dropdown>
         ) : undefined
-        let type = fieldDefinition.type
+        let {type, validators} = fieldDefinition
 
-
+        const hasOptions= hasValidator(validators,'isAllowed')
         switch (true) {
 
             case  (type === Integer):
@@ -189,6 +190,22 @@ export const getDefaultComponent = ( fieldDefinition: FieldDefinitionNative): Fi
                         <Option value={'false'}>No</Option>
 
             </Select>
+                )
+            case  (type === String && hasOptions):
+                const isAllowed=validators.find((validator:Validator)=>validator.validatorName==='isAllowed')
+                if (!isAllowed){
+                    return null
+                }
+                return (
+                  <Select value={value.filter} allowClear style={{width: '100%'}} onChange={(value:any)=>{
+                      if (!value) return onChange(null)
+                      onChange({
+                          operator: selected,
+                          filter: value
+                      })
+                  }}>
+                      {isAllowed.param.map((param: string)=><Option value={param}>{param}</Option>)}
+                  </Select>
                 )
             default:
                 return <Input addonBefore={operator} value={value.filter} style={{width: '100%'}}

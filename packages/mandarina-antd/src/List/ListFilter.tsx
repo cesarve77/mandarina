@@ -20,6 +20,7 @@ interface ListFilterProps {
     field: string,
     schema: Schema
     filter?: any
+    filters?: any
 }
 
 export const ListFilter = React.memo(({onFilterChange, field, filter, schema}: ListFilterProps) => {
@@ -62,7 +63,10 @@ export const ListFilter = React.memo(({onFilterChange, field, filter, schema}: L
         )
     },
     (prevProps, nextProps) => {
-            return !!nextProps.filter?.internal && nextProps.field === prevProps.field && nextProps.schema === prevProps.schema
+            if (Object.keys(prevProps.filters).length===0) {
+              return false
+            }
+            return nextProps.filter?.internal==='true' && nextProps.field === prevProps.field && nextProps.schema === prevProps.schema
     }
 )
 
