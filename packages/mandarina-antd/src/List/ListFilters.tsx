@@ -200,7 +200,7 @@ export const getDefaultComponent = ( fieldDefinition: FieldDefinitionNative): Fi
                   <Select value={value.filter} allowClear style={{width: '100%'}} onChange={(value:any)=>{
                       if (!value) return onChange(null)
                       onChange({
-                          operator: selected,
+                          operator: "",
                           filter: value
                       })
                   }}>
