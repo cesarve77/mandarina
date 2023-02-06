@@ -1,4 +1,4 @@
-import React, {ReactElement, useEffect, useMemo} from 'react'
+import React, {ReactElement, useMemo} from 'react'
 import {Create, Schema, Update} from "mandarina";
 import AutoForm from "uniforms-antd/AutoForm"
 import SubmitField from "uniforms-antd/SubmitField";
