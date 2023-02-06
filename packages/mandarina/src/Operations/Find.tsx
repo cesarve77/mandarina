@@ -59,7 +59,7 @@ export interface FindBaseState {
 }
 
 export class FindBase extends PureComponent<FindProps & FindBaseProps, FindBaseState> {
-    static defaultProps = {where: {}, first: 50}
+    static defaultProps = {where: {}, first: undefined}
     queryHistory: object[] = []
 
     buildQueryFromFields = (fields: string[]) => buildQueryFromFields(fields)

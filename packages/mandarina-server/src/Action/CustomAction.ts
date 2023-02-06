@@ -67,10 +67,10 @@ export class CustomAction {
                         throw new Error('Action not allowed')
                     }
                     if (permissions.includes('everybody') || permissions.some(permission=>roles.includes(permission))){
-                        console.log('***************111***************')
+                        console.log('***************',`Action "${action}" not allowed for this user`,'***************')
                         console.warn(user && user.id,action)
                         console.warn(user && user.roles,permissions)
-                        console.log('***************222***************')
+                        console.log('*****************************************************************************')
                         //throw new Error(`Action "${action}" not allowed for this user`)
                     }
                     return await actions[action].action(_, args, context, info)

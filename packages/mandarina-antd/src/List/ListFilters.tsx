@@ -13,6 +13,7 @@ import {forceType, hasValidator} from "mandarina/build/Schema/utils";
 import Select from "antd/lib/select";
 import {Validator} from "mandarina/build/Schema/ValidatorCreator";
 const { Option } = Select;
+import moment from 'moment';
 
 export const AllOperators: { [subfix: string]: { description: string, symbol: string } } = {
     "": {description: "equals", symbol: "="},
@@ -62,9 +63,9 @@ export const getDefaultFilterMethod = (field: string, schema: Schema): Where => 
         if (search !==undefined ) {
             const where = {}
             path[last] += filter.operator
-            const value = forceType(search, fieldDefinition.type as Native)
-
+            let value = forceType(search, fieldDefinition.type as Native)
             if (filter.operator === "" && fieldDefinition.type === Date) {
+                value = moment(value)
                 path[last] += "_gte"
                 value.startOf('day')
                 set(where, path, value.toDate())
@@ -101,18 +102,20 @@ export const getDefaultComponent = ( fieldDefinition: FieldDefinitionNative): Fi
                             filter: undefined
                         }, onChange
                     }: FilterPros) => {
-        if (!value || (!value.operator && value.operator !== "")) {
-            value = {operator: availableOperators[0], filter: undefined}
+
+        let clonedValue = {...value}
+        if (!clonedValue || (!clonedValue.operator && clonedValue.operator !== "")) {
+            clonedValue = {operator: availableOperators[0], filter: undefined}
         }
-        const [selected, setSelected] = useState(value.operator)
+        const [selected, setSelected] = useState(clonedValue.operator)
         const options = (
             <Menu onClick={({key: operator}) => {
                 if (operator === "_") {
                     operator = ""
                 }
                 setSelected(operator)
-                if (value.filter) {
-                    onChange(value)
+                if (clonedValue.filter) {
+                    onChange(clonedValue)
                 }
             }}>
                 {availableOperators.map(operator =>
@@ -140,7 +143,7 @@ export const getDefaultComponent = ( fieldDefinition: FieldDefinitionNative): Fi
                 <span className="ant-input-group-addon">
                   {operator}
                 </span>
-               <InputNumber value={value.filter}
+               <InputNumber value={clonedValue.filter}
                             style={{width: '100%'}}
                             onChange={(value) => (value=== 0 || value) ? onChange({
                                 operator: selected,
@@ -154,7 +157,7 @@ export const getDefaultComponent = ( fieldDefinition: FieldDefinitionNative): Fi
                 <span className="ant-input-group-addon">
                   {operator}
                 </span>
-               <InputNumber value={value.filter}
+               <InputNumber value={clonedValue.filter}
                             style={{width: '100%'}}
                             onChange={(value) => (value=== 0 || value) ? onChange({
                                 operator: selected,
@@ -168,16 +171,16 @@ export const getDefaultComponent = ( fieldDefinition: FieldDefinitionNative): Fi
                 <span className="ant-input-group-addon">
                   {operator}
                 </span>
-                      <DatePicker value={value.filter}
+                      <DatePicker value={clonedValue.filter ? moment(clonedValue.filter) : undefined}
                                   placeholder={""}
                                   onChange={(date) => date ? onChange({
                                       operator: selected,
-                                      filter: date
+                                      filter: moment(date)
                                   }) : onChange(null)}/>
             </span>
                 )
             case  (type === Boolean):
-                const selectValue=value.filter===false ? 'false' : value.filter ? 'true' : undefined
+                const selectValue=clonedValue.filter===false ? 'false' : clonedValue.filter ? 'true' : undefined
                 return (
                     <Select value={selectValue} allowClear style={{width: '100%'}} onChange={(value:any)=>{
                         if (!value) return onChange(null)
@@ -197,18 +200,18 @@ export const getDefaultComponent = ( fieldDefinition: FieldDefinitionNative): Fi
                     return null
                 }
                 return (
-                  <Select value={value.filter} allowClear style={{width: '100%'}} onChange={(value:any)=>{
+                  <Select value={clonedValue.filter} allowClear style={{width: '100%'}} onChange={(value:any)=>{
                       if (!value) return onChange(null)
                       onChange({
                           operator: "",
                           filter: value
                       })
                   }}>
-                      {isAllowed.param.map((param: string)=><Option value={param}>{param}</Option>)}
+                      {isAllowed.param.map((param: string)=><Option key={param} value={param}>{param}</Option>)}
                   </Select>
                 )
             default:
-                return <Input addonBefore={operator} value={value.filter} style={{width: '100%'}}
+                return <Input addonBefore={operator} value={clonedValue.filter} style={{width: '100%'}}
                               onChange={({target: {value}}) => value ? onChange({
                                   operator: selected,
                                   filter: value

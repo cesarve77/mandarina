@@ -1,4 +1,4 @@
-import React, {ReactElement} from 'react'
+import React, {ReactElement, useEffect, useMemo} from 'react'
 import {Create, Schema, Update} from "mandarina";
 import AutoForm from "uniforms-antd/AutoForm"
 import SubmitField from "uniforms-antd/SubmitField";
@@ -36,9 +36,9 @@ export interface DeleteFormProps extends FormPropsOmitComponent {
 export const CreateForm = React.forwardRef<HTMLFormElement, CreateFormProps>((props: CreateFormProps, ref) =>
     <Form Component={Create} {...props} innerRef={ref}/>)
 export const UpdateForm = React.forwardRef<HTMLFormElement, UpdateFormProps>(({fields, readFields = fields, ...props}: UpdateFormProps, ref) => {
-    const Component = ({children, id, ...props}: Omit<FormProps, 'children'> & { children: MutateChildren }) =>
-        // @ts-ignore
-        <Update {...props} fields={readFields} id={id} children={children}/>
+    const Component = useMemo(() =>({children, id, ...props}: Omit<FormProps, 'children'> & { children: MutateChildren }) =>{
+        return <Update {...props} fields={readFields} id={id} children={children}/>
+    },[readFields.join()])
     return <Form Component={Component} fields={fields} {...props} innerRef={ref}/>;
 })
 export const DeleteForm = React.forwardRef<HTMLFormElement, DeleteFormProps>((props: DeleteFormProps, ref) =>
