@@ -73,6 +73,9 @@ const Table = ({query, where, mode, labeler = defaultLabeler, ...props}) => {
                     }
 
                     return <SelectField {...props}
+                                        filterOption={(input, option) =>{
+                                            return option.props.children.match(new RegExp(input, 'i'))
+                                        }}
                                         mode={mode}
                                         transform={transform}
                                         placeholder={props.loading ? '.... ... .. .' : props.placeholder}
