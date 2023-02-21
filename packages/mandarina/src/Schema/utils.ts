@@ -34,6 +34,7 @@ export const forceType = (value: any, type: Native): any => {
     // since 1 January 1970 00:00:00 UTC) or a string that can be parsed
     // by Date.
     if (type === Date) {
+        if (!value) return null;
         if (typeof value === 'string') {
             const parsedDate = Date.parse(value);
             if (!isNaN(parsedDate)) return new Date(parsedDate);

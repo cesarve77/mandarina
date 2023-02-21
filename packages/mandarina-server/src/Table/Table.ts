@@ -30,7 +30,11 @@ export class Table {
     public schema: Schema;
     public name: string;
     public options: TableSchemaOptions & TableShapeOptions;
+    protected static hooks: Hooks= {}
 
+    static setGlobalHooks = (hooks: Hooks) => {
+        Table.hooks = hooks
+    }
 
     constructor(schema: Schema, tableOptions?: TableShapeOptions) {
         Table.instances = Table.instances || {};
@@ -95,7 +99,6 @@ export class Table {
             if (!this.shouldHasManyUpdate()) return
             resultResolvers[operationName] = async (_: any, args: any = {}, context: Context, info: GraphQLResolveInfo) => {
                 context.originalArgs=args
-                bm()
                 const user = await Mandarina.config.getUser(context)
                 const subOperationName: ActionType | string = operationName.substr(0, 6)
                 const action: ActionType = <ActionType>(['create', 'update', 'delete'].includes(subOperationName) ? subOperationName : 'read')
@@ -182,7 +185,6 @@ export class Table {
                     context.result = result
                     await this.callHook(this.name, 'afterQuery', _, args, context, info);
                 }
-                bm(`${operationName} ${type} over ${this.name}`)
                 return result;
             }
         });
@@ -281,6 +283,7 @@ export class Table {
             let prefix = ''
             if (name.indexOf('before') === 0) prefix = 'before'
             if (name.indexOf('after') === 0) prefix = 'after'
+            const globalHookHandler = Table.hooks[name];
             const hookHandler = this.options.hooks && this.options.hooks[name];
             if ( args.data && prefix) {
                 const fields = Object.keys( args.data)
@@ -319,6 +322,11 @@ export class Table {
 
                     }
                 }
+            }
+            if (globalHookHandler) {
+                context.schemaName=schemaName
+                context.name=name
+                await globalHookHandler(_, args, context, info);
             }
             if (hookHandler) {
                 await hookHandler(_, args, context, info);
@@ -374,25 +382,26 @@ export interface Hook {
 
 export type operationType = "mutation" | "query"
 
+export type Hooks={
+    beforeValidate?: Hook
+    afterValidate?: Hook
+    validationFailed?: Hook
+    beforeCreate?: Hook
+    beforeDelete?: Hook
+    beforeUpdate?: Hook
+    beforeSave?: Hook
+    afterCreate?: Hook
+    afterDelete?: Hook
+    afterUpdate?: Hook
+
+    // Query operation hooks
+    beforeQuery?: Hook
+    afterQuery?: Hook
+}
 
 export interface TableSchemaOptions {
     virtual?: boolean
-    hooks?: {
-        beforeValidate?: Hook
-        afterValidate?: Hook
-        validationFailed?: Hook
-        beforeCreate?: Hook
-        beforeDelete?: Hook
-        beforeUpdate?: Hook
-        beforeSave?: Hook
-        afterCreate?: Hook
-        afterDelete?: Hook
-        afterUpdate?: Hook
-
-        // Query operation hooks
-        beforeQuery?: Hook
-        afterQuery?: Hook
-    }
+    hooks?: Hooks
     filters?: Filter[]
 }
 
@@ -406,7 +415,7 @@ export interface TableShapeOptions extends TableSchemaOptions {
 }
 
 
-type HookName =
+export type HookName =
     'beforeValidate'
     | 'afterValidate'
     | 'validationFailed'
@@ -419,10 +428,10 @@ type HookName =
     | 'beforeQuery'
     | 'afterQuery'
 
-let time = new Date().getTime()
+// let time = new Date().getTime()
 
-export function bm(description = '',...args:any) {
-    description && console.info(description,...args, new Date().getTime() - time)
-    time = new Date().getTime()
-
-}
+// export function bm(description = '',...args:any) {
+//     description && console.info(description,...args, new Date().getTime() - time)
+//     time = new Date().getTime()
+//
+// }

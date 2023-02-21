@@ -486,20 +486,12 @@ export class Schema {
         let errors: ErrorValidator[] = [];
         const flatModel = flatten(model)
         const flatModelKeys = insertParents(Object.keys(flatModel))
-        console.log('flatModelKeys', flatModelKeys)
         flatModelKeys.forEach(key => {
             const value = get(model, key)
             const cleanKey = Schema.cleanKey(key)
             if (fields && !fields.includes(cleanKey)) return
             const last = cleanKey.split('.').pop() as string
             const definition = this.getPathDefinition(cleanKey, overwrite && overwrite[cleanKey]);
-            if (key === 'questions.0.correct.0') {
-                console.log('key', key)
-                console.log('cleanKey', cleanKey)
-                console.log('value', value)
-                console.log('definition', definition)
-                console.log('isScalar', definition)
-            }
 
             for (const validator of definition.validators) {
                 const isScalar = key.match(/\.\d+$/)

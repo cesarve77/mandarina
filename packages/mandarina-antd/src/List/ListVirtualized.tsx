@@ -274,7 +274,6 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
      * @param full
      */
     refresh = (full: boolean = true) => {
-        console.log('refreshing')
         if (full) this.data = []
         return this.onScroll({})
     }
