@@ -1,10 +1,8 @@
-import {ErrorFromServerMapper, Schema} from "mandarina/build/Schema/Schema";
+import {ErrorFromServerMapper, Permission, Schema} from "mandarina/build/Schema/Schema";
 import {TableInstanceNotFound} from "../Errors/TableInstanceNotFound";
 import {UniqueActionError} from "../Errors/UniqueActionError";
-
-import {Permission} from "mandarina/build/Schema/Schema";
 import Mandarina from "../Mandarina";
-
+import {Hook} from "../Table/Table";
 
 
 export class CustomAction {
@@ -15,7 +13,10 @@ export class CustomAction {
     public name: string;
     public options: ActionOptions
     public actions: ActionInterface
-
+    protected static hook: Hook
+    static setGlobalHook = (hook: Hook) => {
+        CustomAction.hook = hook
+    }
 
     /**
      *
@@ -72,6 +73,13 @@ export class CustomAction {
                         console.warn(user && user.roles,permissions)
                         console.log('*****************************************************************************')
                         //throw new Error(`Action "${action}" not allowed for this user`)
+                    }
+                    if (CustomAction.hook) {
+                        context.schemaName= this.name
+                        context.name= action
+                        await CustomAction.hook(_, args, context, info)
+                        delete context.schemaName
+                        delete context.name
                     }
                     return await actions[action].action(_, args, context, info)
 
