@@ -321,9 +321,8 @@ export class Schema {
         }
     }
     validateConnection = (roles: string[]) => {
-        //TODO : think what to do with this
-        return true
         if (!this.getSchemaPermission(roles, 'read')) {
+            console.log(this.name, this.permissions)
             throw new Error(`401, You are not allowed to read on ${this.name}`)
         }
     }
