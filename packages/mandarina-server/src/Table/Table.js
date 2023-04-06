@@ -11,10 +11,11 @@ var __assign = (this && this.__assign) || function () {
     return __assign.apply(this, arguments);
 };
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
         function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
@@ -45,16 +46,30 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
+var __values = (this && this.__values) || function(o) {
+    var s = typeof Symbol === "function" && Symbol.iterator, m = s && o[s], i = 0;
+    if (m) return m.call(o);
+    if (o && typeof o.length === "number") return {
+        next: function () {
+            if (o && i >= o.length) o = void 0;
+            return { value: o && o[i++], done: !o };
+        }
+    };
+    throw new TypeError(s ? "Object is not iterable." : "Symbol.iterator is not defined.");
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 var mandarina_1 = require("mandarina");
 var UniqueSchemaError_1 = require("mandarina/build/Errors/UniqueSchemaError");
 var SchemaInstanceNotFound_1 = require("mandarina/build/Errors/SchemaInstanceNotFound");
 var utils_1 = require("mandarina/build/Schema/utils");
 var MissingIDTableError_1 = require("mandarina/build/Errors/MissingIDTableError");
-var Mandarina_1 = require("../Mandarina");
+var Mandarina_1 = __importDefault(require("../Mandarina"));
 var Mutate_1 = require("mandarina/build/Operations/Mutate");
 var language_1 = require("graphql/language");
-var stringify_object_1 = require("stringify-object");
+var stringify_object_1 = __importDefault(require("stringify-object"));
 var lodash_1 = require("lodash");
 // import {flatten, unflatten} from "flat";
 /**
@@ -67,13 +82,26 @@ var lodash_1 = require("lodash");
 var Table = /** @class */ (function () {
     function Table(schema, tableOptions) {
         var _this = this;
-        this.insertWhereIntoInfo = function (info, user, isSingleMutation) {
+        this.insertWhereIntoInfo = function (info, user, isSingleMutation, action, operationName) {
             if (isSingleMutation === void 0) { isSingleMutation = false; }
+            var _a, _b;
             var field = [];
             var fields = new Set();
             var required = false;
+            var allowedVariables = ((_b = (_a = info.fieldNodes[0]) === null || _a === void 0 ? void 0 : _a.arguments) === null || _b === void 0 ? void 0 : _b.map(function (_a) {
+                var value = _a.name.value;
+                return value;
+            })) || [];
             var query = language_1.visit(info.operation, {
                 enter: function (node, key, parent, path, ancestors) {
+                    if (node.kind === 'VariableDefinition') {
+                        if (!allowedVariables.includes(node === null || node === void 0 ? void 0 : node.variable.name.value)) {
+                            return null;
+                        }
+                    }
+                    if (node.kind === 'Field' && ancestors.length === 2 && node !== info.fieldNodes[0]) {
+                        return null;
+                    }
                     if (node.kind === 'Field' && node.name.value !== '__typename') {
                         field.push(node.name.value);
                         var internalField = field.slice(1).join('.');
@@ -89,7 +117,7 @@ var Table = /** @class */ (function () {
                             table = _this;
                         }
                         if (table && table.options.where && (!isSingleMutation && table === _this)) {
-                            var where = table.options.where(user);
+                            var where = table.options.where(user, action, operationName);
                             if (!where || lodash_1.isEmpty(where))
                                 return;
                             var clone = Mutate_1.deepClone(node);
@@ -123,8 +151,9 @@ var Table = /** @class */ (function () {
                 }
             });
             var queryString = language_1.print(query);
-            if (required)
-                queryString = queryString.replace(/\$where: (\w*)Input,/, '$where: $1Input!,');
+            if (required) {
+                queryString = queryString.replace(/\$where: (\w*)Input(,| |\))/, '$where: $1Input!$2');
+            }
             return { fields: Array.from(fields), query: query, queryString: queryString };
         };
         Table.instances = Table.instances || {};
@@ -188,8 +217,7 @@ var Table = /** @class */ (function () {
                     return __generator(this, function (_b) {
                         switch (_b.label) {
                             case 0:
-                                bm();
-                                console.log('argsargsargs1', Mutate_1.deepClone(args));
+                                context.originalArgs = args;
                                 return [4 /*yield*/, Mandarina_1.default.config.getUser(context)];
                             case 1:
                                 user = _b.sent();
@@ -200,17 +228,17 @@ var Table = /** @class */ (function () {
                             case 2:
                                 _b.sent();
                                 isSingleMutation = operationName === this.schema.names.mutation.update || operationName === this.schema.names.mutation.create;
-                                _a = this.insertWhereIntoInfo(info, user, isSingleMutation), query = _a.query, queryString = _a.queryString, fields = _a.fields;
+                                _a = this.insertWhereIntoInfo(info, user, isSingleMutation, action, operationName), query = _a.query, queryString = _a.queryString, fields = _a.fields;
                                 if (!(type === 'mutation')) return [3 /*break*/, 8];
-                                if (!isSingleMutation) return [3 /*break*/, 4];
-                                where = this.options.where && this.options.where(user);
+                                if (!(isSingleMutation && (action === 'update' || action === 'delete'))) return [3 /*break*/, 4];
+                                where = this.options.where && this.options.where(user, action, operationName);
                                 if (!where) return [3 /*break*/, 4];
                                 finalWhere = args.where ? { AND: [args.where, where] } : where;
                                 return [4 /*yield*/, context.prisma.exists[this.name](finalWhere)];
                             case 3:
                                 exists = (_b.sent());
                                 if (!exists) {
-                                    return [2 /*return*/, null];
+                                    throw new Error(action + " on " + this.schema.name + " not found for " + JSON.stringify(where));
                                 }
                                 _b.label = 4;
                             case 4:
@@ -219,40 +247,13 @@ var Table = /** @class */ (function () {
                                 return [4 /*yield*/, this.callHook(this.name, "before" + capitalizedAction, _, args, context, query)];
                             case 5:
                                 _b.sent();
-                                console.log('argsargsargs2', args);
-                                /*
-                                HACK https://github.com/prisma/prisma/issues/4327
-                                 */
-                                // if (`before${capitalizedAction}` === 'beforeUpdate' || `before${capitalizedAction}` === 'beforeCreate') {
-                                //     const flat = flatten(args.data)
-                                //     const where = args.where
-                                //     let run = false
-                                //     let withDeleteMany: any = {}
-                                //     let withoutDeleteMany: any = {}
-                                //     Object.keys(flat).forEach((key) => {
-                                //         if (key.match(/\.deleteMany\.0$/)) {
-                                //             run = true
-                                //             withDeleteMany[key] = flat[key]
-                                //         } else {
-                                //             withoutDeleteMany[key] = flat[key]
-                                //         }
-                                //     })
-                                //     if (run) {
-                                //         await prismamethod({where, data: unflatten(withdeletemany)}, info);
-                                //         args.data = unflatten(withoutDeleteMany)
-                                //     }
-                                // }
-                                console.log('queryString', queryString);
                                 return [4 /*yield*/, context.prisma.request(queryString, args)];
                             case 6:
                                 data = (_b.sent());
                                 if (data.errors) {
-                                    console.log('args', args);
-                                    console.log('queryString', queryString);
-                                    console.log('data', data);
                                     console.error(data.errors);
                                 }
-                                result = data.data[info.path.key];
+                                result = Object.values(data.data)[0];
                                 context.result = result;
                                 return [4 /*yield*/, this.callHook(this.name, "after" + capitalizedAction, _, args, context, query)];
                             case 7:
@@ -281,12 +282,9 @@ var Table = /** @class */ (function () {
                             case 10:
                                 data = (_b.sent());
                                 if (data.errors) {
-                                    console.log('args', args);
-                                    console.log('queryString', queryString);
-                                    console.log('data', data);
                                     console.error(data.errors);
                                 }
-                                result = data.data[info.path.key];
+                                result = Object.values(data.data)[0];
                                 if (operationName === this.schema.names.query.single) {
                                     result = data.data[this.schema.names.query.plural];
                                     result = result && result.length === 1 ? result[0] : null;
@@ -296,9 +294,7 @@ var Table = /** @class */ (function () {
                             case 11:
                                 _b.sent();
                                 _b.label = 12;
-                            case 12:
-                                bm(operationName + " " + type, result);
-                                return [2 /*return*/, result];
+                            case 12: return [2 /*return*/, result];
                         }
                     });
                 });
@@ -321,104 +317,156 @@ var Table = /** @class */ (function () {
      */
     Table.prototype.callHook = function (schemaName, name, _, args, context, info) {
         return __awaiter(this, void 0, void 0, function () {
-            var prefix, hookHandler, data, fields, schema, _i, fields_1, field, def, inline, operations, table, _a, operations_1, operation, hookName, args2, _b, args2_1, arg2, e_1;
-            return __generator(this, function (_c) {
-                switch (_c.label) {
+            var prefix, globalHookHandler, hookHandler, fields, schema, fields_1, fields_1_1, field, def, inline, operations, table, operations_1, operations_1_1, operation, hookName, args2, args2_1, args2_1_1, arg2, e_1_1, e_2_1, e_3_1, e_4;
+            var e_3, _a, e_2, _b, e_1, _c;
+            return __generator(this, function (_d) {
+                switch (_d.label) {
                     case 0:
-                        _c.trys.push([0, 18, , 19]);
+                        _d.trys.push([0, 32, , 33]);
                         prefix = '';
                         if (name.indexOf('before') === 0)
                             prefix = 'before';
                         if (name.indexOf('after') === 0)
                             prefix = 'after';
+                        globalHookHandler = Table.hooks[name];
                         hookHandler = this.options.hooks && this.options.hooks[name];
-                        data = args.data;
-                        if (!(data && prefix)) return [3 /*break*/, 15];
-                        fields = Object.keys(data);
+                        if (!(args.data && prefix)) return [3 /*break*/, 27];
+                        fields = Object.keys(args.data);
                         schema = mandarina_1.Schema.getInstance(schemaName);
-                        _i = 0, fields_1 = fields;
-                        _c.label = 1;
+                        _d.label = 1;
                     case 1:
-                        if (!(_i < fields_1.length)) return [3 /*break*/, 15];
-                        field = fields_1[_i];
+                        _d.trys.push([1, 25, 26, 27]);
+                        fields_1 = __values(fields), fields_1_1 = fields_1.next();
+                        _d.label = 2;
+                    case 2:
+                        if (!!fields_1_1.done) return [3 /*break*/, 24];
+                        field = fields_1_1.value;
                         def = schema.getPathDefinition(field);
                         inline = !!(def.table && def.table.relation && def.table.relation.link === 'INLINE');
-                        if (!def.isTable) return [3 /*break*/, 14];
-                        operations = Object.keys(data[field]);
+                        if (!def.isTable) return [3 /*break*/, 23];
+                        operations = Object.keys(args.data[field]);
                         if (!Table.instances[def.type]) {
-                            console.warn("No table for " + def.type + " no neasted hooks applied");
-                            return [3 /*break*/, 14];
+                            //console.warn(`No table for ${def.type} no neasted hooks applied`)
+                            return [3 /*break*/, 23];
                         }
                         table = Table.getInstance(def.type);
-                        _a = 0, operations_1 = operations;
-                        _c.label = 2;
-                    case 2:
-                        if (!(_a < operations_1.length)) return [3 /*break*/, 14];
-                        operation = operations_1[_a];
-                        hookName = "" + prefix + utils_1.capitalize(operation);
-                        args2 = data[field][operation];
-                        if (!Array.isArray(args2)) return [3 /*break*/, 9];
-                        _b = 0, args2_1 = args2;
-                        _c.label = 3;
+                        _d.label = 3;
                     case 3:
-                        if (!(_b < args2_1.length)) return [3 /*break*/, 8];
-                        arg2 = args2_1[_b];
-                        if (!inline) return [3 /*break*/, 5];
-                        return [4 /*yield*/, table.callHook(def.type, hookName, _, { data: arg2 }, context, info)];
+                        _d.trys.push([3, 21, 22, 23]);
+                        operations_1 = (e_2 = void 0, __values(operations)), operations_1_1 = operations_1.next();
+                        _d.label = 4;
                     case 4:
-                        _c.sent();
-                        return [3 /*break*/, 7];
-                    case 5: return [4 /*yield*/, table.callHook(def.type, hookName, _, arg2, context, info)];
+                        if (!!operations_1_1.done) return [3 /*break*/, 20];
+                        operation = operations_1_1.value;
+                        hookName = "" + prefix + utils_1.capitalize(operation);
+                        args2 = args.data[field][operation];
+                        if (!Array.isArray(args2)) return [3 /*break*/, 15];
+                        _d.label = 5;
+                    case 5:
+                        _d.trys.push([5, 12, 13, 14]);
+                        args2_1 = (e_1 = void 0, __values(args2)), args2_1_1 = args2_1.next();
+                        _d.label = 6;
                     case 6:
-                        _c.sent();
-                        _c.label = 7;
+                        if (!!args2_1_1.done) return [3 /*break*/, 11];
+                        arg2 = args2_1_1.value;
+                        if (!inline) return [3 /*break*/, 8];
+                        return [4 /*yield*/, table.callHook(def.type, hookName, _, arg2.data ? arg2 : { data: arg2 }, context, info)];
                     case 7:
-                        _b++;
-                        return [3 /*break*/, 3];
-                    case 8: return [3 /*break*/, 13];
+                        _d.sent();
+                        return [3 /*break*/, 10];
+                    case 8: return [4 /*yield*/, table.callHook(def.type, hookName, _, arg2.data ? arg2 : { data: arg2 }, context, info)];
                     case 9:
-                        if (!inline) return [3 /*break*/, 11];
-                        return [4 /*yield*/, table.callHook(def.type, hookName, _, { data: args2 }, context, info)];
+                        _d.sent();
+                        _d.label = 10;
                     case 10:
-                        _c.sent();
-                        return [3 /*break*/, 13];
-                    case 11: return [4 /*yield*/, table.callHook(def.type, hookName, _, args2, context, info)];
+                        args2_1_1 = args2_1.next();
+                        return [3 /*break*/, 6];
+                    case 11: return [3 /*break*/, 14];
                     case 12:
-                        _c.sent();
-                        _c.label = 13;
+                        e_1_1 = _d.sent();
+                        e_1 = { error: e_1_1 };
+                        return [3 /*break*/, 14];
                     case 13:
-                        _a++;
-                        return [3 /*break*/, 2];
-                    case 14:
-                        _i++;
-                        return [3 /*break*/, 1];
+                        try {
+                            if (args2_1_1 && !args2_1_1.done && (_c = args2_1.return)) _c.call(args2_1);
+                        }
+                        finally { if (e_1) throw e_1.error; }
+                        return [7 /*endfinally*/];
+                    case 14: return [3 /*break*/, 19];
                     case 15:
-                        if (!hookHandler) return [3 /*break*/, 17];
-                        return [4 /*yield*/, hookHandler(_, args, context, info)];
+                        if (!inline) return [3 /*break*/, 17];
+                        return [4 /*yield*/, table.callHook(def.type, hookName, _, args2.data ? args2 : { data: args2 }, context, info)];
                     case 16:
-                        _c.sent();
-                        _c.label = 17;
-                    case 17: return [3 /*break*/, 19];
+                        _d.sent();
+                        return [3 /*break*/, 19];
+                    case 17: return [4 /*yield*/, table.callHook(def.type, hookName, _, args2.data ? args2 : { data: args2 }, context, info)];
                     case 18:
-                        e_1 = _c.sent();
+                        _d.sent();
+                        _d.label = 19;
+                    case 19:
+                        operations_1_1 = operations_1.next();
+                        return [3 /*break*/, 4];
+                    case 20: return [3 /*break*/, 23];
+                    case 21:
+                        e_2_1 = _d.sent();
+                        e_2 = { error: e_2_1 };
+                        return [3 /*break*/, 23];
+                    case 22:
+                        try {
+                            if (operations_1_1 && !operations_1_1.done && (_b = operations_1.return)) _b.call(operations_1);
+                        }
+                        finally { if (e_2) throw e_2.error; }
+                        return [7 /*endfinally*/];
+                    case 23:
+                        fields_1_1 = fields_1.next();
+                        return [3 /*break*/, 2];
+                    case 24: return [3 /*break*/, 27];
+                    case 25:
+                        e_3_1 = _d.sent();
+                        e_3 = { error: e_3_1 };
+                        return [3 /*break*/, 27];
+                    case 26:
+                        try {
+                            if (fields_1_1 && !fields_1_1.done && (_a = fields_1.return)) _a.call(fields_1);
+                        }
+                        finally { if (e_3) throw e_3.error; }
+                        return [7 /*endfinally*/];
+                    case 27:
+                        if (!globalHookHandler) return [3 /*break*/, 29];
+                        context.schemaName = schemaName;
+                        context.name = name;
+                        return [4 /*yield*/, globalHookHandler(_, args, context, info)];
+                    case 28:
+                        _d.sent();
+                        _d.label = 29;
+                    case 29:
+                        if (!hookHandler) return [3 /*break*/, 31];
+                        return [4 /*yield*/, hookHandler(_, args, context, info)];
+                    case 30:
+                        _d.sent();
+                        _d.label = 31;
+                    case 31: return [3 /*break*/, 33];
+                    case 32:
+                        e_4 = _d.sent();
                         console.error("Error executing hook: \"" + name + "\" in Table: " + schemaName + "\"");
-                        throw e_1;
-                    case 19: return [2 /*return*/];
+                        console.error(e_4);
+                        throw e_4;
+                    case 33: return [2 /*return*/];
                 }
             });
         });
     };
+    Table.hooks = {};
+    Table.setGlobalHooks = function (hooks) {
+        Table.hooks = hooks;
+    };
     return Table;
 }());
 exports.Table = Table;
-var time = new Date().getTime();
-function bm(description) {
-    if (description === void 0) { description = ''; }
-    var args = [];
-    for (var _i = 1; _i < arguments.length; _i++) {
-        args[_i - 1] = arguments[_i];
-    }
-    description && console.info.apply(console, [description].concat(args, [new Date().getTime() - time]));
-    time = new Date().getTime();
-}
-exports.bm = bm;
+// let time = new Date().getTime()
+// export function bm(description = '',...args:any) {
+//     description && console.info(description,...args, new Date().getTime() - time)
+//     time = new Date().getTime()
+//
+// }
+//# sourceMappingURL=Table.js.map

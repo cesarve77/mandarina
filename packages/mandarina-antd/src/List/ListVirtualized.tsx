@@ -515,6 +515,7 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
         return (
             <Find schema={schema} where={whereAndFilter} skip={0} first={this.firstLoad}
                   sort={sort}
+                // @ts-ignore
                   fields={fields}
                   notifyOnNetworkStatusChange
                   {...rest}
@@ -590,6 +591,7 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
                                            schema={schema}
                                            where={whereAndFilter}
                                            leftButtons={leftButtons}
+                                           // @ts-ignore
                                            {...header}/>
                     }
 

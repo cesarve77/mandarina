@@ -629,7 +629,9 @@ export interface UserFieldDefinitionCommon {
         unique?: boolean,
         createdAt?: boolean,
         updatedAt?: boolean,
-        relation?: string | {
+        relation?: {
+            type?: 'ONE_TO_ONE' | 'ONE_TO_MANY'
+            owner?: true
             link?: 'INLINE' | 'TABLE'
             name?: string
             onDelete?: 'SET_NULL' | 'CASCADE'
@@ -698,7 +700,9 @@ export interface FieldDefinitionCommon extends UserFieldDefinitionCommon {
         unique?: boolean,
         createdAt?: boolean,
         updatedAt?: boolean,
-        relation?: string | {
+        relation?: {
+            type?: 'ONE_TO_ONE' | 'ONE_TO_MANY'
+            owner?: true
             link?: 'INLINE' | 'TABLE'
             name?: string
             onDelete?: 'SET_NULL' | 'CASCADE'

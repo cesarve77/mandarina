@@ -243,6 +243,7 @@ export class List extends React.Component<ListProps, { columns: ColumnProps<any>
                             headerNode = <Header data={dataSource}  count={count}/>
                         }
                         if (typeof header === 'object' || !header) {
+                            // @ts-ignore
                             headerNode = <HeaderDefault data={dataSource} count={count} {...header}  />
                         }
                         this.data=dataSource
