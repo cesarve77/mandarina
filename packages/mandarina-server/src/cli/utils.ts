@@ -39,18 +39,18 @@ const walkSync = function (dir: string, fileList: string[]) {
         if (fs.statSync(pathFile).isDirectory()) {
             fileList = walkSync(pathFile, fileList);
         } else {
-            if (path.extname(file) === '.ts') fileList.push(pathFile);
+            if (path.extname(file) === '.js') fileList.push(pathFile);
         }
     });
     return fileList;
 };
 
 export interface ConfigInterface {
-    database:{
-        url:string,
+    database: {
+        url: string,
     }
-    prisma:{
-        port:string,
+    prisma: {
+        port: string,
         host: string,
         database?: string,
         stage?: string,
@@ -61,7 +61,7 @@ export interface ConfigInterface {
     }
     secret?: string
     customSettings: {
-        [props:string]: any
+        [props: string]: any
     }
 }
 

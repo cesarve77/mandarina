@@ -99,6 +99,7 @@ export class Table {
         operationNames.forEach((operationName: string) => {
             if (!this.shouldHasManyUpdate()) return
             resultResolvers[operationName] = async (_: any, args: any = {}, context: Context, info: GraphQLResolveInfo) => {
+
                 context.originalArgs=args
                 const user = await Mandarina.config.getUser(context)
                 const subOperationName: ActionType | string = operationName.substr(0, 6)
@@ -107,6 +108,8 @@ export class Table {
                 const capitalizedAction = capitalize(action)
                 await this.callHook(this.name, 'beforeValidate', _, args, context, info);
                 const isSingleMutation = operationName === this.schema.names.mutation.update || operationName === this.schema.names.mutation.create
+                // @ts-ignore
+
                 let {query, queryString, fields} = this.insertWhereIntoInfo(info, user, isSingleMutation, action, operationName)
                 if (type === 'mutation') {
                     // if (errors.length > 0) {

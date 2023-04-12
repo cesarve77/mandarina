@@ -113,7 +113,7 @@ const getPrismaModelAModelB = (schema: Schema, fieldDefinition: FieldDefinition)
                     const relation = getRelationName(fieldDefinition, child) || `${schema.name}To${schema.name}`
                     const fields=`p2${fieldDefinition.key}Id`
                     prisma2Models[schema.name][fieldDefinition.key] = `${schema.name}? ${buildRelation(relation, fields)} //SELF: 1 - 1 ((${c}))`;
-                    prisma2Models[schema.name][fields] = `String? //SELF: 1 - 1 ((${c}))`;
+                    prisma2Models[schema.name][fields] = `String? @unique //SELF: 1 - 1 ((${c}))`;
                     prisma2Models[schema.name][`p2Predecessor${schema.name}`] = `${schema.name}? ${buildRelation(relation)}//SELF: 1 - 1 ((${c}))`;
 
                 }

@@ -135,6 +135,9 @@ export const pluralize = (str: string): string => {
     const resultSplit: string[] = result.split(' ')
     let lastWord = <string>resultSplit.pop();
     lastWord = inflection.pluralize(lastWord)
+    if (lastWord === 'logos') {
+        lastWord = 'logoes'
+    }
     return inflection.camelize([...resultSplit, lastWord].join('_'), true)
 }
 
