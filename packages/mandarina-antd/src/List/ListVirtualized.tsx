@@ -1,7 +1,6 @@
 import {Find, Schema} from 'mandarina';
 import React, {ReactElement, ReactNode} from "react";
 import memoizeOne from "memoize-one"
-// import {isEqual} from 'lodash';
 import {isEmpty, isEqual, merge, set} from 'lodash'
 
 import {
@@ -23,7 +22,7 @@ import HeaderDefault, {HeaderDefaultProps} from "./HeaderDefault";
 import {OnSortChange} from "./SortButton";
 import {SortableColumn, SortableColumns} from "./SortableColumns";
 import {SortEnd} from "react-sortable-hoc";
-import arrayMove from 'array-move'
+import {arrayMoveImmutable as arrayMove} from 'array-move'
 import {deepClone} from "mandarina/build/Operations/Mutate";
 import {equalityFn} from "./utils";
 import Query from "react-apollo/Query";
@@ -686,7 +685,7 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
 
 export const DefaultCellComponent: CellComponent = React.memo(({columnIndex, rowIndex, data, field}) => {
         const children = (data[rowIndex] && get(data[rowIndex], field.split('.'))) || [];
-        return <>{children.map((child, i) => <span key={i}>{child}<br/></span>)}</>
+        return <>{children.map((child: any, i: number) => <span key={i}>{child}<br/></span>)}</>
     }
     , areEqual);
 

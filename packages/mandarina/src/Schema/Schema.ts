@@ -51,7 +51,7 @@ export class Schema {
 
         this.errorFromServerMapper = errorFromServerMapper;
         this.permissions = permissions || {};
-        this.shape = mapValues(shape, (field, key) => this.applyDefinitionsDefaults(field, key));
+        this.shape = mapValues(shape, (field: UserFieldDefinition, key: string) => this.applyDefinitionsDefaults(field, key));
         this.keys = Object.keys(this.shape);
         this.filePath = this.getFilePath()
         const single = singularize(this.name);

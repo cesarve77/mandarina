@@ -6,14 +6,10 @@
     "doc": "docs"
   },
   "dependencies": {
-    "@types/lodash.get": "^4.4.4",
-    "docusaurus": "^1.5.1",
-    "markdown-it-include": "^1.1.0",
     "stringify-object": "^3.3.0"
   },
   "scripts": {
     "yarn": "cd packages/mandarina/ && rm -fr node_modules && yarn && cd ../mandarina-server/ && rm -fr node_modules && yarn link mandarina &&  yarn  && cd ../mandarina/ && rm -fr node_modules && yarn link mandarina && yarn ",
-    "publish-docs": "GIT_USER=cesarve77 cd website && docusaurus-publish",
     "start": "cd website && yarn start",
     "tsc": "tsc -p ./packages/mandarina && tsc -p ./packages/mandarina-server && tsc -p ./packages/mandarina-antd/tsconfig.ts.json && tsc -p ./packages/mandarina-antd/tsconfig.js.json",
     "bump-publish": "npm whoami && npm version patch && cd packages/mandarina && npm version patch && npm publish && cd ../mandarina-antd && npm version patch  && npm publish && cd ../mandarina-server && npm version patch  && npm publish && PACKAGE_VERSION=$( cat package.json | grep version | awk '{ print $2 }' | sed s/\\\"//g | sed s/,//g ) && git tag $PACKAGE_VERSION && git push --tags && cd .. && cd ..",
@@ -23,16 +19,7 @@
     "test-prisma-deploy": "cd __TEST__/prisma && prisma deploy"
   },
   "devDependencies": {
-    "apollo-cache-inmemory": "^1.5.1",
-    "apollo-client": "^2.5.1",
-    "apollo-link-http": "^1.5.14",
-    "coffee-script": "^1.12.7",
-    "graphql-yoga": "^1.17.4",
-    "merge-graphql-schemas": "^1.5.8",
-    "prisma-binding": "^2.3.10",
-    "react-apollo": "^2.5.5",
-    "typescript": "3.8.3",
-    "unfetch": "^4.1.0"
+    "typescript": "4.9.5"
   },
   "repository": {
     "type": "git",
