@@ -1,6 +1,6 @@
 {
   "name": "mandarina-antd",
-  "version": "2.0.3",
+  "version": "2.0.4",
   "description": "Antd styling for mandarina",
   "main": "build/index.js",
   "types": "build/index.d.ts",
