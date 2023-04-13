@@ -36,7 +36,8 @@
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "maxNodeModuleJsDepth": 1,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "allowJs": true,
   },
   "include": [
     "src"
