@@ -35,7 +35,8 @@
     "noUnusedLocals": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
-    "maxNodeModuleJsDepth": 1
+    "maxNodeModuleJsDepth": 1,
+    "skipLibCheck": true
   },
   "include": [
     "src"

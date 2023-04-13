@@ -4,7 +4,8 @@ declare module 'browser-or-node' {
     export function isBrowser(): boolean
 }
 declare module 'activity-detector' {
-    export default  any
+    const x: any;
+    export default  x
 }
 
 interface FlatObj {

@@ -522,10 +522,10 @@
   resolved "https://registry.yarnpkg.com/@types/stack-utils/-/stack-utils-1.0.1.tgz#0a851d3bd96498fa25c33ab7278ed3bd65f06c3e"
   integrity sha512-l42BggppR6zLmpfU6fq9HEa2oGPEI8yrSPL3GITjfRInppYFahObbIQOQK3UGxEnyQpltZLaPe75046NOZQikw==
 
-"@types/stringify-object@^3.2.0":
-  version "3.2.0"
-  resolved "https://registry.yarnpkg.com/@types/stringify-object/-/stringify-object-3.2.0.tgz#17242cea3788eaea1ab3295dfee6da89a4f19a23"
-  integrity sha512-VUrjNFiyn1KcNV6nDf2L12pOfNLBQsUUvlniQymEwHCCX7XMa2OWIjr9Fgr1RoDWeCcfj7sMZFB6B3FfGD+Jdw==
+"@types/stringify-object@^4.0.2":
+  version "4.0.2"
+  resolved "https://registry.yarnpkg.com/@types/stringify-object/-/stringify-object-4.0.2.tgz#0923f386858af27cbd5b0239f8a177acc60d75cf"
+  integrity sha512-8ZJwc0CTd9oA09Ug+kmlM1KeIctDTCmLUq77VqKveIdyyCw/kowfKBiJaNq8e4F73UBquRE4xsnHGmRq7sVOBA==
 
 "@types/yargs@^12.0.2", "@types/yargs@^12.0.9":
   version "12.0.12"

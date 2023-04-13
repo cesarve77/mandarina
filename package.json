@@ -1,6 +1,6 @@
 {
   "name": "mandarina-repo",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "main": "index.js",
   "directories": {
     "doc": "docs"
@@ -9,7 +9,9 @@
     "@types/lodash.get": "^4.4.4",
     "docusaurus": "^1.5.1",
     "markdown-it-include": "^1.1.0",
-    "stringify-object": "^3.3.0"
+    "stringify-object": "^3.3.0",
+    "lodash": "^4.17.21",
+    "@types/lodash": "^4.14.192"
   },
   "scripts": {
     "yarn": "cd packages/mandarina/ && rm -fr node_modules && yarn && cd ../mandarina-server/ && rm -fr node_modules && yarn link mandarina &&  yarn  && cd ../mandarina/ && rm -fr node_modules && yarn link mandarina && yarn ",
