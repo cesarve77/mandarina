@@ -1,6 +1,6 @@
 {
   "name": "mandarina-repo",
-  "version": "2.0.3",
+  "version": "2.0.6",
   "main": "index.js",
   "directories": {
     "doc": "docs"
@@ -19,7 +19,16 @@
     "test-prisma-deploy": "cd __TEST__/prisma && prisma deploy"
   },
   "devDependencies": {
-    "typescript": "4.9.5"
+    "apollo-cache-inmemory": "^1.5.1",
+    "apollo-client": "^2.5.1",
+    "apollo-link-http": "^1.5.14",
+    "coffee-script": "^1.12.7",
+    "graphql-yoga": "^1.17.4",
+    "merge-graphql-schemas": "^1.5.8",
+    "prisma-binding": "^2.3.10",
+    "react-apollo": "^2.5.5",
+    "typescript": "4.9.5",
+    "unfetch": "^4.1.0"
   },
   "repository": {
     "type": "git",
