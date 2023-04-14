@@ -1,6 +1,6 @@
 {
   "name": "mandarina-antd",
-  "version": "2.1.1",
+  "version": "2.1.2",
   "description": "Antd styling for mandarina",
   "main": "build/index.js",
   "types": "build/index.d.ts",
@@ -52,14 +52,14 @@
     "antd": "^3.20.5"
   },
   "peerDependencies": {
+    "lodash": ">=4.17.21",
+    "@types/lodash": ">=4.14.192",
     "apollo-client": "2.6.4",
     "graphql-tag": "^2.10.1",
     "mandarina": "latest",
     "react": "16.8.6",
     "react-apollo": "2.5.6",
     "react-dom": "16.8.6",
-    "lodash": "^4.17.21",
-    "@types/lodash": "^4.14.192",
     "graphql": "14.5.7",
     "antd": "^3.20.5"
   },
