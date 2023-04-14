@@ -1332,10 +1332,10 @@ array-filter@^1.0.0:
   resolved "https://registry.yarnpkg.com/array-filter/-/array-filter-1.0.0.tgz#baf79e62e6ef4c2a4c0b831232daffec251f9d83"
   integrity sha1-uveeYubvTCpMC4MSMtr/7CUfnYM=
 
-array-move@latest:
-  version "2.1.0"
-  resolved "https://registry.yarnpkg.com/array-move/-/array-move-2.1.0.tgz#b4e9fc8d6a580bc97dcad408e0539c61b4b7ed7e"
-  integrity sha512-BXEIud+F7/ech2HcSfo+6bpgSCRlNnVTqQhGKdMov9iJkHq+vu9IP9qRXDpZvQpc1WWpDLiEfjs6Lfvvac+fDA==
+array-move@3.0.1:
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/array-move/-/array-move-3.0.1.tgz#179645cc0987b65953a4fc06b6df9045e4ba9618"
+  integrity sha512-H3Of6NIn2nNU1gsVDqDnYKY/LCdWvCMMOWifNGhKcVQgiZ6nOek39aESOvro6zmueP07exSl93YLvkN4fZOkSg==
 
 array-tree-filter@^2.1.0:
   version "2.1.0"
