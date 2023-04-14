@@ -1,6 +1,6 @@
 {
   "name": "mandarina-antd",
-  "version": "2.1.3",
+  "version": "2.1.4",
   "description": "Antd styling for mandarina",
   "main": "build/index.js",
   "types": "build/index.d.ts",
@@ -62,9 +62,6 @@
     "react-dom": "16.8.6",
     "graphql": "14.5.7",
     "antd": "^3.20.5"
-  },
-  "scripts": {
-    "postinstall": "yarn tsc --project tsconfig.js.json && yarn tsc --project tsconfig.ts.json"
   },
   "jest": {
     "coverageDirectory": "coverage",

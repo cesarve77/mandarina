@@ -431,13 +431,13 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
         this.setState(({fields}) => {
             const field = fields[oldIndex];
             const parent = getParentCellComponent(field, this.props.schema);
-            let newFields;
+            let newFields: any;
             if (parent) {
                 //if field has a parent cell component I just put all siblings at the end to no affect the order
                 //
                 newFields = arrayMove(fields, oldIndex, newIndex);
-                const siblings = newFields.filter(newField => newField !== field && newField.match(new RegExp(`^${parent}\.`)));
-                newFields = newFields.filter(newField => !(newField !== field && newField.match(new RegExp(`^${parent}\.`))));
+                const siblings = newFields.filter((newField: any) => newField !== field && newField.match(new RegExp(`^${parent}\.`)));
+                newFields = newFields.filter((newField: any) => !(newField !== field && newField.match(new RegExp(`^${parent}\.`))));
                 newFields = newFields.concat(siblings)
 
             } else {
