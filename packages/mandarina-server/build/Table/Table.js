@@ -74,7 +74,6 @@ var Table = /** @class */ (function () {
         this.insertWhereIntoInfo = function (info, user, isSingleMutation, action, operationName) {
             if (isSingleMutation === void 0) { isSingleMutation = false; }
             var _a, _b;
-            console.log('insertWhereIntoInfo');
             var field = [];
             var fields = new Set();
             var required = false;
@@ -117,13 +116,10 @@ var Table = /** @class */ (function () {
                                 originalWhereString = language_1.print(originalWhereObj.value);
                                 required = true;
                             }
-                            console.log('where', where);
                             var newWhereString = stringify_object_1.default(where, { singleQuotes: false });
-                            console.log('newWhereString', newWhereString);
                             var finalWhereString = originalWhereString ? "{AND:[" + originalWhereString + "," + newWhereString + "]}" : newWhereString;
                             if (originalWhereObj) {
                                 originalWhereObj.value = language_1.parseValue(new language_1.Source(finalWhereString));
-                                console.log('originalWhereObj', originalWhereObj);
                             }
                             else {
                                 clone.arguments.push({
@@ -197,7 +193,6 @@ var Table = /** @class */ (function () {
     // static dotConcat = (a: string | undefined, b: string) => a ? `${a}.${b}` : b;
     Table.prototype.getDefaultActions = function (type) {
         var _this = this;
-        console.log('getDefaultActions22');
         // OperationName for query is user or users, for mutation are createUser, updateUser ....
         var operationNames = Object.values(this.schema.names[type]);
         var resultResolvers = {};

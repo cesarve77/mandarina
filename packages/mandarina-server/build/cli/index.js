@@ -6,7 +6,6 @@ var watch_1 = require("./watch");
 var deploy_1 = require("./deploy");
 var genFiles_1 = require("./gen-files/genFiles");
 var prisma2_1 = require("./gen-files/prisma2");
-console.log('cesar');
 //@ts-ignore
 var _a = process.argv, nodeDir = _a[0], dir = _a[1], cmd = _a[2], args = _a.slice(3);
 switch (cmd) {

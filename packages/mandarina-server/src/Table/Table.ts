@@ -92,7 +92,6 @@ export class Table {
     //Insert where option in to the query
     // static dotConcat = (a: string | undefined, b: string) => a ? `${a}.${b}` : b;
     getDefaultActions(type: operationType) {
-        console.log('getDefaultActions22')
         // OperationName for query is user or users, for mutation are createUser, updateUser ....
         const operationNames: string[] = Object.values(this.schema.names[type]);
         const resultResolvers: { [resolverName: string]: (_: any, args: any, context: Context, info: any) => void } = {};
@@ -196,7 +195,6 @@ export class Table {
     }
 
     insertWhereIntoInfo = (info: GraphQLResolveInfo, user: UserType | null| undefined, isSingleMutation = false, action: ActionType, operationName: string) => {
-        console.log('insertWhereIntoInfo')
         const field: string[] = []
         const fields = new Set<string>()
         let required = false
@@ -235,13 +233,10 @@ export class Table {
                             originalWhereString = print(originalWhereObj.value)
                             required = true
                         }
-                        console.log('where',where)
                         const newWhereString = stringifyObject(where, {singleQuotes: false})
-                        console.log('newWhereString',newWhereString)
                         let finalWhereString = originalWhereString ? `{AND:[${originalWhereString},${newWhereString}]}` : newWhereString
                         if (originalWhereObj) {
                             originalWhereObj.value = parseValue(new Source(finalWhereString))
-                            console.log('originalWhereObj',originalWhereObj)
                         } else {
                             clone.arguments.push({
                                 kind: 'Argument',
