@@ -28,7 +28,7 @@ export declare class Table {
     getDefaultActions(type: operationType): {
         [resolverName: string]: (_: any, args: any, context: Context, info: any) => void;
     };
-    insertWhereIntoInfo: (info: GraphQLResolveInfo, user: UserType | null | undefined, isSingleMutation: boolean | undefined, action: ActionType, operationName: string) => {
+    insertWhereIntoInfo: (info: GraphQLResolveInfo, user: UserType | null | undefined, isSingleMutation: boolean | undefined, action: "read" | "create" | "update" | "delete", operationName: string) => {
         fields: string[];
         query: any;
         queryString: string;
