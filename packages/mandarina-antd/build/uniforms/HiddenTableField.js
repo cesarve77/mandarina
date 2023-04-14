@@ -53,7 +53,6 @@ var HiddenTableField = /** @class */ (function (_super) {
     };
     HiddenTableField.prototype.render = function () {
         var props = this.getFieldProps();
-        console.log('HiddenTableField props', props);
         var value = props.value && props.value.id;
         return props.noDOM ? (nothing_1.default) : (react_1.default.createElement("input", __assign({ disabled: props.disabled, id: props.id, name: props.name, ref: props.inputRef, type: "hidden", value: value || '' }, filterDOMProps_1.default(props))));
     };
