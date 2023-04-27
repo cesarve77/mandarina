@@ -16,7 +16,6 @@ import stringifyObject from 'stringify-object'
 import {isEmpty} from "lodash";
 
 // import {flatten, unflatten} from "flat";
-
 /**
  *
  * A Table instance is the representation of the one of several of the followings:
@@ -102,8 +101,10 @@ export class Table {
                 const user = await Mandarina.config.getUser(context)
                 const subOperationName: ActionType | string = operationName.substr(0, 6)
                 const action: ActionType = <ActionType>(['create', 'update', 'delete'].includes(subOperationName) ? subOperationName : 'read')
+                context.action = action
                 let result: any
                 const capitalizedAction = capitalize(action)
+                context.operationName = operationName
                 await this.callHook(this.name, 'beforeValidate', _, args, context, info);
                 const isSingleMutation = operationName === this.schema.names.mutation.update || operationName === this.schema.names.mutation.create
                 let {query, queryString, fields} = this.insertWhereIntoInfo(info, user, isSingleMutation, action, operationName)
@@ -336,7 +337,6 @@ export class Table {
             console.error(e)
             throw e
         }
-
     }
 
 
