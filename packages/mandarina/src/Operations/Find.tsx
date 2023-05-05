@@ -47,6 +47,7 @@ export interface FindProps extends FindQueryProps {
     after?: string
     first?: number
     having?: Having
+    transformData?: <T=any>(data: T) => T
     //todo: crear un parametro para hacer el refrescamiento de los quieres **1
 }
 
@@ -87,6 +88,7 @@ export class FindBase extends PureComponent<FindProps & FindBaseProps, FindBaseS
             context,
             partialRefetch,
             having,
+            transformData,
             ...props
         } = this.props;
         let orderBy: undefined | string
@@ -165,6 +167,9 @@ export class FindBase extends PureComponent<FindProps & FindBaseProps, FindBaseS
                         }
                     } else {
                         console.error(error)
+                    }
+                    if (transformData) {
+                        data = transformData(data)
                     }
                     if (!children) return null
                     const childrenResult=children({
