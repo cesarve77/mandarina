@@ -74,15 +74,15 @@ export class CustomAction {
                         console.log('*****************************************************************************')
                         //throw new Error(`Action "${action}" not allowed for this user`)
                     }
+
+                    const result = await actions[action].action(_, args, context, info)
+                    context.result = result
                     if (CustomAction.hook) {
                         context.schemaName= this.name
                         context.name= action
                         await CustomAction.hook(_, args, context, info)
-                        delete context.schemaName
-                        delete context.name
                     }
-                    return await actions[action].action(_, args, context, info)
-
+                    return result
                 };
         });
 
