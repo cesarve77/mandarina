@@ -345,7 +345,7 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
                     field,
                     loadingElement: definition.list.loadingElement,
                     CellComponent: definition.list.CellComponent,
-                    FilterComponent: definition.list.FilterComponent || getDefaultFilterMethod(field, this.props.schema),
+                    FilterComponent: definition.list.filterComponent || getDefaultFilterMethod(field, this.props.schema),
                     filterMethod: definition.list.filterMethod || getDefaultFilterMethod(field, this.props.schema),
                     title: definition.label ? definition.label : "",
                     width: definition.list.width || estimatedColumnWidthDefault,
