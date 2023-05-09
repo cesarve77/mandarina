@@ -628,6 +628,7 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
                                                     columnIndex={index}
                                                     column={column}
                                                     sort={sort}
+                                                    overwrite={overwrite?.[column.field]}
                                                     filters={filters}
                                                     schema={schema}
                                                     onResizeStop={this.onResizeStop}
