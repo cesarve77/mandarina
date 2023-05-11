@@ -1,6 +1,6 @@
 {
   "name": "mandarina-repo",
-  "version": "1.7.7",
+  "version": "1.7.8",
   "main": "index.js",
   "directories": {
     "doc": "docs"
