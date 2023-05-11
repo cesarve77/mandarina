@@ -223,7 +223,6 @@ export class List extends React.Component<ListProps, { columns: ColumnProps<any>
         const {columns} = this.state
         return (
             <div className="list-wrapper" style={{width: '100%'}} ref={this.me}>
-
                 <Find schema={schema} where={where} first={first} fields={fields}
                       {...findBaseProps}
                 >

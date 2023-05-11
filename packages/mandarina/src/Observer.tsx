@@ -48,9 +48,7 @@ const Observer = ({
     //     document.body,
     // );
     return (<div
-        style={{display:`inline-block`}}
         ref={div}>
-        {/*//style={{backgroundColor: variables.where.status === 'Paid' ? '#ff00ff' : variables.where.status === 'Due' ? '#0000ff' : '#ff0000'}}>*/}
         {children}</div>)
 
 }

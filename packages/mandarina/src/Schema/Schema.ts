@@ -315,15 +315,15 @@ export class Schema {
     validateQuery = (fields: any, roles: string[]) => {
         for (const field of fields) {
             if (!this.getFieldPermission(field, 'read', roles)) {
-                console.error(this.name, this.getPathDefinition(field))
-                throw new Error(`401, You are not allowed to read "${field}" on ${this.name}`)
+                console.error(this.name, this.getPathDefinition(field), roles)
+                throw new Error(`401.1, You are not allowed to read "${field}" on ${this.name}`)
             }
         }
     }
     validateConnection = (roles: string[]) => {
         if (!this.getSchemaPermission(roles, 'read')) {
-            console.log(this.name, this.permissions)
-            throw new Error(`401, You are not allowed to read on ${this.name}`)
+            console.log(this.name, this.permissions, roles)
+            throw new Error(`401.2, You are not allowed to read on ${this.name}`)
         }
     }
 
@@ -336,7 +336,6 @@ export class Schema {
             for (const field of fields) {
                 const def = this.getPathDefinition(field)
                 const inline = !!(def.table && def.table.relation && def.table.relation.link === 'INLINE')
-
                 if (def.isTable) {
                     const schema = Schema.getInstance(def.type)
                     const operations = Object.keys(data[field])
@@ -344,7 +343,7 @@ export class Schema {
 
                         if (operation === 'set' || operation === 'connect') {
                             const allowed = schema.getFieldPermission('id', action, roles)
-                            if (!allowed) throw new Error(`401, You are not allowed to ${operation} "${field}.id" on ${this.name}`)
+                            if (!allowed) throw new Error(`401.3, You are not allowed to ${operation} "${field}.id" on ${this.name}`)
                             continue
                         }
                         let args2 = data[field][operation]
@@ -363,7 +362,7 @@ export class Schema {
                     }
                 } else {
                     const allowed = this.getFieldPermission(field, action, roles)
-                    if (!allowed) throw new Error(`401, You are not allowed to ${action} "${field}" on ${this.name}.`)
+                    if (!allowed) throw new Error(`401.4, You are not allowed to ${action} "${field}" on ${this.name}.`)
                 }
             }
 
