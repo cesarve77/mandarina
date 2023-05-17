@@ -3624,10 +3624,10 @@ makeerror@1.0.x:
   dependencies:
     tmpl "1.0.x"
 
-mandarina@2.1.8:
-  version "2.1.8"
-  resolved "https://registry.yarnpkg.com/mandarina/-/mandarina-2.1.8.tgz#51286c25eeaa4bf0ac94bbe02aa4d7b496aabc26"
-  integrity sha512-N+7tCsxCQEYZYgDV1Hu3ZOqdUxnMj/jhVLRXgweXfPRZUe8mWe7sEq5ivslQ+wthAiWa3VVg7hl00alJc4q50A==
+mandarina@2.1.10:
+  version "2.1.10"
+  resolved "https://registry.yarnpkg.com/mandarina/-/mandarina-2.1.10.tgz#5a76c43b5d5583dd022b6a1243d2d843c665e982"
+  integrity sha512-+lOARaLyEN67g5yKxPMuXSi+66Z2nHCoUD8BgYaqH1kES2Ej4BnYFzqhZW59G+3vUg41J93RAo7+KnsdxWZfcQ==
   dependencies:
     "@types/graphql" "14.5.0"
     "@types/inflection" "^1.5.28"

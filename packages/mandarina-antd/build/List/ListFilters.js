@@ -118,11 +118,12 @@ exports.getDefaultComponent = function (fieldDefinition) {
             operator: availableOperators[0],
             filter: undefined
         } : _b, onChange = _a.onChange;
+        var _c, _d;
         var clonedValue = __assign({}, value);
         if (!clonedValue || (!clonedValue.operator && clonedValue.operator !== "")) {
             clonedValue = { operator: availableOperators[0], filter: undefined };
         }
-        var _c = react_1.useState(clonedValue.operator), selected = _c[0], setSelected = _c[1];
+        var _e = react_1.useState(clonedValue.operator), selected = _e[0], setSelected = _e[1];
         var options = (react_1.default.createElement(menu_1.default, { onClick: function (_a) {
                 var operator = _a.key;
                 if (operator === "_") {
@@ -184,6 +185,7 @@ exports.getDefaultComponent = function (fieldDefinition) {
                 if (!isAllowed) {
                     return null;
                 }
+                var transform_1 = (_d = (_c = fieldDefinition === null || fieldDefinition === void 0 ? void 0 : fieldDefinition.form) === null || _c === void 0 ? void 0 : _c.props) === null || _d === void 0 ? void 0 : _d.transform;
                 return (react_1.default.createElement(select_1.default, { value: clonedValue.filter, allowClear: true, style: { width: '100%' }, onChange: function (value) {
                         if (!value)
                             return onChange(null);
@@ -191,7 +193,7 @@ exports.getDefaultComponent = function (fieldDefinition) {
                             operator: "",
                             filter: value
                         });
-                    } }, isAllowed.param.map(function (param) { return react_1.default.createElement(Option, { key: param, value: param }, param); })));
+                    } }, isAllowed.param.map(function (param) { return react_1.default.createElement(Option, { key: param, value: param }, transform_1 ? transform_1(param) : param); })));
             default:
                 return react_1.default.createElement(input_1.default, { addonBefore: operator, value: clonedValue.filter, style: { width: '100%' }, onChange: function (_a) {
                         var value = _a.target.value;

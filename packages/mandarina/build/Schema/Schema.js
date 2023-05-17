@@ -53,15 +53,15 @@ var Schema = /** @class */ (function () {
             for (var _i = 0, fields_1 = fields; _i < fields_1.length; _i++) {
                 var field = fields_1[_i];
                 if (!_this.getFieldPermission(field, 'read', roles)) {
-                    console.error(_this.name, _this.getPathDefinition(field));
-                    throw new Error("401, You are not allowed to read \"" + field + "\" on " + _this.name);
+                    console.error(_this.name, _this.getPathDefinition(field), roles);
+                    throw new Error("401.1, You are not allowed to read \"" + field + "\" on " + _this.name);
                 }
             }
         };
         this.validateConnection = function (roles) {
             if (!_this.getSchemaPermission(roles, 'read')) {
-                console.log(_this.name, _this.permissions);
-                throw new Error("401, You are not allowed to read on " + _this.name);
+                console.log(_this.name, _this.permissions, roles);
+                throw new Error("401.2, You are not allowed to read on " + _this.name);
             }
         };
         this.validateMutation = function (action, mutation, roles) {
@@ -85,7 +85,7 @@ var Schema = /** @class */ (function () {
                             if (operation === 'set' || operation === 'connect') {
                                 var allowed = schema.getFieldPermission('id', action, roles);
                                 if (!allowed)
-                                    throw new Error("401, You are not allowed to " + operation + " \"" + field + ".id\" on " + _this.name);
+                                    throw new Error("401.3, You are not allowed to " + operation + " \"" + field + ".id\" on " + _this.name);
                                 continue;
                             }
                             var args2 = data[field][operation];
@@ -111,7 +111,7 @@ var Schema = /** @class */ (function () {
                     else {
                         var allowed = _this.getFieldPermission(field, action, roles);
                         if (!allowed)
-                            throw new Error("401, You are not allowed to " + action + " \"" + field + "\" on " + _this.name + ".");
+                            throw new Error("401.4, You are not allowed to " + action + " \"" + field + "\" on " + _this.name + ".");
                     }
                 }
             }

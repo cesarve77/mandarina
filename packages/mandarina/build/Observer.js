@@ -52,7 +52,7 @@ var Observer = function (_a) {
     //     }}>{active ? 'true' : 'false'}</div>,
     //     document.body,
     // );
-    return (react_1.default.createElement("div", { style: { display: "inline-block" }, ref: div }, children));
+    return (react_1.default.createElement("div", { ref: div }, children));
 };
 exports.default = Observer;
 function useIdle(options, name) {

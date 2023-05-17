@@ -143,7 +143,7 @@ var Table = /** @class */ (function () {
             if (required) {
                 queryString = queryString.replace(/\$where: (\w*)Input(,| |\))/, '$where: $1Input!$2');
             }
-            return { fields: Array.from(fields), query: query, queryString: queryString };
+            return { fields: Array.from(fields), queryString: queryString };
         };
         Table.instances = Table.instances || {};
         this.schema = schema;
@@ -202,7 +202,7 @@ var Table = /** @class */ (function () {
             resultResolvers[operationName] = function (_, args, context, info) {
                 if (args === void 0) { args = {}; }
                 return __awaiter(_this, void 0, void 0, function () {
-                    var user, subOperationName, action, result, capitalizedAction, isSingleMutation, _a, query, queryString, fields, where, finalWhere, exists, data, data;
+                    var user, subOperationName, action, result, capitalizedAction, isSingleMutation, _a, queryString, fields, where, finalWhere, exists, data, data;
                     return __generator(this, function (_b) {
                         switch (_b.label) {
                             case 0:
@@ -212,12 +212,14 @@ var Table = /** @class */ (function () {
                                 user = _b.sent();
                                 subOperationName = operationName.substr(0, 6);
                                 action = (['create', 'update', 'delete'].includes(subOperationName) ? subOperationName : 'read');
+                                context.action = action;
                                 capitalizedAction = utils_1.capitalize(action);
+                                context.operationName = operationName;
                                 return [4 /*yield*/, this.callHook(this.name, 'beforeValidate', _, args, context, info)];
                             case 2:
                                 _b.sent();
                                 isSingleMutation = operationName === this.schema.names.mutation.update || operationName === this.schema.names.mutation.create;
-                                _a = this.insertWhereIntoInfo(info, user, isSingleMutation, action, operationName), query = _a.query, queryString = _a.queryString, fields = _a.fields;
+                                _a = this.insertWhereIntoInfo(info, user, isSingleMutation, action, operationName), queryString = _a.queryString, fields = _a.fields;
                                 if (!(type === 'mutation')) return [3 /*break*/, 8];
                                 if (!(isSingleMutation && (action === 'update' || action === 'delete'))) return [3 /*break*/, 4];
                                 where = this.options.where && this.options.where(user, action, operationName);
@@ -233,7 +235,7 @@ var Table = /** @class */ (function () {
                             case 4:
                                 //VALIDATE IF USER CAN MUTATE THOSE FIELDS
                                 this.schema.validateMutation(action, Mutate_1.deepClone(args), user && user.roles || []);
-                                return [4 /*yield*/, this.callHook(this.name, "before" + capitalizedAction, _, args, context, query)];
+                                return [4 /*yield*/, this.callHook(this.name, "before" + capitalizedAction, _, args, context, info)];
                             case 5:
                                 _b.sent();
                                 return [4 /*yield*/, context.prisma.request(queryString, args)];
@@ -244,7 +246,7 @@ var Table = /** @class */ (function () {
                                 }
                                 result = Object.values(data.data)[0];
                                 context.result = result;
-                                return [4 /*yield*/, this.callHook(this.name, "after" + capitalizedAction, _, args, context, query)];
+                                return [4 /*yield*/, this.callHook(this.name, "after" + capitalizedAction, _, args, context, info)];
                             case 7:
                                 _b.sent();
                                 this.schema.validateQuery(fields, user && user.roles || []);
@@ -252,7 +254,7 @@ var Table = /** @class */ (function () {
                             case 8:
                                 if (!(type === 'query')) return [3 /*break*/, 12];
                                 // console.dir(JSON.parse(JSON.stringify(info)),{depth:1})
-                                return [4 /*yield*/, this.callHook(this.name, 'beforeQuery', _, args, context, query)];
+                                return [4 /*yield*/, this.callHook(this.name, 'beforeQuery', _, args, context, info)];
                             case 9:
                                 // console.dir(JSON.parse(JSON.stringify(info)),{depth:1})
                                 _b.sent();

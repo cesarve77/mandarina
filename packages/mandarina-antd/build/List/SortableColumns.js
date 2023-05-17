@@ -11,12 +11,12 @@ var react_sortable_hoc_1 = require("react-sortable-hoc");
 // @ts-ignore
 var react_resizable_1 = require("react-resizable");
 exports.SortableColumn = react_sortable_hoc_1.SortableElement(function (_a) {
-    var columnIndex = _a.columnIndex, _b = _a.column, title = _b.title, field = _b.field, filter = _b.filter, noSort = _b.noSort, width = _b.width, sort = _a.sort, filters = _a.filters, schema = _a.schema, onSortChange = _a.onSortChange, onResizeStop = _a.onResizeStop, onFilterChange = _a.onFilterChange, onHideColumn = _a.onHideColumn, height = _a.height;
+    var columnIndex = _a.columnIndex, overwrite = _a.overwrite, _b = _a.column, title = _b.title, field = _b.field, filter = _b.filter, noSort = _b.noSort, width = _b.width, sort = _a.sort, filters = _a.filters, schema = _a.schema, onSortChange = _a.onSortChange, onResizeStop = _a.onResizeStop, onFilterChange = _a.onFilterChange, onHideColumn = _a.onHideColumn, height = _a.height;
     return (react_1.default.createElement(react_resizable_1.ResizableBox, { className: 'mandarina-list-thead-col ant-table-column-has-sorters ant-table-column-sort ' + field.replace(/\./g, '-'), width: width, height: height, handleSize: [10, 10], axis: 'x', onResizeStop: function (e, data) { return onResizeStop(field, data.size.width, columnIndex); } },
         react_1.default.createElement("div", null,
             title,
             !noSort && react_1.default.createElement(SortButton_1.default, { onSortChange: onSortChange, field: field, sort: sort })),
-        filter && react_1.default.createElement(ListFilter_1.default, { onFilterChange: onFilterChange, field: field, filters: filters, filter: filters === null || filters === void 0 ? void 0 : filters[field], schema: schema }),
+        filter && react_1.default.createElement(ListFilter_1.default, { onFilterChange: onFilterChange, field: field, overwrite: overwrite, filters: filters, filter: filters === null || filters === void 0 ? void 0 : filters[field], schema: schema }),
         react_1.default.createElement(HideColumn_1.default, { onHide: function () { return onHideColumn(field, columnIndex); } })));
 });
 exports.SortableColumns = react_sortable_hoc_1.SortableContainer(function (_a) {

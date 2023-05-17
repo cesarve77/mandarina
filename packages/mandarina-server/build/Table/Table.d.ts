@@ -23,14 +23,13 @@ export declare class Table {
     static setGlobalHooks: (hooks: Hooks) => void;
     constructor(schema: Schema, tableOptions?: TableShapeOptions);
     static getInstance(name: string): Table;
-    getFields(): string[];
+    getFields(): any;
     shouldHasManyUpdate(): boolean;
     getDefaultActions(type: operationType): {
         [resolverName: string]: (_: any, args: any, context: Context, info: any) => void;
     };
     insertWhereIntoInfo: (info: GraphQLResolveInfo, user: UserType | null | undefined, isSingleMutation: boolean | undefined, action: "read" | "create" | "update" | "delete", operationName: string) => {
         fields: string[];
-        query: any;
         queryString: string;
     };
     /**

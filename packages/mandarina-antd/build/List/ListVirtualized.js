@@ -178,7 +178,7 @@ var ListVirtualized = /** @class */ (function (_super) {
                     field: field,
                     loadingElement: definition.list.loadingElement,
                     CellComponent: definition.list.CellComponent,
-                    FilterComponent: definition.list.FilterComponent || ListFilters_1.getDefaultFilterMethod(field, _this.props.schema),
+                    FilterComponent: definition.list.filterComponent || ListFilters_1.getDefaultFilterMethod(field, _this.props.schema),
                     filterMethod: definition.list.filterMethod || ListFilters_1.getDefaultFilterMethod(field, _this.props.schema),
                     title: definition.label ? definition.label : "",
                     width: definition.list.width || estimatedColumnWidthDefault,
@@ -443,7 +443,7 @@ var ListVirtualized = /** @class */ (function (_super) {
                                 return event.target && event.target.classList && event.target.classList.contains('react-resizable-handle') || event.target.classList.contains('no-draggable') || ['INPUT', 'SELECT', 'TEXTAREA'].includes(event.target.tagName);
                             }, axis: 'x', lockAxis: 'x', pressThreshold: 10, distance: 10, onSortEnd: _this.onColumnOrderChange, width: _this.estimatedColumnWidth * columns.length, height: tHeadHeight }, columns.map(function (column, index) {
                             return column ?
-                                react_1.default.createElement(SortableColumns_1.SortableColumn, { height: tHeadHeight, key: "item-" + column.field, index: index, columnIndex: index, column: column, sort: sort, filters: filters, schema: schema, onResizeStop: _this.onResizeStop, onSortChange: _this.onSortChange, onFilterChange: _this.onFilterChange, onHideColumn: _this.onHideColumn }) : react_1.default.createElement("span", { key: index });
+                                react_1.default.createElement(SortableColumns_1.SortableColumn, { height: tHeadHeight, key: "item-" + column.field, index: index, columnIndex: index, column: column, sort: sort, overwrite: overwrite === null || overwrite === void 0 ? void 0 : overwrite[column.field], filters: filters, schema: schema, onResizeStop: _this.onResizeStop, onSortChange: _this.onSortChange, onFilterChange: _this.onFilterChange, onHideColumn: _this.onHideColumn }) : react_1.default.createElement("span", { key: index });
                         }))),
                     error && react_1.default.createElement(antd_1.Result, { status: "500", subTitle: error.message }),
                     !error && !loading && !count && react_1.default.createElement(empty_1.default, { style: { margin: '40px' } }),

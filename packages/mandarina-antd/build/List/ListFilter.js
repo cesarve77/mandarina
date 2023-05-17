@@ -18,11 +18,12 @@ var Bridge_1 = require("../Bridge");
 var ListFilters_1 = require("./ListFilters");
 var Mutate_1 = require("mandarina/build/Operations/Mutate");
 var HiddenField_1 = __importDefault(require("uniforms-antd/HiddenField"));
+var lodash_1 = require("lodash");
 exports.uuid = function () { return 'i' + (Date.now() - 1540000000000 + Math.random()).toString(36); };
 exports.ListFilter = react_1.memo(function (_a) {
-    var onFilterChange = _a.onFilterChange, field = _a.field, filter = _a.filter, schema = _a.schema;
+    var onFilterChange = _a.onFilterChange, overwrite = _a.overwrite, field = _a.field, filter = _a.filter, schema = _a.schema;
     var FieldComponent = react_1.useMemo(function () {
-        var fieldDefinition = Mutate_1.deepClone(schema.getPathDefinition(field));
+        var fieldDefinition = lodash_1.merge(Mutate_1.deepClone(schema.getPathDefinition(field)), overwrite);
         var FC;
         if (fieldDefinition.isTable) {
             if (fieldDefinition.list.filterComponent === undefined) {

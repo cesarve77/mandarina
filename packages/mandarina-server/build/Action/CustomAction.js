@@ -80,7 +80,7 @@ var CustomAction = /** @class */ (function () {
         var result = {};
         Object.keys(actions).forEach(function (action) {
             result[action] = function (_, args, context, info) { return __awaiter(_this, void 0, void 0, function () {
-                var user, roles, permissions;
+                var user, roles, permissions, result;
                 return __generator(this, function (_a) {
                     switch (_a.label) {
                         case 0: return [4 /*yield*/, Mandarina_1.default.config.getUser(context)];
@@ -98,17 +98,18 @@ var CustomAction = /** @class */ (function () {
                                 console.log('*****************************************************************************');
                                 //throw new Error(`Action "${action}" not allowed for this user`)
                             }
-                            if (!CustomAction.hook) return [3 /*break*/, 3];
+                            return [4 /*yield*/, actions[action].action(_, args, context, info)];
+                        case 2:
+                            result = _a.sent();
+                            context.result = result;
+                            if (!CustomAction.hook) return [3 /*break*/, 4];
                             context.schemaName = this.name;
                             context.name = action;
                             return [4 /*yield*/, CustomAction.hook(_, args, context, info)];
-                        case 2:
+                        case 3:
                             _a.sent();
-                            delete context.schemaName;
-                            delete context.name;
-                            _a.label = 3;
-                        case 3: return [4 /*yield*/, actions[action].action(_, args, context, info)];
-                        case 4: return [2 /*return*/, _a.sent()];
+                            _a.label = 4;
+                        case 4: return [2 /*return*/, result];
                     }
                 });
             }); };

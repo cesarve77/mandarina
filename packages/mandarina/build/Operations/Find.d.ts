@@ -35,6 +35,7 @@ export interface FindProps extends FindQueryProps {
     after?: string;
     first?: number;
     having?: Having;
+    transformData?: <T = any>(data: T) => T;
 }
 export interface FindBaseProps {
     type: 'single' | 'plural' | 'connection';

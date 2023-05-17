@@ -64,7 +64,7 @@ var FindBase = /** @class */ (function (_super) {
     FindBase.prototype.render = function () {
         var _a;
         var _this = this;
-        var _b = this.props, fields = _b.fields, schema = _b.schema, after = _b.after, first = _b.first, type = _b.type, where = _b.where, skip = _b.skip, sort = _b.sort, children = _b.children, pollInterval = _b.pollInterval, notifyOnNetworkStatusChange = _b.notifyOnNetworkStatusChange, fetchPolicy = _b.fetchPolicy, errorPolicy = _b.errorPolicy, ssr = _b.ssr, displayName = _b.displayName, onCompleted = _b.onCompleted, onError = _b.onError, context = _b.context, partialRefetch = _b.partialRefetch, having = _b.having, props = __rest(_b, ["fields", "schema", "after", "first", "type", "where", "skip", "sort", "children", "pollInterval", "notifyOnNetworkStatusChange", "fetchPolicy", "errorPolicy", "ssr", "displayName", "onCompleted", "onError", "context", "partialRefetch", "having"]);
+        var _b = this.props, fields = _b.fields, schema = _b.schema, after = _b.after, first = _b.first, type = _b.type, where = _b.where, skip = _b.skip, sort = _b.sort, children = _b.children, pollInterval = _b.pollInterval, notifyOnNetworkStatusChange = _b.notifyOnNetworkStatusChange, fetchPolicy = _b.fetchPolicy, errorPolicy = _b.errorPolicy, ssr = _b.ssr, displayName = _b.displayName, onCompleted = _b.onCompleted, onError = _b.onError, context = _b.context, partialRefetch = _b.partialRefetch, having = _b.having, transformData = _b.transformData, props = __rest(_b, ["fields", "schema", "after", "first", "type", "where", "skip", "sort", "children", "pollInterval", "notifyOnNetworkStatusChange", "fetchPolicy", "errorPolicy", "ssr", "displayName", "onCompleted", "onError", "context", "partialRefetch", "having", "transformData"]);
         var orderBy;
         if (sort) {
             var field = Object.keys(sort)[0];
@@ -100,6 +100,9 @@ var FindBase = /** @class */ (function (_super) {
             }
             else {
                 console.error(error);
+            }
+            if (transformData) {
+                data = transformData(data);
             }
             if (!children)
                 return null;

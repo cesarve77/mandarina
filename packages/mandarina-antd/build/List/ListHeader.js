@@ -36,13 +36,13 @@ var react_resizable_1 = require("react-resizable");
 var React = __importStar(require("react"));
 var ListFilter_1 = __importDefault(require("./ListFilter"));
 var ListHeader = function (_a) {
-    var field = _a.field, onResize = _a.onResize, onFilterChange = _a.onFilterChange, width = _a.width, schema = _a.schema, children = _a.children, fieldDefinition = _a.fieldDefinition, rest = __rest(_a, ["field", "onResize", "onFilterChange", "width", "schema", "children", "fieldDefinition"]);
+    var field = _a.field, onResize = _a.onResize, onFilterChange = _a.onFilterChange, overwrite = _a.overwrite, width = _a.width, schema = _a.schema, children = _a.children, fieldDefinition = _a.fieldDefinition, rest = __rest(_a, ["field", "onResize", "onFilterChange", "overwrite", "width", "schema", "children", "fieldDefinition"]);
     if (!width)
         return (React.createElement("th", __assign({}, rest),
             children,
             onFilterChange &&
-                React.createElement(ListFilter_1.default, { field: field, schema: schema, onFilterChange: onFilterChange })));
-    return (React.createElement(react_resizable_1.Resizable, { width: width, height: 0, onResize: onResize },
+                React.createElement(ListFilter_1.default, { field: field, overwrite: overwrite, schema: schema, onFilterChange: onFilterChange })));
+    return (React.createElement(react_resizable_1.Resizable, { width: width, overwrite: overwrite, height: 0, onResize: onResize },
         React.createElement("th", __assign({}, rest),
             children,
             onFilterChange &&
