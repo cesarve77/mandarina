@@ -86,7 +86,7 @@ export class Table {
     }
  */
     shouldHasManyUpdate() {
-        const fields = this.schema.getFields().filter(f => f !== 'createdAt' && f !== 'createdAt')
+        const fields = this.schema.getFields().filter((f: string) => f !== 'createdAt' && f !== 'createdAt')
         return fields.length > 0
     }
     //Insert where option in to the query
@@ -98,18 +98,18 @@ export class Table {
         operationNames.forEach((operationName: string) => {
             if (!this.shouldHasManyUpdate()) return
             resultResolvers[operationName] = async (_: any, args: any = {}, context: Context, info: GraphQLResolveInfo) => {
-
                 context.originalArgs=args
                 const user = await Mandarina.config.getUser(context)
                 const subOperationName: ActionType | string = operationName.substr(0, 6)
                 const action: ActionType = <ActionType>(['create', 'update', 'delete'].includes(subOperationName) ? subOperationName : 'read')
+                context.action = action
                 let result: any
                 const capitalizedAction = capitalize(action)
+                context.operationName = operationName
                 await this.callHook(this.name, 'beforeValidate', _, args, context, info);
                 const isSingleMutation = operationName === this.schema.names.mutation.update || operationName === this.schema.names.mutation.create
                 // @ts-ignore
-
-                let {query, queryString, fields} = this.insertWhereIntoInfo(info, user, isSingleMutation, action, operationName)
+                let {queryString, fields} = this.insertWhereIntoInfo(info, user, isSingleMutation, action, operationName)
                 if (type === 'mutation') {
                     // if (errors.length > 0) {
                     //     await this.callHook('validationFailed', action, _, args, context, info);
@@ -130,7 +130,7 @@ export class Table {
                     }
                     //VALIDATE IF USER CAN MUTATE THOSE FIELDS
                     this.schema.validateMutation(action, deepClone(args), user && user.roles || []);
-                    await this.callHook(this.name, <HookName>`before${capitalizedAction}`, _, args, context, query);
+                    await this.callHook(this.name, <HookName>`before${capitalizedAction}`, _, args, context, info);
                     /*
                     HACK https://github.com/prisma/prisma/issues/4327
                      */
@@ -159,13 +159,13 @@ export class Table {
                     }
                     result =Object.values(data.data)[0]
                     context.result = result
-                    await this.callHook(this.name, <HookName>`after${capitalizedAction}`, _, args, context, query);
+                    await this.callHook(this.name, <HookName>`after${capitalizedAction}`, _, args, context, info);
                     this.schema.validateQuery(fields, user && user.roles || []);
 
                 }
                 if (type === 'query') {
                     // console.dir(JSON.parse(JSON.stringify(info)),{depth:1})
-                    await this.callHook(this.name, 'beforeQuery', _, args, context, query);
+                    await this.callHook(this.name, 'beforeQuery', _, args, context, info);
                     if (!!info.fieldName.match(/Connection$/)) {
                         this.schema.validateConnection(user && user.roles || []);
                     } else {
@@ -262,7 +262,7 @@ export class Table {
         if (required) {
             queryString=queryString.replace(/\$where: (\w*)Input(,| |\))/,'$where: $1Input!$2')
         }
-        return {fields: Array.from(fields), query, queryString}
+        return {fields: Array.from(fields), queryString}
     }
 
 
@@ -339,7 +339,6 @@ export class Table {
             console.error(e)
             throw e
         }
-
     }
 
 

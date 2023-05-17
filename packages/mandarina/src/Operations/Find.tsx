@@ -47,6 +47,7 @@ export interface FindProps extends FindQueryProps {
     after?: string
     first?: number
     having?: Having
+    transformData?: <T=any>(data: T) => T
     //todo: crear un parametro para hacer el refrescamiento de los quieres **1
 }
 
@@ -87,6 +88,7 @@ export class FindBase extends PureComponent<FindProps & FindBaseProps, FindBaseS
             context,
             partialRefetch,
             having,
+            transformData,
             ...props
         } = this.props;
         let orderBy: undefined | string
@@ -166,6 +168,9 @@ export class FindBase extends PureComponent<FindProps & FindBaseProps, FindBaseS
                     } else {
                         console.error(error)
                     }
+                    if (transformData) {
+                        data = transformData(data)
+                    }
                     if (!children) return null
                     const childrenResult=children({
                         schema,
@@ -208,7 +213,7 @@ export const Find = (props: FindProps) => <FindBase type='connection' {...props}
 
 
 export const AuthFindBase = ({Component,children, schema, denied = null, userRoles = [], action, fields: fieldsOri, Error, ...props}:
-                    { Component: ComponentType<FindProps | FindProps>, action: ActionType } & (FindProps) & AuthElementsProps) => {
+                    { Component: ComponentType<FindProps>, action: ActionType } & (FindProps) & AuthElementsProps) => {
     return (
       // @ts-ignore
       <Auth schema={schema} action={action} userRoles={userRoles} fields={fieldsOri}>

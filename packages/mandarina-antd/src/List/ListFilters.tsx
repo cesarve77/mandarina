@@ -199,6 +199,7 @@ export const getDefaultComponent = ( fieldDefinition: FieldDefinitionNative): Fi
                 if (!isAllowed){
                     return null
                 }
+                const transform=fieldDefinition?.form?.props?.transform
                 return (
                   <Select value={clonedValue.filter} allowClear style={{width: '100%'}} onChange={(value:any)=>{
                       if (!value) return onChange(null)
@@ -207,7 +208,7 @@ export const getDefaultComponent = ( fieldDefinition: FieldDefinitionNative): Fi
                           filter: value
                       })
                   }}>
-                      {isAllowed.param.map((param: string)=><Option key={param} value={param}>{param}</Option>)}
+                      {isAllowed.param.map((param: string)=><Option key={param} value={param}>{transform ? transform(param) : param}</Option>)}
                   </Select>
                 )
             default:

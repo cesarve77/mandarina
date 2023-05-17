@@ -4,9 +4,10 @@ import AutoForm from "uniforms-antd/AutoForm";
 import {Schema} from "mandarina";
 import {Bridge} from "../Bridge";
 import {getDefaultComponent} from "./ListFilters";
-import {FieldDefinition, FilterComponent} from "mandarina/build/Schema/Schema";
+import {FieldDefinition, FilterComponent, Overwrite} from "mandarina/build/Schema/Schema";
 import {deepClone} from "mandarina/build/Operations/Mutate";
 import HiddenField from "uniforms-antd/HiddenField";
+import {merge} from "lodash";
 
 export const uuid = () => 'i' + (Date.now() - 1540000000000 + Math.random()).toString(36)
 
@@ -21,14 +22,15 @@ interface ListFilterProps {
     field: string,
     schema: Schema
     filter?: any
+    overwrite?: Overwrite[string]
     filters?: any
 }
 
 
 
-export const ListFilter = memo(({onFilterChange, field, filter, schema}: ListFilterProps) => {
+export const ListFilter = memo(({onFilterChange, overwrite, field, filter, schema}: ListFilterProps) => {
     let FieldComponent: FilterComponent = useMemo(() => {
-        const fieldDefinition: FieldDefinition = deepClone(schema.getPathDefinition(field))
+        const fieldDefinition: FieldDefinition = merge(deepClone(schema.getPathDefinition(field)),overwrite)
         let FC: FilterComponent
         if (fieldDefinition.isTable) {
             if (fieldDefinition.list.filterComponent === undefined) {

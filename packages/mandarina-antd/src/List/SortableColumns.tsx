@@ -7,12 +7,14 @@ import {ColumnDef, OnHideColumn, OnResizeStop, Sort} from "./ListVirtualized";
 import {Schema} from "mandarina";
 // @ts-ignore
 import {ResizableBox, ResizeCallbackData} from 'react-resizable';
+import {Overwrite} from "mandarina/build/Schema/Schema";
 
 
 interface SortableColumnInterface {
     column: ColumnDef
     sort?: Sort
     filters: any
+    overwrite?: Overwrite[string]
     schema: Schema
     onSortChange: OnSortChange
     onFilterChange: OnFilterChange
@@ -30,7 +32,7 @@ interface SortableColumnsInterface {
 }
 
 
-export const SortableColumn = SortableElement(({columnIndex, column: {title, field, filter, noSort, width}, sort, filters, schema, onSortChange, onResizeStop, onFilterChange, onHideColumn, height}: SortableColumnInterface) => {
+export const SortableColumn = SortableElement(({columnIndex,  overwrite, column: {title,field, filter, noSort, width}, sort, filters, schema, onSortChange, onResizeStop, onFilterChange, onHideColumn, height}: SortableColumnInterface) => {
         return (
             <ResizableBox
                 className={'mandarina-list-thead-col ant-table-column-has-sorters ant-table-column-sort ' + field.replace(/\./g, '-')}
@@ -46,6 +48,7 @@ export const SortableColumn = SortableElement(({columnIndex, column: {title, fie
 
                 {filter && <ListFilter onFilterChange={onFilterChange}
                                        field={field}
+                                       overwrite={overwrite}
                                        filters={filters}
                                        filter={filters?.[field]}
                                        schema={schema}/>}
