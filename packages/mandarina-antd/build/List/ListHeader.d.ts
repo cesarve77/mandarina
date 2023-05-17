@@ -1,7 +1,7 @@
 import * as React from "react";
 import { OnFilterChange } from "./ListFilter";
 import { onResize } from "./List";
-import { FieldDefinition } from "mandarina/build/Schema/Schema";
+import { FieldDefinition, Overwrite } from "mandarina/build/Schema/Schema";
 import { Schema } from "mandarina";
 interface ListHeaderProps {
     onResize: onResize;
@@ -11,6 +11,7 @@ interface ListHeaderProps {
     onFilterChange: OnFilterChange;
     field: string;
     schema: Schema;
+    overwrite?: Overwrite;
 }
-declare const ListHeader: ({ field, onResize, onFilterChange, width, schema, children, fieldDefinition, ...rest }: ListHeaderProps) => JSX.Element;
+declare const ListHeader: ({ field, onResize, onFilterChange, overwrite, width, schema, children, fieldDefinition, ...rest }: ListHeaderProps) => JSX.Element;
 export default ListHeader;

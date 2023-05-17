@@ -3,10 +3,12 @@ import { OnSortChange } from "./SortButton";
 import { OnFilterChange } from "./ListFilter";
 import { ColumnDef, OnHideColumn, OnResizeStop, Sort } from "./ListVirtualized";
 import { Schema } from "mandarina";
+import { Overwrite } from "mandarina/build/Schema/Schema";
 interface SortableColumnInterface {
     column: ColumnDef;
     sort?: Sort;
     filters: any;
+    overwrite?: Overwrite[string];
     schema: Schema;
     onSortChange: OnSortChange;
     onFilterChange: OnFilterChange;

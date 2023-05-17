@@ -23,7 +23,7 @@ export declare class Table {
     static setGlobalHooks: (hooks: Hooks) => void;
     constructor(schema: Schema, tableOptions?: TableShapeOptions);
     static getInstance(name: string): Table;
-    getFields(): any;
+    getFields(): string[];
     shouldHasManyUpdate(): boolean;
     getDefaultActions(type: operationType): {
         [resolverName: string]: (_: any, args: any, context: Context, info: any) => void;
