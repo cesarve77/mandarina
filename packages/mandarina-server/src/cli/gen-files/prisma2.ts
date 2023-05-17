@@ -95,7 +95,7 @@ const getPrismaModelAModelB = (schema: Schema, fieldDefinition: FieldDefinition)
     prisma2Models[schema.name] = prisma2Models[schema.name] || {}
     c++
     const childSchema = Schema.getInstance(fieldDefinition.type)
-    const children = childSchema.keys.filter(fieldName => childSchema.getPathDefinition(fieldName).type === schema.name)
+    const children = childSchema.keys.filter((fieldName: string) => childSchema.getPathDefinition(fieldName).type === schema.name)
 
     if (!processed[schema.name][fieldDefinition.type][fieldDefinition.key]) {
         if (schema.name === fieldDefinition.type) {
@@ -150,7 +150,7 @@ const getPrismaModelAModelB = (schema: Schema, fieldDefinition: FieldDefinition)
                 if (children.length === 1) {
                     child = childSchema.getPathDefinition(children[0])
                 } else {
-                    const childName = children.find(childName => getRelation(childSchema.getPathDefinition(childName)) === getRelation(fieldDefinition))
+                    const childName = children.find((childName: string) => getRelation(childSchema.getPathDefinition(childName)) === getRelation(fieldDefinition))
                     if (!childName) {
                         throw new Error(`Relation not found111`)
                     }
@@ -199,8 +199,8 @@ const getPrismaModelAModelB = (schema: Schema, fieldDefinition: FieldDefinition)
                         }else{
                             const fields = `p2${relation}${fieldDefinition.type}Id`
                             prisma2Models[schema.name][fieldDefinition.key] = `${fieldDefinition.type}? ${buildRelation(relation, fields)}//OWNED 1 - 1 ((${c}))`;
-                            prisma2Models[schema.name][fields] = `String?  @unique ${buildRelation(relation)} //OWNED =>1 - 1 ((${c}))`;
-                            prisma2Models[fieldDefinition.type][child.key] = `${child.type}? //OWNED =>1 - 1 ((${c}))`;
+                            prisma2Models[schema.name][fields] = `String?  @unique  //OWNED =>1 - 1 ((${c}))`;
+                            prisma2Models[fieldDefinition.type][child.key] = `${child.type}? ${buildRelation(relation)} //OWNED =>1 - 1 ((${c}))`;
                         }
                     }
                 }
@@ -213,7 +213,6 @@ const getPrismaModelAModelB = (schema: Schema, fieldDefinition: FieldDefinition)
         }
     }
 }
-
 
 
 function getRelation(fieldDefinition: FieldDefinition) {

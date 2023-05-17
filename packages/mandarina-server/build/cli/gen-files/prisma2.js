@@ -210,8 +210,8 @@ var getPrismaModelAModelB = function (schema, fieldDefinition) {
                         else {
                             var fields = "p2" + relation + fieldDefinition.type + "Id";
                             prisma2Models[schema.name][fieldDefinition.key] = fieldDefinition.type + "? " + buildRelation(relation, fields) + "//OWNED 1 - 1 ((" + c + "))";
-                            prisma2Models[schema.name][fields] = "String?  @unique " + buildRelation(relation) + " //OWNED =>1 - 1 ((" + c + "))";
-                            prisma2Models[fieldDefinition.type][child.key] = child.type + "? //OWNED =>1 - 1 ((" + c + "))";
+                            prisma2Models[schema.name][fields] = "String?  @unique  //OWNED =>1 - 1 ((" + c + "))";
+                            prisma2Models[fieldDefinition.type][child.key] = child.type + "? " + buildRelation(relation) + " //OWNED =>1 - 1 ((" + c + "))";
                         }
                     }
                 }
