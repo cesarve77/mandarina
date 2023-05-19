@@ -2,7 +2,7 @@ import { Prisma } from "prisma-binding";
 import { ContextParameters } from "graphql-yoga/dist/types";
 import { ActionType } from "mandarina/build/Auth/Auth";
 import { Schema } from "mandarina";
-import { ErrorFromServerMapper } from "mandarina/src/Schema/Schema";
+import { ErrorFromServerMapper } from "mandarina/build/Schema/Schema";
 import { UserType } from "../Mandarina";
 import { GraphQLResolveInfo } from "graphql";
 /**
@@ -28,7 +28,7 @@ export declare class Table {
     getDefaultActions(type: operationType): {
         [resolverName: string]: (_: any, args: any, context: Context, info: any) => void;
     };
-    insertWhereIntoInfo: (info: GraphQLResolveInfo, user: UserType | null | undefined, isSingleMutation: boolean | undefined, action: "read" | "create" | "update" | "delete", operationName: string) => {
+    insertWhereIntoInfo: (info: GraphQLResolveInfo, user: UserType | null | undefined, isSingleMutation: boolean | undefined, action: ActionType, operationName: string) => {
         fields: string[];
         queryString: string;
     };

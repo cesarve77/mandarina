@@ -1,6 +1,6 @@
 {
   "name": "mandarina",
-  "version": "2.1.11",
+  "version": "2.1.12",
   "description": "",
   "main": "build/index.js",
   "types": "build/index.d.ts",
@@ -20,8 +20,7 @@
     "activity-detector": "3.0.0",
     "flat": "^4.1.0",
     "inflection": "^1.12.0",
-    "stringify-object": "3.2.0",
-    "typescript": "3.8.3"
+    "stringify-object": "3.2.0"
   },
   "peerDependencies": {
     "lodash": ">=4.17.21",
@@ -37,6 +36,7 @@
     "react-dom": "^16.8.6"
   },
   "devDependencies": {
+    "typescript": "3.8.3",
     "@babel/cli": "^7.4.4",
     "@babel/core": "^7.4.5",
     "@types/enzyme": "^3.9.4",

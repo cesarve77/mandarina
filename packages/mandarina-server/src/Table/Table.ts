@@ -7,7 +7,7 @@ import {UniqueSchemaError} from 'mandarina/build/Errors/UniqueSchemaError';
 import {SchemaInstanceNotFound} from "mandarina/build/Errors/SchemaInstanceNotFound";
 import {capitalize} from 'mandarina/build/Schema/utils';
 import {MissingIdTableError} from "mandarina/build/Errors/MissingIDTableError";
-import {ErrorFromServerMapper} from "mandarina/src/Schema/Schema";
+import {ErrorFromServerMapper} from "mandarina/build/Schema/Schema";
 import Mandarina, {UserType} from "../Mandarina";
 import {deepClone} from "mandarina/build/Operations/Mutate";
 import {parseValue, print, Source, visit} from 'graphql/language'
