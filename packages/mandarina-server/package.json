@@ -1,6 +1,6 @@
 {
   "name": "mandarina-server",
-  "version": "2.1.12",
+  "version": "2.1.13",
   "description": "Mandarina for server side",
   "main": "build/index.js",
   "types": "build/index.d.ts",
@@ -24,7 +24,7 @@
     "@types/lodash": ">=4.14.192",
     "@types/node": ">=12.0.10",
     "graphql-yoga": ">=1.17.4",
-    "mandarina": "2.1.12",
+    "mandarina": "latest",
     "prisma-binding": ">=2.3.15"
   },
   "devDependencies": {
@@ -32,7 +32,7 @@
     "graphql-yoga": "^1.18.0",
     "jest": "^24.8.0",
     "ts-jest": "22.4.6",
-    "mandarina": "2.1.12",
+    "mandarina": "latest",
     "prisma-binding": "^2.3.15"
   },
   "jest": {
