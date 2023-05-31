@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var ValidatorCreator_1 = require("./ValidatorCreator");
-var exists = function (value) { return value === 0 || value; };
+var exists = function (value) { return value !== null && value !== undefined; };
 exports.noEmpty = function (value) {
     if (value && value.id)
         return true;

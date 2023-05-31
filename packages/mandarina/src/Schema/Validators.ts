@@ -1,6 +1,6 @@
 import {ValidatorCreator} from "./ValidatorCreator";
 
-const exists = (value: any) => value === 0 || value
+const exists = (value: any) => value !== null && value !== undefined
 
 export const noEmpty = (value: any) => {
     if (value && value.id) return true
