@@ -67,6 +67,7 @@ export interface ListProps extends MouseEvents, ControlledListProps, Omit<FindPr
     height?: number
     width?: number
     estimatedRowHeight?: number
+    rowHeight?: (rowIndex: number, data: any[]) => number
     overscanRowCount?: number
     overLoad?: number
     onDataChange?: (data: any[]) => void,
@@ -227,7 +228,7 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
         Header: HeaderDefault,
         height: 0,
         width: 0,
-        estimatedRowHeight: estimatedRowHeightDefault
+        estimatedRowHeight: estimatedRowHeightDefault,
 
     };
 
@@ -315,44 +316,44 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
     })
 
     getColumnDefinition = (field: string): ColumnDef | null => {
-            //detect if parent has a CellComponent
-            const parentPath = getParentCellComponent(field, this.props.schema);
-            if (parentPath) {
-                field = parentPath
-            }
-            const overwrite = this.state.overwrite && this.state.overwrite[field];
+        //detect if parent has a CellComponent
+        const parentPath = getParentCellComponent(field, this.props.schema);
+        if (parentPath) {
+            field = parentPath
+        }
+        const overwrite = this.state.overwrite && this.state.overwrite[field];
 
-            let definition
-            if (!this.props.schema.hasPath(field) && field.indexOf('.') < 0 && overwrite) {
-                definition = merge({
-                    list: {
-                        noFilter: true,
-                        noSort: true
-                    }
-                }, deepClone(this.props.schema.applyDefinitionsDefaults({type: String}, field)), overwrite)
-            } else {
-                definition = this.props.schema.getPathDefinition(field);
-                if (overwrite) {
-                    definition = merge(deepClone(definition), overwrite)
+        let definition
+        if (!this.props.schema.hasPath(field) && field.indexOf('.') < 0 && overwrite) {
+            definition = merge({
+                list: {
+                    noFilter: true,
+                    noSort: true
                 }
+            }, deepClone(this.props.schema.applyDefinitionsDefaults({type: String}, field)), overwrite)
+        } else {
+            definition = this.props.schema.getPathDefinition(field);
+            if (overwrite) {
+                definition = merge(deepClone(definition), overwrite)
             }
-            if (!definition.list) throw new Error(`You need to provide overwrite full definition for "${field}"`)
+        }
+        if (!definition.list) throw new Error(`You need to provide overwrite full definition for "${field}"`)
 
-            if (definition.list.hidden) {
-                return null
-            } else {
-                return  {
-                    field,
-                    loadingElement: definition.list.loadingElement,
-                    CellComponent: definition.list.CellComponent,
-                    FilterComponent: definition.list.filterComponent || getDefaultFilterMethod(field, this.props.schema),
-                    filterMethod: definition.list.filterMethod || getDefaultFilterMethod(field, this.props.schema),
-                    title: definition.label ? definition.label : "",
-                    width: definition.list.width || estimatedColumnWidthDefault,
-                    filter: !definition.list.noFilter,
-                    noSort: !!(definition.isTable || definition.isArray || field.indexOf('.') > 0 || definition.list.noSort),
-                    props: definition.list.props || {},
-                }
+        if (definition.list.hidden) {
+            return null
+        } else {
+            return {
+                field,
+                loadingElement: definition.list.loadingElement,
+                CellComponent: definition.list.CellComponent,
+                FilterComponent: definition.list.filterComponent || getDefaultFilterMethod(field, this.props.schema),
+                filterMethod: definition.list.filterMethod || getDefaultFilterMethod(field, this.props.schema),
+                title: definition.label ? definition.label : "",
+                width: definition.list.width || estimatedColumnWidthDefault,
+                filter: !definition.list.noFilter,
+                noSort: !!(definition.isTable || definition.isArray || field.indexOf('.') > 0 || definition.list.noSort),
+                props: definition.list.props || {},
+            }
         }
     }
 
@@ -494,7 +495,21 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
 
 
     render() {
-        const {onDataChange, schema, leftButtons, where, estimatedRowHeight, overscanRowCount = 2, overLoad = 1, header, onClick, onMouseEnter, onMouseLeave, ...rest} = this.props; //todo rest props
+        const {
+            onDataChange,
+            schema,
+            leftButtons,
+            where,
+            estimatedRowHeight,
+            rowHeight,
+            overscanRowCount = 2,
+            overLoad = 1,
+            header,
+            onClick,
+            onMouseEnter,
+            onMouseLeave,
+            ...rest
+        } = this.props; //todo rest props
         const {fields, width, height, filters, sort, overwrite} = this.state;
         const columns = this.calcColumns(fields, overwrite);
         const getColumnWidth = (index: number) => {
@@ -607,7 +622,7 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
                                         useWindowAsScrollContainer
                                         tHead={this.tHead}
                                         grid={this.gridRef}
-                                        empty={!error && !loading && !count }
+                                        empty={!error && !loading && !count}
                                         shouldCancelStart={(event: any) => {
                                             // @ts-ignore
                                             return event.target && event.target.classList && event.target.classList.contains('react-resizable-handle') || event.target.classList.contains('no-draggable') || ['INPUT', 'SELECT', 'TEXTAREA'].includes(event.target.tagName)
@@ -641,37 +656,43 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
                                 {error && <Result status={"500"} subTitle={error.message}/>}
                                 {!error && !loading && !count && <Empty style={{margin: '40px'}}/>}
                                 {height !== 0 &&
-                                <Grid
-                                    ref={this.gridRef}
-                                    onScroll={this.onScroll}
-                                    height={height}
-                                    rowCount={count}
-                                    estimatedColumnWidth={this.estimatedColumnWidth}
-                                    estimatedRowHeight={estimatedRowHeight}
-                                    columnCount={columns.length}
-                                    columnWidth={getColumnWidth}
-                                    rowHeight={(index: number) => estimatedRowHeight || estimatedRowHeightDefault}
-                                    width={width}
-                                    itemData={itemData}
-                                    overscanRowCount={overscanRowCount}
-                                    onItemsRendered={({
-                                                          overscanRowStartIndex,
-                                                          overscanRowStopIndex,
-                                                          visibleRowStartIndex,
-                                                          visibleRowStopIndex,
+                                    <Grid
+                                        ref={this.gridRef}
+                                        onScroll={this.onScroll}
+                                        height={height}
+                                        rowCount={count || 0}
+                                        estimatedColumnWidth={this.estimatedColumnWidth}
+                                        estimatedRowHeight={estimatedRowHeight}
+                                        columnCount={columns.length}
+                                        columnWidth={getColumnWidth}
+                                        rowHeight={(index: number) => {
+                                            if (rowHeight) {
+                                                return rowHeight(index, this.data)
+                                            } else {
+                                                return estimatedRowHeight || estimatedRowHeightDefault
+                                            }
+                                        }}
+                                        width={width}
+                                        itemData={itemData}
+                                        overscanRowCount={overscanRowCount}
+                                        onItemsRendered={({
+                                                              overscanRowStartIndex,
+                                                              overscanRowStopIndex,
+                                                              visibleRowStartIndex,
+                                                              visibleRowStopIndex,
 
-                                                      }: any) => {
+                                                          }: any) => {
 
 
-                                        this.overscanRowStartIndex = overscanRowStartIndex;
-                                        this.overscanRowStopIndex = overscanRowStopIndex;
-                                        this.visibleRowStartIndex = visibleRowStartIndex;
-                                        this.visibleRowStopIndex = visibleRowStopIndex
+                                            this.overscanRowStartIndex = overscanRowStartIndex;
+                                            this.overscanRowStopIndex = overscanRowStopIndex;
+                                            this.visibleRowStartIndex = visibleRowStartIndex;
+                                            this.visibleRowStopIndex = visibleRowStopIndex
 
-                                    }}
-                                >
-                                    {Cell}
-                                </Grid>}
+                                        }}
+                                    >
+                                        {Cell}
+                                    </Grid>}
                             </div>
                         </>
                     )
@@ -691,7 +712,20 @@ export const DefaultCellComponent: CellComponent = React.memo(({columnIndex, row
 
 const defaultLoadingElement = '...';
 
-const Cell = React.memo(({columnIndex, rowIndex, data: {data, columns, query, refetch, variables, onClick, onMouseEnter, onMouseLeave}, style}: ListChildComponentProps & GridChildComponentProps & { data: MouseEvents & { variables: any, query: DocumentNode, refetch: RefetchQueriesProviderFn, data: any, columns: ColumnDef[] } }) => {
+const Cell = React.memo(({
+                             columnIndex,
+                             rowIndex,
+                             data: {data, columns, query, refetch, variables, onClick, onMouseEnter, onMouseLeave},
+                             style
+                         }: ListChildComponentProps & GridChildComponentProps & {
+    data: MouseEvents & {
+        variables: any,
+        query: DocumentNode,
+        refetch: RefetchQueriesProviderFn,
+        data: any,
+        columns: ColumnDef[]
+    }
+}) => {
     if (!columns[columnIndex]) return null;
     const field = columns[columnIndex].field;
     const CellComponent = columns[columnIndex].CellComponent || DefaultCellComponent;
@@ -703,16 +737,16 @@ const Cell = React.memo(({columnIndex, rowIndex, data: {data, columns, query, re
         <div
             className={`mandarina-list-row-${rowIndex % 2 !== 0 ? 'even' : 'odd'} mandarina-list-cell ${className} ${id}`}
             onClick={() => onClick && onClick({data, rowIndex, field, columnIndex})}
-             onMouseEnter={() => onMouseEnter && onMouseEnter({data, rowIndex, field, columnIndex})}
-             onMouseLeave={() => onMouseLeave && onMouseLeave({data, rowIndex, field, columnIndex})}
-             style={style}>
+            onMouseEnter={() => onMouseEnter && onMouseEnter({data, rowIndex, field, columnIndex})}
+            onMouseLeave={() => onMouseLeave && onMouseLeave({data, rowIndex, field, columnIndex})}
+            style={style}>
             {!data[rowIndex] && loadingElement}
             {data[rowIndex] &&
-            <CellComponent columnIndex={columnIndex} rowIndex={rowIndex} data={data} field={field}
-                           refetch={refetch} variables={variables} query={query}
-                           {...props}
+                <CellComponent columnIndex={columnIndex} rowIndex={rowIndex} data={data} field={field}
+                               refetch={refetch} variables={variables} query={query}
+                               {...props}
 
-            />}
+                />}
         </div>
     )
 }, areEqual);
