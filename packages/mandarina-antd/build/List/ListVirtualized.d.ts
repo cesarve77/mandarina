@@ -44,6 +44,7 @@ export interface ListProps extends MouseEvents, ControlledListProps, Omit<FindPr
     height?: number;
     width?: number;
     estimatedRowHeight?: number;
+    rowHeight?: (rowIndex: number, data: any[]) => number;
     overscanRowCount?: number;
     overLoad?: number;
     onDataChange?: (data: any[]) => void;

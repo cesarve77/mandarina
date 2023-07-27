@@ -376,7 +376,7 @@ var ListVirtualized = /** @class */ (function (_super) {
     };
     ListVirtualized.prototype.render = function () {
         var _this = this;
-        var _a = this.props, onDataChange = _a.onDataChange, schema = _a.schema, leftButtons = _a.leftButtons, where = _a.where, estimatedRowHeight = _a.estimatedRowHeight, _b = _a.overscanRowCount, overscanRowCount = _b === void 0 ? 2 : _b, _c = _a.overLoad, overLoad = _c === void 0 ? 1 : _c, header = _a.header, onClick = _a.onClick, onMouseEnter = _a.onMouseEnter, onMouseLeave = _a.onMouseLeave, rest = __rest(_a, ["onDataChange", "schema", "leftButtons", "where", "estimatedRowHeight", "overscanRowCount", "overLoad", "header", "onClick", "onMouseEnter", "onMouseLeave"]); //todo rest props
+        var _a = this.props, onDataChange = _a.onDataChange, schema = _a.schema, leftButtons = _a.leftButtons, where = _a.where, estimatedRowHeight = _a.estimatedRowHeight, rowHeight = _a.rowHeight, _b = _a.overscanRowCount, overscanRowCount = _b === void 0 ? 2 : _b, _c = _a.overLoad, overLoad = _c === void 0 ? 1 : _c, header = _a.header, onClick = _a.onClick, onMouseEnter = _a.onMouseEnter, onMouseLeave = _a.onMouseLeave, rest = __rest(_a, ["onDataChange", "schema", "leftButtons", "where", "estimatedRowHeight", "rowHeight", "overscanRowCount", "overLoad", "header", "onClick", "onMouseEnter", "onMouseLeave"]); //todo rest props
         var _d = this.state, fields = _d.fields, width = _d.width, height = _d.height, filters = _d.filters, sort = _d.sort, overwrite = _d.overwrite;
         var columns = this.calcColumns(fields, overwrite);
         var getColumnWidth = function (index) {
@@ -448,7 +448,14 @@ var ListVirtualized = /** @class */ (function (_super) {
                     error && react_1.default.createElement(antd_1.Result, { status: "500", subTitle: error.message }),
                     !error && !loading && !count && react_1.default.createElement(empty_1.default, { style: { margin: '40px' } }),
                     height !== 0 &&
-                        react_1.default.createElement(react_window_1.VariableSizeGrid, { ref: _this.gridRef, onScroll: _this.onScroll, height: height, rowCount: count, estimatedColumnWidth: _this.estimatedColumnWidth, estimatedRowHeight: estimatedRowHeight, columnCount: columns.length, columnWidth: getColumnWidth, rowHeight: function (index) { return estimatedRowHeight || estimatedRowHeightDefault; }, width: width, itemData: itemData, overscanRowCount: overscanRowCount, onItemsRendered: function (_a) {
+                        react_1.default.createElement(react_window_1.VariableSizeGrid, { ref: _this.gridRef, onScroll: _this.onScroll, height: height, rowCount: count || 0, estimatedColumnWidth: _this.estimatedColumnWidth, estimatedRowHeight: estimatedRowHeight, columnCount: columns.length, columnWidth: getColumnWidth, rowHeight: function (index) {
+                                if (rowHeight) {
+                                    return rowHeight(index, _this.data);
+                                }
+                                else {
+                                    return estimatedRowHeight || estimatedRowHeightDefault;
+                                }
+                            }, width: width, itemData: itemData, overscanRowCount: overscanRowCount, onItemsRendered: function (_a) {
                                 var overscanRowStartIndex = _a.overscanRowStartIndex, overscanRowStopIndex = _a.overscanRowStopIndex, visibleRowStartIndex = _a.visibleRowStartIndex, visibleRowStopIndex = _a.visibleRowStopIndex;
                                 _this.overscanRowStartIndex = overscanRowStartIndex;
                                 _this.overscanRowStopIndex = overscanRowStopIndex;
@@ -461,7 +468,7 @@ var ListVirtualized = /** @class */ (function (_super) {
         Header: HeaderDefault_1.default,
         height: 0,
         width: 0,
-        estimatedRowHeight: estimatedRowHeightDefault
+        estimatedRowHeight: estimatedRowHeightDefault,
     };
     return ListVirtualized;
 }(react_1.default.Component));
