@@ -34,6 +34,13 @@ datasource db {
             const field = model[fieldName]
             prisma += `\t${fieldName} ${field}\n`
         })
+        const schema = Schema.getInstance(modelName)
+        schema.indexes.forEach(({fields, type}) => {
+            prisma += `\t@@${type.toLowerCase()}([${fields.map(({
+                                                                    name,
+                                                                    options
+                                                                }) => `${name}${options ? `(${options})` : ``}`).join(',')}])\n`
+        })
         prisma += `}\n\n`
     })
     const prismaDir = path.join(process.cwd(), config.dir.prisma2,)
@@ -72,11 +79,11 @@ const getPrisma2Model = (schema: Schema) => {
             }
             if (fieldDefinition.isTable) {
                 getPrismaModelAModelB(schema, fieldDefinition)
-                if (!processedSubSchemas.includes(fieldDefinition.type) ) {
+                if (!processedSubSchemas.includes(fieldDefinition.type)) {
                     processedSubSchemas.push(fieldDefinition.type)
                     getPrisma2Model(Schema.getInstance(fieldDefinition.type))
                 }
-            }else{
+            } else {
                 prisma2Models[schema.name][key] = `${fieldType} ${unique} ${createdAt} ${updatedAt} ${defaultValue}`;
 
             }
@@ -84,7 +91,7 @@ const getPrisma2Model = (schema: Schema) => {
     }// end for
 }
 
-let c=0
+let c = 0
 const getPrismaModelAModelB = (schema: Schema, fieldDefinition: FieldDefinition) => {
     if (!fieldDefinition.isTable) {
         throw new Error(`Relation must be an array`)
@@ -101,17 +108,17 @@ const getPrismaModelAModelB = (schema: Schema, fieldDefinition: FieldDefinition)
         if (schema.name === fieldDefinition.type) {
             if (fieldDefinition.isArray) {
                 throw new Error(`DO THIS`)
-            }else{
+            } else {
                 if (fieldDefinition.isArray) {
                     throw new Error(`DO THIS`)
-                }else{
+                } else {
                     const child = schema.getPathDefinition(fieldDefinition.key)
 
-                    if (getRelation(fieldDefinition)!==getRelation(child)){
+                    if (getRelation(fieldDefinition) !== getRelation(child)) {
                         throw new Error(`Relation must be the same`)
                     }
                     const relation = getRelationName(fieldDefinition, child) || `${schema.name}To${schema.name}`
-                    const fields=`p2${fieldDefinition.key}Id`
+                    const fields = `p2${fieldDefinition.key}Id`
                     prisma2Models[schema.name][fieldDefinition.key] = `${schema.name}? ${buildRelation(relation, fields)} //SELF: 1 - 1 ((${c}))`;
                     prisma2Models[schema.name][fields] = `String? @unique //SELF: 1 - 1 ((${c}))`;
                     prisma2Models[schema.name][`p2Predecessor${schema.name}`] = `${schema.name}? ${buildRelation(relation)}//SELF: 1 - 1 ((${c}))`;
@@ -124,7 +131,7 @@ const getPrismaModelAModelB = (schema: Schema, fieldDefinition: FieldDefinition)
                 if (fieldDefinition.isArray) {
                     //relation many to one
                     prisma2Models[schema.name][fieldDefinition.key] = `${fieldDefinition.type}[] ${buildRelation(relation)}//CREATE: n - 1 ((${c}))`;
-                    const fields=`p2${relation}${schema.name}Id`
+                    const fields = `p2${relation}${schema.name}Id`
                     prisma2Models[fieldDefinition.type][`p2${relation}${schema.name}`] = `${schema.name}? ${buildRelation(relation, fields)}  //=>CREATE: n - 1 ((${c}))`;
                     prisma2Models[fieldDefinition.type][fields] = `String? //=>CREATE: 1 - n ((${c}))`;
                 } else {
@@ -132,16 +139,16 @@ const getPrismaModelAModelB = (schema: Schema, fieldDefinition: FieldDefinition)
                         throw new Error(`Relation must be defined ONE_TO_ONE || ONE_TO_MANY- ${schema.name}.${fieldDefinition.key}`)
                     }
                     if (fieldDefinition.table?.relation?.type === 'ONE_TO_ONE') {
-                        const fields=`p2${relation}${schema.name}Id`
+                        const fields = `p2${relation}${schema.name}Id`
                         prisma2Models[schema.name][fieldDefinition.key] = `${fieldDefinition.type}? ${buildRelation(relation)}//INLINE : 1 - 1 ((${c}))`;
-                        prisma2Models[fieldDefinition.type][`p2${relation}${schema.name}`] = `${schema.name}?  ${buildRelation(relation,fields)} //=>INLINE: 1 - 1 ((${c}))`;
+                        prisma2Models[fieldDefinition.type][`p2${relation}${schema.name}`] = `${schema.name}?  ${buildRelation(relation, fields)} //=>INLINE: 1 - 1 ((${c}))`;
                         prisma2Models[fieldDefinition.type][fields] = `String?  @unique //=>INLINE: 1 - 1 ((${c}))`;
-                    }else if (fieldDefinition.table?.relation?.type === 'ONE_TO_MANY') {
-                        const fields=`p2${relation}${fieldDefinition.type}Id`
-                        prisma2Models[schema.name][fieldDefinition.key] = `${fieldDefinition.type}? ${buildRelation(relation,fields)}//CREATE: 1 - n ((${c}))`;
+                    } else if (fieldDefinition.table?.relation?.type === 'ONE_TO_MANY') {
+                        const fields = `p2${relation}${fieldDefinition.type}Id`
+                        prisma2Models[schema.name][fieldDefinition.key] = `${fieldDefinition.type}? ${buildRelation(relation, fields)}//CREATE: 1 - n ((${c}))`;
                         prisma2Models[schema.name][fields] = `String? //=>CREATE: 1 - n ((${c}))`;
                         prisma2Models[fieldDefinition.type][`p2${relation}${schema.name}`] = `${schema.name}[]  ${buildRelation(relation)} //=>CREATE: 1 - n ((${c}))`;
-                    }else{
+                    } else {
                         throw new Error(`many to one does no exists for create - ${schema.name}.${fieldDefinition.key}`)
                     }
                 }
@@ -161,27 +168,27 @@ const getPrismaModelAModelB = (schema: Schema, fieldDefinition: FieldDefinition)
                 }
 
                 if (child.isArray) { // means that the parent is the array (because fieldDefinition.isArray is array then child is the gran children which is really the parent)
-                    const relation = getRelationName(fieldDefinition,child)
+                    const relation = getRelationName(fieldDefinition, child)
                     if (fieldDefinition.isArray) {
                         //relation many to many
                         prisma2Models[schema.name][fieldDefinition.key] = `${fieldDefinition.type}[]  ${buildRelation(relation)} //n - n ((${c}))`;
                         prisma2Models[fieldDefinition.type][child.key] = `${child.type}[] ${buildRelation(relation)} //=>n - n ((${c}))`;
                     } else {
                         //relation one to many
-                        const relation = getRelationName(fieldDefinition,child)
-                        const fields=`p2${relation}${fieldDefinition.type}Id`
+                        const relation = getRelationName(fieldDefinition, child)
+                        const fields = `p2${relation}${fieldDefinition.type}Id`
                         prisma2Models[schema.name][fieldDefinition.key] = `${fieldDefinition.type}?   ${buildRelation(relation, fields)} //n - 1 ((${c}))`;
                         prisma2Models[schema.name][fields] = `String?  //n - 1 ((${c}))`;
                         prisma2Models[fieldDefinition.type][child.key] = `${schema.name} [] ${buildRelation(relation)}//=>n - 1 ((${c}))`;
 
                     }
                 } else {
-                    const relation = getRelationName(fieldDefinition,child)
+                    const relation = getRelationName(fieldDefinition, child)
                     if (fieldDefinition.isArray) {
                         //relation many to many
-                        const fields=`p2${relation}${schema.name}Id`
+                        const fields = `p2${relation}${schema.name}Id`
                         prisma2Models[schema.name][fieldDefinition.key] = `${fieldDefinition.type}[] ${buildRelation(relation)}//1 - n ((${c}))`;
-                        prisma2Models[fieldDefinition.type][child.key] = `${schema.name}?  ${buildRelation(relation,fields)} //=>n - 1 ((${c}))`;
+                        prisma2Models[fieldDefinition.type][child.key] = `${schema.name}?  ${buildRelation(relation, fields)} //=>n - 1 ((${c}))`;
                         prisma2Models[fieldDefinition.type][fields] = `String?  //=>n - 1 ((${c}))`;
 
                     } else {
@@ -196,7 +203,7 @@ const getPrismaModelAModelB = (schema: Schema, fieldDefinition: FieldDefinition)
                             prisma2Models[schema.name][fieldDefinition.key] = `${fieldDefinition.type}? ${buildRelation(relation)}//OWNER 1 - 1 ((${c}))`;
                             prisma2Models[fieldDefinition.type][child.key] = `${schema.name}?  ${buildRelation(relation, fields)} //OWNER =>1 - 1 ((${c}))`;
                             prisma2Models[fieldDefinition.type][fields] = `String?  @unique //OWNER =>1 - 1 ((${c}))`;
-                        }else{
+                        } else {
                             const fields = `p2${relation}${fieldDefinition.type}Id`
                             prisma2Models[schema.name][fieldDefinition.key] = `${fieldDefinition.type}? ${buildRelation(relation, fields)}//OWNED 1 - 1 ((${c}))`;
                             prisma2Models[schema.name][fields] = `String?  @unique  //OWNED =>1 - 1 ((${c}))`;
@@ -249,26 +256,26 @@ const getGraphQLType = (def: FieldDefinition, key: string, required: boolean): s
     }
 }
 
-function buildRelation(relation: string, fields?: string){
+function buildRelation(relation: string, fields?: string) {
     if (!relation && !fields) return ''
     if (!relation) return `@relation(fields: [${fields}],  references: [id])`
-    if (fields){
+    if (fields) {
         return `@relation("${relation}", fields: [${fields}],  references: [id])`
     }
     return `@relation("${relation}")`
 
 }
 
-const getRelationName = (def1: FieldDefinition, def2?:FieldDefinition) => {
-    const n1=getRelation(def1)
-    if (!def2){
-        if (!n1){
+const getRelationName = (def1: FieldDefinition, def2?: FieldDefinition) => {
+    const n1 = getRelation(def1)
+    if (!def2) {
+        if (!n1) {
             return ''
         }
         return n1
     }
-    const n2=getRelation(def2)
-    if (n1!==n2){
+    const n2 = getRelation(def2)
+    if (n1 !== n2) {
         throw new Error(`Relation name must be equal ${n1} ${n2}`)
     }
     if (!n1) return ""

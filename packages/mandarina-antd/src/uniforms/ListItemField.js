@@ -4,7 +4,8 @@ import joinName from 'uniforms/joinName';
 import AutoField from './AutoField';
 import ListDelField from 'uniforms-antd/ListDelField';
 
-const ListItem = ({children,showListDelField=true, name, index,...props}) => {
+const ListItem = ({children, showListDelField = true, name, index, ...props}) => {
+    console.log('showListDelField2',showListDelField)
         return (
             <div style={{width: '100%', clear: 'both', float: "none"}}>
                 <div
@@ -16,7 +17,8 @@ const ListItem = ({children,showListDelField=true, name, index,...props}) => {
                         width: '20px'
                     }}
                 >
-                    { showListDelField && <ListDelField className="top aligned" name={name} type="danger"/>}
+                    {(typeof showListDelField === 'function' ? showListDelField({index, name}) : showListDelField) &&
+                        <ListDelField className="top aligned" name={name} type="danger"/>}
                 </div>
                 <div style={{marginBottom: '4px', overflow: 'hidden'}}>
                     <div style={{borderBottom: '1px solid #adadad', height: '20px', marginTop: '-4px'}}/>
@@ -24,7 +26,7 @@ const ListItem = ({children,showListDelField=true, name, index,...props}) => {
                 <div style={{width: '100%', clear: 'both'}}>
                     {children ? (
                         typeof children === 'function' ?
-                            Children.map( children({children,showListDelField, name, index,...props}), child =>
+                            Children.map(children({children, showListDelField, name, index, ...props}), child =>
                                 React.cloneElement(child, {
                                     index: index,
                                     name: joinName(name, child.name),

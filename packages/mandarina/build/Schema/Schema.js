@@ -48,6 +48,7 @@ var flat_1 = require("flat");
 var Schema = /** @class */ (function () {
     function Schema(shape, options) {
         var _this = this;
+        this.indexes = [];
         this.pathDefinitions = {};
         this.validateQuery = function (fields, roles) {
             for (var _i = 0, fields_1 = fields; _i < fields_1.length; _i++) {
@@ -116,7 +117,7 @@ var Schema = /** @class */ (function () {
                 }
             }
         };
-        var name = options.name, errorFromServerMapper = options.errorFromServerMapper, permissions = options.permissions;
+        var name = options.name, errorFromServerMapper = options.errorFromServerMapper, permissions = options.permissions, indexes = options.indexes;
         this.name = name;
         Schema.instances = Schema.instances || {};
         if (Schema.instances[this.name]) {
@@ -124,6 +125,7 @@ var Schema = /** @class */ (function () {
         }
         Schema.instances[this.name] = this;
         this.errorFromServerMapper = errorFromServerMapper;
+        this.indexes = (indexes || []);
         this.permissions = permissions || {};
         this.shape = lodash_1.mapValues(shape, function (field, key) { return _this.applyDefinitionsDefaults(field, key); });
         this.keys = Object.keys(this.shape);

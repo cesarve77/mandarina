@@ -40,6 +40,14 @@ exports.genFile = function () {
             var field = model[fieldName];
             prisma += "\t" + fieldName + " " + field + "\n";
         });
+        var schema = mandarina_1.Schema.getInstance(modelName);
+        schema.indexes.forEach(function (_a) {
+            var fields = _a.fields, type = _a.type;
+            prisma += "\t@@" + type.toLowerCase() + "([" + fields.map(function (_a) {
+                var name = _a.name, options = _a.options;
+                return "" + name + (options ? "(" + options + ")" : "");
+            }).join(',') + "])\n";
+        });
         prisma += "}\n\n";
     });
     var prismaDir = path_1.default.join(process.cwd(), config.dir.prisma2);

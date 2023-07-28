@@ -31,6 +31,7 @@ export class Schema {
     public shape: SchemaShape;
     public permissions: Permissions;
     public errorFromServerMapper: ErrorFromServerMapper | undefined
+    public indexes: TableIndex[] = []
     public names: Names;
     fields: string[]
     subSchemas: string[]
@@ -39,7 +40,7 @@ export class Schema {
     private filePath: string;
 
     constructor(shape: UserSchemaShape, options: SchemaOptions) {
-        const {name, errorFromServerMapper, permissions} = options;
+        const {name, errorFromServerMapper, permissions,indexes} = options;
         this.name = name;
 
         Schema.instances = Schema.instances || {};
@@ -50,6 +51,7 @@ export class Schema {
         Schema.instances[this.name] = this;
 
         this.errorFromServerMapper = errorFromServerMapper;
+        this.indexes = (indexes || []);
         this.permissions = permissions || {};
         this.shape = mapValues(shape, (field, key) => this.applyDefinitionsDefaults(field, key));
         this.keys = Object.keys(this.shape);
@@ -557,11 +559,18 @@ export namespace Integer {
 
 export type ErrorFromServerMapper = (field: string, error: any) => string | undefined;
 
-
+export interface TableIndex{
+    type: 'UNIQUE' | 'INDEX' | 'ID'
+    fields: {
+        name: string,
+        options?: string
+    }[]
+}
 export interface SchemaOptions {
     name: string
     errorFromServerMapper?: ErrorFromServerMapper
     permissions?: Permissions
+    indexes?: TableIndex[]
 }
 
 export interface SchemaShape {

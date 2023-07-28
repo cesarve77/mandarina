@@ -3624,10 +3624,10 @@ makeerror@1.0.x:
   dependencies:
     tmpl "1.0.x"
 
-mandarina@2.1.11:
-  version "2.1.11"
-  resolved "https://registry.yarnpkg.com/mandarina/-/mandarina-2.1.11.tgz#b68791ffba159d8105db18096d0c218aac3a306a"
-  integrity sha512-Cs9RBYqARZ6JCNAELb36vXkCTY67T/TpvARiHy+dGT3JaBw9ZnTyUc4LNhKGRVDjhPvNzoKmsbhuKR/BhSwwaA==
+mandarina@latest:
+  version "2.1.18"
+  resolved "https://registry.yarnpkg.com/mandarina/-/mandarina-2.1.18.tgz#c7e996fbf201ac3bd2ea12c7b3187a389b4d9e8c"
+  integrity sha512-I3tPfv5eF1OlLyewwSgZzdgwcHAfPTpuyvTPw+Rzdn2XTyySXeFllbM+MH+D9Yxc4NHRVil1o7VEX5OZdeotKQ==
   dependencies:
     "@types/graphql" "14.5.0"
     "@types/inflection" "^1.5.28"
@@ -3636,7 +3636,6 @@ mandarina@2.1.11:
     flat "^4.1.0"
     inflection "^1.12.0"
     stringify-object "3.2.0"
-    typescript "3.8.3"
 
 map-age-cleaner@^0.1.1:
   version "0.1.3"

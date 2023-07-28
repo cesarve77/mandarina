@@ -21,6 +21,7 @@ export declare class Schema {
     shape: SchemaShape;
     permissions: Permissions;
     errorFromServerMapper: ErrorFromServerMapper | undefined;
+    indexes: TableIndex[];
     names: Names;
     fields: string[];
     subSchemas: string[];
@@ -67,10 +68,18 @@ export declare namespace Integer {
     const type: string;
 }
 export declare type ErrorFromServerMapper = (field: string, error: any) => string | undefined;
+export interface TableIndex {
+    type: 'UNIQUE' | 'INDEX' | 'ID';
+    fields: {
+        name: string;
+        options?: string;
+    }[];
+}
 export interface SchemaOptions {
     name: string;
     errorFromServerMapper?: ErrorFromServerMapper;
     permissions?: Permissions;
+    indexes?: TableIndex[];
 }
 export interface SchemaShape {
     [key: string]: FieldDefinition;
