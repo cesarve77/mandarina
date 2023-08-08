@@ -28,7 +28,7 @@ interface ListFilterProps {
 
 
 
-export const ListFilter = memo(({onFilterChange, overwrite, field, filter, schema}: ListFilterProps) => {
+export const ListFilter = memo(({onFilterChange, overwrite, field, filter, schema, filters}: ListFilterProps) => {
     let FieldComponent: FilterComponent = useMemo(() => {
         const fieldDefinition: FieldDefinition = merge(deepClone(schema.getPathDefinition(field)),overwrite)
         let FC: FilterComponent
@@ -68,7 +68,6 @@ export const ListFilter = memo(({onFilterChange, overwrite, field, filter, schem
         onFilterChange(field, filter)
     }
 
-
     return FieldComponent && (
         <AutoForm schema={bridge} autosave autosaveDelay={400}
                   style={{width: 'calc(100% - 4px)'}}
@@ -79,7 +78,7 @@ export const ListFilter = memo(({onFilterChange, overwrite, field, filter, schem
                   model={{filter}}
         >
             <HiddenField name={'internal'}/>
-            <FieldComponent name='filter' label={false} col={false} defaultValue={''}/>
+            <FieldComponent name='filter' label={false} col={false} defaultValue={''} filters={filters}/>
         </AutoForm>
     )
 })

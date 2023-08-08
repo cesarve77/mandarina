@@ -21,7 +21,7 @@ var HiddenField_1 = __importDefault(require("uniforms-antd/HiddenField"));
 var lodash_1 = require("lodash");
 exports.uuid = function () { return 'i' + (Date.now() - 1540000000000 + Math.random()).toString(36); };
 exports.ListFilter = react_1.memo(function (_a) {
-    var onFilterChange = _a.onFilterChange, overwrite = _a.overwrite, field = _a.field, filter = _a.filter, schema = _a.schema;
+    var onFilterChange = _a.onFilterChange, overwrite = _a.overwrite, field = _a.field, filter = _a.filter, schema = _a.schema, filters = _a.filters;
     var FieldComponent = react_1.useMemo(function () {
         var fieldDefinition = lodash_1.merge(Mutate_1.deepClone(schema.getPathDefinition(field)), overwrite);
         var FC;
@@ -64,7 +64,7 @@ exports.ListFilter = react_1.memo(function (_a) {
             return callback(null);
         }, model: { filter: filter } },
         React.createElement(HiddenField_1.default, { name: 'internal' }),
-        React.createElement(FieldComponent, { name: 'filter', label: false, col: false, defaultValue: '' })));
+        React.createElement(FieldComponent, { name: 'filter', label: false, col: false, defaultValue: '', filters: filters })));
 });
 exports.default = exports.ListFilter;
 //# sourceMappingURL=ListFilter.js.map

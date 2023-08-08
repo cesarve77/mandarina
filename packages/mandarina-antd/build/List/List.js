@@ -219,7 +219,6 @@ var List = /** @class */ (function (_super) {
                     headerNode = React.createElement(Header, { data: dataSource, count: count });
                 }
                 if (typeof header === 'object' || !header) {
-                    // @ts-ignore
                     headerNode = React.createElement(HeaderDefault, __assign({ data: dataSource, count: count }, header));
                 }
                 _this.data = dataSource;

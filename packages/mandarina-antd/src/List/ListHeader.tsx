@@ -18,6 +18,7 @@ interface ListHeaderProps {
 }
 
 const ListHeader = ({field, onResize, onFilterChange, overwrite, width, schema, children, fieldDefinition,  ...rest}: ListHeaderProps) => {
+    console.log('restrestrsest',rest)
     if (!width) return (
         <th {...rest}>
             {children}
