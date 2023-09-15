@@ -219,6 +219,7 @@ var List = /** @class */ (function (_super) {
                     headerNode = React.createElement(Header, { data: dataSource, count: count });
                 }
                 if (typeof header === 'object' || !header) {
+                    // @ts-ignore
                     headerNode = React.createElement(HeaderDefault, __assign({ data: dataSource, count: count }, header));
                 }
                 _this.data = dataSource;
@@ -237,8 +238,8 @@ var List = /** @class */ (function (_super) {
             })));
     };
     List.defaultProps = {
-        first: 10000,
-        pageSize: 10000,
+        first: 300,
+        pageSize: 300,
     };
     return List;
 }(React.Component));
