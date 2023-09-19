@@ -14,5 +14,5 @@ interface ListFilterProps {
     overwrite?: Overwrite[string];
     filters?: any;
 }
-export declare const ListFilter: React.MemoExoticComponent<({ onFilterChange, overwrite, field, filter, schema }: ListFilterProps) => JSX.Element | null>;
+export declare const ListFilter: React.MemoExoticComponent<({ onFilterChange, overwrite, field, filter, schema, filters }: ListFilterProps) => JSX.Element | null>;
 export default ListFilter;
