@@ -129,11 +129,20 @@ const getPrismaModelAModelB = (schema: Schema, fieldDefinition: FieldDefinition)
             if (children.length === 0) {
                 const relation = getRelationName(fieldDefinition)
                 if (fieldDefinition.isArray) {
-                    //relation many to one
-                    prisma2Models[schema.name][fieldDefinition.key] = `${fieldDefinition.type}[] ${buildRelation(relation)}//CREATE: n - 1 ((${c}))`;
-                    const fields = `p2${relation}${schema.name}Id`
-                    prisma2Models[fieldDefinition.type][`p2${relation}${schema.name}`] = `${schema.name}? ${buildRelation(relation, fields)}  //=>CREATE: n - 1 ((${c}))`;
-                    prisma2Models[fieldDefinition.type][fields] = `String? //=>CREATE: 1 - n ((${c}))`;
+                    if (!fieldDefinition.table?.relation?.type || !['MANY_TO_MANY','ONE_TO_MANY'].includes(fieldDefinition.table?.relation?.type) ) {
+                        throw new Error(`Relation must be defined MANY_TO_MANY || ONE_TO_MANY- ${schema.name}.${fieldDefinition.key}`)
+                    }
+                    if (fieldDefinition.table?.relation?.type === 'ONE_TO_MANY') {
+                        //relation many to one
+                        prisma2Models[schema.name][fieldDefinition.key] = `${fieldDefinition.type}[] ${buildRelation(relation)}//CREATE: n - 1 ((${c}))`;
+                        const fields = `p2${relation}${schema.name}Id`
+                        prisma2Models[fieldDefinition.type][`p2${relation}${schema.name}`] = `${schema.name}? ${buildRelation(relation, fields)}  //=>CREATE: n - 1 ((${c}))`;
+                        prisma2Models[fieldDefinition.type][fields] = `String? //=>CREATE:n - n  no children ((${c}))`;
+                    }else if (fieldDefinition.table?.relation?.type === 'MANY_TO_MANY') {
+                        //relation many to many
+                        prisma2Models[schema.name][fieldDefinition.key] = `${fieldDefinition.type}[] ${buildRelation(relation)}//CREATE: n - 1 ((${c}))`;
+                        prisma2Models[fieldDefinition.type][`p2${relation}${schema.name}`] = `${schema.name}[] //=>CREATE: n - n no children((${c}))`;
+                    }
                 } else {
                     if (!fieldDefinition.table?.relation?.type) {
                         throw new Error(`Relation must be defined ONE_TO_ONE || ONE_TO_MANY- ${schema.name}.${fieldDefinition.key}`)

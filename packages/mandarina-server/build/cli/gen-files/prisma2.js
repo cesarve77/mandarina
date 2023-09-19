@@ -98,7 +98,7 @@ var getPrisma2Model = function (schema) {
 };
 var c = 0;
 var getPrismaModelAModelB = function (schema, fieldDefinition) {
-    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r;
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, _y, _z;
     if (!fieldDefinition.isTable) {
         throw new Error("Relation must be an array");
     }
@@ -135,23 +135,33 @@ var getPrismaModelAModelB = function (schema, fieldDefinition) {
             if (children.length === 0) {
                 var relation = getRelationName(fieldDefinition);
                 if (fieldDefinition.isArray) {
-                    //relation many to one
-                    prisma2Models[schema.name][fieldDefinition.key] = fieldDefinition.type + "[] " + buildRelation(relation) + "//CREATE: n - 1 ((" + c + "))";
-                    var fields = "p2" + relation + schema.name + "Id";
-                    prisma2Models[fieldDefinition.type]["p2" + relation + schema.name] = schema.name + "? " + buildRelation(relation, fields) + "  //=>CREATE: n - 1 ((" + c + "))";
-                    prisma2Models[fieldDefinition.type][fields] = "String? //=>CREATE: 1 - n ((" + c + "))";
+                    if (!((_b = (_a = fieldDefinition.table) === null || _a === void 0 ? void 0 : _a.relation) === null || _b === void 0 ? void 0 : _b.type) || !['MANY_TO_MANY', 'ONE_TO_MANY'].includes((_d = (_c = fieldDefinition.table) === null || _c === void 0 ? void 0 : _c.relation) === null || _d === void 0 ? void 0 : _d.type)) {
+                        throw new Error("Relation must be defined MANY_TO_MANY || ONE_TO_MANY- " + schema.name + "." + fieldDefinition.key);
+                    }
+                    if (((_f = (_e = fieldDefinition.table) === null || _e === void 0 ? void 0 : _e.relation) === null || _f === void 0 ? void 0 : _f.type) === 'ONE_TO_MANY') {
+                        //relation many to one
+                        prisma2Models[schema.name][fieldDefinition.key] = fieldDefinition.type + "[] " + buildRelation(relation) + "//CREATE: n - 1 ((" + c + "))";
+                        var fields = "p2" + relation + schema.name + "Id";
+                        prisma2Models[fieldDefinition.type]["p2" + relation + schema.name] = schema.name + "? " + buildRelation(relation, fields) + "  //=>CREATE: n - 1 ((" + c + "))";
+                        prisma2Models[fieldDefinition.type][fields] = "String? //=>CREATE:n - n  no children ((" + c + "))";
+                    }
+                    else if (((_h = (_g = fieldDefinition.table) === null || _g === void 0 ? void 0 : _g.relation) === null || _h === void 0 ? void 0 : _h.type) === 'MANY_TO_MANY') {
+                        //relation many to many
+                        prisma2Models[schema.name][fieldDefinition.key] = fieldDefinition.type + "[] " + buildRelation(relation) + "//CREATE: n - 1 ((" + c + "))";
+                        prisma2Models[fieldDefinition.type]["p2" + relation + schema.name] = schema.name + "[] //=>CREATE: n - n no children((" + c + "))";
+                    }
                 }
                 else {
-                    if (!((_b = (_a = fieldDefinition.table) === null || _a === void 0 ? void 0 : _a.relation) === null || _b === void 0 ? void 0 : _b.type)) {
+                    if (!((_k = (_j = fieldDefinition.table) === null || _j === void 0 ? void 0 : _j.relation) === null || _k === void 0 ? void 0 : _k.type)) {
                         throw new Error("Relation must be defined ONE_TO_ONE || ONE_TO_MANY- " + schema.name + "." + fieldDefinition.key);
                     }
-                    if (((_d = (_c = fieldDefinition.table) === null || _c === void 0 ? void 0 : _c.relation) === null || _d === void 0 ? void 0 : _d.type) === 'ONE_TO_ONE') {
+                    if (((_m = (_l = fieldDefinition.table) === null || _l === void 0 ? void 0 : _l.relation) === null || _m === void 0 ? void 0 : _m.type) === 'ONE_TO_ONE') {
                         var fields = "p2" + relation + schema.name + "Id";
                         prisma2Models[schema.name][fieldDefinition.key] = fieldDefinition.type + "? " + buildRelation(relation) + "//INLINE : 1 - 1 ((" + c + "))";
                         prisma2Models[fieldDefinition.type]["p2" + relation + schema.name] = schema.name + "?  " + buildRelation(relation, fields) + " //=>INLINE: 1 - 1 ((" + c + "))";
                         prisma2Models[fieldDefinition.type][fields] = "String?  @unique //=>INLINE: 1 - 1 ((" + c + "))";
                     }
-                    else if (((_f = (_e = fieldDefinition.table) === null || _e === void 0 ? void 0 : _e.relation) === null || _f === void 0 ? void 0 : _f.type) === 'ONE_TO_MANY') {
+                    else if (((_p = (_o = fieldDefinition.table) === null || _o === void 0 ? void 0 : _o.relation) === null || _p === void 0 ? void 0 : _p.type) === 'ONE_TO_MANY') {
                         var fields = "p2" + relation + fieldDefinition.type + "Id";
                         prisma2Models[schema.name][fieldDefinition.key] = fieldDefinition.type + "? " + buildRelation(relation, fields) + "//CREATE: 1 - n ((" + c + "))";
                         prisma2Models[schema.name][fields] = "String? //=>CREATE: 1 - n ((" + c + "))";
@@ -203,13 +213,13 @@ var getPrismaModelAModelB = function (schema, fieldDefinition) {
                         prisma2Models[fieldDefinition.type][fields] = "String?  //=>n - 1 ((" + c + "))";
                     }
                     else {
-                        if (!((_h = (_g = fieldDefinition.table) === null || _g === void 0 ? void 0 : _g.relation) === null || _h === void 0 ? void 0 : _h.owner) && !((_k = (_j = child.table) === null || _j === void 0 ? void 0 : _j.relation) === null || _k === void 0 ? void 0 : _k.owner)) {
+                        if (!((_r = (_q = fieldDefinition.table) === null || _q === void 0 ? void 0 : _q.relation) === null || _r === void 0 ? void 0 : _r.owner) && !((_t = (_s = child.table) === null || _s === void 0 ? void 0 : _s.relation) === null || _t === void 0 ? void 0 : _t.owner)) {
                             throw new Error("Relation must be defined a owner - " + schema.name + "." + fieldDefinition.key);
                         }
-                        if (((_m = (_l = fieldDefinition.table) === null || _l === void 0 ? void 0 : _l.relation) === null || _m === void 0 ? void 0 : _m.owner) && ((_p = (_o = child.table) === null || _o === void 0 ? void 0 : _o.relation) === null || _p === void 0 ? void 0 : _p.owner)) {
+                        if (((_v = (_u = fieldDefinition.table) === null || _u === void 0 ? void 0 : _u.relation) === null || _v === void 0 ? void 0 : _v.owner) && ((_x = (_w = child.table) === null || _w === void 0 ? void 0 : _w.relation) === null || _x === void 0 ? void 0 : _x.owner)) {
                             throw new Error("Relation booth can not be a owner - " + schema.name + "." + fieldDefinition.key);
                         }
-                        if ((_r = (_q = fieldDefinition.table) === null || _q === void 0 ? void 0 : _q.relation) === null || _r === void 0 ? void 0 : _r.owner) {
+                        if ((_z = (_y = fieldDefinition.table) === null || _y === void 0 ? void 0 : _y.relation) === null || _z === void 0 ? void 0 : _z.owner) {
                             var fields = "p2" + relation + schema.name + "Id";
                             prisma2Models[schema.name][fieldDefinition.key] = fieldDefinition.type + "? " + buildRelation(relation) + "//OWNER 1 - 1 ((" + c + "))";
                             prisma2Models[fieldDefinition.type][child.key] = schema.name + "?  " + buildRelation(relation, fields) + " //OWNER =>1 - 1 ((" + c + "))";

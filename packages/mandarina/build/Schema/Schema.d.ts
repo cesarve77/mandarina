@@ -134,7 +134,7 @@ export interface UserFieldDefinitionCommon {
         createdAt?: boolean;
         updatedAt?: boolean;
         relation?: {
-            type?: 'ONE_TO_ONE' | 'ONE_TO_MANY';
+            type?: 'ONE_TO_ONE' | 'ONE_TO_MANY' | 'MANY_TO_MANY';
             owner?: true;
             link?: 'INLINE' | 'TABLE';
             name?: string;
@@ -197,7 +197,7 @@ export interface FieldDefinitionCommon extends UserFieldDefinitionCommon {
         createdAt?: boolean;
         updatedAt?: boolean;
         relation?: {
-            type?: 'ONE_TO_ONE' | 'ONE_TO_MANY';
+            type?: 'ONE_TO_ONE' | 'ONE_TO_MANY' | 'MANY_TO_MANY';
             owner?: true;
             link?: 'INLINE' | 'TABLE';
             name?: string;
