@@ -73,7 +73,7 @@ export interface ListProps extends MouseEvents, ControlledListProps, Omit<FindPr
     onDataChange?: (data: any[]) => void,
     header?: ReactComponentLike | HeaderDefaultProps
     ref?: React.Ref<ListVirtualized>
-    emptyProps: EmptyProps
+    emptyProps?: EmptyProps
 
 
 }
