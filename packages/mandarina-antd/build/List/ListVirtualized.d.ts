@@ -3,6 +3,7 @@ import React, { ReactElement, ReactNode } from "react";
 import { GridOnScrollProps } from 'react-window';
 import { OnFilterChange, Where } from "./ListFilter";
 import { CellComponent, FilterComponent, FilterMethod, Overwrite } from "mandarina/build/Schema/Schema";
+import { EmptyProps } from "antd/lib/empty";
 import { ReactComponentLike } from "prop-types";
 import { HeaderDefaultProps } from "./HeaderDefault";
 import { OnSortChange } from "./SortButton";
@@ -50,6 +51,7 @@ export interface ListProps extends MouseEvents, ControlledListProps, Omit<FindPr
     onDataChange?: (data: any[]) => void;
     header?: ReactComponentLike | HeaderDefaultProps;
     ref?: React.Ref<ListVirtualized>;
+    emptyProps?: EmptyProps;
 }
 export interface ConnectionResult {
     totalCount: {
