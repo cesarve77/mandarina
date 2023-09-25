@@ -13,7 +13,7 @@ import {
 } from 'react-window';
 import {OnFilterChange, Where} from "./ListFilter";
 import {CellComponent, FilterComponent, FilterMethod, Overwrite} from "mandarina/build/Schema/Schema";
-import Empty from "antd/lib/empty";
+import Empty, {EmptyProps} from "antd/lib/empty";
 import {getDefaultFilterMethod} from "./ListFilters";
 import {ReactComponentLike} from "prop-types";
 import {get} from "mandarina/build/Schema/utils";
@@ -73,6 +73,7 @@ export interface ListProps extends MouseEvents, ControlledListProps, Omit<FindPr
     onDataChange?: (data: any[]) => void,
     header?: ReactComponentLike | HeaderDefaultProps
     ref?: React.Ref<ListVirtualized>
+    emptyProps: EmptyProps
 
 
 }
@@ -113,7 +114,6 @@ export interface Edge {
 
     }
 }
-
 
 
 const estimatedColumnWidthDefault = 175;
@@ -508,6 +508,7 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
             onClick,
             onMouseEnter,
             onMouseLeave,
+            emptyProps,
             ...rest
         } = this.props; //todo rest props
         const {fields, width, height, filters, sort, overwrite} = this.state;
@@ -606,7 +607,7 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
                                            schema={schema}
                                            where={whereAndFilter}
                                            leftButtons={leftButtons}
-                                           // @ts-ignore
+                                // @ts-ignore
                                            {...header}/>
                     }
 
@@ -656,7 +657,7 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
                                     </SortableColumns>
                                 </div>
                                 {error && <Result status={"500"} subTitle={error.message}/>}
-                                {!error && !loading && !count && <Empty style={{margin: '40px'}}/>}
+                                {!error && !loading && !count && <Empty style={{margin: '40px'}} {...emptyProps}/>}
                                 {height !== 0 &&
                                     <Grid
                                         ref={this.gridRef}

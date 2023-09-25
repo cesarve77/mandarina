@@ -376,7 +376,7 @@ var ListVirtualized = /** @class */ (function (_super) {
     };
     ListVirtualized.prototype.render = function () {
         var _this = this;
-        var _a = this.props, onDataChange = _a.onDataChange, schema = _a.schema, leftButtons = _a.leftButtons, where = _a.where, estimatedRowHeight = _a.estimatedRowHeight, rowHeight = _a.rowHeight, _b = _a.overscanRowCount, overscanRowCount = _b === void 0 ? 2 : _b, _c = _a.overLoad, overLoad = _c === void 0 ? 1 : _c, header = _a.header, onClick = _a.onClick, onMouseEnter = _a.onMouseEnter, onMouseLeave = _a.onMouseLeave, rest = __rest(_a, ["onDataChange", "schema", "leftButtons", "where", "estimatedRowHeight", "rowHeight", "overscanRowCount", "overLoad", "header", "onClick", "onMouseEnter", "onMouseLeave"]); //todo rest props
+        var _a = this.props, onDataChange = _a.onDataChange, schema = _a.schema, leftButtons = _a.leftButtons, where = _a.where, estimatedRowHeight = _a.estimatedRowHeight, rowHeight = _a.rowHeight, _b = _a.overscanRowCount, overscanRowCount = _b === void 0 ? 2 : _b, _c = _a.overLoad, overLoad = _c === void 0 ? 1 : _c, header = _a.header, onClick = _a.onClick, onMouseEnter = _a.onMouseEnter, onMouseLeave = _a.onMouseLeave, emptyProps = _a.emptyProps, rest = __rest(_a, ["onDataChange", "schema", "leftButtons", "where", "estimatedRowHeight", "rowHeight", "overscanRowCount", "overLoad", "header", "onClick", "onMouseEnter", "onMouseLeave", "emptyProps"]); //todo rest props
         var _d = this.state, fields = _d.fields, width = _d.width, height = _d.height, filters = _d.filters, sort = _d.sort, overwrite = _d.overwrite;
         var columns = this.calcColumns(fields, overwrite);
         var getColumnWidth = function (index) {
@@ -446,7 +446,7 @@ var ListVirtualized = /** @class */ (function (_super) {
                                 react_1.default.createElement(SortableColumns_1.SortableColumn, { height: tHeadHeight, key: "item-" + column.field, index: index, columnIndex: index, column: column, sort: sort, overwrite: overwrite === null || overwrite === void 0 ? void 0 : overwrite[column.field], filters: filters, schema: schema, onResizeStop: _this.onResizeStop, onSortChange: _this.onSortChange, onFilterChange: _this.onFilterChange, onHideColumn: _this.onHideColumn }) : react_1.default.createElement("span", { key: index });
                         }))),
                     error && react_1.default.createElement(antd_1.Result, { status: "500", subTitle: error.message }),
-                    !error && !loading && !count && react_1.default.createElement(empty_1.default, { style: { margin: '40px' } }),
+                    !error && !loading && !count && react_1.default.createElement(empty_1.default, __assign({ style: { margin: '40px' } }, emptyProps)),
                     height !== 0 &&
                         react_1.default.createElement(react_window_1.VariableSizeGrid, { ref: _this.gridRef, onScroll: _this.onScroll, height: height, rowCount: count || 0, estimatedColumnWidth: _this.estimatedColumnWidth, estimatedRowHeight: estimatedRowHeight, columnCount: columns.length, columnWidth: getColumnWidth, rowHeight: function (index) {
                                 if (rowHeight) {
