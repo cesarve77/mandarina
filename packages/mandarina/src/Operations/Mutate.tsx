@@ -363,7 +363,7 @@ export const Update = ({id, schema, children, fields, optimisticResponse, ...pro
             {({data, ...findOneProps}) => {
                 return (
                     <MutateWithApollo where={where} type='update' doc={data}
-                                     {...findOneProps}  schema={schema}  optimisticResponse={optimisticResponse} >
+                                      {...findOneProps} schema={schema} optimisticResponse={optimisticResponse}>
                         {children}
                     </MutateWithApollo>
                 );
@@ -466,6 +466,10 @@ export const getSubSchemaMutations = (model: Model, schema: Schema, mutationType
                         const {id, ...clone} = value
                         obj[key] = {
                             update: getSubSchemaMutations(clone, schema, 'update')
+                        }
+                    } else if (value && value.id===null) {
+                        obj[key] = {
+                            disconnect: true
                         }
                     } else {
                         const {id, ...clone} = value

@@ -46,7 +46,7 @@ export declare class Schema {
     applyDefinitionsDefaults(definition: UserFieldDefinition, key: string): FieldDefinition;
     validateQuery: (fields: any, roles: string[]) => void;
     validateConnection: (roles: string[]) => void;
-    validateMutation: (action: "read" | "create" | "update" | "delete", mutation: any, roles?: string[] | undefined) => void;
+    validateMutation: (action: "update" | "create" | "delete" | "read", mutation: any, roles?: string[] | undefined) => void;
     /**
      * Mutate the model,with all keys  proper types and null for undefined
      * @param model

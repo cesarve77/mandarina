@@ -57,7 +57,7 @@ export declare const FindOne: (props: FindProps) => JSX.Element;
 export declare const Find: (props: FindProps) => JSX.Element;
 export declare const AuthFindBase: ({ Component, children, schema, denied, userRoles, action, fields: fieldsOri, Error, ...props }: {
     Component: React.ComponentType<FindProps>;
-    action: "read" | "create" | "update" | "delete";
+    action: "update" | "create" | "delete" | "read";
 } & FindProps & AuthElementsProps) => JSX.Element;
 export declare const AuthFindOne: (props: FindProps & AuthElementsProps) => JSX.Element;
 export declare const AuthFind: (props: FindProps & AuthElementsProps) => JSX.Element;

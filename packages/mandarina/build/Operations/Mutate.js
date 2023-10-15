@@ -404,6 +404,11 @@ exports.getSubSchemaMutations = function (model, schema, mutationType) {
                             update: exports.getSubSchemaMutations(clone, schema_3, 'update')
                         };
                     }
+                    else if (value && value.id === null) {
+                        obj[key] = {
+                            disconnect: true
+                        };
+                    }
                     else {
                         var id = value.id, clone = __rest(value, ["id"]);
                         obj[key] = {
