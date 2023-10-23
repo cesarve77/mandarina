@@ -14,6 +14,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.getAuthOperation = exports.getGraphQLOperation = exports.getSubSchemas = exports.saveDockerComposeYaml = exports.savePrismaYaml = exports.resetDir = exports.saveFile = exports.createDir = exports.sleep = exports.getGraphQLInput = exports.getGraphQLModel = exports.getGraphQLType = void 0;
 var mandarina_1 = require("mandarina");
 var utils_1 = require("mandarina/build/Schema/utils");
 var path_1 = __importDefault(require("path"));
@@ -61,35 +62,36 @@ var lodash_1 = require("lodash");
 //             throw new Error(`Error in field definition ${key}. Fields Table definitions do not accept objects, please use composite tables`)
 //     }
 // }
-exports.getGraphQLType = function (def, key, required, isInput) {
+var getGraphQLType = function (def, key, required, isInput) {
     if (required === void 0) { required = ''; }
     if (isInput === void 0) { isInput = false; }
     //if (isBrowser) throw new Error('_functionCreator is not avaiblabe on browser')
     var input = isInput ? 'Input' : '';
     switch (true) {
         case (!def.isArray && !def.isTable && def.type.name === 'String'):
-            return "String" + required;
+            return "String".concat(required);
         case (!def.isArray && !def.isTable && def.type.name === 'Boolean'):
-            return "Boolean" + required;
+            return "Boolean".concat(required);
         case (!def.isArray && !def.isTable && def.type.name === 'Number'):
-            return "Float" + required;
+            return "Float".concat(required);
         case (!def.isArray && !def.isTable && def.type.name === 'Integer'):
-            return "Int" + required;
+            return "Int".concat(required);
         case (!def.isArray && !def.isTable && def.type.name === 'Date'):
-            return "DateTime" + required;
+            return "DateTime".concat(required);
         case (def.isArray && def.isTable):
-            return "[" + def.type + input + "!]" + required;
+            return "[".concat(def.type).concat(input, "!]").concat(required);
         case (def.isArray && !def.isTable):
-            var scalarName = exports.getGraphQLType(__assign(__assign({}, def), { isArray: false }), key);
-            return "[" + scalarName + "!]" + required;
+            var scalarName = (0, exports.getGraphQLType)(__assign(__assign({}, def), { isArray: false }), key);
+            return "[".concat(scalarName, "!]").concat(required);
         default:
             var schemaName = def.type;
             if (isInput && def.isTable && def.form && def.form.props && def.form.props.query) {
-                return schemaName + "WhereUnique" + input + required;
+                return "".concat(schemaName, "WhereUnique").concat(input).concat(required);
             }
             return def.type + input + required;
     }
 };
+exports.getGraphQLType = getGraphQLType;
 // export const buildInterfaceName = (schema: Schema | string): string => schema instanceof Schema ? `${schema.name}Interface` : `${schema}Interface`
 var getMainSchema = function (schema, type) {
     var mainSchema = [];
@@ -100,38 +102,38 @@ var getMainSchema = function (schema, type) {
             continue;
         }
         var fieldDefinition = schema.getPathDefinition(key);
-        var required = utils_1.isRequired(fieldDefinition) ? '!' : '';
+        var required = (0, utils_1.isRequired)(fieldDefinition) ? '!' : '';
         var unique = type === 'type' && fieldDefinition.table.unique ? '@unique' : '';
         var defaultValue = '';
         if (type === 'type' && fieldDefinition.table.default !== undefined) {
             var wrapper = (fieldDefinition.type === String) ? '"' : '';
-            defaultValue = "@default(value: " + wrapper + fieldDefinition.table.default + wrapper + ")";
+            defaultValue = "@default(value: ".concat(wrapper).concat(fieldDefinition.table.default).concat(wrapper, ")");
         }
-        var rename = (type === 'type' && fieldDefinition.table.rename !== undefined) ? "@rename(oldName: \"" + fieldDefinition.table.default + "\")" : '';
+        var rename = (type === 'type' && fieldDefinition.table.rename !== undefined) ? "@rename(oldName: \"".concat(fieldDefinition.table.default, "\")") : '';
         var relations = [];
         var relation = '';
         if (type === 'type' && fieldDefinition.table.relation !== undefined) {
             if (typeof fieldDefinition.table.relation === "string") {
-                relations.push("name: \"" + fieldDefinition.table.relation + "\"");
+                relations.push("name: \"".concat(fieldDefinition.table.relation, "\""));
             }
             else {
                 if (fieldDefinition.table.relation.link) {
-                    relations.push("link: " + fieldDefinition.table.relation.link);
+                    relations.push("link: ".concat(fieldDefinition.table.relation.link));
                 }
                 if (fieldDefinition.table.relation.name) {
-                    relations.push("name: \"" + fieldDefinition.table.relation.name + "\"");
+                    relations.push("name: \"".concat(fieldDefinition.table.relation.name, "\""));
                 }
                 if (fieldDefinition.table.relation.onDelete) {
-                    relations.push("onDelete: " + fieldDefinition.table.relation.onDelete);
+                    relations.push("onDelete: ".concat(fieldDefinition.table.relation.onDelete));
                 }
             }
             if (relations.length > 0) {
-                relation = "@relation(" + relations.join(', ') + ")";
+                relation = "@relation(".concat(relations.join(', '), ")");
             }
         }
         var scalarList = '', createdAt = '', updatedAt = '';
         if (type === 'type' && fieldDefinition.table.scalarList) {
-            scalarList = "@scalarList(strategy: " + fieldDefinition.table.scalarList.strategy + ")";
+            scalarList = "@scalarList(strategy: ".concat(fieldDefinition.table.scalarList.strategy, ")");
         }
         if (type === 'type' && (fieldDefinition.table.createdAt === true || (fieldDefinition.table.createdAt !== false && key === 'createdAt'))) {
             createdAt = "@createdAt";
@@ -142,9 +144,9 @@ var getMainSchema = function (schema, type) {
         if (!scalarList && type === 'type' && fieldDefinition.isArray && !fieldDefinition.isTable) {
             scalarList = "@scalarList(strategy: RELATION)";
         }
-        var fieldType = exports.getGraphQLType(fieldDefinition, key, required, type === 'input');
-        fieldDefinition.description && mainSchema.push("# " + fieldDefinition.description);
-        mainSchema.push(key + ": " + fieldType + " " + unique + " " + createdAt + " " + updatedAt + " " + defaultValue + " " + relation + " " + scalarList + " " + rename);
+        var fieldType = (0, exports.getGraphQLType)(fieldDefinition, key, required, type === 'input');
+        fieldDefinition.description && mainSchema.push("# ".concat(fieldDefinition.description));
+        mainSchema.push("".concat(key, ": ").concat(fieldType, " ").concat(unique, " ").concat(createdAt, " ").concat(updatedAt, " ").concat(defaultValue, " ").concat(relation, " ").concat(scalarList, " ").concat(rename));
     }
     return mainSchema;
 };
@@ -152,38 +154,44 @@ var getGraphQL = function (type, schema) {
     var name = schema.name;
     //if (isBrowser) throw new Error('getGraphQLSchema is not available on browser')
     var mainSchema = getMainSchema(schema, type), graphQLSchema = '';
-    var description = utils_1.capitalize(type) + " for " + name;
+    var description = "".concat((0, utils_1.capitalize)(type), " for ").concat(name);
     if (mainSchema.length) {
-        graphQLSchema += "# " + description + "\n";
-        graphQLSchema += type + " " + name + (type === 'input' ? 'Input' : '') + " {\n";
-        graphQLSchema += "\t" + mainSchema.join('\n\t') + "\n";
+        graphQLSchema += "# ".concat(description, "\n");
+        graphQLSchema += "".concat(type, " ").concat(name).concat(type === 'input' ? 'Input' : '', " {\n");
+        graphQLSchema += "\t".concat(mainSchema.join('\n\t'), "\n");
         graphQLSchema += "}";
     }
     return graphQLSchema;
 };
-exports.getGraphQLModel = function (schema) { return getGraphQL('type', schema); };
-exports.getGraphQLInput = function (schema) { return getGraphQL('input', schema); };
-exports.sleep = function (ms) {
+var getGraphQLModel = function (schema) { return getGraphQL('type', schema); };
+exports.getGraphQLModel = getGraphQLModel;
+var getGraphQLInput = function (schema) { return getGraphQL('input', schema); };
+exports.getGraphQLInput = getGraphQLInput;
+var sleep = function (ms) {
     return new Promise(function (resolve) { return setTimeout(resolve, ms); });
 };
-exports.createDir = function (dir) {
+exports.sleep = sleep;
+var createDir = function (dir) {
     var prismaDir = path_1.default.join(process.cwd(), dir);
-    if (!fs_1.default.existsSync(prismaDir + "/datamodel")) {
-        fs_1.default.mkdirSync(prismaDir + "/datamodel");
+    if (!fs_1.default.existsSync("".concat(prismaDir, "/datamodel"))) {
+        fs_1.default.mkdirSync("".concat(prismaDir, "/datamodel"));
     }
 };
-exports.saveFile = function (dir, fileName, content, fileType) {
+exports.createDir = createDir;
+var saveFile = function (dir, fileName, content, fileType) {
     var prismaDir = path_1.default.join(process.cwd(), dir);
-    var fileAbs = prismaDir + "/datamodel/" + fileName + "." + fileType + ".graphql";
+    var fileAbs = "".concat(prismaDir, "/datamodel/").concat(fileName, ".").concat(fileType, ".graphql");
     fs_1.default.writeFileSync(fileAbs, content);
-    console.info("saving " + fileType + ": " + fileName);
+    console.info("saving ".concat(fileType, ": ").concat(fileName));
 };
-exports.resetDir = function (dir) {
+exports.saveFile = saveFile;
+var resetDir = function (dir) {
     var prismaDir = path_1.default.join(process.cwd(), dir);
     var datamodelDir = path_1.default.join(prismaDir, 'datamodel');
     fs_1.default.readdirSync(datamodelDir).forEach(function (file) { return fs_1.default.unlinkSync(path_1.default.join(datamodelDir, file)); });
 };
-exports.savePrismaYaml = function (datamodel, dir, endpoint, secret) {
+exports.resetDir = resetDir;
+var savePrismaYaml = function (datamodel, dir, endpoint, secret) {
     var prismaDir = path_1.default.join(process.cwd(), dir);
     var prismaYaml = path_1.default.join(prismaDir, "prisma.yml");
     var data = { endpoint: endpoint, datamodel: datamodel, };
@@ -191,15 +199,16 @@ exports.savePrismaYaml = function (datamodel, dir, endpoint, secret) {
         data.secret = secret;
     saveYaml(prismaYaml, data);
 };
-exports.saveDockerComposeYaml = function (dir, port) {
+exports.savePrismaYaml = savePrismaYaml;
+var saveDockerComposeYaml = function (dir, port) {
     var prismaDir = path_1.default.join(process.cwd(), dir);
     var dcYaml = path_1.default.join(prismaDir, "docker-compose.yml");
     if (!fs_1.default.existsSync(dcYaml))
-        return console.warn("\"" + dcYaml + "\" file does not exists");
+        return console.warn("\"".concat(dcYaml, "\" file does not exists"));
     saveYaml(dcYaml, {
         services: {
             prisma: {
-                ports: [port + ":" + port],
+                ports: ["".concat(port, ":").concat(port)],
                 environment: {
                     PRISMA_CONFIG: {
                         port: port,
@@ -209,6 +218,7 @@ exports.saveDockerComposeYaml = function (dir, port) {
         }
     });
 };
+exports.saveDockerComposeYaml = saveDockerComposeYaml;
 var saveYaml = function (file, data) {
     var yaml = require("yaml");
     var contentFile = fs_1.default.readFileSync(file, { encoding: 'utf8' }).replace(/([\t ]*)PRISMA_CONFIG *: *(\||>)?\n/, '$1PRISMA_CONFIG:\n');
@@ -217,12 +227,12 @@ var saveYaml = function (file, data) {
     var newData = data;
     if (data.datamodel) {
         data.datamodel = Array.from(data.datamodel);
-        newData = lodash_1.merge(originalData, data);
+        newData = (0, lodash_1.merge)(originalData, data);
     }
     var str = yaml.stringify(newData).replace(/([\t ]*)PRISMA_CONFIG *: *\n/, '$1PRISMA_CONFIG: |\n');
     fs_1.default.writeFileSync(file, str);
 };
-exports.getSubSchemas = function (schema, processedSchemas) {
+var getSubSchemas = function (schema, processedSchemas) {
     if (processedSchemas === void 0) { processedSchemas = []; }
     var subSchemas = [];
     if (processedSchemas.includes(schema.name))
@@ -235,29 +245,32 @@ exports.getSubSchemas = function (schema, processedSchemas) {
         if (!(fieldDefinition.form && fieldDefinition.form.props && fieldDefinition.form.props.query)) {
             var schemaName = fieldDefinition.type;
             subSchemas.push(schemaName);
-            subSchemas.push.apply(subSchemas, exports.getSubSchemas(mandarina_1.Schema.getInstance(schemaName), processedSchemas));
+            subSchemas.push.apply(subSchemas, (0, exports.getSubSchemas)(mandarina_1.Schema.getInstance(schemaName), processedSchemas));
         }
     });
     return subSchemas;
 };
-exports.getGraphQLOperation = function (action, schema) {
+exports.getSubSchemas = getSubSchemas;
+var getGraphQLOperation = function (action, schema) {
     var response = '', input = '';
     var actions = action.actions;
     if (action.schema) {
         var actionName = action.schema.name;
-        input = schema ? "(data: " + utils_1.capitalize(actionName) + "Input!)" : '';
+        input = schema ? "(data: ".concat((0, utils_1.capitalize)(actionName), "Input!)") : '';
     }
     if (actions) {
         Object.keys(actions).forEach(function (actionName) {
             var action = actions[actionName];
-            response += "extend type Mutation {\n\t" + actionName + " " + input + ": " + action.result + "\n}";
+            response += "extend type Mutation {\n\t".concat(actionName, " ").concat(input, ": ").concat(action.result, "\n}");
         });
     }
     return response;
 };
-exports.getAuthOperation = function () {
+exports.getGraphQLOperation = getGraphQLOperation;
+var getAuthOperation = function () {
     return "extend type Query {\n\tAuthFields(action: String!, table: String!) :  [String!]\n}";
 };
+exports.getAuthOperation = getAuthOperation;
 /*
 
 export const getDeclarations = (schema: Schema): string => {

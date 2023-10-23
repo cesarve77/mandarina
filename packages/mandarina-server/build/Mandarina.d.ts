@@ -6,14 +6,14 @@ export default class Mandarina {
     static getQuery(): {};
     static getMutation(): {};
 }
-declare type GetUser = (context: Context) => Promise<UserType | null | undefined> | UserType | null | undefined;
+type GetUser = (context: Context) => Promise<UserType | null | undefined> | UserType | null | undefined;
 export interface MandarinaConfigOptions {
     getUser?: GetUser;
 }
 export interface MandarinaConfigDefault extends MandarinaConfigOptions {
     getUser: GetUser;
 }
-export declare type UserType = {
+export type UserType = {
     id: string;
     roles: string[];
     [otherProperties: string]: any;

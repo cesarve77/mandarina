@@ -3,9 +3,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.loadSchemas = exports.getConfig = void 0;
 var fs_1 = __importDefault(require("fs"));
 var path_1 = __importDefault(require("path"));
-exports.getConfig = function () {
+var getConfig = function () {
     var rawData;
     try {
         rawData = fs_1.default.readFileSync(path_1.default.join(process.cwd(), 'mandarina.json'), 'utf8');
@@ -34,6 +35,7 @@ exports.getConfig = function () {
     }
     return (config);
 };
+exports.getConfig = getConfig;
 var walkSync = function (dir, fileList) {
     var files = fs_1.default.readdirSync(dir);
     fileList = fileList || [];
@@ -49,7 +51,7 @@ var walkSync = function (dir, fileList) {
     });
     return fileList;
 };
-exports.loadSchemas = function (dir) {
+var loadSchemas = function (dir) {
     var tables = [];
     var schemas = [];
     var actions = [];
@@ -88,4 +90,5 @@ exports.loadSchemas = function (dir) {
         }
     });
 };
+exports.loadSchemas = loadSchemas;
 //# sourceMappingURL=utils.js.map

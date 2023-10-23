@@ -1,9 +1,9 @@
-import React, { PureComponent } from 'react';
+import React, { ComponentType, PureComponent } from 'react';
 import { Schema } from '..';
 import { Query, QueryProps, QueryResult } from "react-apollo";
-import { AuthElementsProps } from "../Auth/Auth";
+import { ActionType, AuthElementsProps } from "../Auth/Auth";
 export declare const canUseDOM: boolean;
-export declare type FindQueryResult = Pick<QueryResult, 'data' | 'loading' | 'error' | 'variables' | 'networkStatus' | 'refetch' | 'fetchMore' | 'startPolling' | 'stopPolling' | 'subscribeToMore' | 'updateQuery' | 'client'>;
+export type FindQueryResult = Pick<QueryResult, 'data' | 'loading' | 'error' | 'variables' | 'networkStatus' | 'refetch' | 'fetchMore' | 'startPolling' | 'stopPolling' | 'subscribeToMore' | 'updateQuery' | 'client'>;
 export interface FindChildrenParams extends FindQueryResult {
     schema: Schema;
     fields: string[];
@@ -19,8 +19,8 @@ export interface FindChildrenParams extends FindQueryResult {
 export interface FindChildren {
     (findChildrenParams: FindChildrenParams): React.ReactNode;
 }
-export declare type FindQueryProps = Pick<QueryProps, 'pollInterval' | 'notifyOnNetworkStatusChange' | 'fetchPolicy' | 'errorPolicy' | 'ssr' | 'displayName' | 'onCompleted' | 'onError' | 'context' | 'partialRefetch'>;
-export declare type Having = {
+export type FindQueryProps = Pick<QueryProps, 'pollInterval' | 'notifyOnNetworkStatusChange' | 'fetchPolicy' | 'errorPolicy' | 'ssr' | 'displayName' | 'onCompleted' | 'onError' | 'context' | 'partialRefetch'>;
+export type Having = {
     [field: string]: any;
 };
 export interface FindProps extends FindQueryProps {
@@ -56,8 +56,8 @@ export declare class FindBase extends PureComponent<FindProps & FindBaseProps, F
 export declare const FindOne: (props: FindProps) => JSX.Element;
 export declare const Find: (props: FindProps) => JSX.Element;
 export declare const AuthFindBase: ({ Component, children, schema, denied, userRoles, action, fields: fieldsOri, Error, ...props }: {
-    Component: React.ComponentType<FindProps>;
-    action: "update" | "create" | "delete" | "read";
+    Component: ComponentType<FindProps>;
+    action: ActionType;
 } & FindProps & AuthElementsProps) => JSX.Element;
 export declare const AuthFindOne: (props: FindProps & AuthElementsProps) => JSX.Element;
 export declare const AuthFind: (props: FindProps & AuthElementsProps) => JSX.Element;

@@ -18,8 +18,8 @@ var Mandarina = /** @class */ (function () {
     function Mandarina() {
     }
     Mandarina.load = function () {
-        var config = utils_1.getConfig();
-        utils_1.loadSchemas(config.dir);
+        var config = (0, utils_1.getConfig)();
+        (0, utils_1.loadSchemas)(config.dir);
     };
     Mandarina.getQuery = function () {
         var Query = {};

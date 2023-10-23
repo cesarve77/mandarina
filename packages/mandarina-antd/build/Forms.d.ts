@@ -3,9 +3,9 @@ import { Schema } from "mandarina";
 import { CreateProps, MutateResultProps, UpdateProps } from "mandarina/build/Operations/Mutate";
 import { OperationVariables } from "react-apollo";
 import { Model, Overwrite } from "mandarina/build/Schema/Schema";
-export declare type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
-declare type Component = (props: CreateProps | UpdateProps) => ReactElement;
-declare type FormPropsOmitComponent = Omit<FormProps, 'Component'>;
+export type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
+type Component = (props: CreateProps | UpdateProps) => ReactElement;
+type FormPropsOmitComponent = Omit<FormProps, 'Component'>;
 export interface CreateFormProps extends FormPropsOmitComponent {
     ref?: React.Ref<HTMLFormElement>;
 }
@@ -18,9 +18,9 @@ export interface DeleteFormProps extends FormPropsOmitComponent {
     id: string;
     ref?: React.Ref<HTMLFormElement>;
 }
-export declare const CreateForm: React.ForwardRefExoticComponent<Pick<CreateFormProps, "id" | "placeholder" | "style" | "children" | "onChange" | "onSubmit" | "onError" | "disabled" | "client" | "ignoreResults" | "optimisticResponse" | "variables" | "refetchQueries" | "awaitRefetchQueries" | "update" | "onCompleted" | "context" | "fetchPolicy" | "schema" | "refetchSchemas" | "innerRef" | "label" | "error" | "fields" | "overwrite" | "showInlineError" | "autosaveDelay" | "autosave" | "model" | "modelTransform" | "onSubmitFailure" | "onSubmitSuccess" | "onValidate" | "onChangeModel" | "validate"> & React.RefAttributes<HTMLFormElement>>;
-export declare const UpdateForm: React.ForwardRefExoticComponent<Pick<UpdateFormProps, "id" | "placeholder" | "style" | "children" | "onChange" | "onSubmit" | "onError" | "disabled" | "client" | "ignoreResults" | "optimisticResponse" | "variables" | "refetchQueries" | "awaitRefetchQueries" | "update" | "onCompleted" | "context" | "fetchPolicy" | "schema" | "refetchSchemas" | "innerRef" | "label" | "error" | "fields" | "overwrite" | "showInlineError" | "autosaveDelay" | "autosave" | "model" | "modelTransform" | "onSubmitFailure" | "onSubmitSuccess" | "onValidate" | "onChangeModel" | "validate" | "readFields"> & React.RefAttributes<HTMLFormElement>>;
-export declare const DeleteForm: React.ForwardRefExoticComponent<Pick<DeleteFormProps, "id" | "placeholder" | "style" | "children" | "onChange" | "onSubmit" | "onError" | "disabled" | "client" | "ignoreResults" | "optimisticResponse" | "variables" | "refetchQueries" | "awaitRefetchQueries" | "update" | "onCompleted" | "context" | "fetchPolicy" | "schema" | "refetchSchemas" | "innerRef" | "label" | "error" | "fields" | "overwrite" | "showInlineError" | "autosaveDelay" | "autosave" | "model" | "modelTransform" | "onSubmitFailure" | "onSubmitSuccess" | "onValidate" | "onChangeModel" | "validate"> & React.RefAttributes<HTMLFormElement>>;
+export declare const CreateForm: React.ForwardRefExoticComponent<Pick<CreateFormProps, "id" | "placeholder" | "style" | "children" | "onChange" | "onSubmit" | "onError" | "disabled" | "client" | "ignoreResults" | "optimisticResponse" | "variables" | "refetchQueries" | "awaitRefetchQueries" | "update" | "onCompleted" | "context" | "fetchPolicy" | "schema" | "refetchSchemas" | "innerRef" | "error" | "fields" | "overwrite" | "showInlineError" | "autosaveDelay" | "autosave" | "label" | "model" | "modelTransform" | "onSubmitFailure" | "onSubmitSuccess" | "onValidate" | "onChangeModel" | "validate"> & React.RefAttributes<HTMLFormElement>>;
+export declare const UpdateForm: React.ForwardRefExoticComponent<Pick<UpdateFormProps, "id" | "placeholder" | "style" | "children" | "onChange" | "onSubmit" | "onError" | "disabled" | "client" | "ignoreResults" | "optimisticResponse" | "variables" | "refetchQueries" | "awaitRefetchQueries" | "update" | "onCompleted" | "context" | "fetchPolicy" | "schema" | "refetchSchemas" | "innerRef" | "error" | "fields" | "overwrite" | "showInlineError" | "autosaveDelay" | "autosave" | "label" | "model" | "modelTransform" | "onSubmitFailure" | "onSubmitSuccess" | "onValidate" | "onChangeModel" | "validate" | "readFields"> & React.RefAttributes<HTMLFormElement>>;
+export declare const DeleteForm: React.ForwardRefExoticComponent<Pick<DeleteFormProps, "id" | "placeholder" | "style" | "children" | "onChange" | "onSubmit" | "onError" | "disabled" | "client" | "ignoreResults" | "optimisticResponse" | "variables" | "refetchQueries" | "awaitRefetchQueries" | "update" | "onCompleted" | "context" | "fetchPolicy" | "schema" | "refetchSchemas" | "innerRef" | "error" | "fields" | "overwrite" | "showInlineError" | "autosaveDelay" | "autosave" | "label" | "model" | "modelTransform" | "onSubmitFailure" | "onSubmitSuccess" | "onValidate" | "onChangeModel" | "validate"> & React.RefAttributes<HTMLFormElement>>;
 export interface AutoFormProps {
     showInlineError?: boolean;
     autosaveDelay?: number;

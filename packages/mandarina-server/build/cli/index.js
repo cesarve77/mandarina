@@ -11,25 +11,25 @@ var _a = process.argv, nodeDir = _a[0], dir = _a[1], cmd = _a[2], args = _a.slic
 switch (cmd) {
     case "create":
         var project = args && args[0] || 'mandarina';
-        createProject_1.createProject(project);
+        (0, createProject_1.createProject)(project);
         break;
     case 'gen-files':
-        genFiles_1.genFile();
+        (0, genFiles_1.genFile)();
         break;
     case 'gen-prisma2':
-        prisma2_1.genFile();
+        (0, prisma2_1.genFile)();
         break;
     case 'deploy':
-        deploy_1.deploy();
+        (0, deploy_1.deploy)();
         break;
     case 'watch':
-        watch_1.watch();
+        (0, watch_1.watch)();
         break;
     case undefined:
         console.info("You need to pass a command at first argument");
         break;
     default:
-        console.info("command " + cmd + " not found, available commands: \"create\",\"gen-files\",\"deploy\",\"watch");
+        console.info("command ".concat(cmd, " not found, available commands: \"create\",\"gen-files\",\"deploy\",\"watch"));
 }
 /*
 const Mandarina = require("../mandarina/build/Mandarina").Mandarina

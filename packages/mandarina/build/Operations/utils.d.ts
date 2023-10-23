@@ -5,4 +5,4 @@ import { Having } from "./Find";
  * @return  grqphql string
  */
 export declare const buildQueryFromFields: (keys: string[], sureId?: boolean) => string;
-export declare const insertHaving: (qs: string, having?: Having | undefined) => string;
+export declare const insertHaving: (qs: string, having?: Having) => string;

@@ -23,12 +23,12 @@ export declare class Table {
     static setGlobalHooks: (hooks: Hooks) => void;
     constructor(schema: Schema, tableOptions?: TableShapeOptions);
     static getInstance(name: string): Table;
-    getFields(): any;
+    getFields(): string[];
     shouldHasManyUpdate(): boolean;
     getDefaultActions(type: operationType): {
         [resolverName: string]: (_: any, args: any, context: Context, info: any) => void;
     };
-    insertWhereIntoInfo: (info: GraphQLResolveInfo, user: UserType | null | undefined, isSingleMutation: boolean | undefined, action: any, operationName: string) => {
+    insertWhereIntoInfo: (info: GraphQLResolveInfo, user: UserType | null | undefined, isSingleMutation: boolean | undefined, action: ActionType, operationName: string) => {
         fields: string[];
         queryString: string;
     };
@@ -54,8 +54,8 @@ export interface Context extends ContextParameters {
 export interface Hook {
     (_: any, args: any, context: any, info: any): Promise<any> | void | any;
 }
-export declare type operationType = "mutation" | "query";
-export declare type Hooks = {
+export type operationType = "mutation" | "query";
+export type Hooks = {
     beforeValidate?: Hook;
     afterValidate?: Hook;
     validationFailed?: Hook;
@@ -74,7 +74,7 @@ export interface TableSchemaOptions {
     hooks?: Hooks;
     filters?: Filter[];
 }
-export declare type Filter = {
+export type Filter = {
     [field: string]: {
         roles: string[];
         operator: string;
@@ -85,4 +85,4 @@ export interface TableShapeOptions extends TableSchemaOptions {
     errorFromServerMapper?: ErrorFromServerMapper;
     where?: (user: UserType | null | undefined, action: ActionType, operationName: string) => any;
 }
-export declare type HookName = 'beforeValidate' | 'afterValidate' | 'validationFailed' | 'beforeCreate' | 'beforeDelete' | 'beforeUpdate' | 'afterCreate' | 'afterDelete' | 'afterUpdate' | 'beforeQuery' | 'afterQuery';
+export type HookName = 'beforeValidate' | 'afterValidate' | 'validationFailed' | 'beforeCreate' | 'beforeDelete' | 'beforeUpdate' | 'afterCreate' | 'afterDelete' | 'afterUpdate' | 'beforeQuery' | 'afterQuery';

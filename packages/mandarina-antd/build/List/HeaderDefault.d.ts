@@ -16,8 +16,8 @@ export interface HeaderProps extends ControlledListProps {
     where: any;
     client: ApolloClient<any>;
 }
-export declare type Action = (props: HeaderActionButtonProps) => void | Promise<any>;
-export declare type ContentFnc = (props: HeaderActionButtonProps) => ReactNode;
+export type Action = (props: HeaderActionButtonProps) => void | Promise<any>;
+export type ContentFnc = (props: HeaderActionButtonProps) => ReactNode;
 export interface HeaderDefaultProps {
     leftButtons?: ReactNode;
     counter?: boolean;

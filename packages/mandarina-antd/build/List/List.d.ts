@@ -7,7 +7,7 @@ import { Where } from "./ListFilter";
 import { FindProps } from "mandarina/build/Operations/Find";
 import { ReactComponentLike } from "prop-types";
 import { TableProps } from "antd/lib/table/interface";
-export declare type onResize = (e: any, { size }: {
+export type onResize = (e: any, { size }: {
     size: {
         width: number;
     };
@@ -70,7 +70,7 @@ export declare class List extends React.Component<ListProps, {
     };
     getColumns(fields: string[], path?: string): ColumnProps<any>[];
     getColumnDefinition: (field: string, index: number) => ColumnProps<any> | undefined;
-    buildFetchMore: (fetchMore: (fetchMoreOptions: any) => Promise<any>, endCursor?: string | undefined) => void;
+    buildFetchMore: (fetchMore: (fetchMoreOptions: any) => Promise<any>, endCursor?: string) => void;
     filters: {
         [field: string]: Where;
     };

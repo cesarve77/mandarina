@@ -3,10 +3,12 @@ var __extends = (this && this.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
         return extendStatics(d, b);
     };
     return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
         extendStatics(d, b);
         function __() { this.constructor = d; }
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -34,17 +36,20 @@ var __rest = (this && this.__rest) || function (s, e) {
         }
     return t;
 };
-var __spreadArrays = (this && this.__spreadArrays) || function () {
-    for (var s = 0, i = 0, il = arguments.length; i < il; i++) s += arguments[i].length;
-    for (var r = Array(s), k = 0, i = 0; i < il; i++)
-        for (var a = arguments[i], j = 0, jl = a.length; j < jl; j++, k++)
-            r[k] = a[j];
-    return r;
+var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
+    if (pack || arguments.length === 2) for (var i = 0, l = from.length, ar; i < l; i++) {
+        if (ar || !(i in from)) {
+            if (!ar) ar = Array.prototype.slice.call(from, 0, i);
+            ar[i] = from[i];
+        }
+    }
+    return to.concat(ar || Array.prototype.slice.call(from));
 };
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.getParentCellComponent = exports.DefaultCellComponent = exports.ListVirtualized = void 0;
 var mandarina_1 = require("mandarina");
 var react_1 = __importDefault(require("react"));
 var memoize_one_1 = __importDefault(require("memoize-one"));
@@ -62,8 +67,15 @@ var utils_2 = require("./utils");
 var antd_1 = require("antd");
 var estimatedColumnWidthDefault = 175;
 var estimatedRowHeightDefault = 60;
-var createItemData = memoize_one_1.default(function (data, columns, refetch, query, variables, onClick, onMouseEnter, onMouseLeave) { return ({
-    data: data, columns: columns, refetch: refetch, query: query, variables: variables, onClick: onClick, onMouseEnter: onMouseEnter, onMouseLeave: onMouseLeave
+var createItemData = (0, memoize_one_1.default)(function (data, columns, refetch, query, variables, onClick, onMouseEnter, onMouseLeave) { return ({
+    data: data,
+    columns: columns,
+    refetch: refetch,
+    query: query,
+    variables: variables,
+    onClick: onClick,
+    onMouseEnter: onMouseEnter,
+    onMouseLeave: onMouseLeave
 }); });
 var ListVirtualized = /** @class */ (function (_super) {
     __extends(ListVirtualized, _super);
@@ -117,7 +129,7 @@ var ListVirtualized = /** @class */ (function (_super) {
                 _this.onScrollTimeoutId && window.clearTimeout(_this.onScrollTimeoutId);
                 _this.onScrollTimeoutId = window.setTimeout(function () {
                     //If all visible are loaded, then not refetch
-                    if (_this.data.length && __spreadArrays(_this.data).slice(_this.visibleRowStartIndex, _this.visibleRowStopIndex).every(function (val) { return val !== undefined; })) {
+                    if (_this.data.length && __spreadArray([], _this.data, true).slice(_this.visibleRowStartIndex, _this.visibleRowStopIndex + (_this.props.overscanRowCount || 2)).every(function (val) { return val !== undefined; })) {
                         resolve(false);
                         return;
                     }
@@ -148,28 +160,28 @@ var ListVirtualized = /** @class */ (function (_super) {
         };
         _this.getColumnDefinition = function (field) {
             //detect if parent has a CellComponent
-            var parentPath = exports.getParentCellComponent(field, _this.props.schema);
+            var parentPath = (0, exports.getParentCellComponent)(field, _this.props.schema);
             if (parentPath) {
                 field = parentPath;
             }
             var overwrite = _this.state.overwrite && _this.state.overwrite[field];
             var definition;
             if (!_this.props.schema.hasPath(field) && field.indexOf('.') < 0 && overwrite) {
-                definition = lodash_1.merge({
+                definition = (0, lodash_1.merge)({
                     list: {
                         noFilter: true,
                         noSort: true
                     }
-                }, Mutate_1.deepClone(_this.props.schema.applyDefinitionsDefaults({ type: String }, field)), overwrite);
+                }, (0, Mutate_1.deepClone)(_this.props.schema.applyDefinitionsDefaults({ type: String }, field)), overwrite);
             }
             else {
                 definition = _this.props.schema.getPathDefinition(field);
                 if (overwrite) {
-                    definition = lodash_1.merge(Mutate_1.deepClone(definition), overwrite);
+                    definition = (0, lodash_1.merge)((0, Mutate_1.deepClone)(definition), overwrite);
                 }
             }
             if (!definition.list)
-                throw new Error("You need to provide overwrite full definition for \"" + field + "\"");
+                throw new Error("You need to provide overwrite full definition for \"".concat(field, "\""));
             if (definition.list.hidden) {
                 return null;
             }
@@ -178,8 +190,8 @@ var ListVirtualized = /** @class */ (function (_super) {
                     field: field,
                     loadingElement: definition.list.loadingElement,
                     CellComponent: definition.list.CellComponent,
-                    FilterComponent: definition.list.filterComponent || ListFilters_1.getDefaultFilterMethod(field, _this.props.schema),
-                    filterMethod: definition.list.filterMethod || ListFilters_1.getDefaultFilterMethod(field, _this.props.schema),
+                    FilterComponent: definition.list.filterComponent || (0, ListFilters_1.getDefaultFilterMethod)(field, _this.props.schema),
+                    filterMethod: definition.list.filterMethod || (0, ListFilters_1.getDefaultFilterMethod)(field, _this.props.schema),
                     title: definition.label ? definition.label : "",
                     width: definition.list.width || estimatedColumnWidthDefault,
                     filter: !definition.list.noFilter,
@@ -197,7 +209,7 @@ var ListVirtualized = /** @class */ (function (_super) {
             _this.setState(function (_a) {
                 var filters = _a.filters;
                 var newFilters = __assign({}, filters);
-                if (filter && !lodash_1.isEmpty(filter)) {
+                if (filter && !(0, lodash_1.isEmpty)(filter)) {
                     newFilters[field] = filter;
                 }
                 else {
@@ -217,8 +229,8 @@ var ListVirtualized = /** @class */ (function (_super) {
             _this.gridRef.current && _this.gridRef.current.resetAfterColumnIndex(index, false);
             _this.setState(function (_a) {
                 var overwrite = _a.overwrite;
-                var newOverwrite = Mutate_1.deepClone(overwrite) || {};
-                lodash_1.set(newOverwrite, [field, 'list', 'hidden'], !show);
+                var newOverwrite = (0, Mutate_1.deepClone)(overwrite) || {};
+                (0, lodash_1.set)(newOverwrite, [field, 'list', 'hidden'], !show);
                 if (_this.props.onOverwriteChange) {
                     _this.props.onOverwriteChange(newOverwrite);
                     return null;
@@ -244,8 +256,8 @@ var ListVirtualized = /** @class */ (function (_super) {
             _this.gridRef.current && _this.gridRef.current.resetAfterColumnIndex(index, false);
             _this.setState(function (_a) {
                 var overwrite = _a.overwrite;
-                var newOverwrite = Mutate_1.deepClone(overwrite) || {};
-                lodash_1.set(newOverwrite, [field, 'list', 'width'], width);
+                var newOverwrite = (0, Mutate_1.deepClone)(overwrite) || {};
+                (0, lodash_1.set)(newOverwrite, [field, 'list', 'width'], width);
                 if (_this.props.onOverwriteChange) {
                     _this.props.onOverwriteChange(newOverwrite);
                     return null;
@@ -264,18 +276,18 @@ var ListVirtualized = /** @class */ (function (_super) {
             _this.setState(function (_a) {
                 var fields = _a.fields;
                 var field = fields[oldIndex];
-                var parent = exports.getParentCellComponent(field, _this.props.schema);
+                var parent = (0, exports.getParentCellComponent)(field, _this.props.schema);
                 var newFields;
                 if (parent) {
                     //if field has a parent cell component I just put all siblings at the end to no affect the order
                     //
-                    newFields = array_move_1.default(fields, oldIndex, newIndex);
-                    var siblings = newFields.filter(function (newField) { return newField !== field && newField.match(new RegExp("^" + parent + ".")); });
-                    newFields = newFields.filter(function (newField) { return !(newField !== field && newField.match(new RegExp("^" + parent + "."))); });
+                    newFields = (0, array_move_1.default)(fields, oldIndex, newIndex);
+                    var siblings = newFields.filter(function (newField) { return newField !== field && newField.match(new RegExp("^".concat(parent, "."))); });
+                    newFields = newFields.filter(function (newField) { return !(newField !== field && newField.match(new RegExp("^".concat(parent, ".")))); });
                     newFields = newFields.concat(siblings);
                 }
                 else {
-                    newFields = array_move_1.default(fields, oldIndex, newIndex);
+                    newFields = (0, array_move_1.default)(fields, oldIndex, newIndex);
                 }
                 if (_this.props.onFieldsChange) {
                     _this.props.onFieldsChange(newFields);
@@ -296,7 +308,7 @@ var ListVirtualized = /** @class */ (function (_super) {
                 _this.setState({ sort: sort });
             }
         };
-        _this.getAllFilters = memoize_one_1.default(function (filters, overwrite) {
+        _this.getAllFilters = (0, memoize_one_1.default)(function (filters, overwrite) {
             var allFilters = [];
             for (var field in filters) {
                 var fieldDefinition = _this.getColumnDefinition(field);
@@ -308,7 +320,7 @@ var ListVirtualized = /** @class */ (function (_super) {
             }
             return allFilters;
         }, utils_2.equalityFn);
-        _this.calcColumns = memoize_one_1.default(function (fields, overwrite) {
+        _this.calcColumns = (0, memoize_one_1.default)(function (fields, overwrite) {
             var columns = [];
             fields.forEach(function (field) {
                 var column = _this.getColumnDefinition(field);
@@ -333,7 +345,7 @@ var ListVirtualized = /** @class */ (function (_super) {
     }
     ListVirtualized.prototype.getSnapshotBeforeUpdate = function (prevProps, prevState) {
         if (this.props.onFieldsChange && (this.props.onOverwriteChange)) {
-            if (!lodash_1.isEqual(this.state.overwrite, prevState.overwrite)) {
+            if (!(0, lodash_1.isEqual)(this.state.overwrite, prevState.overwrite)) {
                 // @ts-ignore
                 this.gridRef.current && this.gridRef.current.resetAfterColumnIndex(0, false);
                 return null;
@@ -350,16 +362,16 @@ var ListVirtualized = /** @class */ (function (_super) {
     };
     ListVirtualized.getDerivedStateFromProps = function (props, state) {
         var result = {};
-        if (props.onFieldsChange && !lodash_1.isEqual(props.fields, state.fields)) {
+        if (props.onFieldsChange && !(0, lodash_1.isEqual)(props.fields, state.fields)) {
             result.fields = props.fields || props.schema.getFields();
         }
-        if ((props.onOverwriteChange) && !lodash_1.isEqual(props.overwrite, state.overwrite)) {
+        if ((props.onOverwriteChange) && !(0, lodash_1.isEqual)(props.overwrite, state.overwrite)) {
             result.overwrite = __assign({}, props.overwrite);
         }
-        if (props.onSortChange && !lodash_1.isEqual(props.sort, state.sort)) {
+        if (props.onSortChange && !(0, lodash_1.isEqual)(props.sort, state.sort)) {
             result.sort = props.sort;
         }
-        if (props.onFilterChange && !lodash_1.isEqual(props.filters, state.filters)) {
+        if (props.onFilterChange && !(0, lodash_1.isEqual)(props.filters, state.filters)) {
             result.filters = props.filters || {};
         }
         return result;
@@ -388,10 +400,10 @@ var ListVirtualized = /** @class */ (function (_super) {
         this.estimatedColumnWidth = columns.reduce(function (mem, c) { return c ? c.width + mem : mem; }, 0) / columns.length;
         var allFilters = this.getAllFilters(filters, overwrite);
         var whereAndFilter;
-        if (where && !lodash_1.isEmpty(where) && allFilters.length > 0) {
-            whereAndFilter = { AND: __spreadArrays([where], allFilters) };
+        if (where && !(0, lodash_1.isEmpty)(where) && allFilters.length > 0) {
+            whereAndFilter = { AND: __spreadArray([where], allFilters, true) };
         }
-        else if (where && !lodash_1.isEmpty(where)) {
+        else if (where && !(0, lodash_1.isEmpty)(where)) {
             whereAndFilter = where;
         }
         else if (allFilters.length > 0) {
@@ -407,12 +419,12 @@ var ListVirtualized = /** @class */ (function (_super) {
                 _this.data = Array(count).fill(undefined);
             }
             if (!loading && count > _this.data.length) { //when your are polling or refetching and the count change
-                _this.data = __spreadArrays(_this.data, Array(count - _this.data.length).fill(undefined));
+                _this.data = __spreadArray(__spreadArray([], _this.data, true), Array(count - _this.data.length).fill(undefined), true);
             }
             if (dataCollection.length && !loading) {
                 // @ts-ignore
                 //this.gridRef.current &&  this.gridRef.current.resetAfterRowIndex(variables.skip)
-                (_b = _this.data).splice.apply(_b, __spreadArrays([variables.skip, dataCollection.length], dataCollection));
+                (_b = _this.data).splice.apply(_b, __spreadArray([variables.skip, dataCollection.length], dataCollection, false));
             }
             !loading && onDataChange && onDataChange(_this.data);
             _this.refetch = refetch;
@@ -420,7 +432,7 @@ var ListVirtualized = /** @class */ (function (_super) {
             _this.stopPolling = stopPolling;
             _this.variables = variables;
             var tHeadHeight = _this.tHead.current && _this.tHead.current.offsetHeight || 95;
-            var itemData = createItemData(__spreadArrays(_this.data), columns, refetch, query, variables, onClick, onMouseEnter, onMouseLeave);
+            var itemData = createItemData(__spreadArray([], _this.data, true), columns, refetch, query, variables, onClick, onMouseEnter, onMouseLeave);
             var headerNode = null;
             if (typeof header === 'function') {
                 var Header = header;
@@ -443,7 +455,7 @@ var ListVirtualized = /** @class */ (function (_super) {
                                 return event.target && event.target.classList && event.target.classList.contains('react-resizable-handle') || event.target.classList.contains('no-draggable') || ['INPUT', 'SELECT', 'TEXTAREA'].includes(event.target.tagName);
                             }, axis: 'x', lockAxis: 'x', pressThreshold: 10, distance: 10, onSortEnd: _this.onColumnOrderChange, width: _this.estimatedColumnWidth * columns.length, height: tHeadHeight }, columns.map(function (column, index) {
                             return column ?
-                                react_1.default.createElement(SortableColumns_1.SortableColumn, { height: tHeadHeight, key: "item-" + column.field, index: index, columnIndex: index, column: column, sort: sort, overwrite: overwrite === null || overwrite === void 0 ? void 0 : overwrite[column.field], filters: filters, schema: schema, onResizeStop: _this.onResizeStop, onSortChange: _this.onSortChange, onFilterChange: _this.onFilterChange, onHideColumn: _this.onHideColumn }) : react_1.default.createElement("span", { key: index });
+                                react_1.default.createElement(SortableColumns_1.SortableColumn, { height: tHeadHeight, key: "item-".concat(column.field), index: index, columnIndex: index, column: column, sort: sort, overwrite: overwrite === null || overwrite === void 0 ? void 0 : overwrite[column.field], filters: filters, schema: schema, onResizeStop: _this.onResizeStop, onSortChange: _this.onSortChange, onFilterChange: _this.onFilterChange, onHideColumn: _this.onHideColumn }) : react_1.default.createElement("span", { key: index });
                         }))),
                     error && react_1.default.createElement(antd_1.Result, { status: "500", subTitle: error.message }),
                     !error && !loading && !count && react_1.default.createElement(empty_1.default, __assign({ style: { margin: '40px' } }, emptyProps)),
@@ -475,7 +487,7 @@ var ListVirtualized = /** @class */ (function (_super) {
 exports.ListVirtualized = ListVirtualized;
 exports.DefaultCellComponent = react_1.default.memo(function (_a) {
     var columnIndex = _a.columnIndex, rowIndex = _a.rowIndex, data = _a.data, field = _a.field;
-    var children = (data[rowIndex] && utils_1.get(data[rowIndex], field.split('.'))) || [];
+    var children = (data[rowIndex] && (0, utils_1.get)(data[rowIndex], field.split('.'))) || [];
     return react_1.default.createElement(react_1.default.Fragment, null, children.map(function (child, i) { return react_1.default.createElement("span", { key: i },
         child,
         react_1.default.createElement("br", null)); }));
@@ -491,12 +503,12 @@ var Cell = react_1.default.memo(function (_a) {
     var props = columns[columnIndex].props || {};
     var className = field.replace('.', '-');
     var id = data && data[rowIndex] && data[rowIndex].id || '';
-    return (react_1.default.createElement("div", { className: "mandarina-list-row-" + (rowIndex % 2 !== 0 ? 'even' : 'odd') + " mandarina-list-cell " + className + " " + id, onClick: function () { return onClick && onClick({ data: data, rowIndex: rowIndex, field: field, columnIndex: columnIndex }); }, onMouseEnter: function () { return onMouseEnter && onMouseEnter({ data: data, rowIndex: rowIndex, field: field, columnIndex: columnIndex }); }, onMouseLeave: function () { return onMouseLeave && onMouseLeave({ data: data, rowIndex: rowIndex, field: field, columnIndex: columnIndex }); }, style: style },
+    return (react_1.default.createElement("div", { className: "mandarina-list-row-".concat(rowIndex % 2 !== 0 ? 'even' : 'odd', " mandarina-list-cell ").concat(className, " ").concat(id), onClick: function () { return onClick && onClick({ data: data, rowIndex: rowIndex, field: field, columnIndex: columnIndex }); }, onMouseEnter: function () { return onMouseEnter && onMouseEnter({ data: data, rowIndex: rowIndex, field: field, columnIndex: columnIndex }); }, onMouseLeave: function () { return onMouseLeave && onMouseLeave({ data: data, rowIndex: rowIndex, field: field, columnIndex: columnIndex }); }, style: style },
         !data[rowIndex] && loadingElement,
         data[rowIndex] &&
             react_1.default.createElement(CellComponent, __assign({ columnIndex: columnIndex, rowIndex: rowIndex, data: data, field: field, refetch: refetch, variables: variables, query: query }, props))));
 }, react_window_1.areEqual);
-exports.getParentCellComponent = function (field, schema) {
+var getParentCellComponent = function (field, schema) {
     var from = 0;
     do {
         from = field.indexOf('.', from + 1);
@@ -510,4 +522,5 @@ exports.getParentCellComponent = function (field, schema) {
     } while (from > 0);
     return false;
 };
+exports.getParentCellComponent = getParentCellComponent;
 //# sourceMappingURL=ListVirtualized.js.map

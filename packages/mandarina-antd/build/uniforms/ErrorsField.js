@@ -30,9 +30,9 @@ var react_1 = __importDefault(require("react"));
 var filterDOMProps_1 = __importDefault(require("uniforms/filterDOMProps"));
 var nothing_1 = __importDefault(require("uniforms/nothing"));
 var ErrorsField = function (_a, _b) {
-    var _c = _b.uniforms, error = _c.error, schema = _c.schema;
     var children = _a.children, props = __rest(_a, ["children"]);
-    return (!error && !children) ? nothing_1.default : (react_1.default.createElement("div", __assign({}, filterDOMProps_1.default(props)),
+    var _c = _b.uniforms, error = _c.error, schema = _c.schema;
+    return (!error && !children) ? nothing_1.default : (react_1.default.createElement("div", __assign({}, (0, filterDOMProps_1.default)(props)),
         react_1.default.createElement("div", { style: { clear: 'both' } }),
         children,
         react_1.default.createElement("div", { dataShow: "true", className: "ant-alert ant-alert-error ant-alert-with-description" },

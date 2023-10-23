@@ -5,7 +5,7 @@ export declare const uuid: () => string;
 export interface OnFilterChange {
     (field: string, filter: any): void;
 }
-export declare type Where = any;
+export type Where = any;
 interface ListFilterProps {
     onFilterChange: OnFilterChange;
     field: string;

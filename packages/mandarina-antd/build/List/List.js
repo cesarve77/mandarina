@@ -3,10 +3,12 @@ var __extends = (this && this.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
         return extendStatics(d, b);
     };
     return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
         extendStatics(d, b);
         function __() { this.constructor = d; }
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -23,6 +25,29 @@ var __assign = (this && this.__assign) || function () {
     };
     return __assign.apply(this, arguments);
 };
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 var __rest = (this && this.__rest) || function (s, e) {
     var t = {};
     for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
@@ -34,24 +59,20 @@ var __rest = (this && this.__rest) || function (s, e) {
         }
     return t;
 };
-var __spreadArrays = (this && this.__spreadArrays) || function () {
-    for (var s = 0, i = 0, il = arguments.length; i < il; i++) s += arguments[i].length;
-    for (var r = Array(s), k = 0, i = 0; i < il; i++)
-        for (var a = arguments[i], j = 0, jl = a.length; j < jl; j++, k++)
-            r[k] = a[j];
-    return r;
+var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
+    if (pack || arguments.length === 2) for (var i = 0, l = from.length, ar; i < l; i++) {
+        if (ar || !(i in from)) {
+            if (!ar) ar = Array.prototype.slice.call(from, 0, i);
+            ar[i] = from[i];
+        }
+    }
+    return to.concat(ar || Array.prototype.slice.call(from));
 };
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
-    result["default"] = mod;
-    return result;
-};
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.List = void 0;
 var table_1 = __importDefault(require("antd/lib/table"));
 var mandarina_1 = require("mandarina");
 var React = __importStar(require("react"));
@@ -72,28 +93,28 @@ var List = /** @class */ (function (_super) {
         _this.hasNextPage = false;
         _this.refetching = false;
         _this.getColumnDefinition = function (field, index) {
-            var parentPath = ListVirtualized_1.getParentCellComponent(field, _this.props.schema);
+            var parentPath = (0, ListVirtualized_1.getParentCellComponent)(field, _this.props.schema);
             if (parentPath) {
                 field = parentPath;
             }
             var overwrite = _this.props.overwrite && _this.props.overwrite[field];
             var definition;
             if (!_this.props.schema.hasPath(field) && field.indexOf('.') < 0 && overwrite) {
-                definition = lodash_1.merge({
+                definition = (0, lodash_1.merge)({
                     list: {
                         noFilter: true,
                         noSort: true
                     }
-                }, Mutate_1.deepClone(_this.props.schema.applyDefinitionsDefaults({ type: String }, field)), overwrite);
+                }, (0, Mutate_1.deepClone)(_this.props.schema.applyDefinitionsDefaults({ type: String }, field)), overwrite);
             }
             else {
                 definition = _this.props.schema.getPathDefinition(field);
                 if (overwrite) {
-                    definition = lodash_1.merge(Mutate_1.deepClone(definition), overwrite);
+                    definition = (0, lodash_1.merge)((0, Mutate_1.deepClone)(definition), overwrite);
                 }
             }
             if (!definition.list)
-                throw new Error("You need to provide overwrite full definition for \"" + field + "\"");
+                throw new Error("You need to provide overwrite full definition for \"".concat(field, "\""));
             if (definition.list.hidden)
                 return;
             return {
@@ -136,7 +157,7 @@ var List = /** @class */ (function (_super) {
                                 // so we have the new `endCursor` and `hasNextPage` values
                                 _b[name] = {
                                     __typename: previousResult[name].__typename,
-                                    edges: __spreadArrays(previousResult[name].edges, newEdges),
+                                    edges: __spreadArray(__spreadArray([], previousResult[name].edges, true), newEdges, true),
                                     pageInfo: pageInfo,
                                     aggregate: aggregate
                                 },
@@ -166,7 +187,7 @@ var List = /** @class */ (function (_super) {
             var size = _a.size;
             _this.setState(function (_a) {
                 var columns = _a.columns;
-                var nextColumns = __spreadArrays(columns);
+                var nextColumns = __spreadArray([], columns, true);
                 nextColumns[index] = __assign(__assign({}, nextColumns[index]), { width: size.width });
                 "";
                 return { columns: nextColumns };
@@ -209,7 +230,7 @@ var List = /** @class */ (function (_super) {
                 _this.variables = variables;
                 _this.buildFetchMore(fetchMore, pageInfo && pageInfo.endCursor);
                 _this.hasNextPage = !!(pageInfo && pageInfo.hasNextPage);
-                var dataSource = loading && _this.hasNextPage ? __spreadArrays(data, new Array(first).fill({})) : data;
+                var dataSource = loading && _this.hasNextPage ? __spreadArray(__spreadArray([], data, true), new Array(first).fill({}), true) : data;
                 if (!loading)
                     _this.firstLoad = false;
                 //this.lastHeight = this.me && this.me.current && this.me.current.offsetHeight || 0// && this.me.current && this.me.current.clientHeight || document.body.clientHeight + scrollTop + 200

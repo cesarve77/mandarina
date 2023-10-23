@@ -42,11 +42,11 @@ export declare class Schema {
     getSchemaPermission(roles: string[] | undefined, action: Action): boolean;
     getFieldPermission(field: string, action: Action, roles?: string[]): boolean;
     _getKeyDefinition(key: string): FieldDefinition;
-    static mapValidators: (validators: (string | Validator | ValidatorFinder)[]) => Validator[];
+    static mapValidators: (validators: (Validator | string | ValidatorFinder)[]) => Validator[];
     applyDefinitionsDefaults(definition: UserFieldDefinition, key: string): FieldDefinition;
     validateQuery: (fields: any, roles: string[]) => void;
     validateConnection: (roles: string[]) => void;
-    validateMutation: (action: "update" | "create" | "delete" | "read", mutation: any, roles?: string[] | undefined) => void;
+    validateMutation: (action: Action, mutation: any, roles?: string[]) => void;
     /**
      * Mutate the model,with all keys  proper types and null for undefined
      * @param model
@@ -67,7 +67,7 @@ export declare function Integer(): undefined;
 export declare namespace Integer {
     const type: string;
 }
-export declare type ErrorFromServerMapper = (field: string, error: any) => string | undefined;
+export type ErrorFromServerMapper = (field: string, error: any) => string | undefined;
 export interface TableIndex {
     type: 'UNIQUE' | 'INDEX' | 'ID';
     fields: {
@@ -87,11 +87,11 @@ export interface SchemaShape {
 export interface UserSchemaShape {
     [fieldName: string]: UserFieldDefinition;
 }
-export declare type Native = (props: any) => any;
-export declare type Types = Native | string | Array<string> | Array<Native>;
-declare type Where = any;
-export declare type FilterMethod = (filter: any) => Where;
-export declare type FilterComponent = ((props: any) => ReactElement) | null;
+export type Native = (props: any) => any;
+export type Types = Native | string | Array<string> | Array<Native>;
+type Where = any;
+export type FilterMethod = (filter: any) => Where;
+export type FilterComponent = ((props: any) => ReactElement) | null;
 export interface CellComponentProps {
     columnIndex: number;
     rowIndex: number;
@@ -99,7 +99,7 @@ export interface CellComponentProps {
     field: string;
     [rest: string]: any;
 }
-export declare type CellComponent = React.ComponentType<CellComponentProps & any>;
+export type CellComponent = React.ComponentType<CellComponentProps & any>;
 export interface UserFieldDefinitionCommon {
     label?: LabelOrResolver;
     description?: string;
@@ -160,7 +160,7 @@ export interface FieldDefinitionNative extends FieldDefinitionCommon {
     isTable: false;
     type: Native;
 }
-export declare type FieldDefinition = FieldDefinitionNative | FieldDefinitionTable;
+export type FieldDefinition = FieldDefinitionNative | FieldDefinitionTable;
 export interface FieldDefinitionCommon extends UserFieldDefinitionCommon {
     key: string;
     label: Label;
@@ -238,9 +238,9 @@ export interface OverwriteDefinition {
         noSort?: boolean;
     };
 }
-export declare type Label = string | false;
-export declare type LabelResolver = (definition: UserFieldDefinition) => string;
-export declare type LabelOrResolver = Label | LabelResolver | undefined;
+export type Label = string | false;
+export type LabelResolver = (definition: UserFieldDefinition) => string;
+export type LabelOrResolver = Label | LabelResolver | undefined;
 export interface Names {
     query: {
         single: string;
@@ -265,12 +265,12 @@ export interface Names {
         update: string;
     };
 }
-export declare type Permission = ('everybody' | 'nobody' | string)[];
+export type Permission = ('everybody' | 'nobody' | string)[];
 export interface Permissions {
     read?: Permission;
     create?: Permission;
     update?: Permission;
     delete?: Permission;
 }
-export declare type Action = keyof Permissions;
+export type Action = keyof Permissions;
 export {};

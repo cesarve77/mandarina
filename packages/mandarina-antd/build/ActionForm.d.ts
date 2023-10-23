@@ -13,5 +13,5 @@ export interface ActionFormProps extends AutoFormProps {
     overwrite?: Overwrite;
     [key: string]: any;
 }
-declare const _default: React.ForwardRefExoticComponent<Pick<ActionFormProps, React.ReactText> & React.RefAttributes<HTMLFormElement>>;
+declare const _default: React.ForwardRefExoticComponent<Pick<ActionFormProps, keyof ActionFormProps> & React.RefAttributes<HTMLFormElement>>;
 export default _default;

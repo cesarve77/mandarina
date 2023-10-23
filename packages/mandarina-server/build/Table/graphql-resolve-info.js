@@ -29,7 +29,7 @@ function isExcludedByDirective(info, ast) {
 }
 // @ts-ignore
 function dotConcat(a, b) {
-    return a ? a + "." + b : b;
+    return a ? "".concat(a, ".").concat(b) : b;
 }
 // @ts-ignore
 function getFieldSet(info, asts, prefix) {

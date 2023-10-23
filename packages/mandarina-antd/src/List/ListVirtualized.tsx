@@ -709,7 +709,7 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
 
 export const DefaultCellComponent: CellComponent = React.memo(({columnIndex, rowIndex, data, field}) => {
         const children = (data[rowIndex] && get(data[rowIndex], field.split('.'))) || [];
-        return <>{children.map((child, i) => <span key={i}>{child}<br/></span>)}</>
+        return <>{children.map((child: any, i: number) => <span key={i}>{child}<br/></span>)}</>
     }
     , areEqual);
 

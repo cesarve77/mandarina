@@ -467,16 +467,19 @@ export const getSubSchemaMutations = (model: Model, schema: Schema, mutationType
                         obj[key] = {
                             update: getSubSchemaMutations(clone, schema, 'update')
                         }
-                    } else if (value && value.id===null) {
-                        obj[key] = {
-                            disconnect: true
-                        }
+
                     } else {
                         const {id, ...clone} = value
-                        obj[key] = {
-                            upsert: {
-                                create: getSubSchemaMutations(clone, schema, 'create'),
-                                update: getSubSchemaMutations(clone, schema, 'update')
+                        if (id === null && Object.keys(clone).length === 0) {
+                            obj[key] = {
+                                disconnect: true
+                            }
+                        } else {
+                            obj[key] = {
+                                upsert: {
+                                    create: getSubSchemaMutations(clone, schema, 'create'),
+                                    update: getSubSchemaMutations(clone, schema, 'update')
+                                }
                             }
                         }
                     }

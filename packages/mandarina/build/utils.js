@@ -1,12 +1,14 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getDecendentsDot = function (keys, parent) {
+exports.generateUUID = exports.generateRandomAlpha = exports.generateRandomNumber = exports.ensureId = exports.insertParents = exports.getParentsDot = exports.getDecendentsDot = void 0;
+var getDecendentsDot = function (keys, parent) {
     parent = parent.replace(/\.\d/g, '.');
     parent = parent.replace(/\.$/, '');
-    var regEx = new RegExp("^" + parent + "\\.");
+    var regEx = new RegExp("^".concat(parent, "\\."));
     return keys.filter(function (key) { return key.match(regEx); }).map(function (key) { return key.replace(regEx, ''); });
 };
-exports.getParentsDot = function (keys) {
+exports.getDecendentsDot = getDecendentsDot;
+var getParentsDot = function (keys) {
     var parents = [];
     keys.forEach(function (key) {
         var first = key.split('.').shift();
@@ -15,7 +17,8 @@ exports.getParentsDot = function (keys) {
     });
     return parents;
 };
-exports.insertParents = function (keys) {
+exports.getParentsDot = getParentsDot;
+var insertParents = function (keys) {
     for (var i = 0; i < keys.length; i++) {
         var key = keys[i];
         var parent_1 = key.substring(0, key.lastIndexOf('.'));
@@ -26,7 +29,8 @@ exports.insertParents = function (keys) {
     }
     return keys;
 };
-exports.ensureId = function (fields) {
+exports.insertParents = insertParents;
+var ensureId = function (fields) {
     var result = [];
     fields.forEach(function (field) {
         var dot = 1;
@@ -43,26 +47,30 @@ exports.ensureId = function (fields) {
     });
     return result;
 };
-exports.generateRandomNumber = function (min, max) {
+exports.ensureId = ensureId;
+var generateRandomNumber = function (min, max) {
     if (min === void 0) { min = 0; }
     if (max === void 0) { max = 1; }
     return Math.floor(Math.random() * (max - min + 1) + min);
 };
-exports.generateRandomAlpha = function (n) {
+exports.generateRandomNumber = generateRandomNumber;
+var generateRandomAlpha = function (n) {
     if (n === void 0) { n = 3; }
     var to = Math.floor(n / 8);
     var rest = n % 8;
     var result = '';
     for (var i = 1; i <= to; i++) {
-        result += exports.generateRandomNumber(Math.pow(36, 7), Math.pow(36, 8)).toString(36);
+        result += (0, exports.generateRandomNumber)(Math.pow(36, 7), Math.pow(36, 8)).toString(36);
     }
     if (rest > 0) {
-        result += exports.generateRandomNumber(Math.pow(36, rest - 1), Math.pow(36, rest)).toString(36);
+        result += (0, exports.generateRandomNumber)(Math.pow(36, rest - 1), Math.pow(36, rest)).toString(36);
     }
     return result;
 };
-exports.generateUUID = function (gap) {
+exports.generateRandomAlpha = generateRandomAlpha;
+var generateUUID = function (gap) {
     if (gap === void 0) { gap = 33853318889500; }
-    return (new Date().getTime() + gap).toString(36) + exports.generateRandomAlpha(16);
+    return (new Date().getTime() + gap).toString(36) + (0, exports.generateRandomAlpha)(16);
 };
+exports.generateUUID = generateUUID;
 //# sourceMappingURL=utils.js.map

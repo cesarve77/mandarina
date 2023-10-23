@@ -18,7 +18,7 @@ export declare class CustomAction {
      */
     constructor(schema: Schema | string, actionOptions: ActionOptions);
     static getInstance(name: string): CustomAction;
-    getFields(): any;
+    getFields(): string[] | undefined;
     getActions(): {};
 }
 export interface ActionOptions {

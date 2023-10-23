@@ -25,6 +25,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.joinValues = void 0;
 var react_apollo_1 = require("react-apollo");
 var react_1 = __importDefault(require("react"));
 var graphql_tag_1 = __importDefault(require("graphql-tag"));
@@ -38,7 +39,7 @@ var defaultLabeler = function (doc) {
     var id = clone.id;
     delete clone.id;
     delete clone.__typename;
-    return exports.joinValues(clone, id);
+    return (0, exports.joinValues)(clone, id);
 };
 var getTransform = function (docs, labeler) {
     if (!Array.isArray(docs) || docs.length === 0)
@@ -49,7 +50,7 @@ var getTransform = function (docs, labeler) {
     });
     return function (id) { return mapper[id] && mapper[id].toString(); };
 };
-exports.joinValues = function (obj, defaultValue, divider) {
+var joinValues = function (obj, defaultValue, divider) {
     if (divider === void 0) { divider = ' '; }
     if (!obj)
         return defaultValue;
@@ -61,7 +62,7 @@ exports.joinValues = function (obj, defaultValue, divider) {
     var result = [];
     keys.forEach(function (key) {
         if (obj[key] === 'object') {
-            return result.push(exports.joinValues(obj[key]));
+            return result.push((0, exports.joinValues)(obj[key]));
         }
         else {
             return result.push(obj[key]);
@@ -69,6 +70,7 @@ exports.joinValues = function (obj, defaultValue, divider) {
     });
     return result.join(divider);
 };
+exports.joinValues = joinValues;
 var Table = function (_a) {
     var query = _a.query, where = _a.where, mode = _a.mode, _b = _a.labeler, labeler = _b === void 0 ? defaultLabeler : _b, props = __rest(_a, ["query", "where", "mode", "labeler"]);
     var table = (props && props.type) || props.field.type;
@@ -76,7 +78,7 @@ var Table = function (_a) {
         var schema = mandarina_1.Schema.getInstance(table);
         var queryName_1 = schema.names.query.plural;
         var inputName = schema.names.input.where.plural;
-        var QUERY = graphql_tag_1.default("query " + queryName_1 + "($where: " + inputName + ") {" + queryName_1 + " (where: $where) { id " + query + " }}");
+        var QUERY = (0, graphql_tag_1.default)("query ".concat(queryName_1, "($where: ").concat(inputName, ") {").concat(queryName_1, " (where: $where) { id ").concat(query, " }}"));
         return (react_1.default.createElement(react_apollo_1.Query, { query: QUERY, variables: { where: where } }, function (_a) {
             var loading = _a.loading, error = _a.error, data = _a.data, variables = _a.variables, refetch = _a.refetch;
             if (error)
@@ -101,7 +103,7 @@ var Table = function (_a) {
             }
             else {
                 value = props.value && props.value.id;
-                if (lodash_1.isEmpty(value))
+                if ((0, lodash_1.isEmpty)(value))
                     value = null;
             }
             return react_1.default.createElement(SelectField_1.default, __assign({}, props, { filterOption: function (input, option) {
@@ -112,7 +114,7 @@ var Table = function (_a) {
     else {
     }
 };
-exports.default = connectField_1.default(Table, {
+exports.default = (0, connectField_1.default)(Table, {
     ensureValue: false,
     includeInChain: false,
     initialValue: true

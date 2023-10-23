@@ -3,10 +3,12 @@ var __extends = (this && this.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
         return extendStatics(d, b);
     };
     return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
         extendStatics(d, b);
         function __() { this.constructor = d; }
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -23,6 +25,29 @@ var __assign = (this && this.__assign) || function () {
     };
     return __assign.apply(this, arguments);
 };
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -38,7 +63,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     function verb(n) { return function (v) { return step([n, v]); }; }
     function step(op) {
         if (f) throw new TypeError("Generator is already executing.");
-        while (_) try {
+        while (g && (g = 0, op[0] && (_ = 0)), _) try {
             if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
             if (y = 0, t) op = [op[0] & 2, t.value];
             switch (op[0]) {
@@ -70,13 +95,6 @@ var __rest = (this && this.__rest) || function (s, e) {
         }
     return t;
 };
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
-    result["default"] = mod;
-    return result;
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -96,7 +114,7 @@ var ConfirmActionButton = /** @class */ (function (_super) {
         var _this = _super.call(this, props) || this;
         _this.refetchQueries = function (mutationResult) {
             var schema = mandarina_1.Schema.instances[_this.schemaName];
-            return Mutate_1.refetchQueries(mutationResult, _this.props.client, _this.props.refetchSchemas, schema);
+            return (0, Mutate_1.refetchQueries)(mutationResult, _this.props.client, _this.props.refetchSchemas, schema);
         };
         _this.schemaName = _this.props.result.replace(/[\[\]\!]/g, '');
         return _this;
@@ -108,18 +126,18 @@ var ConfirmActionButton = /** @class */ (function (_super) {
         if (mandarina_1.Schema.instances[this.schemaName]) {
             if (!resultFields)
                 throw new Error('ActionForm: if the result is a Schema you need to enter resultFields');
-            queryFromFields = utils_1.buildQueryFromFields(resultFields);
+            queryFromFields = (0, utils_1.buildQueryFromFields)(resultFields);
         }
         if (resultFields) {
-            queryFromFields = utils_1.buildQueryFromFields(resultFields, false);
+            queryFromFields = (0, utils_1.buildQueryFromFields)(resultFields, false);
         }
         var dataString = '', dataString2 = '';
         if (schema) {
-            dataString = "($data: " + utils_2.capitalize(schema.name) + "Input!)";
+            dataString = "($data: ".concat((0, utils_2.capitalize)(schema.name), "Input!)");
             dataString2 = "(data: $data)";
         }
-        var gqlString = "\n            mutation " + actionName + " " + dataString + "{\n                " + actionName + " " + dataString2 + "\n                    " + queryFromFields + "\n            }\n        ";
-        var MUTATION = graphql_tag_1.default(gqlString);
+        var gqlString = "\n            mutation ".concat(actionName, " ").concat(dataString, "{\n                ").concat(actionName, " ").concat(dataString2, "\n                    ").concat(queryFromFields, "\n            }\n        ");
+        var MUTATION = (0, graphql_tag_1.default)(gqlString);
         return (React.createElement(react_apollo_1.Mutation, { mutation: MUTATION, onCompleted: onCompleted, 
             // @ts-ignore
             refetchQueries: refetchQueries, update: update, ignoreResults: ignoreResults, optimisticResponse: optimisticResponse, awaitRefetchQueries: awaitRefetchQueries, onError: onError, context: context }, function (mutation, _a) {
@@ -139,7 +157,7 @@ var ConfirmActionButton = /** @class */ (function (_super) {
     };
     return ConfirmActionButton;
 }(React.PureComponent));
-var ConfirmActionFormWithApollo = react_apollo_1.withApollo(ConfirmActionButton);
+var ConfirmActionFormWithApollo = (0, react_apollo_1.withApollo)(ConfirmActionButton);
 exports.default = React.forwardRef(function (props, ref) {
     return React.createElement(ConfirmActionFormWithApollo, __assign({}, props, { innerRef: ref }));
 });

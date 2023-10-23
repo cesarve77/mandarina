@@ -25,7 +25,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     function verb(n) { return function (v) { return step([n, v]); }; }
     function step(op) {
         if (f) throw new TypeError("Generator is already executing.");
-        while (_) try {
+        while (g && (g = 0, op[0] && (_ = 0)), _) try {
             if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
             if (y = 0, t) op = [op[0] & 2, t.value];
             switch (op[0]) {
@@ -50,6 +50,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.Table = void 0;
 var mandarina_1 = require("mandarina");
 var UniqueSchemaError_1 = require("mandarina/build/Errors/UniqueSchemaError");
 var SchemaInstanceNotFound_1 = require("mandarina/build/Errors/SchemaInstanceNotFound");
@@ -72,8 +73,8 @@ var Table = /** @class */ (function () {
     function Table(schema, tableOptions) {
         var _this = this;
         this.insertWhereIntoInfo = function (info, user, isSingleMutation, action, operationName) {
-            if (isSingleMutation === void 0) { isSingleMutation = false; }
             var _a, _b;
+            if (isSingleMutation === void 0) { isSingleMutation = false; }
             var field = [];
             var fields = new Set();
             var required = false;
@@ -81,7 +82,7 @@ var Table = /** @class */ (function () {
                 var value = _a.name.value;
                 return value;
             })) || [];
-            var query = language_1.visit(info.operation, {
+            var query = (0, language_1.visit)(info.operation, {
                 enter: function (node, key, parent, path, ancestors) {
                     if (node.kind === 'VariableDefinition') {
                         if (!allowedVariables.includes(node === null || node === void 0 ? void 0 : node.variable.name.value)) {
@@ -107,25 +108,25 @@ var Table = /** @class */ (function () {
                         }
                         if (table && table.options.where && (!isSingleMutation && table === _this)) {
                             var where = table.options.where(user, action, operationName);
-                            if (!where || lodash_1.isEmpty(where))
+                            if (!where || (0, lodash_1.isEmpty)(where))
                                 return;
-                            var clone = Mutate_1.deepClone(node);
+                            var clone = (0, Mutate_1.deepClone)(node);
                             var originalWhereObj = clone.arguments ? clone.arguments.find(function (a) { return a.name.value === 'where'; }) : null;
                             var originalWhereString = '';
                             if (originalWhereObj && table === _this) {
-                                originalWhereString = language_1.print(originalWhereObj.value);
+                                originalWhereString = (0, language_1.print)(originalWhereObj.value);
                                 required = true;
                             }
-                            var newWhereString = stringify_object_1.default(where, { singleQuotes: false });
-                            var finalWhereString = originalWhereString ? "{AND:[" + originalWhereString + "," + newWhereString + "]}" : newWhereString;
+                            var newWhereString = (0, stringify_object_1.default)(where, { singleQuotes: false });
+                            var finalWhereString = originalWhereString ? "{AND:[".concat(originalWhereString, ",").concat(newWhereString, "]}") : newWhereString;
                             if (originalWhereObj) {
-                                originalWhereObj.value = language_1.parseValue(new language_1.Source(finalWhereString));
+                                originalWhereObj.value = (0, language_1.parseValue)(new language_1.Source(finalWhereString));
                             }
                             else {
                                 clone.arguments.push({
                                     kind: 'Argument',
                                     name: { kind: 'Name', value: 'where' },
-                                    value: language_1.parseValue(new language_1.Source(finalWhereString))
+                                    value: (0, language_1.parseValue)(new language_1.Source(finalWhereString))
                                 });
                             }
                             return clone;
@@ -139,7 +140,7 @@ var Table = /** @class */ (function () {
                     }
                 }
             });
-            var queryString = language_1.print(query);
+            var queryString = (0, language_1.print)(query);
             if (required) {
                 queryString = queryString.replace(/\$where: (\w*)Input(,| |\))/, '$where: $1Input!$2');
             }
@@ -213,7 +214,7 @@ var Table = /** @class */ (function () {
                                 subOperationName = operationName.substr(0, 6);
                                 action = (['create', 'update', 'delete'].includes(subOperationName) ? subOperationName : 'read');
                                 context.action = action;
-                                capitalizedAction = utils_1.capitalize(action);
+                                capitalizedAction = (0, utils_1.capitalize)(action);
                                 context.operationName = operationName;
                                 return [4 /*yield*/, this.callHook(this.name, 'beforeValidate', _, args, context, info)];
                             case 2:
@@ -229,13 +230,13 @@ var Table = /** @class */ (function () {
                             case 3:
                                 exists = (_b.sent());
                                 if (!exists) {
-                                    throw new Error(action + " on " + this.schema.name + " not found for " + JSON.stringify(where));
+                                    throw new Error("".concat(action, " on ").concat(this.schema.name, " not found for ").concat(JSON.stringify(where)));
                                 }
                                 _b.label = 4;
                             case 4:
                                 //VALIDATE IF USER CAN MUTATE THOSE FIELDS
-                                this.schema.validateMutation(action, Mutate_1.deepClone(args), user && user.roles || []);
-                                return [4 /*yield*/, this.callHook(this.name, "before" + capitalizedAction, _, args, context, info)];
+                                this.schema.validateMutation(action, (0, Mutate_1.deepClone)(args), user && user.roles || []);
+                                return [4 /*yield*/, this.callHook(this.name, "before".concat(capitalizedAction), _, args, context, info)];
                             case 5:
                                 _b.sent();
                                 return [4 /*yield*/, context.prisma.request(queryString, args)];
@@ -246,7 +247,7 @@ var Table = /** @class */ (function () {
                                 }
                                 result = Object.values(data.data)[0];
                                 context.result = result;
-                                return [4 /*yield*/, this.callHook(this.name, "after" + capitalizedAction, _, args, context, info)];
+                                return [4 /*yield*/, this.callHook(this.name, "after".concat(capitalizedAction), _, args, context, info)];
                             case 7:
                                 _b.sent();
                                 this.schema.validateQuery(fields, user && user.roles || []);
@@ -267,7 +268,7 @@ var Table = /** @class */ (function () {
                                 //Validate if the roles is able to read those fields
                                 if (operationName === this.schema.names.query.single) {
                                     queryString = queryString.replace(operationName, this.schema.names.query.plural);
-                                    queryString = queryString.replace(new RegExp(this.schema.names.input.where.single + "!?"), this.schema.names.input.where.plural + '!');
+                                    queryString = queryString.replace(new RegExp("".concat(this.schema.names.input.where.single, "!?")), this.schema.names.input.where.plural + '!');
                                 }
                                 return [4 /*yield*/, context.prisma.request(queryString, args)];
                             case 10:
@@ -342,7 +343,7 @@ var Table = /** @class */ (function () {
                     case 2:
                         if (!(_a < operations_1.length)) return [3 /*break*/, 14];
                         operation = operations_1[_a];
-                        hookName = "" + prefix + utils_1.capitalize(operation);
+                        hookName = "".concat(prefix).concat((0, utils_1.capitalize)(operation));
                         args2 = args.data[field][operation];
                         if (!Array.isArray(args2)) return [3 /*break*/, 9];
                         _b = 0, args2_1 = args2;
@@ -396,7 +397,7 @@ var Table = /** @class */ (function () {
                     case 19: return [3 /*break*/, 21];
                     case 20:
                         e_1 = _c.sent();
-                        console.error("Error executing hook: \"" + name + "\" in Table: " + schemaName + "\"");
+                        console.error("Error executing hook: \"".concat(name, "\" in Table: ").concat(schemaName, "\""));
                         console.error(e_1);
                         throw e_1;
                     case 21: return [2 /*return*/];

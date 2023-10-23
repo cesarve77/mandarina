@@ -25,7 +25,7 @@ export interface ControlledListProps {
     onSortChange?: (sort: Sort) => void;
     leftButtons?: ReactNode;
 }
-declare type MouseEvent = (props: {
+type MouseEvent = (props: {
     data: any;
     rowIndex: number;
     columnIndex: number;
@@ -85,10 +85,10 @@ export interface Edge {
         [field: string]: any;
     };
 }
-export declare type Filters = {
+export type Filters = {
     [field: string]: Where;
 };
-export declare type Sort = {
+export type Sort = {
     [field: string]: 1 | -1;
 };
 interface ListState {
@@ -99,7 +99,7 @@ interface ListState {
     fields: string[];
     overwrite?: Overwrite;
 }
-export declare type Refetch = (refetchOptions: any) => Promise<any>;
+export type Refetch = (refetchOptions: any) => Promise<any>;
 export interface ColumnDef {
     field: string;
     title: ReactNode;
@@ -163,8 +163,8 @@ export declare class ListVirtualized extends React.Component<ListProps, ListStat
     onResizeStop: OnResizeStop;
     onColumnOrderChange: ({ oldIndex, newIndex }: SortEnd) => void;
     onSortChange: OnSortChange;
-    getAllFilters: (filters: Filters, overwrite?: Overwrite | undefined) => any[];
-    calcColumns: (fields: string[], overwrite?: Overwrite | undefined) => (ColumnDef | null)[];
+    getAllFilters: (filters: Filters, overwrite?: Overwrite) => any[];
+    calcColumns: (fields: string[], overwrite?: Overwrite) => (ColumnDef | null)[];
     render(): JSX.Element;
 }
 export declare const DefaultCellComponent: CellComponent;
