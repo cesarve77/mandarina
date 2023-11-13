@@ -19,9 +19,9 @@ describe('utils', () => {
         const qs = '{id,otro,users{id,profile{id,name,surname} profile2{nombre2}}}'
         const result = insertHaving(qs, {
             'users': {where: {id_not: null}},
-            'users.profile': {where: {name_includes: 'cesar'}}
+            'users.profile': {where: {name_includes: 'cesar'}, orderBy: 'name_ASC'}
         })
-        expect(result).toBe('{id,otro,users(where:{id_not: null}){id,profile(where:{name_includes: "cesar"}){id,name,surname} profile2{nombre2}}}')
+        expect(result).toBe('{id,otro,users(where:{id_not: null}){id,profile(where:{name_includes: "cesar"},orderBy:name_ASC){id,name,surname} profile2{nombre2}}}')
 
 
     })

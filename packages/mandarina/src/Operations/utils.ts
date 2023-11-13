@@ -49,6 +49,9 @@ export const insertHaving = (qs: string, having?: Having) => {
         if (!inserts[i]) continue
         const variables = Object.keys(having[inserts[i]])
         let txt = variables.map(v => {
+            if (v==='orderBy'){
+                return `${v}:${having[inserts[i]][v]}`
+            }
             return `${v}:${stringifyObject(having[inserts[i]][v], {
                 indent: '',
                 singleQuotes: false
