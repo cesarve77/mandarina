@@ -1,15 +1,12 @@
 "use strict";
-var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
-    if (pack || arguments.length === 2) for (var i = 0, l = from.length, ar; i < l; i++) {
-        if (ar || !(i in from)) {
-            if (!ar) ar = Array.prototype.slice.call(from, 0, i);
-            ar[i] = from[i];
-        }
-    }
-    return to.concat(ar || Array.prototype.slice.call(from));
+var __spreadArrays = (this && this.__spreadArrays) || function () {
+    for (var s = 0, i = 0, il = arguments.length; i < il; i++) s += arguments[i].length;
+    for (var r = Array(s), k = 0, i = 0; i < il; i++)
+        for (var a = arguments[i], j = 0, jl = a.length; j < jl; j++, k++)
+            r[k] = a[j];
+    return r;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.evalWhere = void 0;
 var lodash_1 = require("lodash");
 /**
  *  take a model, and evaluate the where clause (a prisma where shape) and return if the model complain with the clause
@@ -17,7 +14,7 @@ var lodash_1 = require("lodash");
  * @param where
  * @param path
  */
-var evalWhere = function (obj, where, path) {
+exports.evalWhere = function (obj, where, path) {
     if (path === void 0) { path = []; }
     for (var condition in where) {
         if (!where.hasOwnProperty(condition))
@@ -25,7 +22,7 @@ var evalWhere = function (obj, where, path) {
         var operator = condition.substr(condition.indexOf('_') + 1);
         var key = condition.substr(0, condition.indexOf('_')) || operator;
         var right = where[condition];
-        var left = (0, lodash_1.get)(obj, __spreadArray(__spreadArray([], path, true), [key], false));
+        var left = lodash_1.get(obj, __spreadArrays(path, [key]));
         switch (operator) {
             case "AND":
                 return and(obj, right, path);
@@ -52,28 +49,27 @@ var evalWhere = function (obj, where, path) {
             case "not_contains":
                 return !new RegExp(right, 'gi').test(left);
             case "starts_with":
-                return new RegExp("^".concat(right), 'i').test(left);
+                return new RegExp("^" + right, 'i').test(left);
             case "not_starts_with":
-                return !new RegExp("^".concat(right), 'i').test(left);
+                return !new RegExp("^" + right, 'i').test(left);
             case "ends_with":
-                return new RegExp("".concat(right, "$"), 'i').test(left);
+                return new RegExp(right + "$", 'i').test(left);
             case "not_ends_with":
-                return !new RegExp("".concat(right, "$"), 'i').test(left);
+                return !new RegExp(right + "$", 'i').test(left);
             default:
                 if (typeof right === 'object' && right) {
-                    return (0, exports.evalWhere)(obj, right, __spreadArray(__spreadArray([], path, true), [operator], false));
+                    return exports.evalWhere(obj, right, __spreadArrays(path, [operator]));
                 }
                 return left === right;
         }
     }
     return true;
 };
-exports.evalWhere = evalWhere;
 var and = function (obj, whereList, path) {
     if (path === void 0) { path = []; }
     for (var _i = 0, whereList_1 = whereList; _i < whereList_1.length; _i++) {
         var where = whereList_1[_i];
-        if (!(0, exports.evalWhere)(obj, where, path))
+        if (!exports.evalWhere(obj, where, path))
             return false;
     }
     return true;
@@ -82,7 +78,7 @@ var or = function (obj, whereList, path) {
     if (path === void 0) { path = []; }
     for (var _i = 0, whereList_2 = whereList; _i < whereList_2.length; _i++) {
         var where = whereList_2[_i];
-        if ((0, exports.evalWhere)(obj, where, path))
+        if (exports.evalWhere(obj, where, path))
             return true;
     }
     return false;
@@ -91,7 +87,7 @@ var not = function (obj, whereList, path) {
     if (path === void 0) { path = []; }
     for (var _i = 0, whereList_3 = whereList; _i < whereList_3.length; _i++) {
         var where = whereList_3[_i];
-        if ((0, exports.evalWhere)(obj, where, path))
+        if (exports.evalWhere(obj, where, path))
             return false;
     }
     return true;

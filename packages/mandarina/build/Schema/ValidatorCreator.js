@@ -1,6 +1,5 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ValidateFunction = exports.ValidatorCreator = exports.compileMessage = void 0;
 /**
  * Compile a template for the a error messages based on label, arguments, and template itself
  * @param label - Humanize type of field
@@ -8,14 +7,13 @@ exports.ValidateFunction = exports.ValidatorCreator = exports.compileMessage = v
  * @param value - validated value
  * @param args - other params of the validatios
  */
-var compileMessage = function (_a) {
+exports.compileMessage = function (_a) {
     var label = _a.label, template = _a.template, value = _a.value, param = _a.param;
     var message = template.replace(/\{\{label\}\}/gi, label);
     message = message.replace(/\{\{value\}\}/gi, value);
     message = message.replace(/\{\{param\}\}/gi, param);
     return message;
 };
-exports.compileMessage = compileMessage;
 var ValidatorCreator = /** @class */ (function () {
     function ValidatorCreator(validation, name, template, arrayValidator, tableValidator) {
         if (template === void 0) { template = '{{label}} is invalid.'; }
@@ -28,13 +26,13 @@ var ValidatorCreator = /** @class */ (function () {
         this.tableValidator = tableValidator;
         ValidatorCreator.instances = ValidatorCreator.instances || {};
         if (ValidatorCreator.instances[name])
-            throw new Error("Validator named ".concat(name, " already exists, names should be uniques"));
+            throw new Error("Validator named " + name + " already exists, names should be uniques");
         ValidatorCreator.instances[name] = this;
     }
     ValidatorCreator.getInstance = function (name) {
         var instance = ValidatorCreator.instances[name];
         if (!instance)
-            throw new Error("No Validator named ".concat(name));
+            throw new Error("No Validator named " + name);
         return instance;
     };
     ValidatorCreator.prototype.setTemplate = function (template) {
@@ -82,7 +80,7 @@ var ValidatorCreator = /** @class */ (function () {
                         return {
                             key: this.key,
                             label: this.label,
-                            message: (0, exports.compileMessage)({
+                            message: exports.compileMessage({
                                 label: this.label,
                                 template: template,
                                 param: Validator.param,

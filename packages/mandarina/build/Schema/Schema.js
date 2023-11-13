@@ -10,40 +10,21 @@ var __assign = (this && this.__assign) || function () {
     };
     return __assign.apply(this, arguments);
 };
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
+var __spreadArrays = (this && this.__spreadArrays) || function () {
+    for (var s = 0, i = 0, il = arguments.length; i < il; i++) s += arguments[i].length;
+    for (var r = Array(s), k = 0, i = 0; i < il; i++)
+        for (var a = arguments[i], j = 0, jl = a.length; j < jl; j++, k++)
+            r[k] = a[j];
+    return r;
+};
 var __importStar = (this && this.__importStar) || function (mod) {
     if (mod && mod.__esModule) return mod;
     var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
+    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
+    result["default"] = mod;
     return result;
 };
-var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
-    if (pack || arguments.length === 2) for (var i = 0, l = from.length, ar; i < l; i++) {
-        if (ar || !(i in from)) {
-            if (!ar) ar = Array.prototype.slice.call(from, 0, i);
-            ar[i] = from[i];
-        }
-    }
-    return to.concat(ar || Array.prototype.slice.call(from));
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Integer = exports.Schema = void 0;
 var lodash_1 = require("lodash");
 var inflection = __importStar(require("inflection"));
 var ValidatorCreator_1 = require("./ValidatorCreator");
@@ -74,14 +55,14 @@ var Schema = /** @class */ (function () {
                 var field = fields_1[_i];
                 if (!_this.getFieldPermission(field, 'read', roles)) {
                     console.error(_this.name, _this.getPathDefinition(field), roles);
-                    throw new Error("401.1, You are not allowed to read \"".concat(field, "\" on ").concat(_this.name));
+                    throw new Error("401.1, You are not allowed to read \"" + field + "\" on " + _this.name);
                 }
             }
         };
         this.validateConnection = function (roles) {
             if (!_this.getSchemaPermission(roles, 'read')) {
                 console.log(_this.name, _this.permissions, roles);
-                throw new Error("401.2, You are not allowed to read on ".concat(_this.name));
+                throw new Error("401.2, You are not allowed to read on " + _this.name);
             }
         };
         this.validateMutation = function (action, mutation, roles) {
@@ -105,7 +86,7 @@ var Schema = /** @class */ (function () {
                             if (operation === 'set' || operation === 'connect') {
                                 var allowed = schema.getFieldPermission('id', action, roles);
                                 if (!allowed)
-                                    throw new Error("401.3, You are not allowed to ".concat(operation, " \"").concat(field, ".id\" on ").concat(_this.name));
+                                    throw new Error("401.3, You are not allowed to " + operation + " \"" + field + ".id\" on " + _this.name);
                                 continue;
                             }
                             var args2 = data[field][operation];
@@ -131,7 +112,7 @@ var Schema = /** @class */ (function () {
                     else {
                         var allowed = _this.getFieldPermission(field, action, roles);
                         if (!allowed)
-                            throw new Error("401.4, You are not allowed to ".concat(action, " \"").concat(field, "\" on ").concat(_this.name, "."));
+                            throw new Error("401.4, You are not allowed to " + action + " \"" + field + "\" on " + _this.name + ".");
                     }
                 }
             }
@@ -146,33 +127,33 @@ var Schema = /** @class */ (function () {
         this.errorFromServerMapper = errorFromServerMapper;
         this.indexes = (indexes || []);
         this.permissions = permissions || {};
-        this.shape = (0, lodash_1.mapValues)(shape, function (field, key) { return _this.applyDefinitionsDefaults(field, key); });
+        this.shape = lodash_1.mapValues(shape, function (field, key) { return _this.applyDefinitionsDefaults(field, key); });
         this.keys = Object.keys(this.shape);
         this.filePath = this.getFilePath();
-        var single = (0, utils_1.singularize)(this.name);
-        var singleUpper = (0, utils_1.capitalize)(single);
-        var plural = (0, utils_1.pluralize)(this.name);
-        var pluralUpper = (0, utils_1.capitalize)(plural);
-        var connection = "".concat(plural, "Connection");
+        var single = utils_1.singularize(this.name);
+        var singleUpper = utils_1.capitalize(single);
+        var plural = utils_1.pluralize(this.name);
+        var pluralUpper = utils_1.capitalize(plural);
+        var connection = plural + "Connection";
         this.names = {
             // Example user, users, usersConnection
             query: { single: single, plural: plural, connection: connection },
             mutation: {
-                create: "create".concat(singleUpper),
-                update: "update".concat(singleUpper),
-                delete: "delete".concat(singleUpper),
-                updateMany: "updateMany".concat(pluralUpper),
-                deleteMany: "deleteMany".concat(pluralUpper)
+                create: "create" + singleUpper,
+                update: "update" + singleUpper,
+                delete: "delete" + singleUpper,
+                updateMany: "updateMany" + pluralUpper,
+                deleteMany: "deleteMany" + pluralUpper
             },
-            orderBy: "".concat(singleUpper, "OrderByInput"),
+            orderBy: singleUpper + "OrderByInput",
             input: {
                 where: {
-                    single: "".concat(singleUpper, "WhereUniqueInput!"),
-                    plural: "".concat(singleUpper, "WhereInput"),
-                    connection: "".concat(singleUpper, "WhereInput"),
+                    single: singleUpper + "WhereUniqueInput!",
+                    plural: singleUpper + "WhereInput",
+                    connection: singleUpper + "WhereInput",
                 },
-                create: "".concat(singleUpper, "CreateInput!"),
-                update: "".concat(singleUpper, "UpdateInput!"),
+                create: singleUpper + "CreateInput!",
+                update: singleUpper + "UpdateInput!",
             }
         };
     }
@@ -184,7 +165,7 @@ var Schema = /** @class */ (function () {
     };
     Schema.prototype.extend = function (shape) {
         var _this = this;
-        this.shape = __assign(__assign({}, this.shape), (0, lodash_1.mapValues)(shape, function (def, key) { return _this.applyDefinitionsDefaults(def, key); }));
+        this.shape = __assign(__assign({}, this.shape), lodash_1.mapValues(shape, function (def, key) { return _this.applyDefinitionsDefaults(def, key); }));
         this.keys = Object.keys(this.shape);
     };
     Schema.prototype.hasPath = function (field) {
@@ -194,7 +175,7 @@ var Schema = /** @class */ (function () {
     Schema.prototype.getPathDefinition = function (field, overwrite) {
         var definition = this._getPathDefinition(field, overwrite);
         if (!definition) {
-            throw new Error("Field \"".concat(field, "\" not found in ").concat(this.name));
+            throw new Error("Field \"" + field + "\" not found in " + this.name);
         }
         return definition;
     };
@@ -235,7 +216,7 @@ var Schema = /** @class */ (function () {
         return this.filePath;
     };
     Schema.prototype.validate = function (model, fields, overwrite) {
-        fields = (0, utils_2.insertParents)(fields);
+        fields = utils_2.insertParents(fields);
         this.clean(model, fields);
         return this._validate(model, fields, overwrite);
     };
@@ -243,7 +224,7 @@ var Schema = /** @class */ (function () {
         if (roles === void 0) { roles = []; }
         if (!this.permissions[action])
             return true;
-        var rolesWithEverybody = __spreadArray(__spreadArray([], roles, true), ['everybody'], false);
+        var rolesWithEverybody = __spreadArrays(roles, ['everybody']);
         for (var _i = 0, rolesWithEverybody_1 = rolesWithEverybody; _i < rolesWithEverybody_1.length; _i++) {
             var role = rolesWithEverybody_1[_i];
             // @ts-ignore
@@ -253,7 +234,7 @@ var Schema = /** @class */ (function () {
         return false;
     };
     Schema.prototype.getFieldPermission = function (field, action, roles) {
-        var rolesWithEverybody = __spreadArray(__spreadArray([], (roles || []), true), ['everybody'], false);
+        var rolesWithEverybody = __spreadArrays((roles || []), ['everybody']);
         // let parentPath = field
         // let lastDot = parentPath.lastIndexOf('.')
         // let parentRoles: string[] = []
@@ -292,16 +273,16 @@ var Schema = /** @class */ (function () {
         var isIntegerValidator = Validators_1.isInteger.getValidatorWithParam();
         var isStringValidator = Validators_1.isString.getValidatorWithParam();
         // const isRequired = required.getValidatorWithParam();
-        if (definition.type === Number && (!(0, utils_1.hasValidator)(fieldDefinition.validators, isNumberValidator.validatorName))) {
+        if (definition.type === Number && (!utils_1.hasValidator(fieldDefinition.validators, isNumberValidator.validatorName))) {
             fieldDefinition.validators.unshift(isNumberValidator);
         }
-        if (definition.type === Date && (!(0, utils_1.hasValidator)(fieldDefinition.validators, isDateValidator.validatorName))) {
+        if (definition.type === Date && (!utils_1.hasValidator(fieldDefinition.validators, isDateValidator.validatorName))) {
             fieldDefinition.validators.unshift(isDateValidator);
         }
-        if (definition.type === Integer && (!(0, utils_1.hasValidator)(fieldDefinition.validators, isIntegerValidator.validatorName))) {
+        if (definition.type === Integer && (!utils_1.hasValidator(fieldDefinition.validators, isIntegerValidator.validatorName))) {
             fieldDefinition.validators.unshift(isIntegerValidator);
         }
-        if (definition.type === String && (!(0, utils_1.hasValidator)(fieldDefinition.validators, isStringValidator.validatorName))) {
+        if (definition.type === String && (!utils_1.hasValidator(fieldDefinition.validators, isStringValidator.validatorName))) {
             fieldDefinition.validators.unshift(isStringValidator);
         }
         // if (Array.isArray(definition.type) && typeof definition.type[0] !== 'string' && (!hasValidator(fieldDefinition.validators, isRequired.validatorName))) {
@@ -319,7 +300,7 @@ var Schema = /** @class */ (function () {
                 fieldDefinition.validators.forEach(function (_a) {
                     var tableValidator = _a.tableValidator, arrayValidator = _a.arrayValidator, validatorName = _a.validatorName;
                     if (!tableValidator && !arrayValidator) {
-                        throw new Error("Field \"".concat(key, "\" in schema \"").concat(_this.name, "\" only accept validator of type Table or Array and has validator \"").concat(validatorName, "\""));
+                        throw new Error("Field \"" + key + "\" in schema \"" + _this.name + "\" only accept validator of type Table or Array and has validator \"" + validatorName + "\"");
                     }
                 });
             }
@@ -329,7 +310,7 @@ var Schema = /** @class */ (function () {
                 fieldDefinition.validators.forEach(function (_a) {
                     var tableValidator = _a.tableValidator, validatorName = _a.validatorName;
                     if (tableValidator) {
-                        throw new Error("Field \"".concat(key, "\" in schema \"").concat(_this.name, "\" only accept validator of type array or scalar and has validator \"").concat(validatorName, "\""));
+                        throw new Error("Field \"" + key + "\" in schema \"" + _this.name + "\" only accept validator of type array or scalar and has validator \"" + validatorName + "\"");
                     }
                 });
             }
@@ -341,7 +322,7 @@ var Schema = /** @class */ (function () {
             fieldDefinition.validators.forEach(function (_a) {
                 var tableValidator = _a.tableValidator, validatorName = _a.validatorName;
                 if (!tableValidator) {
-                    throw new Error("Field \"".concat(key, "\" in schema \"").concat(_this.name, "\" only accept validator of type Table and has validator \"").concat(validatorName, "\""));
+                    throw new Error("Field \"" + key + "\" in schema \"" + _this.name + "\" only accept validator of type Table and has validator \"" + validatorName + "\"");
                 }
             });
         }
@@ -351,7 +332,7 @@ var Schema = /** @class */ (function () {
             fieldDefinition.validators.forEach(function (_a) {
                 var tableValidator = _a.tableValidator, arrayValidator = _a.arrayValidator, validatorName = _a.validatorName;
                 if (tableValidator || arrayValidator) {
-                    throw new Error("Field \"".concat(key, "\" in schema \"").concat(_this.name, "\" only accept validator of type scalar and has validator \"").concat(validatorName, "\""));
+                    throw new Error("Field \"" + key + "\" in schema \"" + _this.name + "\" only accept validator of type scalar and has validator \"" + validatorName + "\"");
                 }
             });
         }
@@ -398,7 +379,7 @@ var Schema = /** @class */ (function () {
             }
             var definition = _this.getPathDefinition(key);
             if (!definition.isTable && typeof model === 'object' && model !== undefined && model !== null) {
-                model[key] = (0, utils_1.forceType)(model[key], definition.type);
+                model[key] = utils_1.forceType(model[key], definition.type);
                 model[key] = model[key] === undefined || model[key] === null ? definition.defaultValue : model[key];
             }
             else if (definition.isTable && !definition.isArray && typeof model === 'object' && model !== undefined && model !== null) {
@@ -406,20 +387,20 @@ var Schema = /** @class */ (function () {
                     model[key] = definition.defaultValue;
                 }
                 var schema = Schema.getInstance(definition.type);
-                schema._clean(model[key], (0, utils_2.getDecendentsDot)(fields, key));
+                schema._clean(model[key], utils_2.getDecendentsDot(fields, key));
                 return;
             }
             else if (definition.isArray && typeof model === 'object' && model !== undefined && model !== null) {
-                model[key] = (0, utils_1.forceType)(model[key], Array);
+                model[key] = utils_1.forceType(model[key], Array);
                 if (definition.isTable) {
                     var schema_1 = Schema.getInstance(definition.type);
                     model[key] = model[key] && model[key].map(function (value) {
-                        schema_1._clean(value, (0, utils_2.getDecendentsDot)(fields, key));
+                        schema_1._clean(value, utils_2.getDecendentsDot(fields, key));
                         return value;
                     });
                 }
                 else {
-                    model[key] = model[key] && model[key].map(function (value) { return (0, utils_1.forceType)(value, definition.type); });
+                    model[key] = model[key] && model[key].map(function (value) { return utils_1.forceType(value, definition.type); });
                 }
                 return;
             }
@@ -438,7 +419,7 @@ var Schema = /** @class */ (function () {
         if (overwrite && overwrite.validators) {
             overwrite.validators = Schema.mapValidators(overwrite.validators);
         }
-        return overwrite ? (0, lodash_1.merge)((0, lodash_1.cloneDeep)(this.pathDefinitions[field]), overwrite) : this.pathDefinitions[field];
+        return overwrite ? lodash_1.merge(lodash_1.cloneDeep(this.pathDefinitions[field]), overwrite) : this.pathDefinitions[field];
     };
     Schema.prototype.getChainedLabel = function (key) {
         var paths = key.split('.');
@@ -456,7 +437,7 @@ var Schema = /** @class */ (function () {
                 }
             }
             else {
-                labels.push("(".concat(path, ")"));
+                labels.push("(" + path + ")");
             }
         });
         return labels.join(' -> ');
@@ -478,10 +459,10 @@ var Schema = /** @class */ (function () {
     Schema.prototype._validate = function (model, fields, overwrite) {
         var _this = this;
         var errors = [];
-        var flatModel = (0, flat_1.flatten)(model);
-        var flatModelKeys = (0, utils_2.insertParents)(Object.keys(flatModel));
+        var flatModel = flat_1.flatten(model);
+        var flatModelKeys = utils_2.insertParents(Object.keys(flatModel));
         flatModelKeys.forEach(function (key) {
-            var value = (0, lodash_1.get)(model, key);
+            var value = lodash_1.get(model, key);
             var cleanKey = Schema.cleanKey(key);
             if (fields && !fields.includes(cleanKey))
                 return;

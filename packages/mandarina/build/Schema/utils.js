@@ -1,42 +1,23 @@
 "use strict";
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
+var __spreadArrays = (this && this.__spreadArrays) || function () {
+    for (var s = 0, i = 0, il = arguments.length; i < il; i++) s += arguments[i].length;
+    for (var r = Array(s), k = 0, i = 0; i < il; i++)
+        for (var a = arguments[i], j = 0, jl = a.length; j < jl; j++, k++)
+            r[k] = a[j];
+    return r;
+};
 var __importStar = (this && this.__importStar) || function (mod) {
     if (mod && mod.__esModule) return mod;
     var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
+    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
+    result["default"] = mod;
     return result;
 };
-var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
-    if (pack || arguments.length === 2) for (var i = 0, l = from.length, ar; i < l; i++) {
-        if (ar || !(i in from)) {
-            if (!ar) ar = Array.prototype.slice.call(from, 0, i);
-            ar[i] = from[i];
-        }
-    }
-    return to.concat(ar || Array.prototype.slice.call(from));
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.singularize = exports.pluralize = exports.lowerize = exports.capitalize = exports.get = exports.hasValidator = exports.isRequired = exports.forceType = void 0;
 var Schema_1 = require("./Schema");
 var inflection = __importStar(require("inflection"));
 //code borrowed from https://github.com/aldeed/simple-schema-js/blob/master/package/lib/clean/convertToProperType.js
-var forceType = function (value, type) {
+exports.forceType = function (value, type) {
     if (Array.isArray(value) ||
         (value && (typeof value === 'function' || typeof value === 'object') && !(value instanceof Date)) ||
         value === null)
@@ -95,10 +76,8 @@ var forceType = function (value, type) {
     // Could not convert
     return value;
 };
-exports.forceType = forceType;
-var isRequired = function (field) { return (0, exports.hasValidator)(field.validators, 'required') || (0, exports.hasValidator)(field.validators, 'noEmpty'); };
-exports.isRequired = isRequired;
-var hasValidator = function (validators, name) {
+exports.isRequired = function (field) { return exports.hasValidator(field.validators, 'required') || exports.hasValidator(field.validators, 'noEmpty'); };
+exports.hasValidator = function (validators, name) {
     if (!name)
         return false;
     var filtered = validators.filter(function (_a) {
@@ -107,8 +86,7 @@ var hasValidator = function (validators, name) {
     });
     return !!filtered.length;
 };
-exports.hasValidator = hasValidator;
-var get = function (obj, paths) {
+exports.get = function (obj, paths) {
     if (obj === void 0) { obj = {}; }
     var result = [];
     var len = paths.length;
@@ -126,7 +104,7 @@ var get = function (obj, paths) {
                     result.push(val);
                 }
                 else {
-                    result.push.apply(result, (0, exports.get)(val, paths));
+                    result.push.apply(result, exports.get(val, paths));
                 }
             });
         }
@@ -136,33 +114,30 @@ var get = function (obj, paths) {
                 return result;
             }
             else {
-                result.push.apply(result, (0, exports.get)(val, paths));
+                result.push.apply(result, exports.get(val, paths));
                 return result;
             }
         }
     }
     return result;
 };
-exports.get = get;
 /**
  * Upper case the first latter
  * @param  string - string to be upper cased
  */
-var capitalize = function (string) {
+exports.capitalize = function (string) {
     var result = string.trim();
     return result.charAt(0).toUpperCase() + result.slice(1);
 };
-exports.capitalize = capitalize;
 /**
  * Lower case the first latter
  * @param  string - string to be Lower cased
  */
-var lowerize = function (string) {
+exports.lowerize = function (string) {
     var result = string.trim();
     return result.charAt(0).toLowerCase() + result.slice(1);
 };
-exports.lowerize = lowerize;
-var pluralize = function (str) {
+exports.pluralize = function (str) {
     var result = inflection.underscore(str).trim();
     result = inflection.humanize(result);
     var resultSplit = result.split(' ');
@@ -171,16 +146,14 @@ var pluralize = function (str) {
     if (lastWord === 'logos') {
         lastWord = 'logoes';
     }
-    return inflection.camelize(__spreadArray(__spreadArray([], resultSplit, true), [lastWord], false).join('_'), true);
+    return inflection.camelize(__spreadArrays(resultSplit, [lastWord]).join('_'), true);
 };
-exports.pluralize = pluralize;
-var singularize = function (str) {
+exports.singularize = function (str) {
     var result = inflection.underscore(str).trim();
     result = inflection.humanize(result);
     var resultSplit = result.split(' ');
     var lastWord = resultSplit.pop();
     lastWord = inflection.singularize(lastWord);
-    return inflection.camelize(__spreadArray(__spreadArray([], resultSplit, true), [lastWord], false).join('_'), true);
+    return inflection.camelize(__spreadArrays(resultSplit, [lastWord]).join('_'), true);
 };
-exports.singularize = singularize;
 //# sourceMappingURL=utils.js.map

@@ -25,7 +25,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.AuthListVirtualized = exports.AuthList = exports.AuthCreateForm = exports.AuthUpdateForm = void 0;
 var react_1 = __importDefault(require("react"));
 var mandarina_1 = require("mandarina");
 var Forms_1 = require("./Forms");
@@ -47,20 +46,16 @@ var AuthAntD = function (_a) {
             !loading && fields && react_1.default.createElement(Component, __assign({ ref: innerRef, schema: schema }, props, { fields: fields, readFields: readFields }))));
     }));
 };
-var AuthUpdateForm = function (props) {
+exports.AuthUpdateForm = function (props) {
     return react_1.default.createElement(AuthAntD, __assign({ action: 'update', Component: Forms_1.UpdateForm }, props));
 };
-exports.AuthUpdateForm = AuthUpdateForm;
-var AuthCreateForm = function (props) {
+exports.AuthCreateForm = function (props) {
     return react_1.default.createElement(AuthAntD, __assign({ action: 'create', Component: Forms_1.CreateForm }, props));
 };
-exports.AuthCreateForm = AuthCreateForm;
-var AuthList = function (props) {
+exports.AuthList = function (props) {
     return react_1.default.createElement(AuthAntD, __assign({ action: 'read', Component: List_1.List }, props));
 };
-exports.AuthList = AuthList;
-var AuthListVirtualized = function (props) {
+exports.AuthListVirtualized = function (props) {
     return react_1.default.createElement(AuthAntD, __assign({ action: 'read', Component: ListVirtualized_1.ListVirtualized }, props));
 };
-exports.AuthListVirtualized = AuthListVirtualized;
 //# sourceMappingURL=Auth.js.map

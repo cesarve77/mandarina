@@ -2,7 +2,7 @@ import { FieldDefinition, Native } from "./Schema";
 import { Validator } from "./ValidatorCreator";
 export declare const forceType: (value: any, type: Native) => any;
 export declare const isRequired: (field: FieldDefinition) => boolean;
-export declare const hasValidator: (validators: Validator[], name?: string) => boolean;
+export declare const hasValidator: (validators: Validator[], name?: string | undefined) => boolean;
 export declare const get: (obj: any, paths: string[]) => any[];
 /**
  * Upper case the first latter

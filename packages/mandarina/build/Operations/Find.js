@@ -3,12 +3,10 @@ var __extends = (this && this.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
         return extendStatics(d, b);
     };
     return function (d, b) {
-        if (typeof b !== "function" && b !== null)
-            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
         extendStatics(d, b);
         function __() { this.constructor = d; }
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -25,29 +23,6 @@ var __assign = (this && this.__assign) || function () {
     };
     return __assign.apply(this, arguments);
 };
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
 var __rest = (this && this.__rest) || function (s, e) {
     var t = {};
     for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
@@ -59,11 +34,17 @@ var __rest = (this && this.__rest) || function (s, e) {
         }
     return t;
 };
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
+    result["default"] = mod;
+    return result;
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.AuthFind = exports.AuthFindOne = exports.AuthFindBase = exports.Find = exports.FindOne = exports.FindBase = exports.canUseDOM = void 0;
 var react_1 = __importStar(require("react"));
 var graphql_tag_1 = __importDefault(require("graphql-tag"));
 var react_apollo_1 = require("react-apollo");
@@ -77,7 +58,7 @@ var FindBase = /** @class */ (function (_super) {
     function FindBase(props) {
         var _this = _super.call(this, props) || this;
         _this.queryHistory = [];
-        _this.buildQueryFromFields = function (fields) { return (0, utils_1.buildQueryFromFields)(fields); };
+        _this.buildQueryFromFields = function (fields) { return utils_1.buildQueryFromFields(fields); };
         return _this;
     }
     FindBase.prototype.render = function () {
@@ -90,15 +71,15 @@ var FindBase = /** @class */ (function (_super) {
             orderBy = field + (sort[field] > 0 ? '_ASC' : '_DESC');
         }
         var names = schema.names;
-        var defaultQuery = (0, utils_1.insertHaving)(this.buildQueryFromFields(fields.filter(function (field) { return _this.props.schema.hasPath(field); })), having);
+        var defaultQuery = utils_1.insertHaving(this.buildQueryFromFields(fields.filter(function (field) { return _this.props.schema.hasPath(field); })), having);
         var queryString;
         if (type === 'connection') {
-            queryString = "query ($where: ".concat(names.input.where[type], ", $after: String, $first: Int, $skip: Int, $orderBy: ").concat(names.orderBy, ") \n            { ").concat(names.query[type], " (where: $where, after: $after, first: $first, skip: $skip, orderBy: $orderBy) {\n                pageInfo {\n                  hasNextPage\n                  hasPreviousPage\n                  startCursor\n                  endCursor\n                }\n                edges {\n                  node  ").concat(defaultQuery, "\n                }\n              }\n              totalCount: ").concat(names.query[type], " (where: $where) {\n                aggregate {\n                  count\n                }\n              }    \n            }");
+            queryString = "query ($where: " + names.input.where[type] + ", $after: String, $first: Int, $skip: Int, $orderBy: " + names.orderBy + ") \n            { " + names.query[type] + " (where: $where, after: $after, first: $first, skip: $skip, orderBy: $orderBy) {\n                pageInfo {\n                  hasNextPage\n                  hasPreviousPage\n                  startCursor\n                  endCursor\n                }\n                edges {\n                  node  " + defaultQuery + "\n                }\n              }\n              totalCount: " + names.query[type] + " (where: $where) {\n                aggregate {\n                  count\n                }\n              }    \n            }";
         }
         else {
-            queryString = "query ($where: ".concat(names.input.where[type], " ) { ").concat(names.query[type], "  (where: $where) ").concat(defaultQuery, " }");
+            queryString = "query ($where: " + names.input.where[type] + " ) { " + names.query[type] + "  (where: $where) " + defaultQuery + " }";
         }
-        var QUERY = (0, graphql_tag_1.default)(queryString);
+        var QUERY = graphql_tag_1.default(queryString);
         // save a rendered query history in the instance and in the class
         // for update cache queries on mutations
         var query = (_a = {}, _a[names.input[type]] = where, _a);
@@ -127,7 +108,21 @@ var FindBase = /** @class */ (function (_super) {
                 return null;
             var childrenResult = children(__assign({ schema: schema, 
                 //@ts-ignore
-                query: QUERY, data: data, loading: loading, error: error, variables: variables, networkStatus: networkStatus, fields: fields, fetchMore: fetchMore, count: count, pageInfo: pageInfo, refetch: refetch, startPolling: startPolling, stopPolling: stopPolling, subscribeToMore: subscribeToMore, updateQuery: updateQuery, client: client }, props));
+                query: QUERY, data: data,
+                loading: loading,
+                error: error,
+                variables: variables,
+                networkStatus: networkStatus,
+                fields: fields,
+                fetchMore: fetchMore,
+                count: count,
+                pageInfo: pageInfo,
+                refetch: refetch,
+                startPolling: startPolling,
+                stopPolling: stopPolling,
+                subscribeToMore: subscribeToMore,
+                updateQuery: updateQuery,
+                client: client }, props));
             if (pollInterval && exports.canUseDOM) {
                 var observerProps = { refetch: refetch, pollInterval: pollInterval, startPolling: startPolling, stopPolling: stopPolling };
                 return react_1.default.createElement(Observer_1.default, __assign({}, observerProps, { variables: variables }), childrenResult);
@@ -141,11 +136,9 @@ var FindBase = /** @class */ (function (_super) {
     return FindBase;
 }(react_1.PureComponent));
 exports.FindBase = FindBase;
-var FindOne = function (props) { return react_1.default.createElement(FindBase, __assign({ type: 'single' }, props)); };
-exports.FindOne = FindOne;
-var Find = function (props) { return react_1.default.createElement(FindBase, __assign({ type: 'connection' }, props)); };
-exports.Find = Find;
-var AuthFindBase = function (_a) {
+exports.FindOne = function (props) { return react_1.default.createElement(FindBase, __assign({ type: 'single' }, props)); };
+exports.Find = function (props) { return react_1.default.createElement(FindBase, __assign({ type: 'connection' }, props)); };
+exports.AuthFindBase = function (_a) {
     var Component = _a.Component, children = _a.children, schema = _a.schema, _b = _a.denied, denied = _b === void 0 ? null : _b, _c = _a.userRoles, userRoles = _c === void 0 ? [] : _c, action = _a.action, fieldsOri = _a.fields, Error = _a.Error, props = __rest(_a, ["Component", "children", "schema", "denied", "userRoles", "action", "fields", "Error"]);
     return (
     // @ts-ignore
@@ -166,9 +159,6 @@ var AuthFindBase = function (_a) {
         return (react_1.default.createElement(react_1.default.Fragment, null, fields && react_1.default.createElement(Component, __assign({ schema: schema }, props, { children: children, fields: fields }))));
     }));
 };
-exports.AuthFindBase = AuthFindBase;
-var AuthFindOne = function (props) { return react_1.default.createElement(exports.AuthFindBase, __assign({ Component: exports.FindOne, action: 'read' }, props)); };
-exports.AuthFindOne = AuthFindOne;
-var AuthFind = function (props) { return react_1.default.createElement(exports.AuthFindBase, __assign({ Component: exports.Find, action: 'read' }, props)); };
-exports.AuthFind = AuthFind;
+exports.AuthFindOne = function (props) { return react_1.default.createElement(exports.AuthFindBase, __assign({ Component: exports.FindOne, action: 'read' }, props)); };
+exports.AuthFind = function (props) { return react_1.default.createElement(exports.AuthFindBase, __assign({ Component: exports.Find, action: 'read' }, props)); };
 //# sourceMappingURL=Find.js.map

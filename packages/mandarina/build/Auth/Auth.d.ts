@@ -1,6 +1,6 @@
 import { Schema } from "..";
 import React, { ElementType, ReactNode } from "react";
-export type ActionType = 'create' | 'read' | 'update' | 'delete';
+export declare type ActionType = 'create' | 'read' | 'update' | 'delete';
 export interface AuthChildrenProps {
     fields: string[];
     readFields: string[];
