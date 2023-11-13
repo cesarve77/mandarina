@@ -10,14 +10,17 @@ var __assign = (this && this.__assign) || function () {
     };
     return __assign.apply(this, arguments);
 };
-var __spreadArrays = (this && this.__spreadArrays) || function () {
-    for (var s = 0, i = 0, il = arguments.length; i < il; i++) s += arguments[i].length;
-    for (var r = Array(s), k = 0, i = 0; i < il; i++)
-        for (var a = arguments[i], j = 0, jl = a.length; j < jl; j++, k++)
-            r[k] = a[j];
-    return r;
+var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
+    if (pack || arguments.length === 2) for (var i = 0, l = from.length, ar; i < l; i++) {
+        if (ar || !(i in from)) {
+            if (!ar) ar = Array.prototype.slice.call(from, 0, i);
+            ar[i] = from[i];
+        }
+    }
+    return to.concat(ar || Array.prototype.slice.call(from));
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.Bridge = void 0;
 var mandarina_1 = require("mandarina");
 var lodash_1 = require("lodash");
 var Mutate_1 = require("mandarina/build/Operations/Mutate");
@@ -31,7 +34,7 @@ var Bridge = /** @class */ (function () {
             var lastDot = field.lastIndexOf('.');
             if (lastDot >= 0) {
                 var parent_1 = field.substring(0, lastDot);
-                return __spreadArrays(_this.getAncestors(parent_1), [parent_1]);
+                return __spreadArray(__spreadArray([], _this.getAncestors(parent_1), true), [parent_1], false);
             }
             return [];
         };
@@ -51,7 +54,7 @@ var Bridge = /** @class */ (function () {
         if (error && typeof error.message === 'string' && this.schema.errorFromServerMapper) {
             return this.schema.errorFromServerMapper(name, error);
         }
-        if (error && Object.keys(error).some(function (e) { return e.match(new RegExp("^" + name + "\\.")); }))
+        if (error && Object.keys(error).some(function (e) { return e.match(new RegExp("^".concat(name, "\\."))); }))
             return true;
         return error && error[name];
     };
@@ -90,9 +93,9 @@ var Bridge = /** @class */ (function () {
         var field = mandarina_1.Schema.cleanKey(name);
         var overwrite = this.overwrite && this.overwrite[field];
         if (!this.fieldDefinitions[field])
-            this.fieldDefinitions[field] = overwrite ? lodash_1.merge(Mutate_1.deepClone(this.schema.getPathDefinition(field)), overwrite) : this.schema.getPathDefinition(field);
+            this.fieldDefinitions[field] = overwrite ? (0, lodash_1.merge)((0, Mutate_1.deepClone)(this.schema.getPathDefinition(field)), overwrite) : this.schema.getPathDefinition(field);
         if (!this.fieldDefinitions[field] || !this.fieldDefinitions[field].type)
-            throw new Error("No field named \"" + field + "\" in schema " + this.schema.name);
+            throw new Error("No field named \"".concat(field, "\" in schema ").concat(this.schema.name));
         return this.fieldDefinitions[field];
     };
     Bridge.prototype.getType = function (name) {
@@ -124,7 +127,7 @@ var Bridge = /** @class */ (function () {
             });
             var item = {};
             var schema = mandarina_1.Schema.getInstance(field.type);
-            schema.clean(item, utils_1.getDecendentsDot(this.fields, name));
+            schema.clean(item, (0, utils_1.getDecendentsDot)(this.fields, name));
             var items = Math.max(minCount_1, initialCount);
             return new Array(items).fill(item);
         }
@@ -144,7 +147,7 @@ var Bridge = /** @class */ (function () {
             var item = {};
             if (field.isTable) {
                 var schema = mandarina_1.Schema.getInstance(field.type);
-                schema.clean(item, utils_1.getDecendentsDot(this.fields, name));
+                schema.clean(item, (0, utils_1.getDecendentsDot)(this.fields, name));
             }
             return item;
         }
@@ -212,13 +215,7 @@ var Bridge = /** @class */ (function () {
                 if (validator.validatorName === 'maxCount')
                     maxCount_1 = validator.param;
             });
-            this.fieldProps[name] = __assign(__assign({ label: field.label ? field.label : "", allowedValues: allowedValues,
-                minCount: minCount_3,
-                maxCount: maxCount_1,
-                transform: transform,
-                component: component,
-                required: required,
-                placeholder: placeholder }, uniforms), field.form.props);
+            this.fieldProps[name] = __assign(__assign({ label: field.label ? field.label : "", allowedValues: allowedValues, minCount: minCount_3, maxCount: maxCount_1, transform: transform, component: component, required: required, placeholder: placeholder }, uniforms), field.form.props);
         }
         return this.fieldProps[name];
         /**

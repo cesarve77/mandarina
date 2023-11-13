@@ -3,10 +3,12 @@ var __extends = (this && this.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
         return extendStatics(d, b);
     };
     return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
         extendStatics(d, b);
         function __() { this.constructor = d; }
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -23,6 +25,29 @@ var __assign = (this && this.__assign) || function () {
     };
     return __assign.apply(this, arguments);
 };
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 var __rest = (this && this.__rest) || function (s, e) {
     var t = {};
     for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
@@ -34,17 +59,11 @@ var __rest = (this && this.__rest) || function (s, e) {
         }
     return t;
 };
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
-    result["default"] = mod;
-    return result;
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.getSubSchemaMutations = exports.refetchQueries = exports.Update = exports.Create = exports.Delete = exports.Mutate = exports.deepClone = void 0;
 var react_1 = __importStar(require("react"));
 var __1 = require("..");
 var graphql_tag_1 = __importDefault(require("graphql-tag"));
@@ -53,14 +72,15 @@ var utils_1 = require("./utils");
 var Find_1 = require("./Find");
 var lodash_1 = require("lodash");
 var utils_2 = require("../utils");
-exports.deepClone = function (obj) {
-    return lodash_1.cloneDeep(obj);
+var deepClone = function (obj) {
+    return (0, lodash_1.cloneDeep)(obj);
 };
+exports.deepClone = deepClone;
 var Mutate = /** @class */ (function (_super) {
     __extends(Mutate, _super);
     function Mutate() {
         var _this = _super !== null && _super.apply(this, arguments) || this;
-        _this.buildQueryFromFields = function () { return utils_1.buildQueryFromFields(_this.props.fields || _this.props.schema.getFields()); };
+        _this.buildQueryFromFields = function () { return (0, utils_1.buildQueryFromFields)(_this.props.fields || _this.props.schema.getFields()); };
         // update = (proxy: DataProxy, mutationResult: FetchResult<any>) => {
         //     if (this.props.type === 'create') {
         //         // @ts-ignore
@@ -142,7 +162,7 @@ var Mutate = /** @class */ (function (_super) {
         //
         //
         _this.refetchQueries = function (mutationResult) {
-            return exports.refetchQueries(mutationResult, _this.props.client, _this.props.refetchSchemas, _this.props.schema);
+            return (0, exports.refetchQueries)(mutationResult, _this.props.client, _this.props.refetchSchemas, _this.props.schema);
         };
         return _this;
     }
@@ -184,7 +204,7 @@ var Mutate = /** @class */ (function (_super) {
         }
     };
     Mutate.prototype.getSubSchemaMutations = function (model, schema) {
-        return exports.getSubSchemaMutations(model, schema, this.props.type);
+        return (0, exports.getSubSchemaMutations)(model, schema, this.props.type);
     };
     Mutate.prototype.getTypesDoc = function (obj, schema) {
         var wrapper = function (result) { return result; };
@@ -208,7 +228,7 @@ var Mutate = /** @class */ (function (_super) {
     Mutate.prototype.mutate = function (model, mutationFn) {
         var _a;
         var _b = this.props, schema = _b.schema, where = _b.where, type = _b.type, optimisticResponse = _b.optimisticResponse;
-        var cleaned = exports.deepClone(model);
+        var cleaned = (0, exports.deepClone)(model);
         //schema.clean(cleaned, this.props.fields)// fill null all missing keys
         var data = this.getSubSchemaMutations(cleaned, schema);
         var mutation = { variables: {} };
@@ -235,18 +255,18 @@ var Mutate = /** @class */ (function (_super) {
         var _this = this;
         var _a = this.props, type = _a.type, children = _a.children, schema = _a.schema, fields = _a.fields, findLoading = _a.loading, variables = _a.variables, update = _a.update, ignoreResults = _a.ignoreResults, optimisticResponse = _a.optimisticResponse, _b = _a.refetchQueries, refetchQueries = _b === void 0 ? this.refetchQueries : _b, awaitRefetchQueries = _a.awaitRefetchQueries, onCompleted = _a.onCompleted, onError = _a.onError, context = _a.context, client = _a.client, doc = _a.doc, fetchPolicy = _a.fetchPolicy;
         var names = schema.names;
-        this.query = utils_1.buildQueryFromFields(fields);
+        this.query = (0, utils_1.buildQueryFromFields)(fields);
         var queryString;
         if (type === 'update') {
-            queryString = "mutation mutationFn($where: " + names.input.where.single + ", $data: " + names.input[type] + " ) { " + names.mutation[type] + "(data: $data, where: $where) " + this.query + " }";
+            queryString = "mutation mutationFn($where: ".concat(names.input.where.single, ", $data: ").concat(names.input[type], " ) { ").concat(names.mutation[type], "(data: $data, where: $where) ").concat(this.query, " }");
         }
         else if (type === 'delete') {
-            queryString = "mutation mutationFn($where: " + names.input.where.single + ") { " + names.mutation[type] + "(where: $where) {id} }";
+            queryString = "mutation mutationFn($where: ".concat(names.input.where.single, ") { ").concat(names.mutation[type], "(where: $where) {id} }");
         }
         else {
-            queryString = "mutation mutationFn($data: " + names.input[type] + " ) { " + names.mutation[type] + "(data: $data) " + this.query + " }";
+            queryString = "mutation mutationFn($data: ".concat(names.input[type], " ) { ").concat(names.mutation[type], "(data: $data) ").concat(this.query, " }");
         }
-        var MUTATION = graphql_tag_1.default(queryString);
+        var MUTATION = (0, graphql_tag_1.default)(queryString);
         return (react_1.default.createElement(react_apollo_1.Mutation, { mutation: MUTATION, refetchQueries: refetchQueries, variables: variables, update: update, ignoreResults: ignoreResults, optimisticResponse: optimisticResponse, awaitRefetchQueries: awaitRefetchQueries, onCompleted: onCompleted, onError: onError, context: context, client: client, fetchPolicy: fetchPolicy }, function (mutationFn, _a) {
             var loading = _a.loading, data = _a.data, error = _a.error, called = _a.called, client = _a.client;
             if (error) {
@@ -267,8 +287,8 @@ var Mutate = /** @class */ (function (_super) {
     return Mutate;
 }(react_1.PureComponent));
 exports.Mutate = Mutate;
-var MutateWithApollo = react_apollo_1.withApollo(Mutate);
-exports.Delete = function (_a) {
+var MutateWithApollo = (0, react_apollo_1.withApollo)(Mutate);
+var Delete = function (_a) {
     var id = _a.id, schema = _a.schema, optimisticResponse = _a.optimisticResponse, props = __rest(_a, ["id", "schema", "optimisticResponse"]);
     var where = undefined;
     if (id) {
@@ -281,11 +301,13 @@ exports.Delete = function (_a) {
     }
     return (react_1.default.createElement(MutateWithApollo, __assign({ type: 'delete', schema: schema, where: where, optimisticResponse: optimisticResponse }, props)));
 };
-exports.Create = function (_a) {
+exports.Delete = Delete;
+var Create = function (_a) {
     var schema = _a.schema, optimisticResponse = _a.optimisticResponse, props = __rest(_a, ["schema", "optimisticResponse"]);
     return (react_1.default.createElement(MutateWithApollo, __assign({ type: 'create', schema: schema, optimisticResponse: optimisticResponse }, props)));
 };
-exports.Update = function (_a) {
+exports.Create = Create;
+var Update = function (_a) {
     var id = _a.id, schema = _a.schema, children = _a.children, fields = _a.fields, optimisticResponse = _a.optimisticResponse, props = __rest(_a, ["id", "schema", "children", "fields", "optimisticResponse"]);
     var where = undefined;
     if (id) {
@@ -301,7 +323,8 @@ exports.Update = function (_a) {
         return (react_1.default.createElement(MutateWithApollo, __assign({ where: where, type: 'update', doc: data }, findOneProps, { schema: schema, optimisticResponse: optimisticResponse }), children));
     }));
 };
-exports.refetchQueries = function (mutationResult, client, refetchSchemas, schema) {
+exports.Update = Update;
+var refetchQueries = function (mutationResult, client, refetchSchemas, schema) {
     if (refetchSchemas === void 0) { refetchSchemas = []; }
     var refetchQueries = [];
     var _a = (schema && schema.names.query) || {}, _b = _a.single, single = _b === void 0 ? '' : _b, _c = _a.plural, plural = _c === void 0 ? '' : _c, _d = _a.connection, connection = _d === void 0 ? '' : _d;
@@ -324,7 +347,8 @@ exports.refetchQueries = function (mutationResult, client, refetchSchemas, schem
     });
     return refetchQueries;
 };
-exports.getSubSchemaMutations = function (model, schema, mutationType) {
+exports.refetchQueries = refetchQueries;
+var getSubSchemaMutations = function (model, schema, mutationType) {
     var obj = {};
     if (typeof model !== "object" || model === undefined || model === null)
         return model;
@@ -344,7 +368,7 @@ exports.getSubSchemaMutations = function (model, schema, mutationType) {
                 value && value.forEach(function (item) {
                     if (item && item.id && Object.keys(item).length === 1) {
                         result_1['connect'] = result_1['connect'] || [];
-                        result_1['connect'].push(exports.getSubSchemaMutations(item, schema_2, mutationType));
+                        result_1['connect'].push((0, exports.getSubSchemaMutations)(item, schema_2, mutationType));
                         if (mutationType === 'update') {
                             result_1['set'] = result_1['set'] || [];
                             result_1['set'].push({ id: item.id });
@@ -356,7 +380,7 @@ exports.getSubSchemaMutations = function (model, schema, mutationType) {
                             result_1['update'] = result_1['update'] || [];
                             result_1['update'].push({
                                 where: { id: id },
-                                data: exports.getSubSchemaMutations(clone, schema_2, 'update')
+                                data: (0, exports.getSubSchemaMutations)(clone, schema_2, 'update')
                             });
                             result_1['set'] = result_1['set'] || [];
                             result_1['set'].push({ id: item.id });
@@ -366,24 +390,24 @@ exports.getSubSchemaMutations = function (model, schema, mutationType) {
                                 result_1['set'] = result_1['set'] || [];
                                 result_1['set'].push({ id: item.id });
                                 result_1['connect'] = result_1['connect'] || [];
-                                result_1['connect'].push(exports.getSubSchemaMutations(item, schema_2, 'create'));
+                                result_1['connect'].push((0, exports.getSubSchemaMutations)(item, schema_2, 'create'));
                             }
                             else {
-                                item.id = utils_2.generateUUID();
+                                item.id = (0, utils_2.generateUUID)();
                                 result_1['set'] = result_1['set'] || [];
                                 result_1['set'].push({ id: item.id });
                                 result_1['create'] = result_1['create'] || [];
-                                result_1['create'].push(exports.getSubSchemaMutations(item, schema_2, 'create'));
+                                result_1['create'].push((0, exports.getSubSchemaMutations)(item, schema_2, 'create'));
                             }
                         }
                     }
                     else {
-                        item.id = utils_2.generateUUID();
+                        item.id = (0, utils_2.generateUUID)();
                         result_1['set'] = result_1['set'] || [];
                         result_1['set'].push({ id: item.id });
                         result_1['create'] = result_1['create'] || [];
                         //miresult['deleteMany']= [{}]
-                        result_1['create'].push(exports.getSubSchemaMutations(item, schema_2, 'create'));
+                        result_1['create'].push((0, exports.getSubSchemaMutations)(item, schema_2, 'create'));
                     }
                 });
                 if ((result_1 && result_1.create && !result_1.update) || (result_1 && result_1.connect && !result_1.update)) {
@@ -401,7 +425,7 @@ exports.getSubSchemaMutations = function (model, schema, mutationType) {
                     if (value && value.id) {
                         var id = value.id, clone = __rest(value, ["id"]);
                         obj[key] = {
-                            update: exports.getSubSchemaMutations(clone, schema_3, 'update')
+                            update: (0, exports.getSubSchemaMutations)(clone, schema_3, 'update')
                         };
                     }
                     else {
@@ -414,8 +438,8 @@ exports.getSubSchemaMutations = function (model, schema, mutationType) {
                         else {
                             obj[key] = {
                                 upsert: {
-                                    create: exports.getSubSchemaMutations(clone, schema_3, 'create'),
-                                    update: exports.getSubSchemaMutations(clone, schema_3, 'update')
+                                    create: (0, exports.getSubSchemaMutations)(clone, schema_3, 'create'),
+                                    update: (0, exports.getSubSchemaMutations)(clone, schema_3, 'update')
                                 }
                             };
                         }
@@ -423,7 +447,7 @@ exports.getSubSchemaMutations = function (model, schema, mutationType) {
                 }
                 else {
                     obj[key] = {
-                        create: exports.getSubSchemaMutations(value, schema_3, 'create'),
+                        create: (0, exports.getSubSchemaMutations)(value, schema_3, 'create'),
                     };
                 }
             }
@@ -439,4 +463,5 @@ exports.getSubSchemaMutations = function (model, schema, mutationType) {
     });
     return obj;
 };
+exports.getSubSchemaMutations = getSubSchemaMutations;
 //# sourceMappingURL=Mutate.js.map
