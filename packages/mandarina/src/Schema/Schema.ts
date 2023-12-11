@@ -186,7 +186,6 @@ export class Schema {
         // }
 
         const def = this.getPathDefinition(field)
-
         if (def.isTable && action === 'read') return true //prove only final fields
         if (!def.permissions) {
             console.error('!def.permissions getFieldPermission field2 ', this.name, field, action)

@@ -14,6 +14,7 @@
     "@types/lodash": "^4.14.192"
   },
   "scripts": {
+    "tsc": "yarn build",
     "yarn": "cd packages/mandarina/ && rm -fr node_modules && yarn && cd ../mandarina-server/ && rm -fr node_modules && yarn link mandarina &&  yarn  && cd ../mandarina/ && rm -fr node_modules && yarn link mandarina && yarn ",
     "publish-docs": "GIT_USER=cesarve77 cd website && docusaurus-publish",
     "start": "cd website && yarn start",

@@ -20,6 +20,7 @@ export const genFile = () => {
     }
     let prisma = `generator client {
   provider = "prisma-client-js"
+  binaryTargets = ["native", "linux-arm64-openssl-1.0.x"]  
 }
 
 datasource db {

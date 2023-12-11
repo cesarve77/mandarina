@@ -128,7 +128,7 @@ const getMainSchema = (schema: Schema, type: 'input' | 'type') => {
             createdAt = `@createdAt`
         }
         if (type === 'type' && (fieldDefinition.table.updatedAt === true || (fieldDefinition.table.updatedAt !== false && key === 'updatedAt'))) {
-            createdAt = `@updatedAt`
+            updatedAt = `@updatedAt`
         }
         if (!scalarList && type === 'type' && fieldDefinition.isArray && !fieldDefinition.isTable) {
             scalarList = `@scalarList(strategy: RELATION)`
