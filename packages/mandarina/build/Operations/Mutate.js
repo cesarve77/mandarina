@@ -351,7 +351,6 @@ var refetchQueries = function (mutationResult, client, refetchSchemas, schema) {
             }
         }
     });
-    client.query(refetchQueries[0]).then(console.log);
     return refetchQueries;
 };
 exports.refetchQueries = refetchQueries;

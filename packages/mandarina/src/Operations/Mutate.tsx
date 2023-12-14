@@ -398,7 +398,6 @@ export const refetchQueries = (mutationResult: FetchResult, client: ApolloClient
         }
 
     })
-    client.query(refetchQueries[0]).then(console.log)
     return refetchQueries
 }
 
