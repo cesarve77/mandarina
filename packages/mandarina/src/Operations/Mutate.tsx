@@ -374,23 +374,31 @@ export const Update = ({id, schema, children, fields, optimisticResponse, ...pro
 
 export const refetchQueries = (mutationResult: FetchResult, client: ApolloClient<any>, refetchSchemas: string[] = [], schema?: Schema) => {
     const refetchQueries: { query: DocumentNode, variables?: OperationVariables }[] = []
-    const {single = '', plural = '', connection = ''} = (schema && schema.names.query) || {}
+    const {single = '', plural = '', connection = ''} = (schema?.names.query) || {}
     // @ts-ignore
     client.cache.watches.forEach(({query, variables}) => {
         const queryName = query.definitions[0].selectionSet.selections[0].name.value
-        const names: string[] = []
-        if (refetchSchemas) {
-            refetchSchemas.forEach((schemaName) => {
-                const schema = Schema.getInstance(schemaName)
-                names.push(schema.names.query.single)
-                names.push(schema.names.query.plural)
-                names.push(schema.names.query.connection)
-            })
+        const operation = query.definitions[0].operation
+        if (operation === 'query') {
+            const names: string[] = []
+            if (refetchSchemas?.length > 0) {
+                refetchSchemas.forEach((schemaName) => {
+                    const schema = Schema.getInstance(schemaName)
+                    names.push(schema.names.query.single)
+                    names.push(schema.names.query.plural)
+                    names.push(schema.names.query.connection)
+                })
+            }
+            if (queryName === single || queryName === plural || queryName === connection || names.includes(queryName)) {
+                if (queryName === 'groupsConnection') {
+                    refetchQueries.push({query, variables})
+                }
+                //
+            }
         }
-        if (queryName === single || queryName === plural || queryName === connection || names.includes(queryName)) {
-            refetchQueries.push({query, variables})
-        }
+
     })
+    client.query(refetchQueries[0]).then(console.log)
     return refetchQueries
 }
 

@@ -71,7 +71,7 @@ const getPrisma2Model = (schema: Schema) => {
                 createdAt = `@default(now())`
             }
             if ((fieldDefinition.table.updatedAt === true || (fieldDefinition.table.updatedAt !== false && key === 'updatedAt'))) {
-                createdAt = `@default(now())`
+                updatedAt = `@updatedAt`
             }
 
             if (fieldDefinition.table.default !== undefined) {

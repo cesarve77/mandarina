@@ -327,24 +327,31 @@ exports.Update = Update;
 var refetchQueries = function (mutationResult, client, refetchSchemas, schema) {
     if (refetchSchemas === void 0) { refetchSchemas = []; }
     var refetchQueries = [];
-    var _a = (schema && schema.names.query) || {}, _b = _a.single, single = _b === void 0 ? '' : _b, _c = _a.plural, plural = _c === void 0 ? '' : _c, _d = _a.connection, connection = _d === void 0 ? '' : _d;
+    var _a = (schema === null || schema === void 0 ? void 0 : schema.names.query) || {}, _b = _a.single, single = _b === void 0 ? '' : _b, _c = _a.plural, plural = _c === void 0 ? '' : _c, _d = _a.connection, connection = _d === void 0 ? '' : _d;
     // @ts-ignore
     client.cache.watches.forEach(function (_a) {
         var query = _a.query, variables = _a.variables;
         var queryName = query.definitions[0].selectionSet.selections[0].name.value;
-        var names = [];
-        if (refetchSchemas) {
-            refetchSchemas.forEach(function (schemaName) {
-                var schema = __1.Schema.getInstance(schemaName);
-                names.push(schema.names.query.single);
-                names.push(schema.names.query.plural);
-                names.push(schema.names.query.connection);
-            });
-        }
-        if (queryName === single || queryName === plural || queryName === connection || names.includes(queryName)) {
-            refetchQueries.push({ query: query, variables: variables });
+        var operation = query.definitions[0].operation;
+        if (operation === 'query') {
+            var names_1 = [];
+            if ((refetchSchemas === null || refetchSchemas === void 0 ? void 0 : refetchSchemas.length) > 0) {
+                refetchSchemas.forEach(function (schemaName) {
+                    var schema = __1.Schema.getInstance(schemaName);
+                    names_1.push(schema.names.query.single);
+                    names_1.push(schema.names.query.plural);
+                    names_1.push(schema.names.query.connection);
+                });
+            }
+            if (queryName === single || queryName === plural || queryName === connection || names_1.includes(queryName)) {
+                if (queryName === 'groupsConnection') {
+                    refetchQueries.push({ query: query, variables: variables });
+                }
+                //
+            }
         }
     });
+    client.query(refetchQueries[0]).then(console.log);
     return refetchQueries;
 };
 exports.refetchQueries = refetchQueries;
