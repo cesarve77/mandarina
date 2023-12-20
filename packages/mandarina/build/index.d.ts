@@ -6,4 +6,5 @@ import { Delete } from './Operations/Mutate';
 import { FindOne } from './Operations/Find';
 import { Find } from './Operations/Find';
 import { Integer } from './Schema/Schema';
-export { Delete, Integer, Auth, Schema, Create, Update, FindOne, Find, };
+import { AuthFind, AuthFindOne } from "./Operations/Find";
+export { Delete, Integer, Auth, AuthFind, AuthFindOne, Schema, Create, Update, FindOne, Find, };
