@@ -315,7 +315,23 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
         }, 100)
     })
 
+    anyArray(field: string, schema: Schema) : boolean{
+        const paths = field.split('.');
+        if (paths.length === 0) return false;
+        const path = paths.shift()
+        const def = schema.getPathDefinition(path!)
+        if (def.isArray) {
+            return true
+        }
+        if (def.isTable) {
+            return this.anyArray(paths.join('.'), Schema.getInstance(def.type))
+        }
+        return false
+
+    }
+
     getColumnDefinition = (field: string): ColumnDef | null => {
+
         //detect if parent has a CellComponent
         const parentPath = getParentCellComponent(field, this.props.schema);
         if (parentPath) {
@@ -351,7 +367,7 @@ export class ListVirtualized extends React.Component<ListProps, ListState> {
                 title: definition.label ? definition.label : "",
                 width: definition.list.width || estimatedColumnWidthDefault,
                 filter: !definition.list.noFilter,
-                noSort: !!(definition.isTable || definition.isArray || field.indexOf('.') > 0 || definition.list.noSort),
+                noSort: !!(this.anyArray(field, this.props.schema) || definition.list.noSort),
                 props: definition.list.props || {},
             }
         }

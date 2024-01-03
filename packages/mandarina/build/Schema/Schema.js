@@ -164,7 +164,7 @@ var Schema = /** @class */ (function () {
                 updateMany: "updateMany".concat(pluralUpper),
                 deleteMany: "deleteMany".concat(pluralUpper)
             },
-            orderBy: "".concat(singleUpper, "OrderByInput"),
+            orderBy: "String",
             input: {
                 where: {
                     single: "".concat(singleUpper, "WhereUniqueInput!"),

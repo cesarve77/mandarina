@@ -72,7 +72,7 @@ export class Schema {
                 updateMany: `updateMany${pluralUpper}`,
                 deleteMany: `deleteMany${pluralUpper}`
             },
-            orderBy: `${singleUpper}OrderByInput`,
+            orderBy: `String`,
             input: {
                 where: {
                     single: `${singleUpper}WhereUniqueInput!`,

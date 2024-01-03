@@ -195,7 +195,7 @@ var ListVirtualized = /** @class */ (function (_super) {
                     title: definition.label ? definition.label : "",
                     width: definition.list.width || estimatedColumnWidthDefault,
                     filter: !definition.list.noFilter,
-                    noSort: !!(definition.isTable || definition.isArray || field.indexOf('.') > 0 || definition.list.noSort),
+                    noSort: !!(_this.anyArray(field, _this.props.schema) || definition.list.noSort),
                     props: definition.list.props || {},
                 };
             }
@@ -385,6 +385,20 @@ var ListVirtualized = /** @class */ (function (_super) {
     };
     ListVirtualized.prototype.componentWillUnmount = function () {
         window.removeEventListener('resize', this.onResize);
+    };
+    ListVirtualized.prototype.anyArray = function (field, schema) {
+        var paths = field.split('.');
+        if (paths.length === 0)
+            return false;
+        var path = paths.shift();
+        var def = schema.getPathDefinition(path);
+        if (def.isArray) {
+            return true;
+        }
+        if (def.isTable) {
+            return this.anyArray(paths.join('.'), mandarina_1.Schema.getInstance(def.type));
+        }
+        return false;
     };
     ListVirtualized.prototype.render = function () {
         var _this = this;

@@ -155,6 +155,7 @@ export declare class ListVirtualized extends React.Component<ListProps, ListStat
      */
     refresh: (full?: boolean) => Promise<unknown>;
     onScroll: ({ scrollLeft }: GridOnScrollProps) => Promise<unknown>;
+    anyArray(field: string, schema: Schema): boolean;
     getColumnDefinition: (field: string) => ColumnDef | null;
     onFilterChange: OnFilterChange;
     onHideOrShowColumn: (field: string, index: number, show: boolean) => void;
