@@ -26,6 +26,7 @@ export const genFile = () => {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_DATABASE_URL")
 }
 `
     Object.keys(prisma2Models).forEach(modelName => {
