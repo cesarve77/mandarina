@@ -33,7 +33,7 @@ var genFile = function () {
         var schema = mandarina_1.Schema.getInstance(schemaName);
         getPrisma2Model(schema);
     }
-    var prisma = "generator client {\n  provider = \"prisma-client-js\"\n  binaryTargets = [\"native\", \"linux-arm64-openssl-1.0.x\"]  \n}\n\ndatasource db {\n  provider = \"postgresql\"\n  url      = env(\"DATABASE_URL\")\n}\n";
+    var prisma = "generator client {\n  provider = \"prisma-client-js\"\n  binaryTargets = [\"native\", \"linux-arm64-openssl-1.0.x\"]  \n}\n\ndatasource db {\n  provider = \"postgresql\"\n  url      = env(\"DATABASE_URL\")\n  directUrl = env(\"DIRECT_DATABASE_URL\")\n}\n";
     Object.keys(prisma2Models).forEach(function (modelName) {
         var model = prisma2Models[modelName];
         prisma += "model ".concat(modelName, " {\n ");
