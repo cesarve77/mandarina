@@ -121,9 +121,17 @@ const getPrismaModelAModelB = (schema: Schema, fieldDefinition: FieldDefinition)
                     }
                     const relation = getRelationName(fieldDefinition, child) || `${schema.name}To${schema.name}`
                     const fields = `p2${fieldDefinition.key}Id`
-                    prisma2Models[schema.name][fieldDefinition.key] = `${schema.name}? ${buildRelation(relation, fields)} //SELF: 1 - 1 ((${c}))`;
-                    prisma2Models[schema.name][fields] = `String? @unique //SELF: 1 - 1 ((${c}))`;
-                    prisma2Models[schema.name][`p2Predecessor${schema.name}`] = `${schema.name}? ${buildRelation(relation)}//SELF: 1 - 1 ((${c}))`;
+                    if (fieldDefinition.table?.relation?.type === 'MANY_TO_MANY') {
+                        throw new Error(`DO THIS`)
+                    }else if (fieldDefinition.table?.relation?.type === 'ONE_TO_MANY') {
+                        prisma2Models[schema.name][fieldDefinition.key] = `${schema.name}? ${buildRelation(relation, fields)} //SELF: 1 - N ((${c}))`;
+                        prisma2Models[schema.name][fields] = `String? //SELF: 1 - N ((${c}))`;
+                        prisma2Models[schema.name][`p2Predecessor${schema.name}`] = `${schema.name}[] ${buildRelation(relation)}//SELF: N - 1 ((${c}))`;
+                    }else{ //ONT_TO_ONE
+                        prisma2Models[schema.name][fieldDefinition.key] = `${schema.name}? ${buildRelation(relation, fields)} //SELF: 1 - 1 ((${c}))`;
+                        prisma2Models[schema.name][fields] = `String? @unique //SELF: 1 - 1 ((${c}))`;
+                        prisma2Models[schema.name][`p2Predecessor${schema.name}`] = `${schema.name}? ${buildRelation(relation)}//SELF: 1 - 1 ((${c}))`;
+                    }
 
                 }
             }
