@@ -5,7 +5,6 @@ import AutoField from './AutoField';
 import ListDelField from 'uniforms-antd/ListDelField';
 
 const ListItem = ({children, showListDelField = true, name, index, ...props}) => {
-    console.log('showListDelField2',showListDelField)
         return (
             <div style={{width: '100%', clear: 'both', float: "none"}}>
                 <div

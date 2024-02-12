@@ -332,9 +332,7 @@ var refetchQueries = function (mutationResult, client, refetchSchemas, schema) {
     client.cache.watches.forEach(function (_a) {
         var query = _a.query, variables = _a.variables;
         var queryName = query.definitions[0].selectionSet.selections[0].name.value;
-        console.log('queryName', queryName);
         var operation = query.definitions[0].operation;
-        console.log('operation', operation);
         if (operation === 'query') {
             var names_1 = [];
             if ((refetchSchemas === null || refetchSchemas === void 0 ? void 0 : refetchSchemas.length) > 0) {
@@ -345,13 +343,11 @@ var refetchQueries = function (mutationResult, client, refetchSchemas, schema) {
                     names_1.push(schema.names.query.connection);
                 });
             }
-            console.log('names', names_1);
             if (queryName === single || queryName === plural || queryName === connection || names_1.includes(queryName)) {
                 refetchQueries.push({ query: query, variables: variables });
             }
         }
     });
-    console.log('refetchQueries1', refetchQueries);
     return refetchQueries;
 };
 exports.refetchQueries = refetchQueries;

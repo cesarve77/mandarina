@@ -378,10 +378,7 @@ export const refetchQueries = (mutationResult: FetchResult, client: ApolloClient
     // @ts-ignore
     client.cache.watches.forEach(({query, variables}) => {
         const queryName = query.definitions[0].selectionSet.selections[0].name.value
-        console.log('queryName', queryName)
         const operation = query.definitions[0].operation
-        console.log('operation', operation)
-
         if (operation === 'query') {
             const names: string[] = []
             if (refetchSchemas?.length > 0) {
@@ -392,14 +389,12 @@ export const refetchQueries = (mutationResult: FetchResult, client: ApolloClient
                     names.push(schema.names.query.connection)
                 })
             }
-            console.log('names', names)
             if (queryName === single || queryName === plural || queryName === connection || names.includes(queryName)) {
                 refetchQueries.push({query, variables})
             }
         }
 
     })
-    console.log('refetchQueries1', refetchQueries)
     return refetchQueries
 }
 
