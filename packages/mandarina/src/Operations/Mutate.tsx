@@ -390,10 +390,7 @@ export const refetchQueries = (mutationResult: FetchResult, client: ApolloClient
                 })
             }
             if (queryName === single || queryName === plural || queryName === connection || names.includes(queryName)) {
-                if (queryName === 'groupsConnection') {
-                    refetchQueries.push({query, variables})
-                }
-                //
+                refetchQueries.push({query, variables})
             }
         }
 

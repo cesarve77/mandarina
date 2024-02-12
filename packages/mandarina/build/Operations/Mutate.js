@@ -344,10 +344,7 @@ var refetchQueries = function (mutationResult, client, refetchSchemas, schema) {
                 });
             }
             if (queryName === single || queryName === plural || queryName === connection || names_1.includes(queryName)) {
-                if (queryName === 'groupsConnection') {
-                    refetchQueries.push({ query: query, variables: variables });
-                }
-                //
+                refetchQueries.push({ query: query, variables: variables });
             }
         }
     });
