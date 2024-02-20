@@ -69,7 +69,7 @@ var insertHaving = function (qs, having) {
         var variables = Object.keys(having[inserts[i]]);
         var txt = variables.map(function (v) {
             if (v === 'orderBy') {
-                return "".concat(v, ":").concat(having[inserts[i]][v]);
+                return "orderBy:\"".concat(having[inserts[i]][v], "\"");
             }
             return "".concat(v, ":").concat((0, stringify_object_1.default)(having[inserts[i]][v], {
                 indent: '',
@@ -81,6 +81,7 @@ var insertHaving = function (qs, having) {
     for (var i = inserts.length - 1; i >= 0; i--) {
         _loop_1(i);
     }
+    console.log('result', result);
     return "{".concat(result, "}").replace(/\n|\t/g, '');
 };
 exports.insertHaving = insertHaving;

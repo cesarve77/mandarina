@@ -55,7 +55,6 @@ var AutoField_1 = __importDefault(require("./AutoField"));
 var ListDelField_1 = __importDefault(require("uniforms-antd/ListDelField"));
 var ListItem = function (_a) {
     var children = _a.children, _b = _a.showListDelField, showListDelField = _b === void 0 ? true : _b, name = _a.name, index = _a.index, props = __rest(_a, ["children", "showListDelField", "name", "index"]);
-    console.log('showListDelField2', showListDelField);
     return (react_1.default.createElement("div", { style: { width: '100%', clear: 'both', float: "none" } },
         react_1.default.createElement("div", { style: {
                 float: 'right',

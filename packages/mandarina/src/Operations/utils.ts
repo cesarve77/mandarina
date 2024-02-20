@@ -50,7 +50,7 @@ export const insertHaving = (qs: string, having?: Having) => {
         const variables = Object.keys(having[inserts[i]])
         let txt = variables.map(v => {
             if (v==='orderBy'){
-                return `${v}:${having[inserts[i]][v]}`
+                return `orderBy:"${having[inserts[i]][v]}"`
             }
             return `${v}:${stringifyObject(having[inserts[i]][v], {
                 indent: '',
@@ -60,5 +60,6 @@ export const insertHaving = (qs: string, having?: Having) => {
         result = `${result.slice(0, i)}(${txt.replace(/("|\(|\))/g,"\$1")})${result.slice(i)}`
 
     }
+    console.log('result',result)
     return `{${result}}`.replace(/\n|\t/g, '')
 }
