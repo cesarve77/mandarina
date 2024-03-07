@@ -16,12 +16,12 @@ export declare class Table {
     static instances: {
         [name: string]: Table;
     };
+    protected static hooks: Hooks;
     schema: Schema;
     name: string;
     options: TableSchemaOptions & TableShapeOptions;
-    protected static hooks: Hooks;
-    static setGlobalHooks: (hooks: Hooks) => void;
     constructor(schema: Schema, tableOptions?: TableShapeOptions);
+    static setGlobalHooks: (hooks: Hooks) => void;
     static getInstance(name: string): Table;
     getFields(): string[];
     shouldHasManyUpdate(): boolean;

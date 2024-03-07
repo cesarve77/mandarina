@@ -27,14 +27,10 @@ import {isEmpty} from "lodash";
 export class Table {
     // An object with all table instances created
     static instances: { [name: string]: Table };
+    protected static hooks: Hooks = {}
     public schema: Schema;
     public name: string;
     public options: TableSchemaOptions & TableShapeOptions;
-    protected static hooks: Hooks= {}
-
-    static setGlobalHooks = (hooks: Hooks) => {
-        Table.hooks = hooks
-    }
 
     constructor(schema: Schema, tableOptions?: TableShapeOptions) {
         Table.instances = Table.instances || {};
@@ -52,6 +48,10 @@ export class Table {
         this.options = {...tableOptions};
 
         Table.instances[this.name] = this;
+    }
+
+    static setGlobalHooks = (hooks: Hooks) => {
+        Table.hooks = hooks
     }
 
     static getInstance(name: string): Table {
@@ -89,16 +89,19 @@ export class Table {
         const fields = this.schema.getFields().filter((f: string) => f !== 'createdAt' && f !== 'createdAt')
         return fields.length > 0
     }
+
     //Insert where option in to the query
     // static dotConcat = (a: string | undefined, b: string) => a ? `${a}.${b}` : b;
     getDefaultActions(type: operationType) {
         // OperationName for query is user or users, for mutation are createUser, updateUser ....
         const operationNames: string[] = Object.values(this.schema.names[type]);
-        const resultResolvers: { [resolverName: string]: (_: any, args: any, context: Context, info: any) => void } = {};
+        const resultResolvers: {
+            [resolverName: string]: (_: any, args: any, context: Context, info: any) => void
+        } = {};
         operationNames.forEach((operationName: string) => {
             if (!this.shouldHasManyUpdate()) return
             resultResolvers[operationName] = async (_: any, args: any = {}, context: Context, info: GraphQLResolveInfo) => {
-                context.originalArgs=args
+                context.originalArgs = args
                 const user = await Mandarina.config.getUser(context)
                 const subOperationName: ActionType | string = operationName.substr(0, 6)
                 const action: ActionType = <ActionType>(['create', 'update', 'delete'].includes(subOperationName) ? subOperationName : 'read')
@@ -109,20 +112,23 @@ export class Table {
                 await this.callHook(this.name, 'beforeValidate', _, args, context, info);
                 const isSingleMutation = operationName === this.schema.names.mutation.update || operationName === this.schema.names.mutation.create
                 // @ts-ignore
-                let {queryString, fields} = this.insertWhereIntoInfo(info, user, isSingleMutation, action, operationName)
+                let {
+                    queryString,
+                    fields
+                } = this.insertWhereIntoInfo(info, user, isSingleMutation, action, operationName)
                 if (type === 'mutation') {
                     // if (errors.length > 0) {
                     //     await this.callHook('validationFailed', action, _, args, context, info);
                     // } else {
                     //     await this.callHook('afterValidate', action, _, args, context, info);
                     // }
-                    if (isSingleMutation && (action==='update' || action==='delete')) {
-                        const where = this.options.where && this.options.where(user,  action, operationName)
+                    if (isSingleMutation && (action === 'update' || action === 'delete')) {
+                        const where = this.options.where && this.options.where(user, action, operationName)
                         if (where) {
                             let finalWhere = args.where ? {AND: [args.where, where]} : where
                             const exists = (await context.prisma.exists[this.name](finalWhere))
                             if (!exists) {
-                                throw new Error(`${action} on ${this.schema.name} not found for ${JSON.stringify(where)}` )
+                                throw new Error(`${action} on ${this.schema.name} not found for ${JSON.stringify(where)}`)
                             }
 
 
@@ -154,10 +160,10 @@ export class Table {
                     //     }
                     // }
                     const data = (await context.prisma.request(queryString, args))
-                    if (data.errors){
+                    if (data.errors) {
                         console.error(data.errors)
                     }
-                    result =Object.values(data.data)[0]
+                    result = Object.values(data.data)[0]
                     context.result = result
                     await this.callHook(this.name, <HookName>`after${capitalizedAction}`, _, args, context, info);
                     this.schema.validateQuery(fields, user && user.roles || []);
@@ -172,18 +178,18 @@ export class Table {
                         this.schema.validateQuery(fields, user && user.roles || []);
                     }
                     //Validate if the roles is able to read those fields
-                    if (operationName===this.schema.names.query.single){
-                        queryString=queryString.replace(operationName,this.schema.names.query.plural)
-                        queryString=queryString.replace(new RegExp(`${this.schema.names.input.where.single}!?`),this.schema.names.input.where.plural +'!')
+                    if (operationName === this.schema.names.query.single) {
+                        queryString = queryString.replace(operationName, this.schema.names.query.plural)
+                        queryString = queryString.replace(new RegExp(`${this.schema.names.input.where.single}!?`), this.schema.names.input.where.plural + '!')
                     }
                     const data = (await context.prisma.request(queryString, args))
-                    if (data.errors){
+                    if (data.errors) {
                         console.error(data.errors)
                     }
                     result = Object.values(data.data)[0]
-                    if (operationName===this.schema.names.query.single){
+                    if (operationName === this.schema.names.query.single) {
                         result = data.data[this.schema.names.query.plural]
-                        result=result && result.length===1 ? result[0] : null
+                        result = result && result.length === 1 ? result[0] : null
                     }
                     context.result = result
                     await this.callHook(this.name, 'afterQuery', _, args, context, info);
@@ -194,20 +200,20 @@ export class Table {
         return resultResolvers;
     }
 
-    insertWhereIntoInfo = (info: GraphQLResolveInfo, user: UserType | null| undefined, isSingleMutation = false, action: ActionType, operationName: string) => {
+    insertWhereIntoInfo = (info: GraphQLResolveInfo, user: UserType | null | undefined, isSingleMutation = false, action: ActionType, operationName: string) => {
         const field: string[] = []
         const fields = new Set<string>()
         let required = false
-        const allowedVariables=info.fieldNodes[0]?.arguments?.map(({name:{value}})=>value) || []
+        const allowedVariables = info.fieldNodes[0]?.arguments?.map(({name: {value}}) => value) || []
 
         const query = visit(info.operation, {
             enter: (node, key, parent, path, ancestors) => {
-                if (node.kind==='VariableDefinition'){
-                    if (!allowedVariables.includes(node?.variable.name.value)){
+                if (node.kind === 'VariableDefinition') {
+                    if (!allowedVariables.includes(node?.variable.name.value)) {
                         return null
                     }
                 }
-                if (node.kind === 'Field' && ancestors.length===2 && node!==info.fieldNodes[0]){
+                if (node.kind === 'Field' && ancestors.length === 2 && node !== info.fieldNodes[0]) {
                     return null
                 }
                 if (node.kind === 'Field' && node.name.value !== '__typename') {
@@ -258,9 +264,9 @@ export class Table {
             }
 
         });
-        let queryString= print(query)
+        let queryString = print(query)
         if (required) {
-            queryString=queryString.replace(/\$where: (\w*)Input(,| |\))/,'$where: $1Input!$2')
+            queryString = queryString.replace(/\$where: (\w*)Input(,| |\))/, '$where: $1Input!$2')
         }
         return {fields: Array.from(fields), queryString}
     }
@@ -288,14 +294,14 @@ export class Table {
             if (name.indexOf('after') === 0) prefix = 'after'
             const globalHookHandler = Table.hooks[name];
             const hookHandler = this.options.hooks && this.options.hooks[name];
-            if ( args.data && prefix) {
-                const fields = Object.keys( args.data)
+            if (args.data && prefix) {
+                const fields = Object.keys(args.data)
                 const schema = Schema.getInstance(schemaName)
                 for (const field of fields) {
                     const def = schema.getPathDefinition(field)
                     const inline = !!(def.table && def.table.relation && def.table.relation.link === 'INLINE')
                     if (def.isTable) {
-                        const operations = Object.keys( args.data[field])
+                        const operations = Object.keys(args.data[field])
                         if (!Table.instances[def.type]) {
                             //console.warn(`No table for ${def.type} no neasted hooks applied`)
                             continue
@@ -303,7 +309,7 @@ export class Table {
                         const table = Table.getInstance(def.type)
                         for (const operation of operations) {
                             const hookName = `${prefix}${capitalize(operation)}` as HookName
-                            const args2 =  args.data[field][operation]
+                            const args2 = args.data[field][operation]
 
                             if (Array.isArray(args2)) {
                                 for (const arg2 of args2) {
@@ -326,13 +332,18 @@ export class Table {
                     }
                 }
             }
-            if (globalHookHandler) {
-                context.schemaName=schemaName
-                context.name=name
+            if (globalHookHandler && prefix === 'before') {
+                context.schemaName = schemaName
+                context.name = name
                 await globalHookHandler(_, args, context, info);
             }
             if (hookHandler) {
                 await hookHandler(_, args, context, info);
+            }
+            if (globalHookHandler && prefix === 'after') {
+                context.schemaName = schemaName
+                context.name = name
+                await globalHookHandler(_, args, context, info);
             }
         } catch (e) {
             console.error(`Error executing hook: "${name}" in Table: ${schemaName}"`)
@@ -384,7 +395,7 @@ export interface Hook {
 
 export type operationType = "mutation" | "query"
 
-export type Hooks={
+export type Hooks = {
     beforeValidate?: Hook
     afterValidate?: Hook
     validationFailed?: Hook

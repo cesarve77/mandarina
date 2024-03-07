@@ -313,7 +313,7 @@ var Table = /** @class */ (function () {
             return __generator(this, function (_c) {
                 switch (_c.label) {
                     case 0:
-                        _c.trys.push([0, 20, , 21]);
+                        _c.trys.push([0, 22, , 23]);
                         prefix = '';
                         if (name.indexOf('before') === 0)
                             prefix = 'before';
@@ -381,7 +381,7 @@ var Table = /** @class */ (function () {
                         _i++;
                         return [3 /*break*/, 1];
                     case 15:
-                        if (!globalHookHandler) return [3 /*break*/, 17];
+                        if (!(globalHookHandler && prefix === 'before')) return [3 /*break*/, 17];
                         context.schemaName = schemaName;
                         context.name = name;
                         return [4 /*yield*/, globalHookHandler(_, args, context, info)];
@@ -394,13 +394,21 @@ var Table = /** @class */ (function () {
                     case 18:
                         _c.sent();
                         _c.label = 19;
-                    case 19: return [3 /*break*/, 21];
+                    case 19:
+                        if (!(globalHookHandler && prefix === 'after')) return [3 /*break*/, 21];
+                        context.schemaName = schemaName;
+                        context.name = name;
+                        return [4 /*yield*/, globalHookHandler(_, args, context, info)];
                     case 20:
+                        _c.sent();
+                        _c.label = 21;
+                    case 21: return [3 /*break*/, 23];
+                    case 22:
                         e_1 = _c.sent();
                         console.error("Error executing hook: \"".concat(name, "\" in Table: ").concat(schemaName, "\""));
                         console.error(e_1);
                         throw e_1;
-                    case 21: return [2 /*return*/];
+                    case 23: return [2 /*return*/];
                 }
             });
         });
