@@ -17,7 +17,7 @@ const ListItem = ({children, showListDelField = true, name, index, ...props}) =>
                     }}
                 >
                     {(typeof showListDelField === 'function' ? showListDelField({index, name}) : showListDelField) &&
-                        <ListDelField className="top aligned" name={name} type="danger"/>}
+                        <ListDelField className="top aligned ant-btn-danger" name={name} type="danger"/>}
                 </div>
                 <div style={{marginBottom: '4px', overflow: 'hidden'}}>
                     <div style={{borderBottom: '1px solid #adadad', height: '20px', marginTop: '-4px'}}/>

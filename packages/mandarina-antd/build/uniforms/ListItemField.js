@@ -63,7 +63,7 @@ var ListItem = function (_a) {
                 marginRight: '6px',
                 width: '20px'
             } }, (typeof showListDelField === 'function' ? showListDelField({ index: index, name: name }) : showListDelField) &&
-            react_1.default.createElement(ListDelField_1.default, { className: "top aligned", name: name, type: "danger" })),
+            react_1.default.createElement(ListDelField_1.default, { className: "top aligned ant-btn-danger", name: name, type: "danger" })),
         react_1.default.createElement("div", { style: { marginBottom: '4px', overflow: 'hidden' } },
             react_1.default.createElement("div", { style: { borderBottom: '1px solid #adadad', height: '20px', marginTop: '-4px' } })),
         react_1.default.createElement("div", { style: { width: '100%', clear: 'both' } }, children ? (typeof children === 'function' ?
