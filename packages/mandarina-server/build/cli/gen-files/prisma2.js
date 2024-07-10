@@ -51,7 +51,7 @@ var genFile = function () {
                 }).join(','), "])\n");
             }
             else {
-                prisma += "\t@@$INDEX([".concat(fields.map(function (_a) {
+                prisma += "\t@@index([".concat(fields.map(function (_a) {
                     var name = _a.name, options = _a.options;
                     return "".concat(name).concat(options ? "(".concat(options, ")") : "");
                 }).join(','), "], type: ").concat(type, ")\n");

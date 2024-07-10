@@ -44,7 +44,7 @@ datasource db {
                                                                         options
                                                                     }) => `${name}${options ? `(${options})` : ``}`).join(',')}])\n`
             }else{
-                prisma += `\t@@$INDEX([${fields.map(({
+                prisma += `\t@@index([${fields.map(({
                                                                         name,
                                                                         options
                                                                     }) => `${name}${options ? `(${options})` : ``}`).join(',')}], type: ${type})\n`
