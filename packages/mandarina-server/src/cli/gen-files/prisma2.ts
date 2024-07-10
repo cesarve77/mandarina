@@ -38,10 +38,17 @@ datasource db {
         })
         const schema = Schema.getInstance(modelName)
         schema.indexes.forEach(({fields, type}) => {
-            prisma += `\t@@${type.toLowerCase()}([${fields.map(({
-                                                                    name,
-                                                                    options
-                                                                }) => `${name}${options ? `(${options})` : ``}`).join(',')}])\n`
+            if (type === 'UNIQUE' || type === 'INDEX' || type === 'ID') {
+                prisma += `\t@@${type.toLowerCase()}([${fields.map(({
+                                                                        name,
+                                                                        options
+                                                                    }) => `${name}${options ? `(${options})` : ``}`).join(',')}])\n`
+            }else{
+                prisma += `\t@@$INDEX([${fields.map(({
+                                                                        name,
+                                                                        options
+                                                                    }) => `${name}${options ? `(${options})` : ``}`).join(',')}], type: ${type})\n`
+            }
         })
         prisma += `}\n\n`
     })
