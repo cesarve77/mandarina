@@ -44,10 +44,18 @@ var genFile = function () {
         var schema = mandarina_1.Schema.getInstance(modelName);
         schema.indexes.forEach(function (_a) {
             var fields = _a.fields, type = _a.type;
-            prisma += "\t@@".concat(type.toLowerCase(), "([").concat(fields.map(function (_a) {
-                var name = _a.name, options = _a.options;
-                return "".concat(name).concat(options ? "(".concat(options, ")") : "");
-            }).join(','), "])\n");
+            if (type === 'UNIQUE' || type === 'INDEX' || type === 'ID') {
+                prisma += "\t@@".concat(type.toLowerCase(), "([").concat(fields.map(function (_a) {
+                    var name = _a.name, options = _a.options;
+                    return "".concat(name).concat(options ? "(".concat(options, ")") : "");
+                }).join(','), "])\n");
+            }
+            else {
+                prisma += "\t@@$INDEX([".concat(fields.map(function (_a) {
+                    var name = _a.name, options = _a.options;
+                    return "".concat(name).concat(options ? "(".concat(options, ")") : "");
+                }).join(','), "], type: ").concat(type, ")\n");
+            }
         });
         prisma += "}\n\n";
     });

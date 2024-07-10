@@ -559,7 +559,7 @@ export namespace Integer {
 export type ErrorFromServerMapper = (field: string, error: any) => string | undefined;
 
 export interface TableIndex{
-    type: 'UNIQUE' | 'INDEX' | 'ID'
+    type: 'UNIQUE' | 'INDEX' | 'ID' | string
     fields: {
         name: string,
         options?: string
