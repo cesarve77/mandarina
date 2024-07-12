@@ -1,6 +1,6 @@
 {
   "name": "mandarina",
-  "version": "1.7.11",
+  "version": "1.7.12",
   "description": "",
   "main": "build/index.js",
   "types": "build/index.d.ts",
