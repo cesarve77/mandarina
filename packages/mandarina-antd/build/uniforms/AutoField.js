@@ -123,7 +123,7 @@ var CustomAuto = /** @class */ (function (_super) {
         }
         //this.props  properties applied directly on AutoField
         //props has a field property with values in the schema
-        var mergeProps = __assign(__assign({}, this.props), props.field.form.props);
+        var mergeProps = __assign(__assign({}, props.field.form.props), this.props);
         if (mergeProps.col === false)
             return (0, react_1.createElement)(props.component, mergeProps);
         var col = typeof mergeProps.col !== 'object' ? { span: mergeProps.col || 24 } : mergeProps.col ? __assign({}, mergeProps.col) : { span: 24 };

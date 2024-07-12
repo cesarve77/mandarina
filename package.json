@@ -14,11 +14,10 @@
     "@types/lodash": "^4.14.192"
   },
   "scripts": {
-    "tsc": "yarn build",
     "yarn": "cd packages/mandarina/ && rm -fr node_modules && yarn && cd ../mandarina-server/ && rm -fr node_modules && yarn link mandarina &&  yarn  && cd ../mandarina/ && rm -fr node_modules && yarn link mandarina && yarn ",
     "publish-docs": "GIT_USER=cesarve77 cd website && docusaurus-publish",
     "start": "cd website && yarn start",
-    "build": "tsc -p ./packages/mandarina && tsc -p ./packages/mandarina-server && tsc -p ./packages/mandarina-antd/tsconfig.ts.json && tsc -p ./packages/mandarina-antd/tsconfig.js.json",
+    "tsc": "tsc -p ./packages/mandarina && tsc -p ./packages/mandarina-server && tsc -p ./packages/mandarina-antd/tsconfig.ts.json && tsc -p ./packages/mandarina-antd/tsconfig.js.json",
     "bump-publish": "npm whoami && npm version patch && cd packages/mandarina && npm version patch && npm publish && cd ../mandarina-antd && npm version patch  && npm publish && cd ../mandarina-server && npm version patch  && npm publish && PACKAGE_VERSION=$( cat package.json | grep version | awk '{ print $2 }' | sed s/\\\"//g | sed s/,//g ) && git tag $PACKAGE_VERSION && git push --tags && cd .. && cd ..",
     "publish": "npm whoami && cd packages/mandarina  && npm publish && cd ../mandarina-antd && npm publish && cd ../mandarina-server && npm publish  && cd .. && cd ..",
     "test-gen-files": "cd __TEST__ && node ../packages/mandarina-server/build/cli/index.js gen-files",
