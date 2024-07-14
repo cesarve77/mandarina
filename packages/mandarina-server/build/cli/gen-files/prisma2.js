@@ -26,6 +26,7 @@ var prisma2Models = {};
 var processed = {};
 var processedSubSchemas = [];
 var genFile = function () {
+    var _a;
     var config = (0, utils_1.getConfig)();
     (0, utils_1.loadSchemas)(config.dir);
     (0, genFilesUtils_1.createDir)(config.dir.prisma2);
@@ -33,7 +34,7 @@ var genFile = function () {
         var schema = mandarina_1.Schema.getInstance(schemaName);
         getPrisma2Model(schema);
     }
-    var prisma = "generator client {\n  provider = \"prisma-client-js\"\n  binaryTargets = [\"native\", \"linux-arm64-openssl-1.0.x\"]  \n}\n\ndatasource db {\n  provider = \"postgresql\"\n  url      = env(\"DATABASE_URL\")\n  directUrl = env(\"DIRECT_DATABASE_URL\")\n}\n";
+    var prisma = "generator client {\n  provider = \"prisma-client-js\"\n  ".concat((_a = config.prisma) === null || _a === void 0 ? void 0 : _a.generatorClient, "\n}\n\ndatasource db {\n  provider = \"postgresql\"\n  url      = env(\"DATABASE_URL\")\n  directUrl = env(\"DIRECT_DATABASE_URL\")\n}\n");
     Object.keys(prisma2Models).forEach(function (modelName) {
         var model = prisma2Models[modelName];
         prisma += "model ".concat(modelName, " {\n ");

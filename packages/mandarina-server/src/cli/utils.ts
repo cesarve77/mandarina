@@ -54,6 +54,7 @@ export interface ConfigInterface {
         host: string,
         database?: string,
         stage?: string,
+        generatorClient?: string,
     }
     dir: ConfigDirInterface
     options?: {
