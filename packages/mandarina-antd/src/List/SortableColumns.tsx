@@ -41,7 +41,7 @@ export const SortableColumn = SortableElement(({columnIndex,  overwrite, column:
                 handleSize={[10, 10]}
                 axis={'x'}
                 onResizeStop={(e: SyntheticEvent, data: ResizeCallbackData) => onResizeStop(field, data.size.width, columnIndex)}>
-                <div>
+                <div className={'mandarina-column-header'}>
                     {title}
                     {!noSort && <SortButton onSortChange={onSortChange} field={field} sort={sort}/>}
                 </div>
