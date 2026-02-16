@@ -1,5 +1,4 @@
 import {Prisma} from "prisma-binding";
-import {ContextParameters} from "graphql-yoga/dist/types";
 
 import {ActionType} from "mandarina/build/Auth/Auth";
 import {Schema} from "mandarina";
@@ -382,7 +381,7 @@ export class Table {
 
 }
 
-export interface Context extends ContextParameters {
+export interface Context  {
     prisma: Prisma
 
     [others: string]: any

@@ -1,5 +1,4 @@
 import { Prisma } from "prisma-binding";
-import { ContextParameters } from "graphql-yoga/dist/types";
 import { ActionType } from "mandarina/build/Auth/Auth";
 import { Schema } from "mandarina";
 import { ErrorFromServerMapper } from "mandarina/build/Schema/Schema";
@@ -47,7 +46,7 @@ export declare class Table {
      */
     callHook(schemaName: string, name: HookName, _: any, args: any, context: any, info: GraphQLResolveInfo): Promise<void>;
 }
-export interface Context extends ContextParameters {
+export interface Context {
     prisma: Prisma;
     [others: string]: any;
 }
