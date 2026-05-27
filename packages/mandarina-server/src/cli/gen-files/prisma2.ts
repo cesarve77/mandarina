@@ -19,15 +19,10 @@ export const genFile = () => {
         getPrisma2Model(schema)
     }
     let prisma = `generator client {
-  provider = "prisma-client-js"
+  provider = "prisma-client"
   ${config.prisma?.generatorClient}
 }
 
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-  directUrl = env("DIRECT_DATABASE_URL")
-}
 `
     Object.keys(prisma2Models).forEach(modelName => {
         const model = prisma2Models[modelName]
